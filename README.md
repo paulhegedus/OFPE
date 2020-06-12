@@ -10,10 +10,11 @@
 ## Installation
 
 You can install the released version of OFPE from
-[CRAN](https://CRAN.R-project.org) with:
+[GitHub](https://github.com) with:
 
 ``` r
-install.packages("OFPE")
+install.packages("devtools")
+devtools::install_github("paulhegedus/OFPE")
 ```
 
 ## Overview
