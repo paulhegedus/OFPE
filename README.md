@@ -1,11 +1,21 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# OFPE
+# OFPE <img src="man/figures/logo.png" align="right" width="120" />
 
 <!-- badges: start -->
 
+i.e. R-CMD-check, coverage, version [![Travis build
+status](https://travis-ci.com/paulhegedus/OFPE.svg?branch=master)](https://travis-ci.com/paulhegedus/OFPE)
 <!-- badges: end -->
+
+## Overview
+
+The On-Farm Precision Experiments package is developed by the
+Agroecology Lab at Montana State University and provides the tools for
+researchers and producers to manage and analyze data collected from
+individual fields to make field specific recommendations of agricultural
+inputs.
 
 ## Installation
 
@@ -17,13 +27,13 @@ install.packages("devtools")
 devtools::install_github("paulhegedus/OFPE")
 ```
 
-## Overview
-
 ## Intended Use
 
 ## Requirements
 
 ## Workflow/Vignettes
+
+The vignettes of the OFPE package follow
 
 ### Database Creation/Management
 

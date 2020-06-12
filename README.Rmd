@@ -13,10 +13,14 @@ knitr::opts_chunk$set(
 )
 ```
 
-# OFPE
-
+# OFPE <img src="man/figures/logo.png" align="right" width="120" />
 <!-- badges: start -->
+i.e. R-CMD-check, coverage, version
+[![Travis build status](https://travis-ci.com/paulhegedus/OFPE.svg?branch=master)](https://travis-ci.com/paulhegedus/OFPE)
 <!-- badges: end -->
+
+## Overview
+The On-Farm Precision Experiments package is developed by the Agroecology Lab at Montana State University and provides the tools for researchers and producers to manage and analyze data collected from individual fields to make field specific recommendations of agricultural inputs.
 
 ## Installation
 
@@ -26,9 +30,6 @@ You can install the released version of OFPE from [GitHub](https://github.com) w
 install.packages("devtools")
 devtools::install_github("paulhegedus/OFPE")
 ```
-
-## Overview
-
 
 
 ## Intended Use
@@ -40,9 +41,11 @@ devtools::install_github("paulhegedus/OFPE")
 
 
 ## Workflow/Vignettes
+The vignettes of the OFPE package follow 
+
 ### Database Creation/Management
 
-**TODO:activity diagram**
+**TODO:activity diagram** 
 **TODO:component diagram**
 
 ### Data Import
