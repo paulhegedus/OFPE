@@ -1,19 +1,6 @@
 Package: OFPE
-Title: On-Farm Precision Experiments data management tools
 Version: 0.0.0.9000
-Authors@R: 
-    person(given = "Paul",
-           family = "Hegedus", ,
-           role = c("aut", "cre"),
-           email = "paulhegedus@montana.edu",
-           comment = c(ORCID = "0000-0002-6288-4345"))
-    person(given = "Bruce",
-           family = "Maxwell", ,
-           role = c("ctb"),
-           email = "bmax@montana.edu",
-           comment = c(ORCID = "000-0001-7775-9419"))
-    person(given = "Montana State University", , ,
-           role = c("cph"))       
+Title: On-Farm Precision Experiments data management and analysis tools
 Description: The MT OFPE project lays out a concenptual framework for a data 
     intensive field management approach to dryland winter wheat production in
     MT using experimentally applied input rates such as nitrogen fertilizer and 
@@ -24,9 +11,25 @@ Description: The MT OFPE project lays out a concenptual framework for a data
     protein response to variable input rates (nitrogen fertilizer or seed), 
     and generation of input prescriptions based on field specific predictions
     based on field specific data.
+Authors@R: c(
+    person(given = "Paul",
+           family = "Hegedus",
+           role = c("aut", "cre"),
+           email = "paulhegedus@montana.edu",
+           comment = c(ORCID = "0000-0002-6288-4345"))
+    person(given = "Bruce",
+           family = "Maxwell",
+           role = c("ctb"),
+           email = "bmax@montana.edu",
+           comment = c(ORCID = "000-0001-7775-9419"))
+    person(given = "Montana State University", 
+           role = c("cph"))
+    )
+Depends: R (>= 4.0.0)
+
+
 License: MIT + file LICENSE
 Encoding: UTF-8
-Depends: R (>= 4.0.0)
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.0
