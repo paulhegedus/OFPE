@@ -16,19 +16,18 @@ Authors@R: c(
            family = "Hegedus",
            role = c("aut", "cre"),
            email = "paulhegedus@montana.edu",
-           comment = c(ORCID = "0000-0002-6288-4345"))
+           comment = c(ORCID = "0000-0002-6288-4345")),
     person(given = "Bruce",
            family = "Maxwell",
            role = c("ctb"),
            email = "bmax@montana.edu",
-           comment = c(ORCID = "000-0001-7775-9419"))
+           comment = c(ORCID = "000-0001-7775-9419")),
     person(given = "Montana State University", 
            role = c("cph"))
     )
 Depends: R (>= 4.0.0)
 Imports: 
 Suggests: 
-    testthat
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
