@@ -5,8 +5,11 @@
 
 <!-- badges: start -->
 
-i.e. R-CMD-check, coverage, version [![Travis build
+[![Last-changedate](https://img.shields.io/badge/last%20change-2020--06--12-yellowgreen.svg)](/commits/master)
+[![Travis build
 status](https://travis-ci.com/paulhegedus/OFPE.svg?branch=master)](https://travis-ci.com/paulhegedus/OFPE)
+[![R build
+status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
 <!-- badges: end -->
 
 ## Overview

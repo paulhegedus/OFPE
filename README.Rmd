@@ -15,8 +15,9 @@ knitr::opts_chunk$set(
 
 # OFPE <img src="man/figures/logo.png" align="right" width="120" />
 <!-- badges: start -->
-i.e. R-CMD-check, coverage, version
+[![Last-changedate](https://img.shields.io/badge/last%20change-`r gsub('-', '--', Sys.Date())`-yellowgreen.svg)](/commits/master)
 [![Travis build status](https://travis-ci.com/paulhegedus/OFPE.svg?branch=master)](https://travis-ci.com/paulhegedus/OFPE)
+[![R build status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
 <!-- badges: end -->
 
 ## Overview
