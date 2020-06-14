@@ -1,0 +1,19 @@
+---
+title: "DB_Create_01"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{DB_Create_01}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(OFPE)
+```
