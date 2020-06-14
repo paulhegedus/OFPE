@@ -37,9 +37,9 @@ devtools::install_github("paulhegedus/OFPE")
 ```
 
 ## Intended Use/Disclaimer
-The OFPE packages is intended to make the management, analysis, and development of agricultural input management prescriptions easy. This package is intended to be used with dryland winter wheat harvest and application data collected in Montana, USA or Manitoba, Canada. The codebase constitutes the backend of the associate [OFPE Shiny web application](<*URL*>). This package was developed using conventional and organic winter wheat data and intended to inform site-specific management decisions of nitrogen fertilizer or seed rates. 
+The OFPE packages is intended to make the management, analysis, and development of agricultural input management prescriptions easy. This package is intended to be used with dryland winter wheat harvest and application data collected in Montana, USA. The codebase constitutes the backend of the associate [OFPE Shiny web application](https://paulhegedus.shinyapps.io/OFPE_AnalysisAndSim_App_v1/?_ga=2.189182059.1336631904.1592115204-590292424.1592115204). This package was developed using conventional and organic winter wheat data and intended to inform site-specific management decisions of nitrogen fertilizer or seed rates. 
 
-The OFPE package is not intended for use outside of Montana and Manitoba or for crops other than dryland winter wheat. We are not liable for any damages, actions, or outcomes of any decision made while using this this package or influenced by any associated intellectual property.
+The OFPE package is not intended for use outside of Montana or for crops other than dryland winter wheat. We are not liable for any damages, actions, or outcomes of any decision made while using this this package or influenced by any associated intellectual property.
 
 ## Requirements
 The workflows outlined and supported by functions in this package operate with the assumption that the user has access to or has created a PostgreSQL database. Associated tools such as PostGIS are required for data management. If a user is setting up a database on a local machine, the user will need to download [PostgreSQL]() and enable a [postgres]() server account. 
