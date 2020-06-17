@@ -5,11 +5,14 @@
 
 <!-- badges: start -->
 
-[![Last-changedate](https://img.shields.io/badge/last%20change-2020--06--14-yellowgreen.svg)](/commits/master)
+[![Last-changedate](https://img.shields.io/badge/last%20change-2020--06--17-yellowgreen.svg)](/commits/master)
 [![Travis build
 status](https://travis-ci.com/paulhegedus/OFPE.svg?branch=master)](https://travis-ci.com/paulhegedus/OFPE)
 [![R build
 status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
+[![Project Status: WIP – Initial development is in progress, but there
+has not yet been a stable, usable release suitable for the
+public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 
 *\<Package Vesion?\>* <!-- badges: end -->
 
@@ -45,10 +48,11 @@ devtools::install_github("paulhegedus/OFPE")
 
 ## Intended Use/Disclaimer
 
-The OFPE packages is intended to make the management, analysis, and
-development of agricultural input management prescriptions easy. This
-package is intended to be used with dryland winter wheat harvest and
-application data collected in Montana, USA. The codebase constitutes the
+This package is intended to be used with dryland winter wheat harvest
+and application data collected in Montana, USA. The OFPE packages is
+intended to provide the codebase and documentation for the management,
+analysis, and development of agricultural input management prescriptions
+used by crop managers or researchers. The codebase constitutes the
 backend of the associate [OFPE Shiny web
 application](https://paulhegedus.shinyapps.io/OFPE_AnalysisAndSim_App_v1/?_ga=2.189182059.1336631904.1592115204-590292424.1592115204).
 This package was developed using conventional and organic winter wheat
@@ -67,7 +71,10 @@ operate with the assumption that the user has access to or has created a
 PostgreSQL database. Associated tools such as PostGIS are required for
 data management. If a user is setting up a database on a local machine,
 the user will need to download [PostgreSQL]() and enable a [postgres]()
-server account.
+server account. This process is describe in this [tutorial
+1](*TODO:%20show%20how%20to%20download%20postgres%20w/pgadmin%20&%20set%20up%20server*).
+This is not needed if you have credentials to a preexisting OFPE
+formatted database.
 
 This package includes functions for interfacing with Google Earth Engine
 and Google Drive. To access and operate these functions, or for complete
@@ -110,11 +117,11 @@ processes.](man/figures/ofpe_data_workflow.png)
 
 This process begins with the creation of a spatial database for storing
 data gathered from farms and from satellite sources. This database is
-set up in a specific manner to support the ensuing workflow and requires
-the user to specify the boundaries of fields selected for data intensive
-management and the farm boundary within which a farmer’s fields fall.
-This is a one-time process where once the database is set up it will
-only need management to keep it up to date.
+set up in a specific OFPE format to support the ensuing workflow and
+requires the user to specify the boundaries of fields selected for data
+intensive management and the farm boundary within which a farmer’s
+fields fall. This is a one-time process where once the database is set
+up it will only need management to keep it up to date.
 
 The database schematic is outlined below; ![TODO: Update figure. OFPE
 database schematic. Legend is in top left. Blue boxes represent schemas
@@ -126,8 +133,8 @@ The user will need access to or need to create necessary farm and field
 boundaries associated with their experimental fields to set up their
 database. These farm boundaries that encompass the fields within a
 farmer’s ownership/management purview are imported as assets into Google
-Earth Engine and imported into the database. See [this
-link](*TODO:%20Tutorial%20as%20html%20for%20making%20farm/field%20boundaries%20&%20setting%20up%20postgres%20server*)
+Earth Engine and imported into the database. See this [tutorial
+2](*TODO:%20Tutorial%20as%20html%20for%20making%20farm/field%20boundaries%20&%20setting%20up%20postgres%20server*)
 for creating a shapefile of a field and farm boundary.
 
 The process for creating a database is outlined in the activity diagram
@@ -170,8 +177,9 @@ diamond.](man/figures/ofpe_dat_import_pt2.png)
 Remote sensing data is collected from Google Earth Engine and includes
 data temporally variable data such as weather and static data such as
 topogrophy. The user is responsible for running the Google Earth Engine
-Javascript code to download data for each year required. See [this
-link](*TODO:%20Tutorial%20as%20html%20for%20adding%20farm%20boundaries%20to%20GEE%20as%20asset%20and%20using%20Javascript%20code*)
+Javascript code to download data for each year required. See this
+[tutorial
+3](*TODO:%20Tutorial%20as%20html%20for%20adding%20farm%20boundaries%20to%20GEE%20as%20asset%20and%20using%20Javascript%20code*)
 for adding farm boundaries to GEE as asset and using Javascript code.
 This data is downloaded to Google Drive, where the data can be batch
 uploaded to the database.
@@ -251,8 +259,7 @@ The activity workflow for generating prescriptions is described below;
 
 And a diagram of the components for generating prescriptions;
 
-**TODO:component
-diagram**
+**TODO:component diagram**
 
 # Funding <img src="man/figures/msu_coa_logo.png" align="right" width="120" /> <img src="man/figures/MTIOE_logo.png" align="right" width="120" /> <img src="man/figures/DIFM_logo.png" align="right" width="120" /> <img src="man/figures/MREDI_logo.png" align="right" width="200" />
 
