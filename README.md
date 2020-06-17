@@ -5,14 +5,14 @@
 
 <!-- badges: start -->
 
-[![Last-changedate](https://img.shields.io/badge/last%20change-2020--06--17-yellowgreen.svg)](/commits/master)
-[![Travis build
-status](https://travis-ci.com/paulhegedus/OFPE.svg?branch=master)](https://travis-ci.com/paulhegedus/OFPE)
-[![R build
-status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
 [![Project Status: WIP – Initial development is in progress, but there
 has not yet been a stable, usable release suitable for the
 public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![Last-changedate](https://img.shields.io/badge/last%20change-2020--06--17-yellowgreen.svg)](/commits/master)
+[![R build
+status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
+[![Travis build
+status](https://travis-ci.com/paulhegedus/OFPE.svg?branch=master)](https://travis-ci.com/paulhegedus/OFPE)
 
 *\<Package Vesion?\>* <!-- badges: end -->
 
