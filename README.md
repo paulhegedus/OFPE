@@ -122,7 +122,8 @@ workflow, with a more detailed description of the data handling process
 [here](https://paulhegedus.github.io/OFPE-Website/ofpe_overview.html).
 ![OFPE data framework showing the circular process of experiment
 creation and application, data collection, and prescription and
-experiment generation.](man/figures/ofpe_framework.png)
+experiment generation. Figured made by Bruce Maxwell
+(2015).](man/figures/ofpe_framework.png)
 
 ### Database Creation/Management
 

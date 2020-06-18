@@ -59,7 +59,7 @@ The vignettes of the OFPE package follow the OFPE framework workflow. This proce
 For more detailed information about the OFPE data workflow and framework, see this [website](https://paulhegedus.github.io/OFPE-Website/). This includes the tutorials linked above, as well as activity and component diagrams of the processes/vignettes described below.
 
 Below is a schematic of the general On-Field Precision Experiments data workflow, with a more detailed description of the data handling process  [here](https://paulhegedus.github.io/OFPE-Website/ofpe_overview.html).
-![OFPE data framework showing the circular process of experiment creation and application, data collection, and prescription and experiment generation.](man/figures/ofpe_framework.png)
+![OFPE data framework showing the circular process of experiment creation and application, data collection, and prescription and experiment generation. Figured made by Bruce Maxwell (2015).](man/figures/ofpe_framework.png)
 
 ### Database Creation/Management
 This process begins with the creation of a spatial database for storing data gathered from farms and from satellite sources. This database is set up in  a specific OFPE format to support the ensuing workflow and requires the user to specify the boundaries of fields selected for data intensive management and the farm boundary within which a farmer's fields fall. This is a one-time process where once the database is set up it will only need management to keep it up to date.
