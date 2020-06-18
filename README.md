@@ -36,6 +36,12 @@ yield and grain able input rates (nitrogen fertilizer or seed), and
 generation of input prescriptions based on field specific predictions
 based on field specific data.
 
+More information of the OFPE process can be found at the [OFPE
+website](https://sites.google.com/site/ofpeframework/), the pacakge
+vignettes, and the complementary [OFPE framework
+website](https://paulhegedus.github.io/OFPE-Website/) for diagrams and
+tutorials related to the OFPE workflow and project framework package.
+
 ## Installation
 
 You can install the released version of OFPE from
@@ -71,8 +77,8 @@ operate with the assumption that the user has access to or has created a
 PostgreSQL database. Associated tools such as PostGIS are required for
 data management. If a user is setting up a database on a local machine,
 the user will need to download [PostgreSQL]() and enable a [postgres]()
-server account. This process is describe in this [tutorial
-1](*TODO:%20show%20how%20to%20download%20postgres%20w/pgadmin%20&%20set%20up%20server*).
+server account. This process is describe in this
+[tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html).
 This is not needed if you have credentials to a preexisting OFPE
 formatted database.
 
@@ -105,13 +111,18 @@ protein to variable input rates, predicting net-return outcomes of
 management strategies, and generating site-specific prescriptions of
 inputs.
 
+For more detailed information about the OFPE data workflow and
+framework, see this
+[website](https://paulhegedus.github.io/OFPE-Website/). This includes
+the tutorials linked above, as well as activity and component diagrams
+of the processes/vignettes described below.
+
 Below is a schematic of the general On-Field Precision Experiments data
-workflow framework. ![Key is found in the top left corner of the
-schematic. Green arrows represent processes that require the OFPE
-package. The PostgreSQL database in the center of the figure can be
-stored on a cloud server or a local computer. Light blue boxes represent
-alternate modules for executable
-processes.](man/figures/ofpe_data_workflow.png)
+workflow, with a more detailed description of the data handling process
+[here](https://paulhegedus.github.io/OFPE-Website/ofpe_overview.html).
+![OFPE data framework showing the circular process of experiment
+creation and application, data collection, and prescription and
+experiment generation.](man/figures/ofpe_framework.png)
 
 ### Database Creation/Management
 
@@ -123,28 +134,27 @@ intensive management and the farm boundary within which a farmer’s
 fields fall. This is a one-time process where once the database is set
 up it will only need management to keep it up to date.
 
-The database schematic is outlined below; ![TODO: Update figure. OFPE
-database schematic. Legend is in top left. Blue boxes represent schemas
-within the database. Orange boxes represent tables within schemas, and
-grey boxes are columns within each
-table.](man/figures/ofpe_db_schema.png)
+The user will need access to an OFPE formatted database or need to
+create their own. In order to do this, see this
+[tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html)
+for downloading PostgreSQL and setting up a local postgres server. If
+using a pre-existing database, the user will need the host, username,
+password, and database driver. The database schematic and format can be
+found
+[here](https://paulhegedus.github.io/OFPE-Website/db_creation.html).
 
 The user will need access to or need to create necessary farm and field
 boundaries associated with their experimental fields to set up their
 database. These farm boundaries that encompass the fields within a
 farmer’s ownership/management purview are imported as assets into Google
-Earth Engine and imported into the database. See this [tutorial
-2](*TODO:%20Tutorial%20as%20html%20for%20making%20farm/field%20boundaries%20&%20setting%20up%20postgres%20server*)
+Earth Engine and imported into the database. See this
+[tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html)
 for creating a shapefile of a field and farm boundary.
 
 The process for creating a database is outlined in the activity diagram
-below; ![Blue processes are chained together by arrows, and black boxes
-indicate the addition of user inputs.](man/figures/ofpe_db_mgmt.png)
-
-And a diagram of the components for executing the database creation and
-management workflow are outlined below;
-
-**TODO:component diagram**
+on [this
+page](https://paulhegedus.github.io/OFPE-Website/db_creation.html),
+where a component diagram can also be found.
 
 ### Data Import
 
@@ -160,41 +170,26 @@ data can be batch uploaded to the database through a script that
 automatically identifies and organizes each upload.
 
 The process for importing on-farm data to the database is outlined in
-the activity diagram below; ![Part 1 of on-farm data import process.
-Demonstrates pre upload data processing. Blue activities are chained
-together by arrows, and black boxes indicate the addition of user
-inputs. Diamonds represent logical statements, where FALSE returns are
-routed from the side of the diamond and TRUE returns are routed from the
-top or bottom of the diamond.](man/figures/ofpe_dat_import_pt1.png)
-
-![Part 2 of on-farm data import process. Demonstrates upload of data to
-database. Blue activities are chained together by arrows, and black
-boxes indicate the addition of user inputs. Diamonds represent logical
-statements, where FALSE returns are routed from the side of the diamond
-and TRUE returns are routed from the top or bottom of the
-diamond.](man/figures/ofpe_dat_import_pt2.png)
+the activity diagram on [this
+page](https://paulhegedus.github.io/OFPE-Website/dat_import.html), where
+a component diagram can also be found.
 
 Remote sensing data is collected from Google Earth Engine and includes
 data temporally variable data such as weather and static data such as
 topogrophy. The user is responsible for running the Google Earth Engine
 Javascript code to download data for each year required. See this
-[tutorial
-3](*TODO:%20Tutorial%20as%20html%20for%20adding%20farm%20boundaries%20to%20GEE%20as%20asset%20and%20using%20Javascript%20code*)
-for adding farm boundaries to GEE as asset and using Javascript code.
-This data is downloaded to Google Drive, where the data can be batch
-uploaded to the database.
+[tutorial](https://paulhegedus.github.io/OFPE-Website/gee_setup.html)
+for adding farm boundaries to GEE as asset and this
+[tutorial](https://paulhegedus.github.io/OFPE-Website/run_gee.html) for
+editing and using Javascript code. This data is downloaded to Google
+Drive, where the data can be batch uploaded to the database. See this
+[tutorial](https://paulhegedus.github.io/OFPE-Website/gd_setup.html) for
+setting up Google Drive to receive your data from Google Earth Engine.
 
 The process for importing Google Earth Engine data to the database is
-outlined in the activity diagram below; ![Google Earth Engine data
-import process. Demonstrates upload of data to database. Blue activities
-are chained together by arrows, and black boxes indicate the addition of
-user inputs. Diamonds represent logical statements, where FALSE returns
-are routed from the side of the diamond and TRUE returns are routed from
-the top or bottom of the diamond.](man/figures/ofpe_gee_import.png)
-
-And a diagram of the components for importing data to the database;
-
-**TODO:component diagram**
+outlined in the activity diagram on [this
+page](https://paulhegedus.github.io/OFPE-Website/dat_import.html), where
+a component diagram can also be found.
 
 ### Data Aggregation
 
@@ -211,13 +206,9 @@ resolution of data possible to make decisions with data that has as
 little natural variation removed as possible.
 
 The activity workflow for enriching yield and protein datasets is
-described below;
-
-**TODO:activity diagram**
-
-And a diagram of the components for aggregating data;
-
-**TODO:component diagram**
+described on [this
+page](https://paulhegedus.github.io/OFPE-Website/data_agg.html), where a
+component diagram can also be found.
 
 ### Analysis/Simulation
 
@@ -233,14 +224,9 @@ on their input rates by March 30th for winter wheat, the farmer will not
 know the weather conditions for the rest of the growing season, so the
 user will be able to select a year or scenario to simulate.
 
-The activity workflow for simulating management outcomes is described
-below;
-
-**TODO:activity diagram**
-
-And a diagram of the components for simulating management outcomes;
-
-**TODO:component diagram**
+The activity workflow for simulating management outcomes is described on
+[this page](https://paulhegedus.github.io/OFPE-Website/sim_anal.html),
+where a component diagram can also be found.
 
 ### Prescription Generation
 
@@ -253,13 +239,9 @@ scenario or the *mean/median* of inputs across simulation results. The
 prescription is exported as a shapefile that the farmer can upload to
 their equipment and apply the inputs.
 
-The activity workflow for generating prescriptions is described below;
-
-**TODO:activity diagram**
-
-And a diagram of the components for generating prescriptions;
-
-**TODO:component diagram**
+The activity workflow for generating prescriptions is described on [this
+page](https://paulhegedus.github.io/OFPE-Website/rx_gen.html), where a
+component diagram can also be found.
 
 # Funding <img src="man/figures/msu_coa_logo.png" align="right" width="120" /> <img src="man/figures/MTIOE_logo.png" align="right" width="120" /> <img src="man/figures/DIFM_logo.png" align="right" width="120" /> <img src="man/figures/MREDI_logo.png" align="right" width="200" />
 
