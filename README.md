@@ -36,11 +36,12 @@ yield and grain able input rates (nitrogen fertilizer or seed), and
 generation of input prescriptions based on field specific predictions
 based on field specific data.
 
-More information of the OFPE process can be found at the [OFPE
-website](https://sites.google.com/site/ofpeframework/), the pacakge
-vignettes, and the complementary [OFPE framework
-website](https://paulhegedus.github.io/OFPE-Website/) for diagrams and
-tutorials related to the OFPE workflow and project framework package.
+More information of the MSU OFPE Project can be found at;
+
+  - The OFPE website: <https://sites.google.com/site/ofpeframework/>
+  - The OFPE package vignettes
+  - The OFPE package complementary website:
+    <https://paulhegedus.github.io/OFPE-Website/>
 
 ## Installation
 
