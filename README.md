@@ -8,7 +8,7 @@
 [![Project Status: WIP – Initial development is in progress, but there
 has not yet been a stable, usable release suitable for the
 public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-[![Last-changedate](https://img.shields.io/badge/last%20change-2020--06--17-yellowgreen.svg)](/commits/master)
+[![Last-changedate](https://img.shields.io/badge/last%20change-2020--06--18-yellowgreen.svg)](/commits/master)
 [![R build
 status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
 [![Travis build
@@ -42,6 +42,8 @@ More information of the MSU OFPE Project can be found at;
   - The OFPE package vignettes
   - The OFPE package complementary website:
     <https://paulhegedus.github.io/OFPE-Website/>
+  - The OFPE web application:
+    <https://paulhegedus.shinyapps.io/OFPE_AnalysisAndSim_App_v1/?_ga=2.189182059.1336631904.1592115204-590292424.1592115204>
 
 ## Installation
 
@@ -143,7 +145,7 @@ for downloading PostgreSQL and setting up a local postgres server. If
 using a pre-existing database, the user will need the host, username,
 password, and database driver. The database schematic and format can be
 found
-[here](https://paulhegedus.github.io/OFPE-Website/db_creation.html).
+[here](https://paulhegedus.github.io/OFPE-Website/db_creation.html)
 
 The user will need access to or need to create necessary farm and field
 boundaries associated with their experimental fields to set up their
@@ -151,7 +153,11 @@ database. These farm boundaries that encompass the fields within a
 farmer’s ownership/management purview are imported as assets into Google
 Earth Engine and imported into the database. See this
 [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html)
-for creating a shapefile of a field and farm boundary.
+for creating a shapefile of a field or farm boundary. These are
+necessary for identifying data based on geographic location rather than
+searching files for information keying in on field or farm specific
+information. Farm boundaries are also used as the bounding boxes for
+downloading Google Earth Engine data.
 
 The process for creating a database is outlined in the activity diagram
 on [this
