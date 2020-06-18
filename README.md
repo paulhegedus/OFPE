@@ -77,8 +77,8 @@ The workflows outlined and supported by functions in this package
 operate with the assumption that the user has access to or has created a
 PostgreSQL database. Associated tools such as PostGIS are required for
 data management. If a user is setting up a database on a local machine,
-the user will need to download [PostgreSQL]() and enable a [postgres]()
-server account. This process is describe in this
+the user will need to download [PostgreSQL](https://www.postgresql.org)
+and enable a *postgres* server account. This process is describe in this
 [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html).
 This is not needed if you have credentials to a preexisting OFPE
 formatted database.
