@@ -8,7 +8,7 @@
 [![Project Status: WIP – Initial development is in progress, but there
 has not yet been a stable, usable release suitable for the
 public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-[![Last-changedate](https://img.shields.io/badge/last%20change-2020--06--18-yellowgreen.svg)](/commits/master)
+[![Last-changedate](https://img.shields.io/badge/last%20change-2020--07--03-yellowgreen.svg)](/commits/master)
 [![R build
 status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
 [![Travis build
@@ -28,19 +28,24 @@ of agricultural inputs. This project requires the experimental
 application of input rates to develop crop response functions for
 predicting outcomes of various management scenarios.
 
-This package contains tools for creating a database to store field
-specific information, importing data collected on-farms or from
-remotely-sensed sources to the database, enriching yield and protein
-datasets with covariate data, analysis and simulation of winter wheat
-yield and grain able input rates (nitrogen fertilizer or seed), and
-generation of input prescriptions based on field specific predictions
-based on field specific data.
+This package contains tools for the OFPE data workflow. This workflow
+consists of the creation of a database to store field specific
+information, and a data cycle that is repeated on an annual scale. The
+cycle begins by importing data collected on-farms or from
+remotely-sensed sources to the database, then aggregating all covariate
+data to the yield and protein datasets, analysis and simulation of
+ecological and economic outcomes, and generation of input prescriptions
+based on the field specific predictions. In the next year, data is
+collected and the cycle repeats, beginning with downloading GEE data and
+importing data collected from on-farm equipment.
 
-More information of the MSU OFPE Project can be found at;
+*TODO: OFPE data cycle diagram?*
+
+More information/products of the MSU OFPE Project can be found at;
 
   - The OFPE website: <https://sites.google.com/site/ofpeframework/>
   - The OFPE package vignettes
-  - The OFPE package complementary website:
+  - The OFPE package support website:
     <https://paulhegedus.github.io/OFPE-Website/>
   - The OFPE web application:
     <https://paulhegedus.shinyapps.io/OFPE_AnalysisAndSim_App_v1/?_ga=2.189182059.1336631904.1592115204-590292424.1592115204>
@@ -193,6 +198,9 @@ editing and using Javascript code. This data is downloaded to Google
 Drive, where the data can be batch uploaded to the database. See this
 [tutorial](https://paulhegedus.github.io/OFPE-Website/gd_setup.html) for
 setting up Google Drive to receive your data from Google Earth Engine.
+
+This [tutorial](https://paulhegedus.github.io/OFPE-Website/run_gee.html)
+is a copy? of the vignette.
 
 The process for importing Google Earth Engine data to the database is
 outlined in the activity diagram on [this
