@@ -1,0 +1,39 @@
+---
+title: "Vignette1b-DB_Update"
+author: "Paul Hegedus"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette1b-DB_Update}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Introduction
+This is the second tutorial in the OFPE data workflow and one of the intiial steps before the OFPE data cycle. This vignette is not frequently used post-setup, except for when new farmers or fields are added to the database. Please see [Vignette1a-DB_Create]() for a tutorial on creating an OFPE formatted database.
+
+This process begins with the creation of a spatial database for storing data gathered from farms and from satellite sources. This database is set up in  a specific OFPE format to support the ensuing workflow and requires the user to specify the boundaries of fields selected for data intensive management and the farm boundary within which a farmer's fields fall. This is a one-time process where once the database is set up it will only need management to keep it up to date.
+
+The user will need access to an OFPE formatted database or need to create their own. In order to do this, see this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html) for downloading PostgreSQL and setting up a local postgres server. If using a pre-existing database, the user will need the host, username, password, and database driver. The database schematic and format can be found [here](https://paulhegedus.github.io/OFPE-Website/db_creation.html)
+
+The user will need access to or need to create necessary farm and field boundaries associated with their experimental fields to set up their database. These farm boundaries that encompass the fields within a farmer's ownership/management purview are imported as assets into Google Earth Engine and imported into the database. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html) for creating a shapefile of a field or farm boundary. These are necessary for identifying data based on geographic location rather than searching files for information keying in on field or farm specific information. Farm boundaries are also used as the bounding boxes for downloading Google Earth Engine data.
+
+The process for creating a database is outlined in the activity diagram on [this page](https://paulhegedus.github.io/OFPE-Website/db_creation.html), where a component diagram can also be found.
+
+
+
+
+
+
+
+
+
+
+

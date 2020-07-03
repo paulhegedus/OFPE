@@ -1,0 +1,32 @@
+---
+title: "Vignette1a-DB_Create"
+author: "Paul Hegedus"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette1a-DB_Create}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Introduction
+This is the first tutorial in the OFPE data workflow and the intiial step before the OFPE data cycle. This 
+
+
+# Set Up
+
+```{r setup}
+library(OFPE)
+library(RPostgreSQL)
+```
+
+
+# Create Database
+# Load Extensions
+# Build Schemas
+# Build Tables
+
+
+
+
+
+

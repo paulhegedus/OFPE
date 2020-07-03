@@ -1,8 +1,8 @@
 ---
-title: "A1-DB_Create"
+title: "Vignette1-DB_Create"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{DB_Create_01}
+  %\VignetteIndexEntry{Vignette1-DB_Create}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
