@@ -8,13 +8,23 @@
 [![Project Status: WIP – Initial development is in progress, but there
 has not yet been a stable, usable release suitable for the
 public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-[![Last-changedate](https://img.shields.io/badge/last%20change-2020--07--03-yellowgreen.svg)](/commits/master)
+[![Last-changedate](https://img.shields.io/badge/last%20change-2020--07--06-yellowgreen.svg)](/commits/master)
 [![R build
 status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
 [![Travis build
 status](https://travis-ci.com/paulhegedus/OFPE.svg?branch=master)](https://travis-ci.com/paulhegedus/OFPE)
 
 *\<Package Vesion?\>* <!-- badges: end -->
+
+## Installation
+
+You can install the released version of OFPE from
+[GitHub](https://github.com) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("paulhegedus/OFPE")
+```
 
 ## Overview
 
@@ -39,26 +49,25 @@ based on the field specific predictions. In the next year, data is
 collected and the cycle repeats, beginning with downloading GEE data and
 importing data collected from on-farm equipment.
 
-*TODO: OFPE data cycle diagram?*
+Below (Fig. 1) is a schematic of the general On-Field Precision
+Experiments data workflow, with a more detailed description of the data
+handling process
+[here](https://paulhegedus.github.io/OFPE-Website/ofpe_overview.html).
+![**Figure 1.** OFPE data framework showing the circular process of
+experiment creation and application, data collection, and prescription
+and experiment generation. Figured made by Bruce Maxwell
+(2015).](man/figures/ofpe_framework.png)
 
 More information/products of the MSU OFPE Project can be found at;
 
-  - The OFPE website: <https://sites.google.com/site/ofpeframework/>
+  - [OFPE Project Website](https://sites.google.com/site/ofpeframework/)
+  - [OFPE Technical
+    Website](https://paulhegedus.github.io/OFPE-Website/)
+  - [OFPE Web
+    Application](https://paulhegedus.shinyapps.io/OFPE_AnalysisAndSim_App_v1/?_ga=2.189182059.1336631904.1592115204-590292424.1592115204)
   - The OFPE package vignettes
-  - The OFPE package support website:
-    <https://paulhegedus.github.io/OFPE-Website/>
-  - The OFPE web application:
-    <https://paulhegedus.shinyapps.io/OFPE_AnalysisAndSim_App_v1/?_ga=2.189182059.1336631904.1592115204-590292424.1592115204>
-
-## Installation
-
-You can install the released version of OFPE from
-[GitHub](https://github.com) with:
-
-``` r
-# install.packages("devtools")
-devtools::install_github("paulhegedus/OFPE")
-```
+  - [OFPE CropScan 3300H Visualization
+    Application](https://paulhegedus.shinyapps.io/OFPE_Protein_Application/?_ga=2.69643152.1880072526.1592481594-590292424.1592115204)
 
 ## Intended Use/Disclaimer
 
@@ -112,26 +121,29 @@ with John Deere and Case equipment.
 ## Workflow/Vignettes
 
 The vignettes of the OFPE package follow the OFPE framework workflow.
-This process consists of creating a database with user specified field
-and farm data, importing data collected on-fields and from open sources,
-enriching yield and protein datasets, analyzing response of yield and
-protein to variable input rates, predicting net-return outcomes of
-management strategies, and generating site-specific prescriptions of
-inputs.
+These vignettes are the low level API equivalent to pages found in the
+high level API found in the OFPE web application. Both of these tools
+are centered around the OFPE database (Fig. 2). This process consists of
+creating a database with user specified field and farm data, importing
+data collected on-fields and from open sources, enriching yield and
+protein datasets by aggregating covariate data, analyzing response of
+yield and protein to variable input rates, simualting and predicting
+net-return outcomes of management strategies, and generating
+site-specific prescriptions of inputs.
+
+![**Figure 2.** Key is found in the top right corner of the schematic.
+The green ring represents the R-Shiny OFPE web spplication which is
+driven by the OFPE R-Package (blue ring). These both require connection
+to a PostgreSQL spatial database with PostGIS enabled. The yellow boxes
+represent different pages of the OFPE web application and vignettes in
+the R-package. Black boxes represent user inputs and orange clouds
+represent cloud based tools.](man/figures/ofpe_data_workflow.png)
 
 For more detailed information about the OFPE data workflow and
 framework, see this
 [website](https://paulhegedus.github.io/OFPE-Website/). This includes
 the tutorials linked above, as well as activity and component diagrams
 of the processes/vignettes described below.
-
-Below is a schematic of the general On-Field Precision Experiments data
-workflow, with a more detailed description of the data handling process
-[here](https://paulhegedus.github.io/OFPE-Website/ofpe_overview.html).
-![OFPE data framework showing the circular process of experiment
-creation and application, data collection, and prescription and
-experiment generation. Figured made by Bruce Maxwell
-(2015).](man/figures/ofpe_framework.png)
 
 ### Database Creation/Management
 
@@ -164,8 +176,8 @@ searching files for information keying in on field or farm specific
 information. Farm boundaries are also used as the bounding boxes for
 downloading Google Earth Engine data.
 
-The process for creating a database is outlined in the activity diagram
-on [this
+The process for creating a database and a more detailed description is
+outlined in the activity diagram on [this
 page](https://paulhegedus.github.io/OFPE-Website/db_creation.html),
 where a component diagram can also be found.
 
@@ -182,8 +194,8 @@ protein data that is gathered as a comma-separated values file. These
 data can be batch uploaded to the database through a script that
 automatically identifies and organizes each upload.
 
-The process for importing on-farm data to the database is outlined in
-the activity diagram on [this
+The process for importing on-farm data to the database is outlined and a
+more detailed descriptionin the activity diagram on [this
 page](https://paulhegedus.github.io/OFPE-Website/dat_import.html), where
 a component diagram can also be found.
 
@@ -202,8 +214,8 @@ setting up Google Drive to receive your data from Google Earth Engine.
 This [tutorial](https://paulhegedus.github.io/OFPE-Website/run_gee.html)
 is a copy? of the vignette.
 
-The process for importing Google Earth Engine data to the database is
-outlined in the activity diagram on [this
+The process for importing Google Earth Engine data to the database and a
+more detailed description is outlined in the activity diagram on [this
 page](https://paulhegedus.github.io/OFPE-Website/dat_import.html), where
 a component diagram can also be found.
 
@@ -221,8 +233,8 @@ estimation of protein data. The OFPE project aims to use the finest
 resolution of data possible to make decisions with data that has as
 little natural variation removed as possible.
 
-The activity workflow for enriching yield and protein datasets is
-described on [this
+The activity workflow for enriching yield and protein datasets and a
+more detailed description is described on [this
 page](https://paulhegedus.github.io/OFPE-Website/data_agg.html), where a
 component diagram can also be found.
 
@@ -255,14 +267,28 @@ scenario or the *mean/median* of inputs across simulation results. The
 prescription is exported as a shapefile that the farmer can upload to
 their equipment and apply the inputs.
 
-The activity workflow for generating prescriptions is described on [this
+The activity workflow for generating prescriptions and a more detailed
+description is described on [this
 page](https://paulhegedus.github.io/OFPE-Website/rx_gen.html), where a
 component diagram can also be found.
 
-# Funding <img src="man/figures/msu_coa_logo.png" align="right" width="120" /> <img src="man/figures/MTIOE_logo.png" align="right" width="120" /> <img src="man/figures/DIFM_logo.png" align="right" width="120" /> <img src="man/figures/MREDI_logo.png" align="right" width="200" />
+### Funding
 
-Montana State University College of Agriculture, Montana Fertilizer
-Advisory Commitee (MFAC), Montana Research and Economic Development
-Initiative (MREDI), University of Illinois Data Intensive Farm
-Management (DIFM) Project, Montana Institute on Ecosystems (MTIoE),
-Western Sustainable Agriculture Research and Education (WSARE)
+The OFPE project was initially funded by the Montana Research and
+Economic Development Initiative
+([MREDI](https://mus.edu/research/research_initiative.html)) and is
+continued to be funded by the Montana Fertilizer Advisory Committee
+([MFAC](https://agriculture.montana.edu/mfac/index.html)). Other funding
+sources include the Montana State University College of Agriculture
+([MSU CoA](https://agriculture.montana.edu)), the MSU Department Land
+Resources and Environmental Sciences
+([LRES](https://landresources.montana.edu)), and the Montana Institute
+on Ecosystems ([MT IoE](https://montanaioe.org)). Other support and
+funding has been provided by the Data Intensive Farm Management project
+at the University of Illinois
+([DIFM](https://publish.illinois.edu/data-intensive-farm-managment/)).
+Funding for Paul Hegedus is provided by MSU and the Graduate Student
+Grants from the Western Sustainable Agriculture Research and Education
+(WSARE).
+
+# <img src="man/figures//MREDI_logo.png" align="left" width="250" height = "50" /> <img src="man/figures//msu_coa_logo.png" align="left" width="50" height = "50" /> <img src="man/figures//MTIOE_logo.png" align="left" width="150" height = "50" /> <img src="man/figures//DIFM_logo.png" align="left" width="150" height = "50" /> <img src="man/figures//WSARE_logo.gif" align="left" width="50" height = "50" />
