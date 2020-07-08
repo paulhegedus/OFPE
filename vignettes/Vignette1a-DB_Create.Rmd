@@ -1,15 +1,14 @@
 ---
-title: "Vignette1a-DB_Create"
+title: "Vignette1A-DB_Create"
 author: "Paul Hegedus"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette1a-DB_Create}
+  %\VignetteIndexEntry{Vignette1A-DB_Create}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-
 # Introduction
-This is the first tutorial in the OFPE data workflow and the intiial step before the OFPE data cycle. This vignette is only needed once per database. Please see [Vignette1b-DB_Update]() for a tutorial on updating database information. More information on creating the database can be found [here](https://paulhegedus.github.io/OFPE-Website/db_creation.html).
+This is the first tutorial in the OFPE data workflow and the intiial step before the OFPE data cycle. This vignette is only needed once per database. Please see [Vignette1B-DB_Update]() for a tutorial on updating database information. More information on creating the database can be found [here](https://paulhegedus.github.io/OFPE-Website/db_creation.html).
 
 This process begins with the creation of a spatial database for storing data gathered from farms and from satellite sources. This database is set up in  a specific OFPE format to support the ensuing workflow and requires the user to specify the boundaries of fields selected for data intensive management and the farm boundary within which a farmer's fields fall. This is a one-time process where once the database is set up it will only need management to keep it up to date.
 
