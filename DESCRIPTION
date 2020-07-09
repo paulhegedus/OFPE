@@ -1,6 +1,6 @@
 Package: OFPE
 Version: 0.0.0.9000
-Title: On-Farm Precision Experiments data management and analysis tools
+Title: On-Farm Precision Experiments (OFPE) Tools
 Description: The MT OFPE project lays out a concenptual framework for a data 
     intensive field management approach to dryland winter wheat production in
     MT using experimentally applied input rates such as nitrogen fertilizer and 
