@@ -12,23 +12,67 @@ This is the first tutorial in the OFPE data workflow and the intiial step before
 
 This process begins with the creation of a spatial database for storing data gathered from farms and from satellite sources. This database is set up in  a specific OFPE format to support the ensuing workflow and requires the user to specify the boundaries of fields selected for data intensive management and the farm boundary within which a farmer's fields fall. This is a one-time process where once the database is set up it will only need management to keep it up to date.
 
-The user will need access to an OFPE formatted database or need to create their own. In order to do this, see this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html) for downloading PostgreSQL and setting up a local postgres server. If using a pre-existing database, the user will need the host, username, password, and database driver. 
+The user will need access to a server or need to create their own. In order to do this, see this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html) for downloading PostgreSQL and setting up a local postgres server. If using a pre-existing database, the user will need the host, username, password, and database driver. 
 
 The user will need access to or need to create necessary farm and field boundaries associated with their experimental fields to set up their database. These farm boundaries that encompass the fields within a farmer's ownership/management purview are imported as assets into Google Earth Engine and imported into the database. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html) for creating a shapefile of a field or farm boundary. These are necessary for identifying data based on geographic location rather than searching files for information keying in on field or farm specific information. Farm boundaries are also used as the bounding boxes for downloading Google Earth Engine data.
 
 The process for creating a database is outlined in the activity diagram on [this page](https://paulhegedus.github.io/OFPE-Website/db_creation.html), where a component diagram can also be found.
 
-# Set Up
+# Set-Up
+This vignette uses example data located in the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) R-package. This vigette downloads data from the OFPE package in order to demonstrate a realistic data workflow. NOTE that when using this code in the real world this first step is irrelevant.
 
-```{r setup}
-#library(OFPE)
+### Load packages and example data
+
+```{r setup, message = FALSE}
+#devtools::install_github("paulhegedus/OFPEDATA")
+library(OFPE)
+library(OFPEDATA)
+library(sf)
+library(dplyr)
 ```
 
+### Prepare Example Data
+This section is for creating a folder that contains the experimental field and farm boundaries. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html) for creating a shapefile of a field or farm boundary. **NOTE:** when using your own data, this section is irrelevant. 
+
+First, get the names of the data in the OFPEDATA package that has example data for these vignettes. Isolate the names of data corresponding to field or farm boundaries, labeled with 'bbox'. Extract from OFPEDATA.
+```{r}
+dat <- data(package = "OFPEDATA")
+dat_names <- dat$results[, "Item"] %>%
+  subset(grepl("_bbox", dat$results[, "Item"]))
+dat_list <- as.list(dat_names) %>%
+  `names<-`(dat_names) %>% 
+  lapply(function (x) eval(parse(text = x)))
+rm(dat, dat_names) 
+```
+
+Second, save boundaries to a temporary folder. Again, in your real world situation you do not need to do this. **NOTE:** This example will create a temporary folder called 'INIT_UPLOADS' in your home directory and WILL delete any folder called 'INIT_UPLOADS' in your home directory.
+```{r, message = FALSE}
+temp_path <- "~/INIT_UPLOADS/"
+ifelse(dir.exists(temp_path), 
+       {do.call(file.remove, list(list.files(temp_path, full.names = TRUE)));
+         file.remove(temp_path);
+         dir.create(temp_path)},
+       dir.create(temp_path)) %>% 
+  invisible()
+OFPE::hush(mapply(function (x, y) st_write(x, paste0(temp_path, y, ".shp")),
+            dat_list, 
+            names(dat_list))) %>% 
+  invisible()
+rm(dat_list, temp_path)
+```
 
 # Create Database
-# Load Extensions
-# Build Schemas
-# Build Tables
+## Create Database
+## Load Extensions & Functions
+
+# Format Database
+## Build Schemas
+## Build Tables
+
+# Update Database
+## Import Farms
+## Import Fields
+## Spatial Indices
 
 
 
