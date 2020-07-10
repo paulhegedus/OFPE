@@ -30,10 +30,17 @@ You can install the released version of OFPE from [GitHub](https://github.com) w
 devtools::install_github("paulhegedus/OFPE")
 ```
 
-## Overview
-The [On-Field Precision Experiments project](https://sites.google.com/site/ofpeframework/) (OFPE) package is developed by the Agroecology Lab at Montana State University and provides the tools for researchers and producers to execute data intensive field management. Users are able to manage and analyze data collected from individual fields to make field specific recommendations of agricultural inputs. This project requires the experimental application of input rates to develop crop response functions for predicting outcomes of various management scenarios.
+And you can install the released version of the OFPE data package from [GitHub](https://github.com) with:
 
-This package contains tools for the OFPE data workflow. This workflow consists of the creation of a database to store field specific information, and a data cycle that is repeated on an annual scale. The cycle begins by importing data collected on-farms or from remotely-sensed sources to the database, then aggregating all covariate data to the yield and protein datasets, analysis and simulation of ecological and economic outcomes, and generation of input prescriptions based on the field specific predictions. In the next year, data is collected and the cycle repeats, beginning with downloading GEE data and importing data collected from on-farm equipment. 
+``` r
+# install.packages("devtools")
+devtools::install_github("paulhegedus/OFPEDATA")
+```
+
+## Overview
+The [On-Field Precision Experiments project](https://sites.google.com/site/ofpeframework/) (OFPE) package is developed by the Agroecology Lab at Montana State University and provides the tools for researchers and producers to execute data intensive field management. Users are able to manage and analyze data collected from individual fields to make field specific recommendations of agricultural inputs. This project requires the experimental application of input rates to develop crop response functions for predicting outcomes of various management scenarios. 
+
+This package contains tools for the OFPE data workflow. The OFPE data framework consists of the creation of a database to store field specific information, and a data cycle that is repeated on an annual scale. The cycle begins by importing data collected on-farms or from remotely-sensed sources to the database, then aggregating all covariate data to the yield and protein datasets, analysis and simulation of ecological and economic outcomes, and generation of input prescriptions based on the field specific predictions. In the next year, data is collected and the cycle repeats, beginning with downloading GEE data and importing data collected from on-farm equipment. 
 
 Below (Fig. 1) is a schematic of the general On-Field Precision Experiments data workflow, with a more detailed description of the data handling process  [here](https://paulhegedus.github.io/OFPE-Website/ofpe_overview.html).
 ![**Figure 1.** OFPE data framework showing the circular process of experiment creation and application, data collection, and prescription and experiment generation. Figured made by Bruce Maxwell (2015).](man/figures/ofpe_framework.png)
@@ -44,7 +51,7 @@ More information/products of the MSU OFPE Project can be found at;
   * [OFPE Project Website](https://sites.google.com/site/ofpeframework/)
   * [OFPE Technical Website](https://paulhegedus.github.io/OFPE-Website/)
   * [OFPE Web Application](https://paulhegedus.shinyapps.io/OFPE_AnalysisAndSim_App_v1/?_ga=2.189182059.1336631904.1592115204-590292424.1592115204)
-  * The OFPE Tools package vignettes
+  * The OFPE Tools package vignettes & OFPE Data Package ([OFPEDATA]([here](https://github.com/paulhegedus/OFPEDATA.git)))
   * [OFPE CropScan 3300H Visualization Application](https://paulhegedus.shinyapps.io/OFPE_Protein_Application/?_ga=2.69643152.1880072526.1592481594-590292424.1592115204)
 
 
@@ -63,7 +70,7 @@ While not required, it is assumed that the user has access and uses grain protei
 Other on-farm data such as yield and as-applied fertilizer or seed rates do not require a specific brand association. This code has been tested with John Deere and Case equipment. 
 
 ## Workflow/Vignettes
-The vignettes of the OFPE package follow the OFPE framework workflow. These vignettes are the low level API equivalent to pages found in the high level API found in the OFPE web application. Both of these tools are centered around the OFPE database (Fig. 2). This process consists of creating a database with user specified field and farm data, importing data collected on-fields and from open sources, enriching yield and protein datasets by aggregating covariate data, analyzing response of yield and protein to variable input rates, simualting and predicting net-return outcomes of management strategies, and generating site-specific prescriptions of inputs. 
+The vignettes of the OFPE package follow the OFPE framework workflow. These vignettes are the low level API equivalent to pages found in the high level API found in the OFPE web application. Both of these tools are centered around the OFPE database (Fig. 2). This process consists of creating a database with user specified field and farm data, importing data collected on-fields and from open sources, enriching yield and protein datasets by aggregating covariate data, analyzing response of yield and protein to variable input rates, simualting and predicting net-return outcomes of management strategies, and generating site-specific prescriptions of inputs. Data associated with the vignettes can be found [here](https://github.com/paulhegedus/OFPEDATA.git) and installed using the code above.
 
 ![**Figure 2.** Key is found in the top right corner of the schematic. The green ring represents the R-Shiny OFPE web spplication which is driven by the OFPE R-Package (blue ring). These both require connection to a PostgreSQL spatial database with PostGIS enabled. The yellow boxes represent different pages of the OFPE web application and vignettes in the R-package. Black boxes represent user inputs and orange clouds represent cloud based tools. ](man/figures/ofpe_data_workflow.png)
 

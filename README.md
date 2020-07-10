@@ -8,7 +8,7 @@
 [![Project Status: WIP – Initial development is in progress, but there
 has not yet been a stable, usable release suitable for the
 public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-[![Last-changedate](https://img.shields.io/badge/last%20change-2020--07--08-yellowgreen.svg)](/commits/master)
+[![Last-changedate](https://img.shields.io/badge/last%20change-2020--07--09-yellowgreen.svg)](/commits/master)
 [![R build
 status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
 [![Build
@@ -24,6 +24,14 @@ You can install the released version of OFPE from
 devtools::install_github("paulhegedus/OFPE")
 ```
 
+And you can install the released version of the OFPE data package from
+[GitHub](https://github.com) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("paulhegedus/OFPEDATA")
+```
+
 ## Overview
 
 The [On-Field Precision Experiments
@@ -36,8 +44,8 @@ of agricultural inputs. This project requires the experimental
 application of input rates to develop crop response functions for
 predicting outcomes of various management scenarios.
 
-This package contains tools for the OFPE data workflow. This workflow
-consists of the creation of a database to store field specific
+This package contains tools for the OFPE data workflow. The OFPE data
+framework consists of the creation of a database to store field specific
 information, and a data cycle that is repeated on an annual scale. The
 cycle begins by importing data collected on-farms or from
 remotely-sensed sources to the database, then aggregating all covariate
@@ -63,7 +71,8 @@ More information/products of the MSU OFPE Project can be found at;
     Website](https://paulhegedus.github.io/OFPE-Website/)
   - [OFPE Web
     Application](https://paulhegedus.shinyapps.io/OFPE_AnalysisAndSim_App_v1/?_ga=2.189182059.1336631904.1592115204-590292424.1592115204)
-  - The OFPE Tools package vignettes
+  - The OFPE Tools package vignettes & OFPE Data Package
+    ([OFPEDATA](%5Bhere%5D\(https://github.com/paulhegedus/OFPEDATA.git\)))
   - [OFPE CropScan 3300H Visualization
     Application](https://paulhegedus.shinyapps.io/OFPE_Protein_Application/?_ga=2.69643152.1880072526.1592481594-590292424.1592115204)
 
@@ -127,7 +136,10 @@ data collected on-fields and from open sources, enriching yield and
 protein datasets by aggregating covariate data, analyzing response of
 yield and protein to variable input rates, simualting and predicting
 net-return outcomes of management strategies, and generating
-site-specific prescriptions of inputs.
+site-specific prescriptions of inputs. Data associated with the
+vignettes can be found
+[here](https://github.com/paulhegedus/OFPEDATA.git) and installed using
+the code above.
 
 ![**Figure 2.** Key is found in the top right corner of the schematic.
 The green ring represents the R-Shiny OFPE web spplication which is
