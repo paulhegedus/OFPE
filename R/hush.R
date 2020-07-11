@@ -1,6 +1,6 @@
-#' Truly invisible output
+#' @title Truly invisible output
 #'
-#' Suppress all output from function return. Useful for st_write. Credit goes
+#' @description Suppress all output from function return. Useful for st_write. Credit goes
 #' to "Danny", https://stackoverflow.com/users/699385/danny.
 #'
 #' @param code Function or code.
