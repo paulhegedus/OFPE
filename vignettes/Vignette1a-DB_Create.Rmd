@@ -54,7 +54,7 @@ ifelse(dir.exists(temp_path),
          dir.create(temp_path)},
        dir.create(temp_path)) %>% 
   invisible()
-OFPE::hush(mapply(function (x, y) st_write(x, paste0(temp_path, y, ".shp")),
+hush(mapply(function (x, y) st_write(x, paste0(temp_path, y, ".shp")),
             dat_list, 
             names(dat_list))) %>% 
   invisible()
