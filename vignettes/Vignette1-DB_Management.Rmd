@@ -1,10 +1,10 @@
 ---
-title: "Vignette1A-DB_Create"
+title: "Vignette1-DB_Management"
 author: "Paul Hegedus"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette1A-DB_Create}
+  %\VignetteIndexEntry{Vignette1-DB_Management}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -55,16 +55,27 @@ ifelse(dir.exists(temp_path),
          dir.create(temp_path)},
        dir.create(temp_path)) %>% 
   invisible()
-hush(mapply(function (x, y) st_write(x, paste0(temp_path, y, ".shp")),
+hush(
+  mapply(function (x, y) st_write(x, paste0(temp_path, y, ".shp")),
             dat_list, 
-            names(dat_list))) %>% 
+            names(dat_list))
+) %>% 
   invisible()
 rm(dat_list, temp_path)
 ```
 
 # Create Database
+This section is for building the database and loading required extensions such as PostGIS. At this point, the user is expected to have followed the PostgreSQL download and set up tutorial found [here](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). The user also has the option of connecting to another server group in which they have priviledges to create and edit databases. This vignette operates under the assumption of a local server group established on the user's machine.
+
 ## Create Database
+First, a connection is formed to the server group where the database will be housed.  Then the database is generated, the default name here is 'OFPE'.
+
+```{r}
+
+```
+
 ## Load Extensions & Functions
+There are a couple 
 
 # Format Database
 ## Build Schemas

@@ -4,7 +4,7 @@ Title: On-Farm Precision Experiments (OFPE) data management and analysis tools
 Description: The MT OFPE project lays out a concenptual framework for a data 
     intensive field management approach to dryland winter wheat production in
     MT using experimentally applied input rates such as nitrogen fertilizer and 
-    seed. This package contains tools for creating a database to store field
+    seed. This package contains tools for managing a database to store field
     specific information, importing data collected on-farms or from remotely-
     sensed sources to the database, enriching yield and protein datasets with 
     covariate data, analysis and simulation of winter wheat yield and grain
@@ -39,5 +39,6 @@ VignetteBuilder: knitr
 Imports: 
     covr,
     dplyr,
+    magrittr,
     sf
     

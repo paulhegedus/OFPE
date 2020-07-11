@@ -8,7 +8,7 @@
 [![Project Status: WIP – Initial development is in progress, but there
 has not yet been a stable, usable release suitable for the
 public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-[![Last-changedate](https://img.shields.io/badge/last%20change-2020--07--09-yellowgreen.svg)](/commits/master)
+[![Last-changedate](https://img.shields.io/badge/last%20change-2020--07--11-yellowgreen.svg)](/commits/master)
 [![R build
 status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
 [![Build
@@ -45,9 +45,9 @@ application of input rates to develop crop response functions for
 predicting outcomes of various management scenarios.
 
 This package contains tools for the OFPE data workflow. The OFPE data
-framework consists of the creation of a database to store field specific
-information, and a data cycle that is repeated on an annual scale. The
-cycle begins by importing data collected on-farms or from
+framework consists of the management of a database to store field
+specific information, and a data cycle that is repeated on an annual
+scale. The cycle begins by importing data collected on-farms or from
 remotely-sensed sources to the database, then aggregating all covariate
 data to the yield and protein datasets, analysis and simulation of
 ecological and economic outcomes, and generation of input prescriptions
@@ -168,11 +168,10 @@ up it will only need management to keep it up to date.
 The user will need access to an OFPE formatted database or need to
 create their own. In order to do this, see this
 [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html)
-for downloading PostgreSQL and setting up a local postgres server. If
-using a pre-existing database, the user will need the host, username,
-password, and database driver. The database schematic and format can be
-found
-[here](https://paulhegedus.github.io/OFPE-Website/db_creation.html)
+for downloading PostgreSQL and creating an empty database. If using a
+pre-existing database, the user will need the host, username, password,
+and database driver. The database schematic and format can be found
+[here](https://paulhegedus.github.io/OFPE-Website/db_management.html)
 
 The user will need access to or need to create necessary farm and field
 boundaries associated with their experimental fields to set up their
@@ -188,7 +187,7 @@ downloading Google Earth Engine data.
 
 The process for creating a database and a more detailed description is
 outlined in the activity diagram on [this
-page](https://paulhegedus.github.io/OFPE-Website/db_creation.html),
+page](https://paulhegedus.github.io/OFPE-Website/db_management.html),
 where a component diagram can also be found.
 
 ### Data Import
