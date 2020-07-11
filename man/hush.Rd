@@ -2,7 +2,7 @@
 % Please edit documentation in R/hush.R
 \name{hush}
 \alias{hush}
-\title{Truly invisible output}
+\title{Truly invisible output (internal)}
 \source{
 \url{https://stackoverflow.com/questions/2723034/suppress-output-of-a-function}
 }

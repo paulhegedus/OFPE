@@ -3,7 +3,7 @@
 \docType{package}
 \name{OFPE}
 \alias{OFPE}
-\title{OFPE: On-Farm Precision Experiments (OFPE) data management and analysis tools}
+\title{OFPE: On-Farm Precision Experiments data management and analysis tools}
 \description{
 The OFPE package contains tools for supporting the OFPE data framework
 developed at Montana State University. This package contains S3 and R6
