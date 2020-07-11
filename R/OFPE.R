@@ -8,6 +8,8 @@
 #' analysis and optimization of inputs, simulationg of management outcomes,
 #' and generation of prescriptive application maps for optimized inputs.
 #'
+#' @importFrom magrittr %>%
+#'
 #' @seealso \url{https://sites.google.com/site/ofpeframework/}
 #' @seealso \url{https://paulhegedus.github.io/OFPE-Website/}
 #' @seealso \url{https://github.com/paulhegedus/OFPEDATA.git}
