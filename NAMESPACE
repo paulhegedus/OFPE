@@ -3,5 +3,4 @@
 export(fbind)
 export(hush)
 export(loadExtensions)
-importFrom(DBI,dbSendQuery)
 importFrom(magrittr,"%>%")

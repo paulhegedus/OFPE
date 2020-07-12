@@ -25,6 +25,7 @@ This vignette uses example data located in the [OFPEDATA](https://github.com/pau
 ### Load packages and example data
 
 ```{r setup, message = FALSE}
+#devtools::install_github("paulhegedus/OFPE")
 #devtools::install_github("paulhegedus/OFPEDATA")
 library(OFPE)
 library(OFPEDATA)
@@ -92,7 +93,7 @@ db <- dbConnect(dbDriver("PostgreSQL"),
 There are a couple extensions that need to be activated in the database. First is [PostGIS](https://postgis.net), an extension of PostgreSQL database, and the second is an extension of PostGIS enabling raster functionality. Finally, a function for creating a net across an area is made. These are the minimum extensions needed for the OFPE data cycle.
 
 ```{r}
-loadExtensions(db)
+loadExtensions(db, "2.5") %>% invisible()
 ```
 
 ## Build Schemas

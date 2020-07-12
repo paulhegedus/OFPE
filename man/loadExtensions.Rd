@@ -7,10 +7,12 @@
 \url{https://trac.osgeo.org/postgis/wiki/UsersWikiCreateFishnet}
 }
 \usage{
-loadExtensions(db)
+loadExtensions(db, postgis_version)
 }
 \arguments{
 \item{db}{Connection to a database.}
+
+\item{postgis_version}{character PostGIS version installed.}
 }
 \value{
 None.
