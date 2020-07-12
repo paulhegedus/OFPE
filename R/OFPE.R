@@ -9,6 +9,7 @@
 #' and generation of prescriptive application maps for optimized inputs.
 #'
 #' @importFrom magrittr %>%
+#' @importFrom DBI dbSendQuery
 #'
 #' @seealso \url{https://sites.google.com/site/ofpeframework/}
 #' @seealso \url{https://paulhegedus.github.io/OFPE-Website/}

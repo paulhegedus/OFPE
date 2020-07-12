@@ -13,7 +13,7 @@ This is the first tutorial in the OFPE data workflow and the intiial step before
 
 This process begins with the creation of a spatial database for storing data gathered from farms and from satellite sources. This database is set up in  a specific OFPE format to support the ensuing workflow and requires the user to specify the boundaries of fields selected for data intensive management and the farm boundary within which a farmer's fields fall. This is a one-time process where once the database is set up it will only need management to keep it up to date.
 
-The user will need access to a server or need to create their own. In order to do this, see this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html) for downloading PostgreSQL and setting up a local postgres server. If using a pre-existing database, the user will need the host, username, password, and database driver. 
+The user will need access to a server or need to create their own. In order to do this, see this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html) for downloading PostgreSQL and creating a local database. If using a pre-existing database, the user will need the host, username, password, and database driver. 
 
 The user will need access to or need to create necessary farm and field boundaries associated with their experimental fields to set up their database. These farm boundaries that encompass the fields within a farmer's ownership/management purview are imported as assets into Google Earth Engine and imported into the database. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html) for creating a shapefile of a field or farm boundary. These are necessary for identifying data based on geographic location rather than searching files for information keying in on field or farm specific information. Farm boundaries are also used as the bounding boxes for downloading Google Earth Engine data.
 
@@ -30,6 +30,7 @@ library(OFPE)
 library(OFPEDATA)
 library(sf)
 library(dplyr)
+library(RPostgreSQL)
 ```
 
 ### Prepare Example Data
@@ -64,22 +65,39 @@ hush(
 rm(dat_list, temp_path)
 ```
 
-# Create Database
-This section is for building the database and loading required extensions such as PostGIS. At this point, the user is expected to have followed the PostgreSQL download and set up tutorial found [here](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). The user also has the option of connecting to another server group in which they have priviledges to create and edit databases. This vignette operates under the assumption of a local server group established on the user's machine.
+# Database Set-Up
+This section is for building the database and loading required extensions such as PostGIS. At this point, the user is expected to have followed the PostgreSQL download and set up tutorial found [here](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). The user also has the option of connecting to another server group in which they have priviledges to edit databases. This vignette operates under the assumption of a local server group established on the user's machine and that the user has created a database as in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). 
 
-## Create Database
-First, a connection is formed to the server group where the database will be housed.  Then the database is generated, the default name here is 'OFPE'.
+First, a connection is formed to the database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette, and the rest of the vignettes are working with an example database named 'OFPE' (as named in the tutorial).
 
-```{r}
+```{r, eval = FALSE}
+db <- dbConnect(dbDriver("PostgreSQL"), 
+                user="postgres",
+                password="<your_password>",   #
+                dbname="<your_db_name>", 
+                host="localhost",
+                port="5432") 
+```
 
+```{r, echo = FALSE}
+db <- dbConnect(dbDriver("PostgreSQL"), 
+                user="postgres",
+                password="Paul210220",   #
+                dbname="OFPE", 
+                host="localhost",
+                port="5432") 
 ```
 
 ## Load Extensions & Functions
-There are a couple 
+There are a couple extensions that need to be activated in the database. First is [PostGIS](https://postgis.net), an extension of PostgreSQL database, and the second is an extension of PostGIS enabling raster functionality. Finally, a function for creating a net across an area is made. These are the minimum extensions needed for the OFPE data cycle.
 
-# Format Database
+```{r}
+loadExtensions(db)
+```
+
 ## Build Schemas
 ## Build Tables
+
 
 # Update Database
 ## Import Farms

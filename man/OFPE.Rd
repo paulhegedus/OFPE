@@ -15,7 +15,7 @@ and generation of prescriptive application maps for optimized inputs.
 }
 \section{Database Creation & Managements}{
 
-See the Vignettes 1A and 1B for database management and updating examples.
+See Vignette 1 for database management and updating examples.
 
 The OFPE database creation and management functions and R6 class generators...
 }

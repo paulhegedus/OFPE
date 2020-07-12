@@ -10,10 +10,10 @@
 hush(code)
 }
 \arguments{
-\item{code}{Function or code.}
+\item{code}{Function or code chunk.}
 }
 \value{
-Execution of function or code.
+Result of function or code chunk.
 }
 \description{
 Suppress all output from function return. Useful for st_write. Credit goes
