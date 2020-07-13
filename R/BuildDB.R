@@ -137,6 +137,9 @@ BuildDB <- R6::R6Class(
     #' @param db Connection to a database.
     #' @return Built 'all_farms' tables
     buildTables = function(db = NULL) {
+      if (is.null(db)) {
+        db <- self$db
+      }
       DBI::dbSendQuery(
         db,
         "CREATE TABLE all_farms.farmers (
