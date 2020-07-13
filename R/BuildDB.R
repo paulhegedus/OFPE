@@ -1,6 +1,6 @@
-#' @title R6 Class for building OFPE database
+#' R6 Class for building OFPE database
 #'
-#' @description R6 class for for loading required extensions and
+#' R6 class for for loading required extensions and
 #' building the the OFPE database schemas and initial tables.
 BuildDB <- R6::R6Class(
   "BuildDB",
@@ -10,7 +10,7 @@ BuildDB <- R6::R6Class(
     #' @field postgis_version Version of PostGIS installed (i.e. 2.5, 3.0).
     postgis_version = NULL,
     #' @field farmers Vector of farmer names to use for building initial schemas.
-    postgis_version = NULL,
+    farmers = NULL,
 
     #' @description
     #' Create a database builder object.
@@ -30,18 +30,19 @@ BuildDB <- R6::R6Class(
     #' Execute database builder functions.
     buildDatabase = function() {
       private$.loadExtensions()
-      private$.buildSchemas()
-      private$.buildTables()
+      # private$.buildSchemas()
+      # private$.buildTables()
     }
   ),
   private = list(
-    #' @description Loads extensions needed for OFPE database functions such
+    #' @description
+    #' Loads extensions needed for OFPE database functions such
     #' as PostGIS tools and a function for generating a net across an area of
     #' interest (see source).
     #' @param db Connection to a database.
     #' @param postgis_version character PostGIS version installed.
     #' @source \url{https://trac.osgeo.org/postgis/wiki/UsersWikiCreateFishnet}
-    .loadExtensions <- function(db = NULL, postgis_version = NULL) {
+    .loadExtensions = function(db = NULL, postgis_version = NULL) {
       extensions <- DBI::dbGetQuery(self$db, "SELECT * FROM pg_extension")
 
       if (as.numeric(self$postgis_version) >= 3) {
