@@ -123,6 +123,7 @@ buildDB <- BuildDB$new(db, "2.5", farmers)
 All methods are public for documentation purposes. It is recommended to run the buildDatabase() function that runs these functions in order.
 
 ```{r, eval = FALSE}
+# not run
 buildDB$buildDatabase()
 ```
 
