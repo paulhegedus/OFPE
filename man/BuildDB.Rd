@@ -18,7 +18,7 @@ building the the OFPE database schemas and initial tables.
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{db}}{Database connection, as in a <PostgreSQLConnection>.}
+\item{\code{db}}{Database connection, such as PostgreSQLConnection.}
 
 \item{\code{postgis_version}}{Version of PostGIS installed (i.e. 2.5, 3.0).}
 
@@ -63,6 +63,12 @@ A new \code{BuildDB} object.
 \if{latex}{\out{\hypertarget{method-buildDatabase}{}}}
 \subsection{Method \code{buildDatabase()}}{
 Execute database builder functions.
+@description
+Loads extensions needed for OFPE database functions such
+as PostGIS tools and a function for generating a net across an area of
+interest (see source).
+@param db Connection to a database.
+@param postgis_version character PostGIS version installed.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{BuildDB$buildDatabase()}\if{html}{\out{</div>}}
 }
