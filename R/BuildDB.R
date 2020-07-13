@@ -21,7 +21,7 @@ BuildDB <- R6::R6Class(
     #' @return A new `BuildDB` object.
     initialize = function(db = NA, postgis_version = NA, farmers = NA) {
       stopifnot(
-        class(farmers) == "character",
+        class(farmers) == "character"
       )
       self$db <- db
       self$postgis_version <- postgis_version
