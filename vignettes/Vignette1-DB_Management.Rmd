@@ -115,14 +115,25 @@ The BuildDB class is initialized with a database connection and a list of farmer
 
 For demonstrative purposes, not all of the farmers available in the example data from the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) package are used to initialize the database. This is to show how to add a farmer later in the Update Database section of this vignette.
 ```{r}
-
+farmers <- c("FarmerB", "FarmerC")
+buildDB <- BuildDB$new(db, "2.5", farmers)
 ```
+
+#### Build Database
+All methods are public for documentation purposes. It is recommended to run the buildDatabase() function that runs these functions in order.
+
+```{r, eval = FALSE}
+buildDB$buildDatabase()
+```
+
+This function simply runs each of the functions below in the intended order. Running these out of order will likely result in errors. Again, refer to the buildDatabase() function. 
 
 #### Load Extensions
 There are a couple extensions that need to be activated in the database. First is [PostGIS](https://postgis.net), an extension of PostgreSQL database, and the second is an extension of PostGIS enabling raster functionality. Finally, a function for creating a net across an area is made. These are the minimum extensions needed for the OFPE data cycle. 
 
+The function below does not require arguments if you provided all arguments to the initializer function. If you provide arguments, they will be used rather than the attributes you initialized the object with.
 ```{r}
-
+buildDB$loadExtensions()
 ```
 
 #### Build Schemas

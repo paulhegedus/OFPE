@@ -1,6 +1,6 @@
-#' R6 Class for building OFPE database
+#' @title R6 Class for building OFPE database
 #'
-#' R6 class for for loading required extensions and
+#' @description R6 class for for loading required extensions and
 #' building the the OFPE database schemas and initial tables.
 BuildDB <- R6::R6Class(
   "BuildDB",
@@ -28,41 +28,50 @@ BuildDB <- R6::R6Class(
     },
 
     #' @description
-    #' Execute database builder functions.
+    #' Execute database builder functions. Runs, loadExtension(), buildSchemas(),
+    #' and buildTables().
+    #' @param None No arguments needed because they are provided during class
+    #' initialization.
     buildDatabase = function() {
-      private$.loadExtensions()
-      # private$.buildSchemas()
-      # private$.buildTables()
-    }
-  ),
-  private = list(
-    #'  @description
+      loadExtensions()
+      buildSchemas()
+      buildTables()
+    },
+
+    #' @description
     #' Loads extensions needed for OFPE database functions such
     #' as PostGIS tools and a function for generating a net across an area of
-    #' interest (see source).
-    #'  @param db Connection to a database.
-    #'  @param postgis_version character PostGIS version installed.
+    #' interest (see source). No arguments needed if provided on class
+    #' initialization.
+    #' @param db Connection to a database.
+    #' @param postgis_version character PostGIS version installed.
     #' @source \url{https://trac.osgeo.org/postgis/wiki/UsersWikiCreateFishnet}
-    .loadExtensions = function() {
-      extensions <- DBI::dbGetQuery(self$db, "SELECT * FROM pg_extension")
+    loadExtensions = function(db = NULL, postgis_version = NULL) {
+      if (is.null(db)) {
+        db <- self$db
+      }
+      if (is.null(postgis_version)) {
+        postgis_version <- self$postgis_version
+      }
+      extensions <- DBI::dbGetQuery(db, "SELECT * FROM pg_extension")
 
-      if (as.numeric(self$postgis_version) >= 3) {
+      if (as.numeric(postgis_version) >= 3) {
         if (!any(grepl("postgis", extensions$extname))) {
-          DBI::dbSendQuery(self$db, paste0("CREATE EXTENSION postgis;
+          DBI::dbSendQuery(db, paste0("CREATE EXTENSION postgis;
                                CREATE EXTENSION postgis_raster;"))
         } else {
           if (!any(grepl("postgis_raster", extensions$extname))) {
-            DBI::dbSendQuery(self$db,
+            DBI::dbSendQuery(db,
                              paste0("CREATE EXTENSION postgis_raster;"))
           }
         }
       } else {
         if (!any(grepl("postgis", extensions$extname))) {
-          DBI::dbSendQuery(self$db, paste0("CREATE EXTENSION postgis;"))
+          DBI::dbSendQuery(db, paste0("CREATE EXTENSION postgis;"))
         }
       }
       DBI::dbSendQuery(
-        self$db,
+        db,
         paste0("
           CREATE OR REPLACE FUNCTION ST_CreateFishnet(
              nrow integer, ncol integer,

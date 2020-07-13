@@ -7,11 +7,6 @@
 \url{https://trac.osgeo.org/postgis/wiki/UsersWikiCreateFishnet}
 }
 \description{
-R6 Class for building OFPE database
-
-R6 Class for building OFPE database
-}
-\details{
 R6 class for for loading required extensions and
 building the the OFPE database schemas and initial tables.
 }
@@ -31,6 +26,7 @@ building the the OFPE database schemas and initial tables.
 \itemize{
 \item \href{#method-new}{\code{BuildDB$new()}}
 \item \href{#method-buildDatabase}{\code{BuildDB$buildDatabase()}}
+\item \href{#method-loadExtensions}{\code{BuildDB$loadExtensions()}}
 \item \href{#method-clone}{\code{BuildDB$clone()}}
 }
 }
@@ -62,17 +58,42 @@ A new \code{BuildDB} object.
 \if{html}{\out{<a id="method-buildDatabase"></a>}}
 \if{latex}{\out{\hypertarget{method-buildDatabase}{}}}
 \subsection{Method \code{buildDatabase()}}{
-Execute database builder functions.
-@description
-Loads extensions needed for OFPE database functions such
-as PostGIS tools and a function for generating a net across an area of
-interest (see source).
-@param db Connection to a database.
-@param postgis_version character PostGIS version installed.
+Execute database builder functions. Runs, loadExtension(), buildSchemas(),
+and buildTables().
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{BuildDB$buildDatabase()}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{None}}{No arguments needed because they are provided during class
+initialization.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-loadExtensions"></a>}}
+\if{latex}{\out{\hypertarget{method-loadExtensions}{}}}
+\subsection{Method \code{loadExtensions()}}{
+Loads extensions needed for OFPE database functions such
+as PostGIS tools and a function for generating a net across an area of
+interest (see source). No arguments needed if provided on class
+initialization.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{BuildDB$loadExtensions(db = NULL, postgis_version = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{db}}{Connection to a database.}
+
+\item{\code{postgis_version}}{character PostGIS version installed.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}
