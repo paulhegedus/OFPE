@@ -120,7 +120,7 @@ buildDB <- BuildDB$new(db, "2.5", farmers)
 #### Build Database
 All methods are public for documentation purposes. It is recommended to run the buildDatabase() function that runs these functions in order.
 
-```{r, eval = FALSE}
+```{r}
 # not run
 buildDB$buildDatabase()
 ```
@@ -131,21 +131,21 @@ This function simply runs each of the functions below in the intended order. Run
 There are a couple extensions that need to be activated in the database. First is [PostGIS](https://postgis.net), an extension of PostgreSQL database, and the second is an extension of PostGIS enabling raster functionality. Finally, a function for creating a net across an area is made. These are the minimum extensions needed for the OFPE data cycle. 
 
 The function below does not require arguments if you provided all arguments to the initializer function. If you provide arguments, they will be used rather than the attributes you initialized the object with.
-```{r}
+```{r, eval = FALSE}
 buildDB$loadExtensions()
 ```
 
 #### Build Schemas
 Additionally, the BuildDB object will generate two schemas for each farmer, one to hold raw and one to hold aggregated data. A general schema called 'all_farms' is also built. 
 
-```{r}
+```{r, eval = FALSE}
 buildDB$buildSchemas()
 ```
 
 #### Build Tables
 There are three tables that are initialized when building the OFPE database. These three initial tables are created in the 'all_farms' schema; 'farmers', 'farms', and 'fields' which are filled in using the updater functions below.
 
-```{r}
+```{r, eval = FALSE}
 buildDB$buildTables()
 ```
 

@@ -34,9 +34,9 @@ BuildDB <- R6::R6Class(
     #' @param None No arguments needed because they are provided during class
     #' initialization.
     buildDatabase = function() {
-      loadExtensions()
-      buildSchemas()
-      buildTables()
+      self$loadExtensions()
+      self$buildSchemas()
+      self$buildTables()
     },
 
     #' @description
