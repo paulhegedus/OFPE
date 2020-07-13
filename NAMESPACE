@@ -2,6 +2,5 @@
 
 export(BuildDB)
 export(hush)
-export(loadExtensions)
 importFrom(R6,R6Class)
 importFrom(magrittr,"%>%")
