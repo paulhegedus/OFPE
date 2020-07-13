@@ -18,7 +18,7 @@ BuildDB <- R6::R6Class(
     #' @param db Database connection.
     #' @param postgis_version Version of PostGIS.
     #' @param farmers Vector of farmer names.
-    #' @return A new `BuildDB` object.
+    #' @return A new 'BuildDB' object.
     initialize = function(db = NA, postgis_version = NA, farmers = NA) {
       stopifnot(
         class(farmers) == "character"
@@ -43,9 +43,12 @@ BuildDB <- R6::R6Class(
     #' Loads extensions needed for OFPE database functions such
     #' as PostGIS tools and a function for generating a net across an area of
     #' interest (see source). No arguments needed if provided on class
-    #' initialization.
+    #' initialization, otherwise arguments provided take precedence.
+    #' ST_CreateFishnet was written by the PostGIS team and built in this
+    #' method, see source for reference and credit.
     #' @param db Connection to a database.
-    #' @param postgis_version character PostGIS version installed.
+    #' @param postgis_version PostGIS version installed.
+    #' @return Enabled database extensions.
     #' @source \url{https://trac.osgeo.org/postgis/wiki/UsersWikiCreateFishnet}
     loadExtensions = function(db = NULL, postgis_version = NULL) {
       if (is.null(db)) {
@@ -90,6 +93,70 @@ BuildDB <- R6::R6Class(
           ) AS foo;
           $$ LANGUAGE sql IMMUTABLE STRICT;
         ")
+      )
+    },
+
+    #' @description
+    #' Builds the skeleton of the database. Two schemas for each farmer supplied
+    #' is built; one for holding raw data collected on-farms from equipment, and
+    #' another for storing aggregated data files. A general schema call 'all_farms'
+    #' is also created to hold data that is not farmer specific or farm-wide data.
+    #' No arguments needed if provided on class initialization, otherwise arguments
+    #' provided take precedence.
+    #' @param db Connection to a database.
+    #' @param farmers Vector of farmer names.
+    #' @return Built database schemas.
+    buildSchemas = function(db = NULL, farmers = NULL) {
+      if (is.null(db)) {
+        db <- self$db
+      }
+      if (is.null(farmers)) {
+        farmers <- self$farmers
+      }
+      farmSchemas <- rep(farmers, each = 2) %>%
+        paste0(c("_r", "_a"))
+      schemas <- c("all_farms", farmSchemas)
+
+      for (i in 1:length(schemas)) {
+        DBI::dbSendQuery(db, paste0("CREATE SCHEMA ", schemas[i]))
+      }
+    },
+
+    #' @description
+    #' Builds initial tables in the 'all_farms' schema. None of these tables
+    #' are filled with information. These tables will be filled with methods
+    #' in the UpdateDB class. The tables created are 'farmers' with an integer
+    #' column for a farmer ID and column for the farmer name. The 'farms' table
+    #' contains an ID column, and columns for the name of the farm and the ID of
+    #' the farmer who owns it. The 'fields' table contains an ID column for
+    #' sections of the field, a field ID, the ID of the farm the field falls
+    #' within, the farmer's ID, and the name of the field. Geometry columns are
+    #' also added to the 'farms' and 'fields' tables. No arguments needed if
+    #' provided on class initialization, otherwise arguments provided take
+    #' precedence.
+    #' @param db Connection to a database.
+    #' @return Built 'all_farms' tables
+    buildTables = function(db = NULL) {
+      DBI::dbSendQuery(
+        db,
+        "CREATE TABLE all_farms.farmers (
+           farmeridx INTEGER NOT NULL,
+           farmer VARCHAR(100) NOT NULL,
+           PRIMARY KEY (farmeridx));
+        CREATE TABLE all_farms.farms (
+           farmidx INTEGER NOT NULL,
+           farm VARCHAR(100) NOT NULL,
+           farmeridx INTEGER REFERENCES all_farms.farmers(farmeridx),
+           PRIMARY KEY (farmidx));
+        ALTER TABLE all_farms.farms ADD COLUMN geom geometry;
+        CREATE TABLE all_farms.fields (
+          wfid INTEGER NOT NULL,
+          fieldidx INTEGER NOT NULL,
+          farmidx INTEGER REFERENCES all_farms.farms(farmidx),
+          farmeridx INTEGER REFERENCES all_farms.farmers(farmeridx),
+          fieldname VARCHAR(100) NOT NULL,
+          PRIMARY KEY (fieldidx,wfid));
+        ALTER TABLE all_farms.fields ADD COLUMN geom geometry;"
       )
     }
   )

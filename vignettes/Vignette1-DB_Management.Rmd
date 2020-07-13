@@ -96,11 +96,9 @@ ifelse(dir.exists(temp_path),
          dir.create(temp_path)},
        dir.create(temp_path)) %>% 
   invisible()
-hush(
-  mapply(function (x, y) st_write(x, paste0(temp_path, y, ".shp")),
+hush(mapply(function (x, y) st_write(x, paste0(temp_path, y, ".shp")),
             dat_list, 
-            names(dat_list))
-) %>% 
+            names(dat_list))) %>% 
   invisible()
 rm(dat_list, temp_path)
 ```
@@ -134,21 +132,21 @@ There are a couple extensions that need to be activated in the database. First i
 
 The function below does not require arguments if you provided all arguments to the initializer function. If you provide arguments, they will be used rather than the attributes you initialized the object with.
 ```{r}
-#buildDB$loadExtensions()
+buildDB$loadExtensions()
 ```
 
 #### Build Schemas
 Additionally, the BuildDB object will generate two schemas for each farmer, one to hold raw and one to hold aggregated data. A general schema called 'all_farms' is also built. 
 
 ```{r}
-
+buildDB$buildSchemas()
 ```
 
 #### Build Tables
 There are three tables that are initialized when building the OFPE database. These three initial tables are created in the 'all_farms' schema; 'farmers', 'farms', and 'fields' which are filled in using the updater functions below.
 
 ```{r}
-
+buildDB$buildTables()
 ```
 
 ## Update Database

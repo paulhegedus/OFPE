@@ -1,7 +1,8 @@
 #' @title Truly invisible output
 #'
-#' @description Suppress all output from function return. Useful for st_write. Credit goes
-#' to "Danny", https://stackoverflow.com/users/699385/danny.
+#' @description Suppress all output from function return. Useful
+#' for st_write and other functions that have chatty outputs. Credit
+#' goes to "Danny", https://stackoverflow.com/users/699385/danny.
 #'
 #' @param code Function or code chunk.
 #' @return Result of function or code chunk.

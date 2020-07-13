@@ -27,6 +27,8 @@ building the the OFPE database schemas and initial tables.
 \item \href{#method-new}{\code{BuildDB$new()}}
 \item \href{#method-buildDatabase}{\code{BuildDB$buildDatabase()}}
 \item \href{#method-loadExtensions}{\code{BuildDB$loadExtensions()}}
+\item \href{#method-buildSchemas}{\code{BuildDB$buildSchemas()}}
+\item \href{#method-buildTables}{\code{BuildDB$buildTables()}}
 \item \href{#method-clone}{\code{BuildDB$clone()}}
 }
 }
@@ -51,7 +53,7 @@ Create a database builder object.
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A new \code{BuildDB} object.
+A new 'BuildDB' object.
 }
 }
 \if{html}{\out{<hr>}}
@@ -80,7 +82,9 @@ initialization.}
 Loads extensions needed for OFPE database functions such
 as PostGIS tools and a function for generating a net across an area of
 interest (see source). No arguments needed if provided on class
-initialization.
+initialization, otherwise arguments provided take precedence.
+ST_CreateFishnet was written by the PostGIS team and built in this
+method, see source for reference and credit.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{BuildDB$loadExtensions(db = NULL, postgis_version = NULL)}\if{html}{\out{</div>}}
 }
@@ -90,9 +94,69 @@ initialization.
 \describe{
 \item{\code{db}}{Connection to a database.}
 
-\item{\code{postgis_version}}{character PostGIS version installed.}
+\item{\code{postgis_version}}{PostGIS version installed.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Enabled database extensions.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-buildSchemas"></a>}}
+\if{latex}{\out{\hypertarget{method-buildSchemas}{}}}
+\subsection{Method \code{buildSchemas()}}{
+Builds the skeleton of the database. Two schemas for each farmer supplied
+is built; one for holding raw data collected on-farms from equipment, and
+another for storing aggregated data files. A general schema call 'all_farms'
+is also created to hold data that is not farmer specific or farm-wide data.
+No arguments needed if provided on class initialization, otherwise arguments
+provided take precedence.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{BuildDB$buildSchemas(db = NULL, farmers = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{db}}{Connection to a database.}
+
+\item{\code{farmers}}{Vector of farmer names.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Built database schemas.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-buildTables"></a>}}
+\if{latex}{\out{\hypertarget{method-buildTables}{}}}
+\subsection{Method \code{buildTables()}}{
+Builds initial tables in the 'all_farms' schema. None of these tables
+are filled with information. These tables will be filled with methods
+in the UpdateDB class. The tables created are 'farmers' with an integer
+column for a farmer ID and column for the farmer name. The 'farms' table
+contains an ID column, and columns for the name of the farm and the ID of
+the farmer who owns it. The 'fields' table contains an ID column for
+sections of the field, a field ID, the ID of the farm the field falls
+within, the farmer's ID, and the name of the field. Geometry columns are
+also added to the 'farms' and 'fields' tables. No arguments needed if
+provided on class initialization, otherwise arguments provided take
+precedence.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{BuildDB$buildTables(db = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{db}}{Connection to a database.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Built 'all_farms' tables
 }
 }
 \if{html}{\out{<hr>}}
