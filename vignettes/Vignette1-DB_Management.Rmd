@@ -9,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 # Introduction
-This is the first tutorial in the OFPE data workflow and the intiial step before the OFPE data cycle. This vignette is only needed once per database. Please see [Vignette1B-DB_Update]() for a tutorial on updating database information. More information on creating the database can be found [here](https://paulhegedus.github.io/OFPE-Website/db_creation.html).
+This is the first tutorial in the OFPE data workflow and typically the initial step before the OFPE data cycle. The Update Database section below can be used to add new farmers, farms, or fields to the database. More information on creating the database can be found on this [page](https://paulhegedus.github.io/OFPE-Website/db_creation.html) at the [OFPE Technical Website](https://paulhegedus.github.io/OFPE-Website/index.html).
 
 This process begins with the creation of a spatial database for storing data gathered from farms and from satellite sources. This database is set up in  a specific OFPE format to support the ensuing workflow and requires the user to specify the boundaries of fields selected for data intensive management and the farm boundary within which a farmer's fields fall. This is a one-time process where once the database is set up it will only need management to keep it up to date.
 
@@ -17,12 +17,27 @@ The user will need access to a server or need to create their own. In order to d
 
 The user will need access to or need to create necessary farm and field boundaries associated with their experimental fields to set up their database. These farm boundaries that encompass the fields within a farmer's ownership/management purview are imported as assets into Google Earth Engine and imported into the database. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html) for creating a shapefile of a field or farm boundary. These are necessary for identifying data based on geographic location rather than searching files for information keying in on field or farm specific information. Farm boundaries are also used as the bounding boxes for downloading Google Earth Engine data.
 
-The process for creating a database is outlined in the activity diagram on [this page](https://paulhegedus.github.io/OFPE-Website/db_creation.html), where a component diagram can also be found.
+The process for creating a database is outlined in the activity diagram on this [page](https://paulhegedus.github.io/OFPE-Website/db_creation.html), where a component diagram can also be found.
 
-# Set-Up
-This vignette uses example data located in the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) R-package. This vigette downloads data from the OFPE package in order to demonstrate a realistic data workflow. NOTE that when using this code in the real world this first step is irrelevant.
+# Resources
+The resources below are strongly recommended as supplemental information regarding the use and intent of this vignette and associated functions.
 
-### Load packages and example data
+  * [OFPE Project Website](https://sites.google.com/site/ofpeframework/): Project information and products from the MSU OFPE project.
+  * [OFPE Technical Website](https://paulhegedus.github.io/OFPE-Website/index.html): Website with more detailed descriptions of the OFPE data cycle and workflow, as well as tutorials for external data processes that cannot be performed in R.
+  * [OFPE Overview](https://paulhegedus.github.io/OFPE-Website/ofpe_overview.html): Page of the OFPE Technical Website describing an overview of the OFPE data cycle and workflow.
+  * [OFPE Database Management](https://paulhegedus.github.io/OFPE-Website/db_management.html): Detailed description of the OFPE database set up
+  * [PostgreSQL Database Set-Up](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html): Tutorial for downloading PostgreSQL and PostGIS and creating a spatial database. 
+  * [Create ESRI Shapefiles](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html): Tutorial for creating ESRI shapefiles for farm and field boundaries required for the OFPE data cycle.
+
+The [PostgreSQL Database Set-Up](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html) tutorial is required before using this vignette. It is recommended that the database created is named 'OFPE' for continuity with the rest of these vignettes.
+
+# Workflow
+The sections below describe the process of building and setting up an intitial OFPE database for the first time and loading data into the database. The initial seciton loads the required packages and connects to the database. If the user does not have farm and field boundaries to upload, use the section for setting up example data in order to follow along with this and all of the vignettes.
+
+## Set-Up
+The below contains the packages used in the vignette and a demonstration of connecting to your database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette uses example data located in the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) R-package. This vignette downloads data from the OFPE package in order to demonstrate a realistic data workflow. 
+
+#### Load Packages
 
 ```{r setup, message = FALSE}
 #devtools::install_github("paulhegedus/OFPE")
@@ -30,46 +45,12 @@ This vignette uses example data located in the [OFPEDATA](https://github.com/pau
 library(OFPE)
 library(OFPEDATA)
 library(sf)
-library(dplyr)
 library(RPostgreSQL)
 ```
 
-### Prepare Example Data
-This section is for creating a folder that contains the experimental field and farm boundaries. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html) for creating a shapefile of a field or farm boundary. **NOTE:** when using your own data, this section is irrelevant. 
+#### Connect to Database
 
-First, get the names of the data in the OFPEDATA package that has example data for these vignettes. Isolate the names of data corresponding to field or farm boundaries, labeled with 'bbox'. Extract from OFPEDATA.
-```{r}
-dat <- data(package = "OFPEDATA")
-dat_names <- dat$results[, "Item"] %>%
-  subset(grepl("_bbox", dat$results[, "Item"]))
-dat_list <- as.list(dat_names) %>%
-  `names<-`(dat_names) %>% 
-  lapply(function (x) eval(parse(text = x)))
-rm(dat, dat_names) 
-```
-
-Second, save boundaries to a temporary folder. Again, in your real world situation you do not need to do this. **NOTE:** This example will create a temporary folder called 'INIT_UPLOADS' in your home directory and WILL delete any folder called 'INIT_UPLOADS' in your home directory.
-```{r, message = FALSE}
-temp_path <- "~/INIT_UPLOADS/"
-ifelse(dir.exists(temp_path), 
-       {do.call(file.remove, list(list.files(temp_path, full.names = TRUE)));
-         file.remove(temp_path);
-         dir.create(temp_path)},
-       dir.create(temp_path)) %>% 
-  invisible()
-hush(
-  mapply(function (x, y) st_write(x, paste0(temp_path, y, ".shp")),
-            dat_list, 
-            names(dat_list))
-) %>% 
-  invisible()
-rm(dat_list, temp_path)
-```
-
-# Database Set-Up
-This section is for building the database and loading required extensions such as PostGIS. At this point, the user is expected to have followed the PostgreSQL download and set up tutorial found [here](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). The user also has the option of connecting to another server group in which they have priviledges to edit databases. This vignette operates under the assumption of a local server group established on the user's machine and that the user has created a database as in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). 
-
-First, a connection is formed to the database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette, and the rest of the vignettes are working with an example database named 'OFPE' (as named in the tutorial).
+First, a connection is formed to the database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette, and the rest of the vignettes are working with an example database named 'OFPE' (as named in the tutorial). Insert password and dbname 
 
 ```{r, eval = FALSE}
 db <- dbConnect(dbDriver("PostgreSQL"), 
@@ -89,23 +70,86 @@ db <- dbConnect(dbDriver("PostgreSQL"),
                 port="5432") 
 ```
 
-## Load Extensions & Functions
-There are a couple extensions that need to be activated in the database. First is [PostGIS](https://postgis.net), an extension of PostgreSQL database, and the second is an extension of PostGIS enabling raster functionality. Finally, a function for creating a net across an area is made. These are the minimum extensions needed for the OFPE data cycle.
+
+#### Prepare Example Data
+This section is for creating a folder that contains the experimental field and farm boundaries. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html) for creating a shapefile of a field or farm boundary. **NOTE:** when using your own data, this section is irrelevant, but you still might want to check out that tutorial.
+
+First, get the names of the data in the OFPEDATA package that has example data for these vignettes. Isolate the names of data corresponding to field or farm boundaries, labeled with 'bbox'. Extract from OFPEDATA.
 
 ```{r}
-loadExtensions(db, "2.5") %>% invisible()
+dat <- data(package = "OFPEDATA")
+dat_names <- dat$results[, "Item"] %>%
+  subset(grepl("_bbox", dat$results[, "Item"]))
+dat_list <- as.list(dat_names) %>%
+  `names<-`(dat_names) %>% 
+  lapply(function (x) eval(parse(text = x)))
+rm(dat, dat_names) 
 ```
 
-## Build Schemas
-## Build Tables
+Second, save boundaries to a temporary folder. Again, in your real world situation you do not need to do this. **NOTE:** This example will create a temporary folder called 'INIT_UPLOADS' in your home directory and WILL delete any folder called 'INIT_UPLOADS' in your home directory.
 
+```{r, message = FALSE}
+temp_path <- "~/INIT_UPLOADS/"
+ifelse(dir.exists(temp_path), 
+       {do.call(file.remove, list(list.files(temp_path, full.names = TRUE)));
+         file.remove(temp_path);
+         dir.create(temp_path)},
+       dir.create(temp_path)) %>% 
+  invisible()
+hush(
+  mapply(function (x, y) st_write(x, paste0(temp_path, y, ".shp")),
+            dat_list, 
+            names(dat_list))
+) %>% 
+  invisible()
+rm(dat_list, temp_path)
+```
 
-# Update Database
-## Import Farms
-## Import Fields
-## Spatial Indices
+## Build Database
+This section is for building the database and loading required extensions such as PostGIS. At this point, the user is expected to have followed the PostgreSQL download and set up tutorial found in the [link](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html) below. This is the first step of the OFPE data cycle and should only be required once. If adding more farmers, fields, or farms to the database, see the Update Database section below. This section utilizes an R6 Class called BuildDB that is used to build and set-up an OFPE formatted database. This vignette operates under the assumption of a local server group established on the user's machine and that the user has created a database as in tutorial below. 
 
+  * PostgreSQL Database Set-Up : [Tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html)
 
+#### Initialize BuildDB
+The BuildDB class is initialized with a database connection and a list of farmers for which to build schemas for. This list of farmers does not need to be exhaustive, as farmers can be added later. When adding farmers using the UpdateDB class (see section below), the appropriate schemas will be built. This BuildDB class is only for use when setting up an OFPE database for the first time.
+
+For demonstrative purposes, not all of the farmers available in the example data from the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) package are used to initialize the database. This is to show how to add a farmer later in the Update Database section of this vignette.
+```{r}
+
+```
+
+#### Load Extensions
+There are a couple extensions that need to be activated in the database. First is [PostGIS](https://postgis.net), an extension of PostgreSQL database, and the second is an extension of PostGIS enabling raster functionality. Finally, a function for creating a net across an area is made. These are the minimum extensions needed for the OFPE data cycle. 
+
+```{r}
+
+```
+
+#### Build Schemas
+Additionally, the BuildDB object will generate two schemas for each farmer, one to hold raw and one to hold aggregated data. A general schema called 'all_farms' is also built. 
+
+```{r}
+
+```
+
+#### Build Tables
+There are three tables that are initialized when building the OFPE database. These three initial tables are created in the 'all_farms' schema; 'farmers', 'farms', and 'fields' which are filled in using the updater functions below.
+
+```{r}
+
+```
+
+## Update Database
+#### Import Farms
+#### Import Fields
+#### Spatial Indices
+
+# Clean-Up
+Whenever a database connection is open it needs to be closed.
+
+```{r}
+dbDisconnect(db) %>% invisible()
+```
 
 
 

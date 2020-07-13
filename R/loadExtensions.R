@@ -12,15 +12,20 @@
 loadExtensions <- function(db, postgis_version) {
   extensions <- DBI::dbGetQuery(db, "SELECT * FROM pg_extension")
 
-  if (!any(grepl("postgis", extensions$extname))) {
-    if (as.numeric(postgis_version) >= 3) {
+  if (as.numeric(postgis_version) >= 3) {
+    if (!any(grepl("postgis", extensions$extname))) {
       DBI::dbSendQuery(db, paste0("CREATE EXTENSION postgis;
                                CREATE EXTENSION postgis_raster;"))
     } else {
+      if (!any(grepl("postgis_raster", extensions$extname))) {
+        DBI::dbSendQuery(db, paste0("CREATE EXTENSION postgis_raster;"))
+      }
+    }
+  } else {
+    if (!any(grepl("postgis", extensions$extname))) {
       DBI::dbSendQuery(db, paste0("CREATE EXTENSION postgis;"))
     }
   }
-
   DBI::dbSendQuery(
     db,
     paste0("
@@ -41,7 +46,4 @@ loadExtensions <- function(db, postgis_version) {
         $$ LANGUAGE sql IMMUTABLE STRICT;
     ")
   )
-
-
-
 }
