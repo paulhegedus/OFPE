@@ -133,7 +133,7 @@ There are a couple extensions that need to be activated in the database. First i
 
 The function below does not require arguments if you provided all arguments to the initializer function. If you provide arguments, they will be used rather than the attributes you initialized the object with.
 ```{r}
-buildDB$loadExtensions()
+#buildDB$loadExtensions()
 ```
 
 #### Build Schemas

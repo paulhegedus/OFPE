@@ -2,6 +2,7 @@
 #'
 #' @description R6 class for for loading required extensions and
 #' building the the OFPE database schemas and initial tables.
+#' @export
 BuildDB <- R6::R6Class(
   "BuildDB",
   public = list(
