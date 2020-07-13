@@ -148,16 +148,16 @@ BuildDB <- R6::R6Class(
            farm VARCHAR(100) NOT NULL,
            farmeridx INTEGER REFERENCES all_farms.farmers(farmeridx),
            PRIMARY KEY (farmidx));
-        ALTER TABLE all_farms.farms ADD COLUMN geom geometry;
         CREATE TABLE all_farms.fields (
           wfid INTEGER NOT NULL,
           fieldidx INTEGER NOT NULL,
           farmidx INTEGER REFERENCES all_farms.farms(farmidx),
           farmeridx INTEGER REFERENCES all_farms.farmers(farmeridx),
           fieldname VARCHAR(100) NOT NULL,
-          PRIMARY KEY (fieldidx,wfid));
-        ALTER TABLE all_farms.fields ADD COLUMN geom geometry;"
+          PRIMARY KEY (fieldidx,wfid));"
       )
+      DBI::dbSendQuery(db, "ALTER TABLE all_farms.farms ADD COLUMN geom geometry")
+      DBI::dbSendQuery(db, "ALTER TABLE all_farms.fields ADD COLUMN geom geometry")
     }
   )
 )
