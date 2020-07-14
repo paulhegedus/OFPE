@@ -77,7 +77,6 @@ db <- DBCon$new(
 )
 ```
 
-
 ### Prepare Example Data
 This section is for creating a folder that contains the experimental field and farm boundaries. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html) for creating a shapefile of a field or farm boundary. **NOTE:** when using your own data, this section is irrelevant, but you still might want to check out that tutorial.
 
@@ -103,7 +102,7 @@ ifelse(dir.exists(temp_path),
          dir.create(temp_path)},
        dir.create(temp_path)) %>% 
   invisible()
-mapply(function (x, y) st_write(x, paste0(temp_path, y, ".shp")),
+mapply(function (x, y) sf::st_write(x, paste0(temp_path, y, ".shp")),
             dat_list, 
             names(dat_list)) %>% 
   invisible()
