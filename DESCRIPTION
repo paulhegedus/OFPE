@@ -29,7 +29,6 @@ Depends: R (>= 3.0.0)
 Suggests: 
     knitr,
     rmarkdown,
-    OFPEDATA,
     RPostgreSQL
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -42,4 +41,6 @@ Imports:
     magrittr,
     sf,
     DBI,
-    R6
+    R6,
+    OFPEDATA
+
