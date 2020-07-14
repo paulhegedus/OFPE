@@ -101,9 +101,9 @@ ifelse(dir.exists(temp_path),
          dir.create(temp_path)},
        dir.create(temp_path)) %>% 
   invisible()
-hush(mapply(function (x, y) st_write(x, paste0(temp_path, y, ".shp")),
+mapply(function (x, y) st_write(x, paste0(temp_path, y, ".shp")),
             dat_list, 
-            names(dat_list))) %>% 
+            names(dat_list)) %>% 
   invisible()
 rm(dat_list, temp_path)
 ```
