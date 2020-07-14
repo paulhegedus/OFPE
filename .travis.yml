@@ -4,11 +4,10 @@ language: R
 cache: packages
 sudo: required
 
-addons:
-  homebrew:
-    packages:
-    - pkg-config
-    - gdal
+before_install:
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install pkg-config || echo "fail 1"; fi;
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install gdal || echo "fail 2"; fi;
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then Rscript -e "install.packages('sf', configure.args = '--with-proj-lib=/usr/local/lib/')"; fi;
 
 r_packages:
   - sf
