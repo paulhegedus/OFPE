@@ -44,9 +44,9 @@ The below contains the packages used in the vignette and a demonstration of conn
 
 ### Load Packages
 
-```{r setup, message = FALSE}
+```{r setup, message = FALSE, eval = FALSE}
 #devtools::install_github("paulhegedus/OFPE")
-devtools::install_github("paulhegedus/OFPEDATA")
+#devtools::install_github("paulhegedus/OFPEDATA")
 library(OFPE)
 library(OFPEDATA)
 library(sf)
@@ -66,7 +66,7 @@ db <- dbConnect(dbDriver("PostgreSQL"),
                 port="5432") 
 ```
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, eval = FALSE}
 db <- dbConnect(dbDriver("PostgreSQL"), 
                 user="postgres",
                 password="Paul210220",   #
@@ -81,7 +81,7 @@ This section is for creating a folder that contains the experimental field and f
 
 First, get the names of the data in the OFPEDATA package that has example data for these vignettes. Isolate the names of data corresponding to field or farm boundaries, labeled with 'bbox'. Extract from OFPEDATA.
 
-```{r}
+```{r, eval = FALSE}
 dat <- data(package = "OFPEDATA")
 dat_names <- dat$results[, "Item"] %>%
   subset(grepl("_bbox", dat$results[, "Item"]))
@@ -93,7 +93,7 @@ rm(dat, dat_names)
 
 Second, save boundaries to a temporary folder. Again, in your real world situation you do not need to do this. **NOTE:** This example will create a temporary folder called 'INIT_UPLOADS' in your home directory and WILL delete any folder called 'INIT_UPLOADS' in your home directory.
 
-```{r, message = FALSE}
+```{r, eval = FALSE}
 temp_path <- "~/INIT_UPLOADS/"
 ifelse(dir.exists(temp_path), 
        {do.call(file.remove, list(list.files(temp_path, full.names = TRUE)));
@@ -118,7 +118,7 @@ The BuildDB class is initialized with a database connection and a list of farmer
 
 For demonstrative purposes, not all of the farmers available in the example data from the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) package are used to initialize the database. This is to show how to add a farmer later in the Manage Database section of this vignette.
 
-```{r}
+```{r, eval = FALSE}
 farmers <- c("FarmerB", "FarmerC")
 buildDB <- BuildDB$new(db, "2.5", farmers)
 ```
@@ -158,7 +158,7 @@ For demonstrative purposes, not all of the farmers available in the example data
 #### Initial Parameters
 Initial parameters are provided below. When using your own data you will have different farm and field names. And perhaps a lot more than two. First, supply your inputs, this example uses the same 'farmers' as defined above. 
 
-```{r}
+```{r, eval = FALSE}
 farm_names <- c("FarmerB_FarmName", "FarmerC_FarmName")
 farm_path <- "~/INIT_UPLOADS/"
 
@@ -171,7 +171,7 @@ The ManageDB class is initialized with a database connection, and a list of meth
 
 Any or all of these can be ran at any time in any order, however the user needs to be logical. If you are updating a new field from a new farmer but haven't added the new farm yet, no association with a farm can be made with the field, because the farm doesn't exist. Start at coarse spatial scales (farmers, farms) and then upload finer scale data (fields).
 
-```{r}
+```{r, eval = FALSE}
 action_list <- list(
   list(
     action = "updateFarmers",
@@ -220,7 +220,7 @@ This vignette provided a demonstration of how to set-up a freshly created databa
 Although the classes in this vignette interact with the database, none of them include any methods for deleting information. It is expected that the user will be able to execute a database query to remove any unwanted information.
 
 Whenever a database connection is open it needs to be closed.
-```{r}
+```{r, eval = FALSE}
 dbDisconnect(db) %>% invisible()
 ```
 
