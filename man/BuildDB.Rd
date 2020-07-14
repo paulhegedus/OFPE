@@ -26,9 +26,9 @@ building the the OFPE database schemas and initial tables.
 \itemize{
 \item \href{#method-new}{\code{BuildDB$new()}}
 \item \href{#method-buildDatabase}{\code{BuildDB$buildDatabase()}}
-\item \href{#method-loadExtensions}{\code{BuildDB$loadExtensions()}}
-\item \href{#method-buildSchemas}{\code{BuildDB$buildSchemas()}}
-\item \href{#method-buildTables}{\code{BuildDB$buildTables()}}
+\item \href{#method-.loadExtension}{\code{BuildDB$.loadExtension()}}
+\item \href{#method-.buildSchemas}{\code{BuildDB$.buildSchemas()}}
+\item \href{#method-.buildTables}{\code{BuildDB$.buildTables()}}
 \item \href{#method-clone}{\code{BuildDB$clone()}}
 }
 }
@@ -60,8 +60,8 @@ A new 'BuildDB' object.
 \if{html}{\out{<a id="method-buildDatabase"></a>}}
 \if{latex}{\out{\hypertarget{method-buildDatabase}{}}}
 \subsection{Method \code{buildDatabase()}}{
-Execute database builder functions. Runs, loadExtension(), buildSchemas(),
-and buildTables().
+Execute database builder functions. Runs, loadExtension(), .buildSchemas(),
+and .buildTables().
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{BuildDB$buildDatabase()}\if{html}{\out{</div>}}
 }
@@ -76,17 +76,18 @@ initialization.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-loadExtensions"></a>}}
-\if{latex}{\out{\hypertarget{method-loadExtensions}{}}}
-\subsection{Method \code{loadExtensions()}}{
+\if{html}{\out{<a id="method-.loadExtension"></a>}}
+\if{latex}{\out{\hypertarget{method-.loadExtension}{}}}
+\subsection{Method \code{.loadExtension()}}{
 Loads extensions needed for OFPE database functions such
 as PostGIS tools and a function for generating a net across an area of
 interest (see source). No arguments needed if provided on class
 initialization, otherwise arguments provided take precedence.
 ST_CreateFishnet was written by the PostGIS team and built in this
-method, see source for reference and credit.
+method, see source for reference and credit. The dot indicates that this
+function would be private if not for documentations sake.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{BuildDB$loadExtensions(db = NULL, postgis_version = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{BuildDB$.loadExtension(db = NULL, postgis_version = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -103,17 +104,18 @@ Enabled database extensions.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-buildSchemas"></a>}}
-\if{latex}{\out{\hypertarget{method-buildSchemas}{}}}
-\subsection{Method \code{buildSchemas()}}{
+\if{html}{\out{<a id="method-.buildSchemas"></a>}}
+\if{latex}{\out{\hypertarget{method-.buildSchemas}{}}}
+\subsection{Method \code{.buildSchemas()}}{
 Builds the skeleton of the database. Two schemas for each farmer supplied
 is built; one for holding raw data collected on-farms from equipment, and
 another for storing aggregated data files. A general schema call 'all_farms'
 is also created to hold data that is not farmer specific or farm-wide data.
 No arguments needed if provided on class initialization, otherwise arguments
-provided take precedence.
+provided take precedence. The dot indicates that this function would be
+private if not for documentations sake.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{BuildDB$buildSchemas(db = NULL, farmers = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{BuildDB$.buildSchemas(db = NULL, farmers = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -130,9 +132,9 @@ Built database schemas.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-buildTables"></a>}}
-\if{latex}{\out{\hypertarget{method-buildTables}{}}}
-\subsection{Method \code{buildTables()}}{
+\if{html}{\out{<a id="method-.buildTables"></a>}}
+\if{latex}{\out{\hypertarget{method-.buildTables}{}}}
+\subsection{Method \code{.buildTables()}}{
 Builds initial tables in the 'all_farms' schema. None of these tables
 are filled with information. These tables will be filled with methods
 in the UpdateDB class. The tables created are 'farmers' with an integer
@@ -143,9 +145,10 @@ sections of the field, a field ID, the ID of the farm the field falls
 within, the farmer's ID, and the name of the field. Geometry columns are
 also added to the 'farms' and 'fields' tables. No arguments needed if
 provided on class initialization, otherwise arguments provided take
-precedence.
+precedence. The dot indicates that this function would be private if not
+for documentations sake.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{BuildDB$buildTables(db = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{BuildDB$.buildTables(db = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

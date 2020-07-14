@@ -29,14 +29,14 @@ BuildDB <- R6::R6Class(
     },
 
     #' @description
-    #' Execute database builder functions. Runs, loadExtension(), buildSchemas(),
-    #' and buildTables().
+    #' Execute database builder functions. Runs, loadExtension(), .buildSchemas(),
+    #' and .buildTables().
     #' @param None No arguments needed because they are provided during class
     #' initialization.
     buildDatabase = function() {
-      self$loadExtensions()
-      self$buildSchemas()
-      self$buildTables()
+      self$.loadExtension()
+      self$.buildSchemas()
+      self$.buildTables()
     },
 
     #' @description
@@ -45,12 +45,13 @@ BuildDB <- R6::R6Class(
     #' interest (see source). No arguments needed if provided on class
     #' initialization, otherwise arguments provided take precedence.
     #' ST_CreateFishnet was written by the PostGIS team and built in this
-    #' method, see source for reference and credit.
+    #' method, see source for reference and credit. The dot indicates that this
+    #' function would be private if not for documentations sake.
     #' @param db Connection to a database.
     #' @param postgis_version PostGIS version installed.
     #' @return Enabled database extensions.
     #' @source \url{https://trac.osgeo.org/postgis/wiki/UsersWikiCreateFishnet}
-    loadExtensions = function(db = NULL, postgis_version = NULL) {
+    .loadExtension = function(db = NULL, postgis_version = NULL) {
       if (is.null(db)) {
         db <- self$db
       }
@@ -102,11 +103,12 @@ BuildDB <- R6::R6Class(
     #' another for storing aggregated data files. A general schema call 'all_farms'
     #' is also created to hold data that is not farmer specific or farm-wide data.
     #' No arguments needed if provided on class initialization, otherwise arguments
-    #' provided take precedence.
+    #' provided take precedence. The dot indicates that this function would be
+    #' private if not for documentations sake.
     #' @param db Connection to a database.
     #' @param farmers Vector of farmer names.
     #' @return Built database schemas.
-    buildSchemas = function(db = NULL, farmers = NULL) {
+    .buildSchemas = function(db = NULL, farmers = NULL) {
       if (is.null(db)) {
         db <- self$db
       }
@@ -133,10 +135,11 @@ BuildDB <- R6::R6Class(
     #' within, the farmer's ID, and the name of the field. Geometry columns are
     #' also added to the 'farms' and 'fields' tables. No arguments needed if
     #' provided on class initialization, otherwise arguments provided take
-    #' precedence.
+    #' precedence. The dot indicates that this function would be private if not
+    #' for documentations sake.
     #' @param db Connection to a database.
     #' @return Built 'all_farms' tables
-    buildTables = function(db = NULL) {
+    .buildTables = function(db = NULL) {
       if (is.null(db)) {
         db <- self$db
       }
