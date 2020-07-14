@@ -4,8 +4,5 @@ language: R
 cache: packages
 sudo: required
 
-install:
-- R -e 'install_github("r-spatial/sf", configure.args = "--with-proj-lib=/usr/local/lib/")'
-
 r_packages:
   - sf
