@@ -184,8 +184,8 @@ action_list <- list(
   ),
   list(
     action = "updateFields",
-    farm_names = field_names,
-    farm_path = field_path
+    field_names = field_names,
+    field_path = field_path
   )
 )
 ```
@@ -197,12 +197,12 @@ manageDB <- ManageDB$new(db, action_list)
 ```
 
 #### Execute ManageDB
-After a ManageDB class object has been created, the user can run the 'executeActions' method to add information to the database. The modularity of this class allows users to add methods that they have built and pass them into the executeAction method. For example, a user may want to build a method or two for deleting information. 
+After a ManageDB class object has been created and set up, the user can run the 'executeActions' method to add information to the database. The modularity of this class allows users to add methods that they have built and pass them into the executeAction method. For example, a user may want to build a method or two for deleting information or adding information to other tables. 
 
 After the user has initialized the class, running the executeAction method will run the functions associated with each action method.
 
 ```{r, eval = FALSE}
-
+manageDB$executeAction()
 ```
 
 Now there should be data filled in the 'farmers', 'farms', and 'fields' tables in the 'all_farms' schema of the database. The section below will demonstrate how to add another farmer and their associated farm and fields.

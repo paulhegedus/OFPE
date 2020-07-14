@@ -4,8 +4,8 @@ language: R
 cache: packages
 sudo: required
 
-apt_packages:
-    - gdal-bin
-    - libgdal-dev
-    - libxml2-dev
-    - libproj-dev
+addons:
+  homebrew:
+    packages:
+    - pkg-config
+    - gdal

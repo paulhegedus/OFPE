@@ -15,9 +15,9 @@ BuildDB <- R6::R6Class(
 
     #' @description
     #' Create a database builder object.
-    #' @param db Database connection.
-    #' @param postgis_version Version of PostGIS.
-    #' @param farmers Vector of farmer names.
+    #' @param db Database connection, such as PostgreSQLConnection.
+    #' @param postgis_version Version of PostGIS installed (i.e. 2.5, 3.0).
+    #' @param farmers Vector of farmer names to use for building initial schemas.
     #' @return A new 'BuildDB' object.
     initialize = function(db = NA, postgis_version = NA, farmers = NA) {
       stopifnot(
