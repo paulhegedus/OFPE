@@ -4,10 +4,8 @@ language: R
 cache: packages
 sudo: required
 
-before_install:
-  - brew install pkg-config; fi;
-  - brew install gdal; fi;
-  - Rscript -e "install.packages('sf', configure.args = '--with-proj-lib=/usr/local/lib/')"; fi;
+install:
+- R -e 'install_github("r-spatial/sf", configure.args = "--with-proj-lib=/usr/local/lib/")'
 
 r_packages:
   - sf
