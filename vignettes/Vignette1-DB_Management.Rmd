@@ -46,7 +46,7 @@ The below contains the packages used in the vignette and a demonstration of conn
 
 ```{r setup, message = FALSE}
 #devtools::install_github("paulhegedus/OFPE")
-#devtools::install_github("paulhegedus/OFPEDATA")
+devtools::install_github("paulhegedus/OFPEDATA")
 library(OFPE)
 library(OFPEDATA)
 library(sf)
