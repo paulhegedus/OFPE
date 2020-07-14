@@ -44,11 +44,11 @@ Create a database builder object.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{db}}{Database connection.}
+\item{\code{db}}{Database connection, such as PostgreSQLConnection.}
 
-\item{\code{postgis_version}}{Version of PostGIS.}
+\item{\code{postgis_version}}{Version of PostGIS installed (i.e. 2.5, 3.0).}
 
-\item{\code{farmers}}{Vector of farmer names.}
+\item{\code{farmers}}{Vector of farmer names to use for building initial schemas.}
 }
 \if{html}{\out{</div>}}
 }
