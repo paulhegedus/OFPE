@@ -3,9 +3,6 @@
 \name{ManageDB}
 \alias{ManageDB}
 \title{R6 Class for managing information in the OFPE database}
-\source{
-\url{https://trac.osgeo.org/postgis/wiki/UsersWikiCreateFishnet}
-}
 \description{
 R6 class for for adding information to the OFPE database
 such as new farmer names, farm names and boundaries, and experimental
@@ -28,8 +25,8 @@ to execute and their associated parameters.}
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-new}{\code{ManageDB$new()}}
-\item \href{#method-executeAction}{\code{ManageDB$executeAction()}}
-\item \href{#method-initializeActions}{\code{ManageDB$initializeActions()}}
+\item \href{#method-setupActions}{\code{ManageDB$setupActions()}}
+\item \href{#method-executeActions}{\code{ManageDB$executeActions()}}
 \item \href{#method-clone}{\code{ManageDB$clone()}}
 }
 }
@@ -37,7 +34,9 @@ to execute and their associated parameters.}
 \if{html}{\out{<a id="method-new"></a>}}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
-Create a database manager object.
+Create a database manager object. The database connection and each
+action class list is passed to an internal method that initializes
+the specified action classes.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ManageDB$new(db = NA, action_list = NA)}\if{html}{\out{</div>}}
 }
@@ -53,16 +52,41 @@ to execute and their associated parameters.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A new 'ManageDB' object.
+A new 'ManageDB' object with initialized action classes.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-executeAction"></a>}}
-\if{latex}{\out{\hypertarget{method-executeAction}{}}}
-\subsection{Method \code{executeAction()}}{
-Execute database manager action methods that the user specifies.
+\if{html}{\out{<a id="method-setupActions"></a>}}
+\if{latex}{\out{\hypertarget{method-setupActions}{}}}
+\subsection{Method \code{setupActions()}}{
+Prepares the R6 action classes supplied by the user in the
+'action_list' by running their setup methods that preprocess data
+prior to uploading to the OFPE database.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ManageDB$executeAction()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ManageDB$setupActions()}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{None}}{There are no arguments to this method as the list of
+actions was supplied upong initialization of the ManageDB class.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Prepared R6 action classes specified by the user.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-executeActions"></a>}}
+\if{latex}{\out{\hypertarget{method-executeActions}{}}}
+\subsection{Method \code{executeActions()}}{
+Executes the upload method of each action class that was passed in by
+the user and has been initialzied and set up. These methods upload the
+data prepared by each action's setup method.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ManageDB$executeActions()}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -73,27 +97,8 @@ initialization.}
 }
 \if{html}{\out{</div>}}
 }
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-initializeActions"></a>}}
-\if{latex}{\out{\hypertarget{method-initializeActions}{}}}
-\subsection{Method \code{initializeActions()}}{
-Initializes the a
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ManageDB$initializeActions()}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{db}}{Connection to a database.}
-
-\item{\code{postgis_version}}{PostGIS version installed.}
-}
-\if{html}{\out{</div>}}
-}
 \subsection{Returns}{
-Enabled database extensions.
+Data uploaded into the database.
 }
 }
 \if{html}{\out{<hr>}}

@@ -49,30 +49,32 @@ The below contains the packages used in the vignette and a demonstration of conn
 #devtools::install_github("paulhegedus/OFPEDATA")
 library(OFPE)
 library(OFPEDATA)
-library(sf)
-library(RPostgreSQL)
+#library(sf)
+#library(RPostgreSQL)
 ```
 
 ### Connect to Database
 
-First, a connection is formed to the database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette, and the rest of the vignettes are working with an example database named 'OFPE' (as named in the tutorial). Insert password and dbname 
+First, a connection is formed to the database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette, and the rest of the vignettes are working with an example database named 'OFPE' (as named in the tutorial). This package utilizes an R6 class for containing the database connection information and the connection itself. This class is PostgreSQL sp
 
 ```{r, eval = FALSE}
-db <- dbConnect(dbDriver("PostgreSQL"), 
-                user="postgres",
-                password="<your_password>",   #
-                dbname="<your_db_name>", 
-                host="localhost",
-                port="5432") 
+db <- DBCon$new(
+  user = "postgres",
+  password = "<your_password>",
+  dbname = "<your_db_name>", 
+  host = "localhost",
+  port = "5432"
+)
 ```
 
 ```{r, echo = FALSE, eval = FALSE}
-db <- dbConnect(dbDriver("PostgreSQL"), 
-                user="postgres",
-                password="Paul210220",   #
-                dbname="OFPE", 
-                host="localhost",
-                port="5432") 
+db <- DBCon$new(
+  user = "postgres",
+  password = "Paul210220",
+  dbname = "OFPE", 
+  host = "localhost",
+  port = "5432"
+)
 ```
 
 
@@ -190,15 +192,15 @@ action_list <- list(
 )
 ```
 
-Now, pass the arguments on to the ManageDB class generator along with a database connection. Each of the action R6 classes specified by the user have the same interface that includes setUp() and upload() methods. These are called from the ManageDB class automatically when it's initializeActions() method is called.
+Now, pass the arguments on to the ManageDB class generator along with a database connection. Each of the action R6 classes specified by the user have the same interface that includes setup() and upload() methods. These are called from the ManageDB class automatically when it's initializeActions() method is called.
 
 ```{r, eval = FALSE}
 manageDB <- ManageDB$new(db, action_list)
-manageDB$initializeActions()
+manageDB$setupActions()
 ```
 
 #### Execute ManageDB
-After a ManageDB class object has been created and set up, the user can run the 'executeActions' method to add information to the database. The modularity of this class allows users to add R6 classes that they have built and pass them into the executeAction method. For example, a user may want to build a method or two for deleting information or adding information to other tables. See this [page](https://stackoverflow.com/questions/40295279/r-how-do-i-add-an-extra-function-to-a-package) for information on how to add to a package.
+After a ManageDB class object has been created and set up, the user can run the 'executeActions' method to add information to the database. The modularity of this class allows users to add R6 classes that they have built and pass them into the executeAction method. For example, a user may want to build a method or two for deleting information or adding information to other tables. See this [page](https://stackoverflow.com/questions/40295279/r-how-do-i-add-an-extra-function-to-a-package) for information on how to add to a package or clone the [OFPE package](https://github.com/paulhegedus/OFPE.git) Github repository, add your own classes and re-install the package from your source files.
 
 After the user has initialized the class, running the executeAction method will run the functions associated with each action method.
 
