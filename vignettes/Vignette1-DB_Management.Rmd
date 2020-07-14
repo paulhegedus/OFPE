@@ -122,7 +122,7 @@ For demonstrative purposes, not all of the farmers available in the example data
 
 ```{r, eval = FALSE}
 farmers <- c("FarmerB", "FarmerC")
-buildDB <- BuildDB$new(db, "2.5", farmers)
+buildDB <- BuildDB$new(db$db, "2.5", farmers)
 ```
 
 ### Build Database
@@ -195,7 +195,7 @@ action_list <- list(
 Now, pass the arguments on to the ManageDB class generator along with a database connection. Each of the action R6 classes specified by the user have the same interface that includes setup() and upload() methods. These are called from the ManageDB class automatically when it's initializeActions() method is called.
 
 ```{r, eval = FALSE}
-manageDB <- ManageDB$new(db, action_list)
+manageDB <- ManageDB$new(db$db, action_list)
 manageDB$setupActions()
 ```
 
@@ -224,7 +224,7 @@ Although the classes in this vignette interact with the database, none of them i
 
 Whenever a database connection is open it needs to be closed.
 ```{r, eval = FALSE}
-dbDisconnect(db) %>% invisible()
+dbDisconnect(db$db) %>% invisible()
 ```
 
 

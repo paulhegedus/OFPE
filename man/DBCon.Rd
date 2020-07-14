@@ -33,7 +33,7 @@ functions and other R6 classes in the OFPE data workflow.
 Create a database connection inside of the DBCon class.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBCon$new(
-  drv = DBI::dbDriver("PostgreSQL"),
+  drv = RPostgreSQL::PostgreSQL(),
   user = NA,
   password = NA,
   dbname = NA,
@@ -45,7 +45,8 @@ Create a database connection inside of the DBCon class.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{drv}}{Database driver for connection. Default is PostgreSQL.}
+\item{\code{drv}}{Database driver for connection. Default is PostgreSQL
+but can be overrided by passing in an argument.}
 
 \item{\code{user}}{Username associated with the database owner.}
 
