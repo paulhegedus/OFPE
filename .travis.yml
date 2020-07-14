@@ -7,6 +7,8 @@ sudo: required
 addons:
   homebrew:
     packages:
-    - proj
-    - geos
-    - gdal2
+    - pkg-config
+    - gdal
+
+r_packages:
+  - sf

@@ -163,5 +163,3 @@ BuildDB <- R6::R6Class(
     }
   )
 )
-#' Loads PostGIS tools and
-#' a function for generating a net across an area of interest. From PostGIS website, see source.

@@ -17,44 +17,52 @@ ManageDB <- R6::R6Class(
     do_action = NULL,
 
     #' @description
-    #' Create a database manager object.
+    #' Create a database manager object. The database connection and each
+    #' action class list is passed to an internal method that initializes
+    #' the specified action classes.
     #' @param db Database connection.
     #' @param action_list List of lists with the names of the action methods
     #' to execute and their associated parameters.
-    #' @return A new 'ManageDB' object.
+    #' @return A new 'ManageDB' object with initialized action classes.
     initialize = function(db = NA, action_list = NA) {
       stopifnot(
         !is.null(action_list)
       )
       self$db <- db
       self$action_list <- action_list
-
-      self$do_actions <- lapply(self$action_list, private$.loadActions)
+      self$do_actions <- lapply(self$action_list, private$.initializeActions)
     },
     #' @description
-    #' Execute database manager action methods that the user specifies.
+    #' Prepares the R6 action classes supplied by the user in the
+    #' 'action_list' by running their setup methods that preprocess data
+    #' prior to uploading to the OFPE database.
+    #' @param None There are no arguments to this method as the list of
+    #' actions was supplied upong initialization of the ManageDB class.
+    #' @return Prepared R6 action classes specified by the user.
+    setupActions = function() {
+      lapply(self$do_actions, private$.setupActions)
+    },
+    #' @description
+    #' Executes the upload method of each action class that was passed in by
+    #' the user and has been initialzied and set up. These methods upload the
+    #' data prepared by each action's setup method.
     #' @param None No arguments needed because they are provided during class
     #' initialization.
-    executeAction = function() {
-      lapply(self$action_list, private$.runActions)
-    },
-    #' @description
-    #' Initializes the a
-    #' @param db Connection to a database.
-    #' @param postgis_version PostGIS version installed.
-    #' @return Enabled database extensions.
-    #' @source \url{https://trac.osgeo.org/postgis/wiki/UsersWikiCreateFishnet}
-    initializeActions = function() {
-
-
+    #' @return Data uploaded into the database.
+    executeActions = function() {
+      lapply(self$action_list, private$.executeActions)
     }
   ),
   private = list(
-    .runActions = function(action) {
-      action$setUp()
+    .initializeActions = function(action_item) {
+      init_text <- "$new(self$db, action_item)"
+      return(eval(parse(text = paste0(action_item$action, init_text))))
+    },
+    .setupActions = function(action) {
+      action$setup()
+    },
+    .executeActions = function(action) {
       action$upload()
     }
   )
 )
-#' Loads PostGIS tools and
-#' a function for generating a net across an area of interest. From PostGIS website, see source.
