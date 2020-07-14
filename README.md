@@ -8,7 +8,7 @@
 [![Project Status: WIP – Initial development is in progress, but there
 has not yet been a stable, usable release suitable for the
 public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-[![Last-changedate](https://img.shields.io/badge/last%20change-2020--07--11-yellowgreen.svg)](/commits/master)
+[![Last-changedate](https://img.shields.io/badge/last%20change-2020--07--13-yellowgreen.svg)](/commits/master)
 [![R build
 status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
 [![Build
@@ -59,10 +59,20 @@ Below (Fig. 1) is a schematic of the general On-Field Precision
 Experiments data workflow, with a more detailed description of the data
 handling process
 [here](https://paulhegedus.github.io/OFPE-Website/ofpe_overview.html).
-![**Figure 1.** OFPE data framework showing the circular process of
+
+<div class="figure" style="text-align: center">
+
+<img src="man/figures/ofpe_framework.png" alt="**Figure 1.** OFPE data framework showing the circular process of experiment creation and application, data collection, and prescription and experiment generation. Figured made by Bruce Maxwell (2015)." width="100%" />
+
+<p class="caption">
+
+**Figure 1.** OFPE data framework showing the circular process of
 experiment creation and application, data collection, and prescription
-and experiment generation. Figured made by Bruce Maxwell
-(2015).](man/figures/ofpe_framework.png)
+and experiment generation. Figured made by Bruce Maxwell (2015).
+
+</p>
+
+</div>
 
 More information/products of the MSU OFPE Project can be found at;
 
@@ -75,6 +85,19 @@ More information/products of the MSU OFPE Project can be found at;
     ([OFPEDATA](%5Bhere%5D\(https://github.com/paulhegedus/OFPEDATA.git\)))
   - [OFPE CropScan 3300H Visualization
     Application](https://paulhegedus.shinyapps.io/OFPE_Protein_Application/?_ga=2.69643152.1880072526.1592481594-590292424.1592115204)
+
+It is **strongly** recommended that the user familiarizes themselves
+with the OFPE project and the data workflow that this package supports
+by reading the general project information on the [OFPE Project
+Website](https://sites.google.com/site/ofpeframework/) and the detailed
+descriptions and diagrams of the OFPE data cycle on the [OFPE Technical
+Website](https://paulhegedus.github.io/OFPE-Website/). The [OFPE Web
+Application](https://paulhegedus.shinyapps.io/OFPE_AnalysisAndSim_App_v1/?_ga=2.189182059.1336631904.1592115204-590292424.1592115204)
+may also be illuminating to see the intended use of this package’s
+functions in a user friendly GUI. Finally, **please** read the
+*Workflow/Vignettes* section below and work through Vignettes 1 - 5 for
+a complete understanding of the usage of this package in supporting your
+own or your client’s on-farm precision experiments.
 
 ## Intended Use/Disclaimer
 
@@ -127,33 +150,57 @@ with John Deere and Case equipment.
 
 ## Workflow/Vignettes
 
-The vignettes of the OFPE package follow the OFPE framework workflow.
-These vignettes are the low level API equivalent to pages found in the
-high level API found in the OFPE web application. Both of these tools
-are centered around the OFPE database (Fig. 2). This process consists of
-creating a database with user specified field and farm data, importing
-data collected on-fields and from open sources, enriching yield and
-protein datasets by aggregating covariate data, analyzing response of
-yield and protein to variable input rates, simualting and predicting
-net-return outcomes of management strategies, and generating
-site-specific prescriptions of inputs. Data associated with the
-vignettes can be found
-[here](https://github.com/paulhegedus/OFPEDATA.git) and installed using
-the code above.
+The vignettes of the OFPE package and pages of the OFPE web application
+both follow the OFPE framework workflow. The vignettes are the low level
+API equivalent to pages found in the high level API found in the OFPE
+web application. Both of these tools are centered around and dependent
+on an OFPE formatted database (Fig. 2 & 3). The OFPE R package provides
+the codebase that interacts with the database in response to user
+actions. The OFPE web application uses the OFPE R package to provide an
+easy to use GUI interface to the users. This is represented in Figure 2
+by the concentric rings surrounding the database, with the blue OFPE
+package ring closest to the database and the green OFPE web app ring
+closest to the users. The rings touch because the OFPE package powers
+the OFPE web app. The yellow boxes in Figure 2 represent each process in
+the OFPE data workflow, and are different pages available for the user
+on the OFPE web app, which also have an accompying vignette in the OFPE
+R package to demonstrate the usage of the code outside of the OFPE web
+app GUI. This process consists of setting up (creating) the database
+with user specified field and farm data (Step 1), importing data
+collected on-fields and from open sources like SSURGO and Google Earth
+Engine (Step 2a & 2b), enriching yield and protein datasets by
+aggregating covariate data (Step 3), analyzing response of yield and
+protein to variable input rates, simualting and predicting net-return
+outcomes of management strategies (Step 4), and generating site-specific
+prescriptions of inputs (Step 5).
 
-![**Figure 2.** Key is found in the top right corner of the schematic.
-The green ring represents the R-Shiny OFPE web spplication which is
-driven by the OFPE R-Package (blue ring). These both require connection
-to a PostgreSQL spatial database with PostGIS enabled. The yellow boxes
+<div class="figure" style="text-align: center">
+
+<img src="man/figures/ofpe_data_workflow.png" alt="**Figure 2.** Key is found in the top right corner of the schematic. The green ring represents the R-Shiny OFPE web spplication which is driven by the OFPE R-Package (blue ring). These both require connection to a PostgreSQL spatial database with PostGIS enabled. The yellow boxes represent different pages of the OFPE web application and vignettes in the R-package. Black boxes represent user inputs and orange clouds represent cloud based tools." width="100%" />
+
+<p class="caption">
+
+**Figure 2.** Key is found in the top right corner of the schematic. The
+green ring represents the R-Shiny OFPE web spplication which is driven
+by the OFPE R-Package (blue ring). These both require connection to a
+PostgreSQL spatial database with PostGIS enabled. The yellow boxes
 represent different pages of the OFPE web application and vignettes in
 the R-package. Black boxes represent user inputs and orange clouds
-represent cloud based tools.](man/figures/ofpe_data_workflow.png)
+represent cloud based tools.
+
+</p>
+
+</div>
 
 For more detailed information about the OFPE data workflow and
 framework, see this
 [website](https://paulhegedus.github.io/OFPE-Website/). This includes
 the tutorials linked above, as well as activity and component diagrams
 of the processes/vignettes described below.
+
+Example data used in the vignettes can be found
+[here](https://github.com/paulhegedus/OFPEDATA.git) and installed using
+the code above.
 
 ### Database Creation/Management
 

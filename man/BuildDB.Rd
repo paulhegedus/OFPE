@@ -26,7 +26,7 @@ building the the OFPE database schemas and initial tables.
 \itemize{
 \item \href{#method-new}{\code{BuildDB$new()}}
 \item \href{#method-buildDatabase}{\code{BuildDB$buildDatabase()}}
-\item \href{#method-.loadExtension}{\code{BuildDB$.loadExtension()}}
+\item \href{#method-.loadExtensions}{\code{BuildDB$.loadExtensions()}}
 \item \href{#method-.buildSchemas}{\code{BuildDB$.buildSchemas()}}
 \item \href{#method-.buildTables}{\code{BuildDB$.buildTables()}}
 \item \href{#method-clone}{\code{BuildDB$clone()}}
@@ -60,7 +60,7 @@ A new 'BuildDB' object.
 \if{html}{\out{<a id="method-buildDatabase"></a>}}
 \if{latex}{\out{\hypertarget{method-buildDatabase}{}}}
 \subsection{Method \code{buildDatabase()}}{
-Execute database builder functions. Runs, loadExtension(), .buildSchemas(),
+Execute database builder functions. Runs, .loadExtensions(), .buildSchemas(),
 and .buildTables().
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{BuildDB$buildDatabase()}\if{html}{\out{</div>}}
@@ -76,9 +76,9 @@ initialization.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.loadExtension"></a>}}
-\if{latex}{\out{\hypertarget{method-.loadExtension}{}}}
-\subsection{Method \code{.loadExtension()}}{
+\if{html}{\out{<a id="method-.loadExtensions"></a>}}
+\if{latex}{\out{\hypertarget{method-.loadExtensions}{}}}
+\subsection{Method \code{.loadExtensions()}}{
 Loads extensions needed for OFPE database functions such
 as PostGIS tools and a function for generating a net across an area of
 interest (see source). No arguments needed if provided on class
@@ -87,7 +87,7 @@ ST_CreateFishnet was written by the PostGIS team and built in this
 method, see source for reference and credit. The dot indicates that this
 function would be private if not for documentations sake.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{BuildDB$.loadExtension(db = NULL, postgis_version = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{BuildDB$.loadExtensions(db = NULL, postgis_version = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

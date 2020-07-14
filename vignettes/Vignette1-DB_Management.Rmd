@@ -17,7 +17,12 @@ This process begins by building a spatial database for storing data gathered fro
 
 The user will need access to or need to create necessary farm and field boundaries associated with their experimental fields to set up their database. These farm boundaries that encompass the fields within a farmer's ownership/management purview are imported as assets into Google Earth Engine and imported into the database. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html) for creating a shapefile of a field or farm boundary. These are necessary for identifying data based on geographic location rather than searching files for information keying in on field or farm specific information. Farm boundaries are also used as the bounding boxes for downloading Google Earth Engine data.
 
-The process for creating a database is outlined in the activity diagram on this [page](https://paulhegedus.github.io/OFPE-Website/db_creation.html), where a component diagram can also be found.
+The process this vignette demonstrates is represented in the activity diagram shown in Figure 1, which can also found on this [page](https://paulhegedus.github.io/OFPE-Website/db_creation.html), where a component diagram can also be found.
+
+```{r, out.width='100%', fig.align='center', fig.cap='**Figure 1.** Blue processes are chained together by arrows indicating the next step in the workflow, and black boxes indicate the addition of user inputs.', echo = FALSE}
+knitr::include_graphics('figures/ofpe_db_mgmt.png')
+```
+
 
 # Resources
 The resources below are strongly recommended as supplemental information regarding the use and intent of this vignette and associated functions.
@@ -112,6 +117,7 @@ This section is for building the database and loading required extensions such a
 The BuildDB class is initialized with a database connection and a list of farmers for which to build schemas for. This list of farmers does not need to be exhaustive, as farmers can be added later. When adding farmers using the ManageDB class (see section below), the appropriate schemas will be built. This BuildDB class is only for use when setting up an OFPE database for the first time.
 
 For demonstrative purposes, not all of the farmers available in the example data from the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) package are used to initialize the database. This is to show how to add a farmer later in the Manage Database section of this vignette.
+
 ```{r}
 farmers <- c("FarmerB", "FarmerC")
 buildDB <- BuildDB$new(db, "2.5", farmers)
@@ -137,31 +143,83 @@ buildDB$buildDatabase()
 ```
 
 ## Manage Database
-This section is for managing and updating general information related to  on-farm precision experiments. It is also used to add initial data to the database upon inception in the method above. This data includes the names of collaborating farmers, the names of and boundaries for areas that encompass the experimental fields, and the names of and boundaries for experimental fields. **Note** you do not need to upload the field boundaries for all of the field's for which you upload data, just the fields that have experimental rates applied. For example, if you want to import data from a field with no experiments, perhaps for future comparisons, you would not need to include a field boundary until you want to analyze that data. **However** any field data that you upload needs to fall within a farm boundary, otherwise cannot be sorted into the database upon upload.
+This section is for managing and updating general information related to  on-farm precision experiments. It is also used to add initial data to the database upon inception in the method above. This data includes the names of collaborating farmers, the names of and boundaries for areas that encompass the experimental fields, and the names of and boundaries for experimental fields. **Note** you do not need to upload the field boundaries for all of the field's for which you upload data, just the fields that have experimental rates applied. For example, if you want to import data from a field with no experiments, perhaps for future comparisons, you would not need to include a field boundary until you want to analyze that data. **However**, any field data that you upload needs to fall within a farm boundary, otherwise it cannot be sorted into the database upon upload.
 
-This section utilizes an R6 Class called ManageDB that is used to update or add data to the OFPE database. This vignette operates under the assumption that the section above has been completed once for your database to enable extensions and add initial tables. 
+The user will need access to or need to create necessary farm and field boundaries associated with their experimental fields to set up their database. These farm boundaries that encompass the fields within a farmer's ownership/management purview are both imported as assets into Google Earth Engine and imported into the database. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html) for creating a shapefile of a field or farm boundary. These are necessary for identifying data based on geographic location rather than searching files for information keying in on field or farm specific information. Farm boundaries are also used as the bounding boxes for downloading Google Earth Engine data. The shapefile naming convention for fields is "<fieldname>_bbox.shp" while the shapefile naming convention for farm boundaries is "<farmername>_<farmname>_bbox.shp". This format is used because there are sometimes multiple farm boundaries corresponding to one farmer if their operations are spread across a large area (i.e. multiple counties). **NOTE:** Do not use the same name for a farm and a field. You must have the farm or field name present in the corresponding shapefile name. 
 
-The user will need access to or need to create necessary farm and field boundaries associated with their experimental fields to set up their database. These farm boundaries that encompass the fields within a farmer's ownership/management purview are both imported as assets into Google Earth Engine and imported into the database. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html) for creating a shapefile of a field or farm boundary. These are necessary for identifying data based on geographic location rather than searching files for information keying in on field or farm specific information. Farm boundaries are also used as the bounding boxes for downloading Google Earth Engine data.
+### ManageDB Class
+This section utilizes an R6 Class called ManageDB that is used to update or add data to the OFPE database. This vignette section operates under the assumption that the section above has been completed once for your database to enable extensions and add initial tables. This class takes a list of lists as an argument with an 'action' name and associated parameters. 'Actions' include updateFarmers(), updateFarms(), and updateFields(). 
 
-### Initialize ManageDB
-The ManageDB class is initialized with a database connection, and a list of methods and associated arguments to run. These include a list of farmers to add to or update the database with, farm names and a file path to farm boundaries, and field names and a file path to field boudnaries. When adding farmers using the ManageDB class the appropriate schemas will be built.
+### Initial Upload
+This section provides an example of uploading an initial batch of experimental information to the database, including the farm and field names and boudnaries and the vector of farmer names. This information fills in the tables created with the BuildDB class. The section below will demonstrate how to add more farmers, fields, or farms to the database. 
 
 For demonstrative purposes, not all of the farmers available in the example data from the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) were used to build the database above in order to illustrate how to update and add to the database. 
 
+#### Initial Parameters
+Initial parameters are provided below. When using your own data you will have different farm and field names. And perhaps a lot more than two. First, supply your inputs, this example uses the same 'farmers' as defined above. 
+
 ```{r}
+farm_names <- c("FarmerB_FarmName", "FarmerC_FarmName")
+farm_path <- "~/INIT_UPLOADS/"
 
+field_names <- c("sec35mid", "millview")
+field_path <- "~/INIT_UPLOADS/"
+```
 
+#### Initialize ManageDB
+The ManageDB class is initialized with a database connection, and a list of methods and associated arguments to run. These include a list of farmers to add to or update the database with, farm names and a file path to farm boundaries, and field names and a file path to field boudnaries. When adding farmers using the ManageDB class the appropriate schemas will be built.
+
+Any or all of these can be ran at any time in any order, however the user needs to be logical. If you are updating a new field from a new farmer but haven't added the new farm yet, no association with a farm can be made with the field, because the farm doesn't exist. Start at coarse spatial scales (farmers, farms) and then upload finer scale data (fields).
+
+```{r}
+action_list <- list(
+  list(
+    action = "updateFarmers",
+    farmers = farmers
+  ),
+  list(
+    action = "updateFarms", 
+    farm_names = farm_names,
+    farm_path = farm_path
+  ),
+  list(
+    action = "updateFields",
+    farm_names = field_names,
+    farm_path = field_path
+  )
+)
+```
+
+Now, pass the arguments on to the ManageDB class generator along with a database connection.
+
+```{r, eval = FALSE}
+manageDB <- ManageDB$new(db, action_list)
+```
+
+#### Execute ManageDB
+After a ManageDB class object has been created, the user can run the 'executeActions' method to add information to the database. The modularity of this class allows users to add methods that they have built and pass them into the executeAction method. For example, a user may want to build a method or two for deleting information. 
+
+After the user has initialized the class, running the executeAction method will run the functions associated with each action method.
+
+```{r, eval = FALSE}
 
 ```
 
-### Manage Farmers
-### Manage Farms
-### Manage Fields
-### Spatial Indexes
+Now there should be data filled in the 'farmers', 'farms', and 'fields' tables in the 'all_farms' schema of the database. The section below will demonstrate how to add another farmer and their associated farm and fields.
 
-# Clean-Up
+### Adding Data
+#### Initial Parameters
+#### Initialize ManageDB
+
+
+### Spatial Indexes?
+
+# Conclusion
+This vignette provided a demonstration of how to set-up a freshly created database following the completion of this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). A BuildDB class object is generated once per database and 
+
+Although the classes in this vignette interact with the database, none of them include any methods for deleting information. It is expected that the user will be able to execute a database query to remove any unwanted information.
+
 Whenever a database connection is open it needs to be closed.
-
 ```{r}
 dbDisconnect(db) %>% invisible()
 ```

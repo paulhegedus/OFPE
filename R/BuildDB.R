@@ -27,18 +27,16 @@ BuildDB <- R6::R6Class(
       self$postgis_version <- postgis_version
       self$farmers <- farmers
     },
-
     #' @description
-    #' Execute database builder functions. Runs, loadExtension(), .buildSchemas(),
+    #' Execute database builder functions. Runs, .loadExtensions(), .buildSchemas(),
     #' and .buildTables().
     #' @param None No arguments needed because they are provided during class
     #' initialization.
     buildDatabase = function() {
-      self$.loadExtension()
+      self$.loadExtensions()
       self$.buildSchemas()
       self$.buildTables()
     },
-
     #' @description
     #' Loads extensions needed for OFPE database functions such
     #' as PostGIS tools and a function for generating a net across an area of
@@ -51,7 +49,7 @@ BuildDB <- R6::R6Class(
     #' @param postgis_version PostGIS version installed.
     #' @return Enabled database extensions.
     #' @source \url{https://trac.osgeo.org/postgis/wiki/UsersWikiCreateFishnet}
-    .loadExtension = function(db = NULL, postgis_version = NULL) {
+    .loadExtensions = function(db = NULL, postgis_version = NULL) {
       if (is.null(db)) {
         db <- self$db
       }
@@ -96,7 +94,6 @@ BuildDB <- R6::R6Class(
         ")
       )
     },
-
     #' @description
     #' Builds the skeleton of the database. Two schemas for each farmer supplied
     #' is built; one for holding raw data collected on-farms from equipment, and
@@ -123,7 +120,6 @@ BuildDB <- R6::R6Class(
         DBI::dbSendQuery(db, paste0("CREATE SCHEMA ", schemas[i]))
       }
     },
-
     #' @description
     #' Builds initial tables in the 'all_farms' schema. None of these tables
     #' are filled with information. These tables will be filled with methods
