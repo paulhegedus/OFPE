@@ -9,7 +9,7 @@
 #' @source \url{https://stackoverflow.com/questions/2723034/suppress-output-of-a-function}
 #' @export
 hush <- function(code){
-  sink("NUL") # use /dev/null in UNIX
+  sink("~/NUL") # use /dev/null in UNIX
   tmp = code
   sink()
   return(tmp)
