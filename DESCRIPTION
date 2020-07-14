@@ -25,8 +25,7 @@ Authors@R: c(
     person(given = "Montana State University", 
            role = c("cph"))
     )
-Depends: R (>= 3.0.0),
-    sf
+Depends: R (>= 3.0.0)
 Suggests: 
     knitr,
     rmarkdown,
@@ -40,4 +39,5 @@ VignetteBuilder: knitr
 Imports: 
     magrittr,
     DBI,
-    R6
+    R6,
+    sf
