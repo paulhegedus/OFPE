@@ -5,4 +5,4 @@ cache: packages
 
 sudo: required
 before_install:
-  - sudo apt-get -y install libxml2-dev
+  - sudo apt install -y libudunits2-0 libudunits2-dev
