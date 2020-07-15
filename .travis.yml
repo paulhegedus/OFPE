@@ -16,5 +16,11 @@ apt_packages:
     - libcairo2-dev
     - libnetcdf-dev
 
+addons:
+  homebrew:
+    packages:
+    - pkg-config
+    - gdal
+
 r_packages:
   - units
