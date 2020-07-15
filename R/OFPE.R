@@ -10,7 +10,6 @@
 #'
 #' @importFrom magrittr %>%
 #' @importFrom R6 R6Class
-#' @import sf
 #'
 #' @seealso \url{https://sites.google.com/site/ofpeframework/}
 #' @seealso \url{https://paulhegedus.github.io/OFPE-Website/}

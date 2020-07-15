@@ -103,7 +103,8 @@ BuildDB <- R6::R6Class(
     #' is also created to hold data that is not farmer specific or farm-wide data.
     #' No arguments needed if provided on class initialization, otherwise arguments
     #' provided take precedence. The dot indicates that this function would be
-    #' private if not for documentations sake.
+    #' private if not for documentations sake. Note that farmer names are converted
+    #' to lowercase upon addition to the database if not already.
     #' @param db Connection to a database.
     #' @param farmers Vector of farmer names.
     #' @return Built database schemas.

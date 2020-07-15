@@ -170,6 +170,7 @@ farm_path <- "~/INIT_UPLOADS/"
 Next, supply the inputs for field information. Pass a vector of field names correpsond to the names of shapefiles with the field boundaries located in the path to the folder with fields. A vector of farmer names corresponding to the owner of the field is also required. 
 
 ```{r}
+fields <- 
 field_names <- c("sec35mid", "millview")
 field_farmer_names <- c("FarmerB", "FarmerC")
 field_path <- "~/INIT_UPLOADS/"
