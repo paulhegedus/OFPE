@@ -154,14 +154,14 @@ ManageFields <- R6::R6Class(
                            partial.match = TRUE,
                            upsert.using = c("wfid", "fieldname"))
       )
-      DBI::dbGetQuery(
+      DBI::dbSendQuery(
         db,
         "UPDATE all_farms.fields
           SET farmidx = farms.farmidx
           FROM all_farms.farms
           WHERE ST_INTERSECTS(farms.geom, fields.geom);
         UPDATE all_farms.fields
-          SET area = ST_AREA(geom::geography) * .0000062736;"
+          SET area = ST_AREA(geom::geography) * 0.000247105;"
       )
     }
   )

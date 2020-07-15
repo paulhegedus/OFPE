@@ -9,6 +9,12 @@ apt_packages:
     - libgdal-dev
     - libxml2-dev
     - libproj-dev
+    - libudunits2-dev
+    - libgeos-dev
+    - libfontconfig1-dev
+    - libv8-dev
+    - libcairo2-dev
+    - libnetcdf-dev
 
 r_packages:
   - units
