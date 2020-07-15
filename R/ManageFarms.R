@@ -73,7 +73,8 @@ ManageFarms <- R6::R6Class(
     #' @description
     #' Converts a list with information about the farms into a format ready for
     #' uploading to the database. Imports the shapefile using the path name
-    #' in the list provided and adds a column for the farmer name.
+    #' in the list provided and adds a column for the farmer name. Converts
+    #' to EPSG 4326 for storage.
     #' @param farm_info List with information about the farm to uplaod.
     #' @param farm_path Path to the location of farm boundary shapefiles.
     #' @return ESRI shapefile of farm boundary.
@@ -93,6 +94,11 @@ ManageFarms <- R6::R6Class(
         farm <- sf::st_as_sf(farm) %>%
           sf::st_cast()
       }
+      farm <- farm %>%
+        sf::st_set_crs(4326) %>%
+        sf::st_transform(4326)
+      # farm$area <- sf::st_area(farm) %>%
+      #   units::set_units("acre")
       return(farm)
     },
     #' @description
@@ -100,8 +106,9 @@ ManageFarms <- R6::R6Class(
     #' coresponding farmeridx, adds it as a column, and then uploads to the
     #' 'all_farms.farms' table. Makes sure there is no conflict defined in the
     #' .buildTables method of the BuildDB class. A farmidx is automatically
-    #' generated upon upload by PostgreSQL. The dot indicates that this function
-    #' would be private if not for documentations sake.
+    #' generated upon upload by PostgreSQL and the area of the farm is calculated
+    #' and converted to acres. The dot indicates that this function would be private
+    #' if not for documentations sake.
     #' @param farm Farm shapefile for upload into 'all_farms.farmers'.
     #' @param db Database connection.
     #' @return Farm upload into database.
@@ -120,6 +127,11 @@ ManageFarms <- R6::R6Class(
                            sf::as_Spatial(farm),
                            partial.match = TRUE,
                            upsert.using = c("farm", "farmeridx"))
+      )
+      DBI::dbGetQuery(
+        db,
+        "UPDATE all_farms.farms
+          SET area = ST_AREA(geom::geography) * .0000062736;"
       )
     }
   )

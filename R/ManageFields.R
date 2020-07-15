@@ -76,7 +76,8 @@ ManageFields <- R6::R6Class(
     #' uploading to the database. Imports the shapefile using the path name
     #' in the list provided and adds a column for the farmer name. If fields
     #' contain multiple unconnected portions, the 'id' column associated with
-    #' these sections is renamed 'wfid' for 'within field ID'.
+    #' these sections is renamed 'wfid' for 'within field ID'. Converts
+    #' to EPSG 4326 for storage.
     #' @param field_info List with information about the field to uplaod.
     #' @param field_path Path to the location of field boundary shapefiles.
     #' @return ESRI shapefile of field boundary.
@@ -101,6 +102,11 @@ ManageFields <- R6::R6Class(
         field <- sf::st_as_sf(field) %>%
           sf::st_cast()
       }
+      field <- field %>%
+        sf::st_set_crs(4326) %>%
+        sf::st_transform(4326)
+      # field$area <- sf::st_area(field) %>%
+      #   units::set_units("acre")
       return(field)
     },
     #' @description
@@ -111,7 +117,8 @@ ManageFields <- R6::R6Class(
     #' A fieldidx is automatically generated upon upload by PostgreSQL based
     #' on the 'wfid' and 'fieldname'. After uploading, PostGIS is used to
     #' identify the farm the field falls within and a the 'farmidx' column is
-    #' filled. The dot indicates that this function would be private if not for
+    #' filled and the area of the field is calculated and converted to acres.
+    #' The dot indicates that this function would be private if not for
     #' documentations sake.
     #' @param field Field shapefile for upload into 'all_farms.fields'.
     #' @param db Database connection.
@@ -150,9 +157,11 @@ ManageFields <- R6::R6Class(
       DBI::dbGetQuery(
         db,
         "UPDATE all_farms.fields
-        SET farmidx = farms.farmidx
-        FROM all_farms.farms
-        WHERE ST_INTERSECTS(farms.geom, fields.geom)"
+          SET farmidx = farms.farmidx
+          FROM all_farms.farms
+          WHERE ST_INTERSECTS(farms.geom, fields.geom);
+        UPDATE all_farms.fields
+          SET area = ST_AREA(geom::geography) * .0000062736;"
       )
     }
   )

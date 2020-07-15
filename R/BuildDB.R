@@ -154,6 +154,7 @@ BuildDB <- R6::R6Class(
            farmidx SERIAL PRIMARY KEY,
            farm VARCHAR(100) NOT NULL,
            farmeridx INTEGER REFERENCES all_farms.farmers(farmeridx),
+           area DOUBLE PRECISION,
            CONSTRAINT norepfarms UNIQUE (farm, farmeridx));
         CREATE TABLE all_farms.field_ids (
            fieldidx SERIAL PRIMARY KEY,
@@ -165,6 +166,7 @@ BuildDB <- R6::R6Class(
           farmidx INTEGER REFERENCES all_farms.farms(farmidx),
           farmeridx INTEGER REFERENCES all_farms.farmers(farmeridx),
           fieldname VARCHAR(100) NOT NULL,
+          area DOUBLE PRECISION,
           CONSTRAINT norepfields UNIQUE (wfid, fieldname),
           PRIMARY KEY (wfid, fieldname));"
       )

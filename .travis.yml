@@ -9,8 +9,6 @@ apt_packages:
     - libgdal-dev
     - libxml2-dev
     - libproj-dev
-    #- libudunits2
 
 r_packages:
-  - libudunits2
   - units
