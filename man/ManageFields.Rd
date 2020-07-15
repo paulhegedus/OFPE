@@ -4,14 +4,13 @@
 \alias{ManageFields}
 \title{R6 Class for adding or updating field information in OFPE database.}
 \description{
-R6 class that takes a vector of field names and a path
-to the location of field boundary shapefiles. Uploads boundaries to the
-database. Adds a unique ID field for each field that is used for
-internal relationships and identifies the associated farmer with the fields.
-If a field is already present in the database,
-it will be replaced with the same field ID. This follows the ManageDB
-interface and includes a setup and execute method that is called from
-the ManageDB class.
+R6 class that takes a database connection object, path to
+the folder with the field boundaries, and a list with field information to
+upload. Uploads boundaries to the database. Adds a unique ID column for
+each field that is used for internal relationships. If a field is already
+present in the database, it's information will be updated. This
+follows the ManageDB interface and includes a setup and execute method that
+is called from the ManageDB class.
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -19,12 +18,16 @@ the ManageDB class.
 \item{\code{dbCon}}{Database connection object connected to an OFPE formatted
 database, see DBCon class.}
 
-\item{\code{field_names}}{Vector of field names to add or update in the database.}
-
-\item{\code{field_farmer_names}}{Vector of farmer names reflecting the
-owner of the field names supplied.}
+\item{\code{field_info}}{List of fields to update, with each element a list with
+a 'field_name' element for the name of the field, a 'field_shp_name'
+element with the name of the shapefile with the field boundary, and a
+element called  'farmer_name' with the name of the farmer who own the
+field.}
 
 \item{\code{field_path}}{File path to the location of field boundary shapefiles.}
+
+\item{\code{fields}}{List with data prepared for upload to the database. Contains
+shapefiles with a column indicating the associated farmer and farm name.}
 }
 \if{html}{\out{</div>}}
 }
@@ -34,6 +37,8 @@ owner of the field names supplied.}
 \item \href{#method-new}{\code{ManageFields$new()}}
 \item \href{#method-setup}{\code{ManageFields$setup()}}
 \item \href{#method-execute}{\code{ManageFields$execute()}}
+\item \href{#method-.setupFields}{\code{ManageFields$.setupFields()}}
+\item \href{#method-.uploadFields}{\code{ManageFields$.uploadFields()}}
 \item \href{#method-clone}{\code{ManageFields$clone()}}
 }
 }
@@ -41,14 +46,14 @@ owner of the field names supplied.}
 \if{html}{\out{<a id="method-new"></a>}}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
-Create an ManageFields object. The database connection and a vector of
-field names and farmer names are used to upload field information
-to the database with the appropriate owner information. The field_path
-argument indicates the file path in which to follow for the field boundary
-shapefiles that are to be uploaded to the database. Instantiates the class
-for running the setup and execute methods.
+Create an ManageFields object. The database connection and a list with
+field information used to upload field information to the database with
+the appropriate owner information. The field_path argument indicates the
+file path in which to follow for the field boundary shapefiles that are
+to be uploaded to the database. Instantiates the class for running the
+setup and execute methods.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ManageFields$new(dbCon, field_names, field_farmer_names, field_path)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ManageFields$new(dbCon, action_item)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -57,17 +62,14 @@ for running the setup and execute methods.
 \item{\code{dbCon}}{Database connection object connected to an OFPE formatted
 database, see DBCon class.}
 
-\item{\code{field_names}}{Vector of field names to add or update in the database.}
-
-\item{\code{field_farmer_names}}{Vector of farmer names reflecting the
-owner of the field names supplied.}
-
-\item{\code{field_path}}{File path to the location of field boundary shapefiles.}
+\item{\code{action_item}}{List of inputs to the AddFields method, from the
+list passed into the ManageDB class. This includes a list of field
+information and a path to where the field boundaries are stored.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A new initialized 'AddFarms' object.
+A new initialized 'AddFields' object.
 }
 }
 \if{html}{\out{<hr>}}
@@ -90,7 +92,7 @@ initialization.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Prepared R6 class for uploading farmer information.
+Prepared R6 class for uploading field information.
 }
 }
 \if{html}{\out{<hr>}}
@@ -114,7 +116,63 @@ initialization.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Farm data uploaded into the 'all_farms.fields' table in the database.
+Field data uploaded into the 'all_farms.fields' table in the database.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-.setupFields"></a>}}
+\if{latex}{\out{\hypertarget{method-.setupFields}{}}}
+\subsection{Method \code{.setupFields()}}{
+Converts a list with information about the fields into a format ready for
+uploading to the database. Imports the shapefile using the path name
+in the list provided and adds a column for the farmer name. If fields
+contain multiple unconnected portions, the 'id' column associated with
+these sections is renamed 'wfid' for 'within field ID'.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ManageFields$.setupFields(field_info, field_path = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{field_info}}{List with information about the field to uplaod.}
+
+\item{\code{field_path}}{Path to the location of field boundary shapefiles.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+ESRI shapefile of field boundary.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-.uploadFields"></a>}}
+\if{latex}{\out{\hypertarget{method-.uploadFields}{}}}
+\subsection{Method \code{.uploadFields()}}{
+Uploads a field to the database. Takes the field shapefile and
+identifies the coresponding farmeridx, adds it as a column, and
+then uploads to the 'all_farms.fields' table. Makes sure there is
+no conflict defined in the .buildTables method of the BuildDB class.
+A fieldidx is automatically generated upon upload by PostgreSQL based
+on the 'wfid' and 'fieldname'. After uploading, PostGIS is used to
+identify the farm the field falls within and a the 'farmidx' column is
+filled. The dot indicates that this function would be private if not for
+documentations sake.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ManageFields$.uploadFields(field, db)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{field}}{Field shapefile for upload into 'all_farms.fields'.}
+
+\item{\code{db}}{Database connection.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Field upload into database.
 }
 }
 \if{html}{\out{<hr>}}

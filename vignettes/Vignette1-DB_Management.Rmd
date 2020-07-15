@@ -178,7 +178,7 @@ Next, supply your inputs for field information. For each field, create a list wi
 ```{r, eval = FALSE}
 fields <- list(
   list(field_name = "sec35middle",
-       field_shp_name = "sec35midddle_bbox",
+       field_shp_name = "sec35middle_bbox",
        farmer_name = "FarmerB"),
   list(field_name = "millview",
        field_shp_name = "millview_bbox",
@@ -202,12 +202,12 @@ action_list <- list(
     action = "ManageFarms",
     farms = farms,
     farm_path = farm_path
-  )#,
-  # list(
-  #   action = "ManageFields",
-  #   fields = fields,
-  #   field_path = field_path
-  # )
+  ),
+  list(
+    action = "ManageFields",
+    fields = fields,
+    field_path = field_path
+  )
 )
 ```
 

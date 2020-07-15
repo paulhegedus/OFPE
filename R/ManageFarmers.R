@@ -33,7 +33,8 @@ ManageFarmers <- R6::R6Class(
         is.character(action_item$farmers)
       )
       self$dbCon <- dbCon
-      self$farmers <- action_item$farmers %>% tolower()
+      self$farmers <- action_item$farmers %>%
+        tolower()
     },
     #' @description
     #' No setup needed for the ManageFarmers class. However is still present to

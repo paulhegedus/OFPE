@@ -162,7 +162,7 @@ BuildDB <- R6::R6Class(
           fieldname VARCHAR(100) NOT NULL,
           UNIQUE (wfid, fieldname),
           CONSTRAINT norepfields UNIQUE (wfid, fieldname),
-          PRIMARY KEY (fieldidx, wfid));"
+          PRIMARY KEY (wfid, fieldname));"
       )
       DBI::dbSendQuery(db, "ALTER TABLE all_farms.farms ADD COLUMN geom geometry")
       DBI::dbSendQuery(db, "ALTER TABLE all_farms.fields ADD COLUMN geom geometry")

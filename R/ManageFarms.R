@@ -86,6 +86,13 @@ ManageFarms <- R6::R6Class(
         sf::st_cast()
       farm$farm <- farm_info$farm_name
       farm$farmer <- farm_info$farmer_name
+      if (any(grepl("geometry", names(farm)))) {
+        geom <- farm$geometry
+        farm <- sf::st_drop_geometry(farm)
+        farm$geom <- geom
+        farm <- sf::st_as_sf(farm) %>%
+          sf::st_cast()
+      }
       return(farm)
     },
     #' @description
@@ -105,12 +112,7 @@ ManageFarms <- R6::R6Class(
                FROM all_farms.farmers
                WHERE farmer = '", unique(farm$farmer), "'")
       )$farmeridx
-      if (any(grepl("geometry", names(farm)))) {
-        geom <- farm$geometry
-        farm <- sf::st_drop_geometry(farm)
-        farm$geom <- geom
-        farm <- sf::st_as_sf(farm) %>% sf::st_cast()
-      }
+
       farm <- farm[, c("farm", "farmeridx","geom")]
       suppressMessages(
         rpostgis::pgInsert(db,
