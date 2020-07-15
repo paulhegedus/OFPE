@@ -9,4 +9,3 @@ apt_packages:
     - libgdal-dev
     - libxml2-dev
     - libproj-dev
-    - libpng-dev

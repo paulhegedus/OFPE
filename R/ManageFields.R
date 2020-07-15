@@ -117,14 +117,29 @@ ManageFields <- R6::R6Class(
     #' @param db Database connection.
     #' @return Field upload into database.
     .uploadFields = function(field, db) {
+      # field_ids upsert
+      field_name <- unique(field$fieldname)
+      DBI::dbSendQuery(
+        db,
+        paste0("INSERT INTO all_farms.field_ids(fieldname)
+               VALUES ('", field_name, "')
+               ON CONFLICT ON CONSTRAINT norepfieldids
+               DO UPDATE SET fieldname = EXCLUDED.fieldname;")
+      )
+      # fields upsert
       field$farmeridx <- DBI::dbGetQuery(
         db,
         paste0("SELECT farmeridx
                FROM all_farms.farmers
                WHERE farmer = '", unique(field$farmer), "'")
       )$farmeridx
-
-      field <- field[, c("wfid", "farmeridx", "fieldname", "geom")]
+      field$fieldidx <- DBI::dbGetQuery(
+        db,
+        paste0("SELECT fieldidx
+               FROM all_farms.field_ids
+               WHERE fieldname = '", unique(field$fieldname), "'")
+      )$fieldidx
+      field <- field[, c("wfid", "fieldidx", "farmeridx", "fieldname", "geom")]
       suppressMessages(
         rpostgis::pgInsert(db,
                            c("all_farms","fields"),

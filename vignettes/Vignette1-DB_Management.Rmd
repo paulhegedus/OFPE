@@ -101,8 +101,10 @@ ifelse(dir.exists(temp_path),
          file.remove(temp_path);
          dir.create(temp_path)},
        dir.create(temp_path)) %>% 
-  invisible()
-mapply(function (x, y) sf::st_write(x, paste0(temp_path, y, ".shp")),
+  invisible
+mapply(function (x, y) sf::st_write(x, 
+                                    paste0(temp_path, y, ".shp"), 
+                                    quiet = TRUE),
        dat_list, 
        names(dat_list)) %>% 
   invisible()
@@ -137,6 +139,12 @@ Additionally, the BuildDB object will generate two schemas for each farmer, one 
 There are three tables that are initialized when building the OFPE database. These three initial tables are created in the 'all_farms' schema; 'farmers', 'farms', and 'fields' which are filled in using the manager functions below.
 
 Again, the function below simply runs each of the functions above in the intended order. Running those functions out of order will likely result in errors. Also, if you run this again after running once will result in error because extensions already created. Note that PostgreSQL does not allow uppercase letters in the names of their schemas or tables, so any names passed in are converted to lowercase.
+
+### Build Spatial Indexes: buildSpatialIndexes()
+The last step in the database build process involves building spatial indices for the tables with geometries that we just created. These are used to speed up spatial queries used later. After building spatial indices, it is recommended to vacuum/analyze your database regularly to keept these up to date. See this [page](https://postgis.net/workshops/postgis-intro/indexing.html) for more information on PostGIS spatial indexes.
+
+### Build Database: buildDatabase()
+The method that wraps all of the above functions up and executes in the proper order is the buildDatabase() method and is the only intended public method of the BuildDB class. However, the methods above are public for transparency and in order to document them.
 
 ```{r, eval = FALSE}
 # not run
@@ -215,7 +223,7 @@ Now, pass the arguments on to the ManageDB class generator along with a database
 
 ```{r, eval = FALSE}
 manageDB <- ManageDB$new(dbCon, action_list)
-manageDB$setupActions() %>% invisible
+manageDB$setupActions() 
 ```
 
 #### Execute ManageDB
@@ -224,17 +232,69 @@ After a ManageDB class object has been created and set up, the user can run the 
 After the user has initialized the class, running the executeAction method will run the functions associated with each action method. Invisbile is called to suppress chatty output.
 
 ```{r, eval = FALSE}
-manageDB$executeActions() %>% invisible()
+manageDB$executeActions() 
 ```
 
 Now there should be data filled in the 'farmers', 'farms', and 'fields' tables in the 'all_farms' schema of the database. The section below will demonstrate how to add another farmer and their associated farm and fields.
 
 ### Adding Data
-#### Initial Parameters
+Adding more data utilizes the same process and R6 classes as above in the 'Initial Upload' section above. Remember that if you attempt to upload a farm or field that already exists in the database it will be updated. This is determined based off of the farm or field name passed in. The section below adds the third farmer's data contained in the *OFPEDATA* package. Because this section mirrors the section above, it contains less information as above.
+
+#### Create Parameters
+Create your parameter objects that are passed onto the R6 classes and associated methods. This section will 'reload' Farmer B's data into the database in order to demonstrate that this will not negatively affect your relations.
+
+```{r, eval = FALSE}
+farmers <- c("FarmerB", "FarmerI")
+farms <- list(
+  list(farm_name = "FarmerB_FarmName",
+       farm_shp_name = "FarmerB_FarmName_bbox",
+       farmer_name = "FarmerB"),
+  list(farm_name = "FarmerI_FarmName",
+       farm_shp_name = "FarmerI_FarmName_bbox",
+       farmer_name = "FarmerI")
+)
+farm_path <- "~/INIT_UPLOADS/"
+fields <- list(
+  list(field_name = "sec35middle",
+       field_shp_name = "sec35middle_bbox",
+       farmer_name = "FarmerB"),
+  list(field_name = "henrys",
+       field_shp_name = "henrys_bbox",
+       farmer_name = "FarmerI")
+)
+field_path <- "~/INIT_UPLOADS/"
+```
+
+
 #### Initialize ManageDB
+Now initialize the ManageDB class by builiding the 'action_list' and passing a DBCon object. Then setup the actions for execution. 
 
+```{r, eval = FALSE}
+action_list <- list(
+  list(
+    action = "ManageFarmers",
+    farmers = farmers
+  ),
+  list(
+    action = "ManageFarms",
+    farms = farms,
+    farm_path = farm_path
+  ),
+  list(
+    action = "ManageFields",
+    fields = fields,
+    field_path = field_path
+  )
+)
+manageDB <- ManageDB$new(dbCon, action_list)
+manageDB$setupActions() 
+```
 
-### Spatial Indexes?
+Finally, execute the actions specified as above by running the executeActions() method of the ManageDB class.
+
+```{r, eval = FALSE}
+manageDB$executeActions() 
+```
 
 # Conclusion
 This vignette provided a demonstration of how to set-up a freshly created database following the completion of this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). A BuildDB class object is generated once per database and 

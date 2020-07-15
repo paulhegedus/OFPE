@@ -30,6 +30,7 @@ database, see DBCon class.}
 \item \href{#method-.loadExtensions}{\code{BuildDB$.loadExtensions()}}
 \item \href{#method-.buildSchemas}{\code{BuildDB$.buildSchemas()}}
 \item \href{#method-.buildTables}{\code{BuildDB$.buildTables()}}
+\item \href{#method-.buildSpatialIndexes}{\code{BuildDB$.buildSpatialIndexes()}}
 \item \href{#method-clone}{\code{BuildDB$clone()}}
 }
 }
@@ -163,6 +164,31 @@ for documentations sake.
 }
 \subsection{Returns}{
 Built 'all_farms' tables
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-.buildSpatialIndexes"></a>}}
+\if{latex}{\out{\hypertarget{method-.buildSpatialIndexes}{}}}
+\subsection{Method \code{.buildSpatialIndexes()}}{
+Builds spatial indexes on the tabels created in the 'all_farms' schema.
+These indexes are used to speed up spatial queries and are a PostGIS tool.
+This means that this function must be run after loading the extensions and
+creating the tables. No arguments needed if provided on class initialization,
+otherwise arguments provided take precedence. The dot indicates that this
+function would be private if not for documentations sake.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{BuildDB$.buildSpatialIndexes(db = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{db}}{Connection to a database.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Built spatial indexes on the 'farms' and 'fields' tables.
 }
 }
 \if{html}{\out{<hr>}}

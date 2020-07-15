@@ -38,6 +38,7 @@ BuildDB <- R6::R6Class(
       self$.loadExtensions()
       self$.buildSchemas()
       self$.buildTables()
+      self$.buildSpatialIndexes()
     },
     #' @description
     #' Loads extensions needed for OFPE database functions such
@@ -154,18 +155,44 @@ BuildDB <- R6::R6Class(
            farm VARCHAR(100) NOT NULL,
            farmeridx INTEGER REFERENCES all_farms.farmers(farmeridx),
            CONSTRAINT norepfarms UNIQUE (farm, farmeridx));
+        CREATE TABLE all_farms.field_ids (
+           fieldidx SERIAL PRIMARY KEY,
+           fieldname VARCHAR(100) NOT NULL,
+           CONSTRAINT norepfieldids UNIQUE (fieldname));
         CREATE TABLE all_farms.fields (
-          fieldidx SERIAL NOT NULL,
+          fieldidx INTEGER REFERENCES all_farms.field_ids(fieldidx),
           wfid INTEGER NOT NULL,
           farmidx INTEGER REFERENCES all_farms.farms(farmidx),
           farmeridx INTEGER REFERENCES all_farms.farmers(farmeridx),
           fieldname VARCHAR(100) NOT NULL,
-          UNIQUE (wfid, fieldname),
           CONSTRAINT norepfields UNIQUE (wfid, fieldname),
           PRIMARY KEY (wfid, fieldname));"
       )
       DBI::dbSendQuery(db, "ALTER TABLE all_farms.farms ADD COLUMN geom geometry")
       DBI::dbSendQuery(db, "ALTER TABLE all_farms.fields ADD COLUMN geom geometry")
+    },
+    #' @description
+    #' Builds spatial indexes on the tabels created in the 'all_farms' schema.
+    #' These indexes are used to speed up spatial queries and are a PostGIS tool.
+    #' This means that this function must be run after loading the extensions and
+    #' creating the tables. No arguments needed if provided on class initialization,
+    #' otherwise arguments provided take precedence. The dot indicates that this
+    #' function would be private if not for documentations sake.
+    #' @param db Connection to a database.
+    #' @return Built spatial indexes on the 'farms' and 'fields' tables.
+    .buildSpatialIndexes = function(db = NULL) {
+      if (is.null(db)) {
+        db <- self$dbCon$db
+      }
+      DBI::dbSendQuery(
+        db,
+        "CREATE INDEX farms_geom_idx
+          ON all_farms.farms
+          USING GIST (geom);
+        CREATE INDEX fields_geom_idx
+          ON all_farms.fields
+          USING GIST (geom);"
+      )
     }
   )
 )

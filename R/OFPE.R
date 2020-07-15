@@ -16,12 +16,12 @@
 #' @seealso \url{https://github.com/paulhegedus/OFPEDATA.git}
 #'
 #' @section General Functions:
-#'
+#' DBCon
 #'
 #' @section Database Creation & Managements:
 #' See Vignette 1 for database management and updating examples.
 #'
-#' The OFPE database creation and management functions and R6 class generators...
+#' BuildDB, ManageDB, ManageFarmers, ManageFarms, ManageFields
 #'
 #' @section Data Import:
 #' See the Vignettes 2A and 2B for examples importing data from farms and
