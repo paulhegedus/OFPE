@@ -103,8 +103,8 @@ ifelse(dir.exists(temp_path),
        dir.create(temp_path)) %>% 
   invisible()
 mapply(function (x, y) sf::st_write(x, paste0(temp_path, y, ".shp")),
-            dat_list, 
-            names(dat_list)) %>% 
+       dat_list, 
+       names(dat_list)) %>% 
   invisible()
 rm(dat_list, temp_path)
 ```
@@ -149,7 +149,7 @@ This section is for managing and updating general information related to  on-far
 The user will need access to or need to create necessary farm and field boundaries associated with their experimental fields to set up their database. These farm boundaries that encompass the fields within a farmer's ownership/management purview are both imported as assets into Google Earth Engine and imported into the database. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html) for creating a shapefile of a field or farm boundary. These are necessary for identifying data based on geographic location rather than searching files for information keying in on field or farm specific information. Farm boundaries are also used as the bounding boxes for downloading Google Earth Engine data. The shapefile naming convention for fields is "<fieldname>_bbox.shp" while the shapefile naming convention for farm boundaries is "<farmername>_<farmname>_bbox.shp". This format is used because there are sometimes multiple farm boundaries corresponding to one farmer if their operations are spread across a large area (i.e. multiple counties). **NOTE:** Do not use the same name for a farm and a field. You must have the farm or field name present in the corresponding shapefile name. 
 
 ### ManageDB Class
-This section utilizes an R6 Class called ManageDB that is used to update or add data to the OFPE database. This utilizes other R6 classes such as AddFarmers, AddFields, and AddFarms, on request by the user. The modularity of the ManageDB class allows for users to create their own classes that can be integrated and passed into the ManageDB class. This vignette section operates under the assumption that the section above has been completed once for your database to enable extensions and add initial tables. This class takes a list of lists as an argument with an 'action class' name and associated parameters. 'Actions classes' include AddFarmers(), AddFarms(), and AddFields(). 
+This section utilizes an R6 Class called ManageDB that is used to update or add data to the OFPE database. This utilizes other R6 classes such as ManageFarmers, ManageFields, and ManageFarms, on request by the user. The modularity of the ManageDB class allows for users to create their own classes that can be integrated and passed into the ManageDB class. This vignette section operates under the assumption that the section above has been completed once for your database to enable extensions and add initial tables. This class takes a list of lists as an argument with an 'action class' name and associated parameters. 'Actions classes' include ManageFarmers(), ManageFarms(), and ManageFields(). 
 
 ### Initial Upload
 This section provides an example of uploading an initial batch of experimental information to the database, including the farm and field names and boudnaries and the vector of farmer names. This information fills in the tables created with the BuildDB class. The section below will demonstrate how to add more farmers, fields, or farms to the database. 
@@ -157,13 +157,13 @@ This section provides an example of uploading an initial batch of experimental i
 For demonstrative purposes, not all of the farmers available in the example data from the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) were used to build the database above in order to illustrate how to update and add to the database. 
 
 #### Initial Parameters
-Initial parameters are provided below. When using your own data you will have different farm and field names and will likely have a lot more than two. In this example, we ware using the vector of farmer names defined above. This is the only argument for the AddFarmers class and not redefined below.
+Initial parameters are provided below. When using your own data you will have different farm and field names and will likely have a lot more than two. In this example, we ware using the vector of farmer names defined above. This is the only argument for the ManageFarmers class and not redefined below.
 
 First, supply your inputs for farm information. For each farm, create a list with the name of the farm, the name of the farmer that owns it, and the name of the shapefile with the farm boundary. Remember that all arguments for names will be converted to lowercase (i.e. FarmerB = farmerb). Additionally, the path to the folder containing the farm boundary data will be required.
 
 ```{r, eval = FALSE}
 farms <- list(
-  list(farm_name = "FarrmerB_FarmName",
+  list(farm_name = "FarmerB_FarmName",
        farm_shp_name = "FarmerB_FarmName_bbox",
        farmer_name = "FarmerB"),
   list(farm_name = "FarmerC_FarmName",
@@ -175,7 +175,7 @@ farm_path <- "~/INIT_UPLOADS/"
 
 Next, supply your inputs for field information. For each field, create a list with the name of the field, the name of the farmer that owns it, and the name of the shapefile with the field boundary. Remember that all arguments for names will be converted to lowercase (i.e. FarmerB = farmerb). Additionally, the path to the folder containing the field boundary data will be required.
 
-```{r}
+```{r, eval = FALSE}
 fields <- list(
   list(field_name = "sec35middle",
        field_shp_name = "sec35midddle_bbox",
@@ -195,16 +195,16 @@ Any or all of these R6 classes can be ran at any time in any order, however the 
 ```{r, eval = FALSE}
 action_list <- list(
   list(
-    action = "AddFarmers",
+    action = "ManageFarmers",
     farmers = farmers
+  ),
+  list(
+    action = "ManageFarms",
+    farms = farms,
+    farm_path = farm_path
   )#,
   # list(
-  #   action = "AddFarms", 
-  #   farms = farms,
-  #   farm_path = farm_path
-  # ),
-  # list(
-  #   action = "AddFields",
+  #   action = "ManageFields",
   #   fields = fields,
   #   field_path = field_path
   # )
@@ -215,7 +215,7 @@ Now, pass the arguments on to the ManageDB class generator along with a database
 
 ```{r, eval = FALSE}
 manageDB <- ManageDB$new(dbCon, action_list)
-manageDB$setupActions()
+manageDB$setupActions() %>% invisible
 ```
 
 #### Execute ManageDB

@@ -41,7 +41,6 @@ ManageDB <- R6::R6Class(
     #' actions was supplied upong initialization of the ManageDB class.
     #' @return Prepared R6 action classes specified by the user.
     setupActions = function() {
-      browser()
       lapply(self$do_actions, private$.setupActions)
     },
     #' @description
@@ -61,7 +60,6 @@ ManageDB <- R6::R6Class(
       return(eval(parse(text = paste0(action_item$action, init_text))))
     },
     .setupActions = function(action) {
-      browser()
       action$setup()
     },
     .executeActions = function(action) {

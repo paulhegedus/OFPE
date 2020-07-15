@@ -40,4 +40,5 @@ Imports:
     magrittr,
     DBI,
     R6,
-    sf
+    sf,
+    rpostgis

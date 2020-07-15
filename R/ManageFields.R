@@ -1,4 +1,4 @@
-#' @title R6 Class for adding field information in OFPE database.
+#' @title R6 Class for adding or updating field information in OFPE database.
 #'
 #' @description R6 class that takes a vector of field names and a path
 #' to the location of field boundary shapefiles. Uploads boundaries to the
@@ -9,13 +9,13 @@
 #' interface and includes a setup and execute method that is called from
 #' the ManageDB class.
 #' @export
-AddFields <- R6::R6Class(
-  "AddFields",
+ManageFields <- R6::R6Class(
+  "ManageFields",
   public = list(
     #' @field dbCon Database connection object connected to an OFPE formatted
     #' database, see DBCon class.
     dbCon = NULL,
-    #' @field field_names Vector of field names to add to the database.
+    #' @field field_names Vector of field names to add or update in the database.
     field_names = NULL,
     #' @field field_farmer_names Vector of farmer names reflecting the
     #' owner of the field names supplied.
@@ -24,7 +24,7 @@ AddFields <- R6::R6Class(
     field_path = NULL,
 
     #' @description
-    #' Create an AddFields object. The database connection and a vector of
+    #' Create an ManageFields object. The database connection and a vector of
     #' field names and farmer names are used to upload field information
     #' to the database with the appropriate owner information. The field_path
     #' argument indicates the file path in which to follow for the field boundary
@@ -32,7 +32,7 @@ AddFields <- R6::R6Class(
     #' for running the setup and execute methods.
     #' @param dbCon Database connection object connected to an OFPE formatted
     #' database, see DBCon class.
-    #' @param field_names Vector of field names to add to the database.
+    #' @param field_names Vector of field names to add or update in the database.
     #' @param field_farmer_names Vector of farmer names reflecting the
     #' owner of the field names supplied.
     #' @param field_path File path to the location of field boundary shapefiles.
