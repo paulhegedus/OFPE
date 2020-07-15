@@ -15,6 +15,9 @@
 #' @seealso \url{https://paulhegedus.github.io/OFPE-Website/}
 #' @seealso \url{https://github.com/paulhegedus/OFPEDATA.git}
 #'
+#' @section General Functions:
+#'
+#'
 #' @section Database Creation & Managements:
 #' See Vignette 1 for database management and updating examples.
 #'

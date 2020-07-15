@@ -12,7 +12,8 @@
 AddFields <- R6::R6Class(
   "AddFields",
   public = list(
-    #' @field dbCon Database connection object, see DBCon class.
+    #' @field dbCon Database connection object connected to an OFPE formatted
+    #' database, see DBCon class.
     dbCon = NULL,
     #' @field field_names Vector of field names to add to the database.
     field_names = NULL,
@@ -29,7 +30,8 @@ AddFields <- R6::R6Class(
     #' argument indicates the file path in which to follow for the field boundary
     #' shapefiles that are to be uploaded to the database. Instantiates the class
     #' for running the setup and execute methods.
-    #' @param dbCon Database connection object, see DBCon class.
+    #' @param dbCon Database connection object connected to an OFPE formatted
+    #' database, see DBCon class.
     #' @param field_names Vector of field names to add to the database.
     #' @param field_farmer_names Vector of farmer names reflecting the
     #' owner of the field names supplied.

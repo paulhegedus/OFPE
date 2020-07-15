@@ -13,7 +13,8 @@ a setup and execute method that is called from the ManageDB class.
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{dbCon}}{Database connection object, see DBCon class.}
+\item{\code{dbCon}}{Database connection object connected to an OFPE formatted
+database, see DBCon class.}
 
 \item{\code{farmers}}{Vector of farmer names to add to the database.}
 }
@@ -36,15 +37,19 @@ Create an AddFarmers object. The database connection and a vector of
 farmer names are used to upload farmer information to the database.
 Instantiates the class for running the setup and execute methods.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AddFarmers$new(dbCon, farmers)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{AddFarmers$new(dbCon, action_item)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{dbCon}}{Database connection object, see DBCon class.}
+\item{\code{dbCon}}{Database connection object connected to an OFPE formatted
+database, see DBCon class.}
 
-\item{\code{farmers}}{Vector of farmer names to add to the database.}
+\item{\code{action_item}}{List of inputs to the AddFarmers method, from the
+list passed into the ManageDB class. This includes a vector of farmer
+names to add to the 'all_farms.farmers' table of an OFPE formatted
+database.}
 }
 \if{html}{\out{</div>}}
 }

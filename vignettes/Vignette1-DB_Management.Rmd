@@ -136,7 +136,7 @@ Additionally, the BuildDB object will generate two schemas for each farmer, one 
 ### Build Tables: buildTables()
 There are three tables that are initialized when building the OFPE database. These three initial tables are created in the 'all_farms' schema; 'farmers', 'farms', and 'fields' which are filled in using the manager functions below.
 
-Again, the function below simply runs each of the functions above in the intended order. Running those functions out of order will likely result in errors. Also, if you run this again after running once will result in error because extensions already created.
+Again, the function below simply runs each of the functions above in the intended order. Running those functions out of order will likely result in errors. Also, if you run this again after running once will result in error because extensions already created. Note that PostgreSQL does not allow uppercase letters in the names of their schemas or tables, so any names passed in are converted to lowercase.
 
 ```{r, eval = FALSE}
 # not run
@@ -159,20 +159,31 @@ For demonstrative purposes, not all of the farmers available in the example data
 #### Initial Parameters
 Initial parameters are provided below. When using your own data you will have different farm and field names and will likely have a lot more than two. In this example, we ware using the vector of farmer names defined above. This is the only argument for the AddFarmers class and not redefined below.
 
-First, supply your inputs for farm information; a vector of farm names that correpsond to the names of shapefiles with the farm boundaries located in the path to the folder with farms. To be explicit, a vector of farmer names corresponding to the owner of the farm is passed in. This is in case the naming convention for farm names (<farmername_farmname>_bbox.shp) is not followed and a farmer name cannot be identified from the farm name.
+First, supply your inputs for farm information. For each farm, create a list with the name of the farm, the name of the farmer that owns it, and the name of the shapefile with the farm boundary. Remember that all arguments for names will be converted to lowercase (i.e. FarmerB = farmerb). Additionally, the path to the folder containing the farm boundary data will be required.
 
 ```{r, eval = FALSE}
-farm_names <- c("FarmerB_FarmName", "FarmerC_FarmName")
-farm_farmer_names <- c("FarmerB", "FarmerC")
+farms <- list(
+  list(farm_name = "FarrmerB_FarmName",
+       farm_shp_name = "FarmerB_FarmName_bbox",
+       farmer_name = "FarmerB"),
+  list(farm_name = "FarmerC_FarmName",
+       farm_shp_name = "FarmerC_FarmName_bbox",
+       farmer_name = "FarmerC")
+)
 farm_path <- "~/INIT_UPLOADS/"
 ```
 
-Next, supply the inputs for field information. Pass a vector of field names correpsond to the names of shapefiles with the field boundaries located in the path to the folder with fields. A vector of farmer names corresponding to the owner of the field is also required. 
+Next, supply your inputs for field information. For each field, create a list with the name of the field, the name of the farmer that owns it, and the name of the shapefile with the field boundary. Remember that all arguments for names will be converted to lowercase (i.e. FarmerB = farmerb). Additionally, the path to the folder containing the field boundary data will be required.
 
 ```{r}
-fields <- 
-field_names <- c("sec35mid", "millview")
-field_farmer_names <- c("FarmerB", "FarmerC")
+fields <- list(
+  list(field_name = "sec35middle",
+       field_shp_name = "sec35midddle_bbox",
+       farmer_name = "FarmerB"),
+  list(field_name = "millview",
+       field_shp_name = "millview_bbox",
+       farmer_name = "FarmerC")
+)
 field_path <- "~/INIT_UPLOADS/"
 ```
 
@@ -189,20 +200,18 @@ action_list <- list(
   )#,
   # list(
   #   action = "AddFarms", 
-  #   farm_names = farm_names,
-  #   farm_farmer_names = farm_farmer_names,
+  #   farms = farms,
   #   farm_path = farm_path
   # ),
   # list(
   #   action = "AddFields",
-  #   field_names = field_names,
-  #   field_farmer_names = field_farmer_names,
+  #   fields = fields,
   #   field_path = field_path
   # )
 )
 ```
 
-Now, pass the arguments on to the ManageDB class generator along with a database connection. Each of the action R6 classes specified by the user have the same interface that includes setup() and execute() methods. These are called from the ManageDB class automatically when it's initializeActions() method is called.
+Now, pass the arguments on to the ManageDB class generator along with a database connection. Each of the action R6 classes specified by the user have the same interface that includes setup() and execute() methods. Any or all of these can be passed into the ManageDB class. These action classes are initialized with the initializeActions() method, setup with the setupActions() method, and executed with the executeActions() method. 
 
 ```{r, eval = FALSE}
 manageDB <- ManageDB$new(dbCon, action_list)
@@ -212,10 +221,10 @@ manageDB$setupActions()
 #### Execute ManageDB
 After a ManageDB class object has been created and set up, the user can run the 'executeActions' method to add information to the database. The modularity of this class allows users to add R6 classes that they have built and pass them into the executeAction method. For example, a user may want to build a method or two for deleting information or adding information to other tables. See this [page](https://stackoverflow.com/questions/40295279/r-how-do-i-add-an-extra-function-to-a-package) for information on how to add to a package or clone the [OFPE package](https://github.com/paulhegedus/OFPE.git) Github repository, add your own classes and re-install the package from your source files.
 
-After the user has initialized the class, running the executeAction method will run the functions associated with each action method.
+After the user has initialized the class, running the executeAction method will run the functions associated with each action method. Invisbile is called to suppress chatty output.
 
 ```{r, eval = FALSE}
-manageDB$executeActions()
+manageDB$executeActions() %>% invisible()
 ```
 
 Now there should be data filled in the 'farmers', 'farms', and 'fields' tables in the 'all_farms' schema of the database. The section below will demonstrate how to add another farmer and their associated farm and fields.

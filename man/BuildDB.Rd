@@ -13,8 +13,8 @@ building the the OFPE database schemas and initial tables.
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{dbCon}}{DBCon class object that holds a database connection,
-such as PostgreSQLConnection.}
+\item{\code{dbCon}}{Database connection object connected to an OFPE formatted
+database, see DBCon class.}
 
 \item{\code{postgis_version}}{Version of PostGIS installed (i.e. 2.5, 3.0).}
 
@@ -45,8 +45,8 @@ Create a database builder object.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{dbCon}}{DBCon class object that holds a database connection,
-such as PostgreSQLConnection.}
+\item{\code{dbCon}}{dbCon Database connection object connected to an OFPE formatted
+database, see DBCon class.}
 
 \item{\code{postgis_version}}{Version of PostGIS installed (i.e. 2.5, 3.0).}
 
@@ -115,7 +115,8 @@ another for storing aggregated data files. A general schema call 'all_farms'
 is also created to hold data that is not farmer specific or farm-wide data.
 No arguments needed if provided on class initialization, otherwise arguments
 provided take precedence. The dot indicates that this function would be
-private if not for documentations sake.
+private if not for documentations sake. Note that farmer names are converted
+to lowercase upon addition to the database if not already.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{BuildDB$.buildSchemas(db = NULL, farmers = NULL)}\if{html}{\out{</div>}}
 }

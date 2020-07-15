@@ -16,7 +16,8 @@ the ManageDB class.
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{dbCon}}{Database connection object, see DBCon class.}
+\item{\code{dbCon}}{Database connection object connected to an OFPE formatted
+database, see DBCon class.}
 
 \item{\code{farm_names}}{Vector of farm names to add to the database.}
 
@@ -53,7 +54,8 @@ for running the setup and execute methods.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{dbCon}}{Database connection object, see DBCon class.}
+\item{\code{dbCon}}{Database connection object connected to an OFPE formatted
+database, see DBCon class.}
 
 \item{\code{farm_names}}{Vector of farm names to add to the database.}
 

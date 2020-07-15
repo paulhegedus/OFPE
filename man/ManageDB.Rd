@@ -12,13 +12,14 @@ own methods.
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{dbCon}}{DBCon class object that holds a database connection,
-such as PostgreSQLConnection.}
+\item{\code{dbCon}}{Database connection object connected to an OFPE formatted
+database, see DBCon class.}
 
 \item{\code{action_list}}{List of lists with the names of the action methods
 to execute and their associated parameters.}
 
-\item{\code{do_action}}{List of action methods initialized for execution.}
+\item{\code{do_actions}}{List of action methods initialized for setup and
+execution.}
 }
 \if{html}{\out{</div>}}
 }
@@ -45,8 +46,8 @@ the specified action classes.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{dbCon}}{DBCon class object that holds a database connection,
-such as PostgreSQLConnection.}
+\item{\code{dbCon}}{Database connection object connected to an OFPE formatted
+database, see DBCon class.}
 
 \item{\code{action_list}}{List of lists with the names of the action methods
 to execute and their associated parameters.}

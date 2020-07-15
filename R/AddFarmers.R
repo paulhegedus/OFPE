@@ -9,7 +9,8 @@
 AddFarmers <- R6::R6Class(
   "AddFarmers",
   public = list(
-    #' @field dbCon Database connection object, see DBCon class.
+    #' @field dbCon Database connection object connected to an OFPE formatted
+    #' database, see DBCon class.
     dbCon = NULL,
     #' @field farmers Vector of farmer names to add to the database.
     farmers = NULL,
@@ -18,29 +19,26 @@ AddFarmers <- R6::R6Class(
     #' Create an AddFarmers object. The database connection and a vector of
     #' farmer names are used to upload farmer information to the database.
     #' Instantiates the class for running the setup and execute methods.
-    #' @param dbCon Database connection object, see DBCon class.
-    #' @param farmers Vector of farmer names to add to the database.
+    #' @param dbCon Database connection object connected to an OFPE formatted
+    #' database, see DBCon class.
+    #' @param action_item List of inputs to the AddFarmers method, from the
+    #' list passed into the ManageDB class. This includes a vector of farmer
+    #' names to add to the 'all_farms.farmers' table of an OFPE formatted
+    #' database.
     #' @return A new initialized 'AddFarmers' object.
-    initialize = function(dbCon, farmers) {
+    initialize = function(dbCon, action_item) {
       stopifnot(
-        !is.null(farmers),
-        !is.character(farmers)
+        !is.null(action_item),
+        !is.null(action_item$farmers),
+        is.character(action_item$farmers)
       )
       self$dbCon <- dbCon
-      self$farmers <- farmers
+      self$farmers <- action_item$farmers %>% tolower()
     },
     #' @description
-    #' Prepares the farmer data prior to uploading to the database.
-    #' Queries the database for existing farmer information, and if found
-    #' matches existing farmer ID's to farmer names where needed, else
-    #' provides a new farmer ID.
-    #' @param None No arguments needed because they are provided during class
-    #' initialization.
-    #' @return Prepared R6 class for uploading farmer information.
-    setup = function() {
-
-
-    },
+    #' No setup needed for the AddFarmers class. However is still present to
+    #' abide by the ManageDB interface consisting of setup and execute methods.
+    setup = function() {},
     #' @description
     #' Executes the upload of prepared farmer information to the database in the
     #' 'all_farms' schema and the 'farmers' table. If a farmer is already
@@ -49,8 +47,25 @@ AddFarmers <- R6::R6Class(
     #' initialization.
     #' @return Farmer data uploaded into 'all_farms.farmers' table in the database.
     execute = function() {
-
-
+      sapply(self$farmers, self$.uploadFarmers, self$dbCon$db)
+    },
+    #' @description
+    #' Uploads a farmer to the database. Takes the farmer name and adds it to the
+    #' 'all_farms.farmers' table. Makes sure there is no conflict defined in the
+    #' .buildTables method of the BuildDB class. A farmeridx is automatically
+    #' generated upon upload by PostgreSQL. The dot indicates that this function
+    #' would be private if not for documentations sake.
+    #' @param farmer Name of a farmer for upload into 'all_farms.farmers'.
+    #' @param farmer Name of a farmer for upload into 'all_farms.farmers'.
+    #' @return Farmer upload into database.
+    .uploadFarmers = function(farmer, db) {
+      DBI::dbSendQuery(
+        db,
+        paste0("INSERT INTO all_farms.farmers(farmer)
+                        VALUES ('", farmer, "')
+                        ON CONFLICT ON CONSTRAINT norepfarmers
+                        DO UPDATE SET farmer = EXCLUDED.farmer;")
+      )
     }
   )
 )

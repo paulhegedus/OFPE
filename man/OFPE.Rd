@@ -13,6 +13,10 @@ remotely sensed data, aggregating data from disparate sources, data
 analysis and optimization of inputs, simulationg of management outcomes,
 and generation of prescriptive application maps for optimized inputs.
 }
+\section{General Functions}{
+
+}
+
 \section{Database Creation & Managements}{
 
 See Vignette 1 for database management and updating examples.

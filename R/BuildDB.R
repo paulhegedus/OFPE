@@ -6,8 +6,8 @@
 BuildDB <- R6::R6Class(
   "BuildDB",
   public = list(
-    #' @field dbCon DBCon class object that holds a database connection,
-    #' such as PostgreSQLConnection.
+    #' @field dbCon Database connection object connected to an OFPE formatted
+    #' database, see DBCon class.
     dbCon = NULL,
     #' @field postgis_version Version of PostGIS installed (i.e. 2.5, 3.0).
     postgis_version = NULL,
@@ -16,8 +16,8 @@ BuildDB <- R6::R6Class(
 
     #' @description
     #' Create a database builder object.
-    #' @param dbCon DBCon class object that holds a database connection,
-    #' such as PostgreSQLConnection.
+    #' @param dbCon dbCon Database connection object connected to an OFPE formatted
+    #' database, see DBCon class.
     #' @param postgis_version Version of PostGIS installed (i.e. 2.5, 3.0).
     #' @param farmers Vector of farmer names to use for building initial schemas.
     #' @return A new 'BuildDB' object.
@@ -115,6 +115,7 @@ BuildDB <- R6::R6Class(
       if (is.null(farmers)) {
         farmers <- self$farmers
       }
+      farmers <- tolower(farmers)
       farmSchemas <- rep(farmers, each = 2) %>%
         paste0(c("_r", "_a"))
       schemas <- c("all_farms", farmSchemas)
@@ -145,20 +146,22 @@ BuildDB <- R6::R6Class(
       DBI::dbSendQuery(
         db,
         "CREATE TABLE all_farms.farmers (
-           farmeridx SERIAL NOT NULL,
+           farmeridx SERIAL PRIMARY KEY,
            farmer VARCHAR(100) NOT NULL,
-           PRIMARY KEY (farmeridx));
+           CONSTRAINT norepfarmers UNIQUE (farmer));
         CREATE TABLE all_farms.farms (
-           farmidx SERIAL NOT NULL,
+           farmidx SERIAL PRIMARY KEY,
            farm VARCHAR(100) NOT NULL,
            farmeridx INTEGER REFERENCES all_farms.farmers(farmeridx),
-           PRIMARY KEY (farmidx));
+           CONSTRAINT norepfarms UNIQUE (farm, farmeridx));
         CREATE TABLE all_farms.fields (
-          wfid INTEGER NOT NULL,
           fieldidx SERIAL NOT NULL,
+          wfid INTEGER NOT NULL,
           farmidx INTEGER REFERENCES all_farms.farms(farmidx),
           farmeridx INTEGER REFERENCES all_farms.farmers(farmeridx),
           fieldname VARCHAR(100) NOT NULL,
+          UNIQUE (wfid, fieldname),
+          CONSTRAINT norepfields UNIQUE (wfid, fieldname),
           PRIMARY KEY (fieldidx, wfid));"
       )
       DBI::dbSendQuery(db, "ALTER TABLE all_farms.farms ADD COLUMN geom geometry")

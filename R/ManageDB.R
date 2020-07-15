@@ -8,28 +8,27 @@
 ManageDB <- R6::R6Class(
   "ManageDB",
   public = list(
-    #' @field dbCon DBCon class object that holds a database connection,
-    #' such as PostgreSQLConnection.
+    #' @field dbCon Database connection object connected to an OFPE formatted
+    #' database, see DBCon class.
     dbCon = NULL,
     #' @field action_list List of lists with the names of the action methods
     #' to execute and their associated parameters.
     action_list = NULL,
-    #' @field do_action List of action methods initialized for execution.
-    do_action = NULL,
+    #' @field do_actions List of action methods initialized for setup and
+    #' execution.
+    do_actions = NULL,
 
     #' @description
     #' Create a database manager object. The database connection and each
     #' action class list is passed to an internal method that initializes
     #' the specified action classes.
-    #' @param dbCon DBCon class object that holds a database connection,
-    #' such as PostgreSQLConnection.
+    #' @param dbCon Database connection object connected to an OFPE formatted
+    #' database, see DBCon class.
     #' @param action_list List of lists with the names of the action methods
     #' to execute and their associated parameters.
     #' @return A new 'ManageDB' object with initialized action classes.
     initialize = function(dbCon, action_list) {
-      stopifnot(
-        !is.null(action_list)
-      )
+      stopifnot(!is.null(action_list))
       self$dbCon <- dbCon
       self$action_list <- action_list
       self$do_actions <- lapply(self$action_list, private$.initializeActions)
@@ -42,6 +41,7 @@ ManageDB <- R6::R6Class(
     #' actions was supplied upong initialization of the ManageDB class.
     #' @return Prepared R6 action classes specified by the user.
     setupActions = function() {
+      browser()
       lapply(self$do_actions, private$.setupActions)
     },
     #' @description
@@ -52,7 +52,7 @@ ManageDB <- R6::R6Class(
     #' initialization.
     #' @return Data uploaded into the database.
     executeActions = function() {
-      lapply(self$action_list, private$.executeActions)
+      lapply(self$do_actions, private$.executeActions)
     }
   ),
   private = list(
@@ -61,6 +61,7 @@ ManageDB <- R6::R6Class(
       return(eval(parse(text = paste0(action_item$action, init_text))))
     },
     .setupActions = function(action) {
+      browser()
       action$setup()
     },
     .executeActions = function(action) {
