@@ -58,7 +58,7 @@ library(OFPEDATA)
 First, a connection is formed to the database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette, and the rest of the vignettes are working with an example database named 'OFPE' (as named in the tutorial). This package utilizes an R6 class for containing the database connection information and the connection itself. This class is PostgreSQL sp
 
 ```{r, eval = FALSE}
-db <- DBCon$new(
+dbCon <- DBCon$new(
   user = "postgres",
   password = "<your_password>",
   dbname = "<your_db_name>", 
@@ -68,7 +68,7 @@ db <- DBCon$new(
 ```
 
 ```{r, echo = FALSE, eval = FALSE}
-db <- DBCon$new(
+dbCon <- DBCon$new(
   user = "postgres",
   password = "Paul210220",
   dbname = "OFPE", 
@@ -121,7 +121,7 @@ For demonstrative purposes, not all of the farmers available in the example data
 
 ```{r, eval = FALSE}
 farmers <- c("FarmerB", "FarmerC")
-buildDB <- BuildDB$new(db$db, "2.5", farmers)
+buildDB <- BuildDB$new(dbCon, "2.5", farmers)
 ```
 
 ### Build Database
@@ -136,7 +136,7 @@ Additionally, the BuildDB object will generate two schemas for each farmer, one 
 ### Build Tables: buildTables()
 There are three tables that are initialized when building the OFPE database. These three initial tables are created in the 'all_farms' schema; 'farmers', 'farms', and 'fields' which are filled in using the manager functions below.
 
-Again, the function below simply runs each of the functions above in the intended order. Running those functions out of order will likely result in errors.
+Again, the function below simply runs each of the functions above in the intended order. Running those functions out of order will likely result in errors. Also, if you run this again after running once will result in error because extensions already created.
 
 ```{r, eval = FALSE}
 # not run
@@ -149,7 +149,7 @@ This section is for managing and updating general information related to  on-far
 The user will need access to or need to create necessary farm and field boundaries associated with their experimental fields to set up their database. These farm boundaries that encompass the fields within a farmer's ownership/management purview are both imported as assets into Google Earth Engine and imported into the database. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html) for creating a shapefile of a field or farm boundary. These are necessary for identifying data based on geographic location rather than searching files for information keying in on field or farm specific information. Farm boundaries are also used as the bounding boxes for downloading Google Earth Engine data. The shapefile naming convention for fields is "<fieldname>_bbox.shp" while the shapefile naming convention for farm boundaries is "<farmername>_<farmname>_bbox.shp". This format is used because there are sometimes multiple farm boundaries corresponding to one farmer if their operations are spread across a large area (i.e. multiple counties). **NOTE:** Do not use the same name for a farm and a field. You must have the farm or field name present in the corresponding shapefile name. 
 
 ### ManageDB Class
-This section utilizes an R6 Class called ManageDB that is used to update or add data to the OFPE database. This utilizes other R6 classes such as ManageFarmers, AddFields, and AddFarms, on request by the user. The modularity of the ManageDB class allows for users to create their own classes that can be integrated and passed into the ManageDB class. This vignette section operates under the assumption that the section above has been completed once for your database to enable extensions and add initial tables. This class takes a list of lists as an argument with an 'action class' name and associated parameters. 'Actions classes' include ManageFarmers(), ManageFarms(), and ManageFields(). 
+This section utilizes an R6 Class called ManageDB that is used to update or add data to the OFPE database. This utilizes other R6 classes such as AddFarmers, AddFields, and AddFarms, on request by the user. The modularity of the ManageDB class allows for users to create their own classes that can be integrated and passed into the ManageDB class. This vignette section operates under the assumption that the section above has been completed once for your database to enable extensions and add initial tables. This class takes a list of lists as an argument with an 'action class' name and associated parameters. 'Actions classes' include AddFarmers(), AddFarms(), and AddFields(). 
 
 ### Initial Upload
 This section provides an example of uploading an initial batch of experimental information to the database, including the farm and field names and boudnaries and the vector of farmer names. This information fills in the tables created with the BuildDB class. The section below will demonstrate how to add more farmers, fields, or farms to the database. 
@@ -157,13 +157,21 @@ This section provides an example of uploading an initial batch of experimental i
 For demonstrative purposes, not all of the farmers available in the example data from the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) were used to build the database above in order to illustrate how to update and add to the database. 
 
 #### Initial Parameters
-Initial parameters are provided below. When using your own data you will have different farm and field names. And perhaps a lot more than two. First, supply your inputs, this example uses the same 'farmers' as defined above. 
+Initial parameters are provided below. When using your own data you will have different farm and field names and will likely have a lot more than two. In this example, we ware using the vector of farmer names defined above. This is the only argument for the AddFarmers class and not redefined below.
+
+First, supply your inputs for farm information; a vector of farm names that correpsond to the names of shapefiles with the farm boundaries located in the path to the folder with farms. To be explicit, a vector of farmer names corresponding to the owner of the farm is passed in. This is in case the naming convention for farm names (<farmername_farmname>_bbox.shp) is not followed and a farmer name cannot be identified from the farm name.
 
 ```{r, eval = FALSE}
 farm_names <- c("FarmerB_FarmName", "FarmerC_FarmName")
+farm_farmer_names <- c("FarmerB", "FarmerC")
 farm_path <- "~/INIT_UPLOADS/"
+```
 
+Next, supply the inputs for field information. Pass a vector of field names correpsond to the names of shapefiles with the field boundaries located in the path to the folder with fields. A vector of farmer names corresponding to the owner of the field is also required. 
+
+```{r}
 field_names <- c("sec35mid", "millview")
+field_farmer_names <- c("FarmerB", "FarmerC")
 field_path <- "~/INIT_UPLOADS/"
 ```
 
@@ -175,26 +183,28 @@ Any or all of these R6 classes can be ran at any time in any order, however the 
 ```{r, eval = FALSE}
 action_list <- list(
   list(
-    action = "ManageFarmers",
+    action = "AddFarmers",
     farmers = farmers
-  ),
-  list(
-    action = "ManageFarms", 
-    farm_names = farm_names,
-    farm_path = farm_path
-  ),
-  list(
-    action = "ManageFields",
-    field_names = field_names,
-    field_path = field_path
-  )
+  )#,
+  # list(
+  #   action = "AddFarms", 
+  #   farm_names = farm_names,
+  #   farm_farmer_names = farm_farmer_names,
+  #   farm_path = farm_path
+  # ),
+  # list(
+  #   action = "AddFields",
+  #   field_names = field_names,
+  #   field_farmer_names = field_farmer_names,
+  #   field_path = field_path
+  # )
 )
 ```
 
-Now, pass the arguments on to the ManageDB class generator along with a database connection. Each of the action R6 classes specified by the user have the same interface that includes setup() and upload() methods. These are called from the ManageDB class automatically when it's initializeActions() method is called.
+Now, pass the arguments on to the ManageDB class generator along with a database connection. Each of the action R6 classes specified by the user have the same interface that includes setup() and execute() methods. These are called from the ManageDB class automatically when it's initializeActions() method is called.
 
 ```{r, eval = FALSE}
-manageDB <- ManageDB$new(db$db, action_list)
+manageDB <- ManageDB$new(dbCon, action_list)
 manageDB$setupActions()
 ```
 
@@ -223,7 +233,7 @@ Although the classes in this vignette interact with the database, none of them i
 
 Whenever a database connection is open it needs to be closed.
 ```{r, eval = FALSE}
-dbDisconnect(db$db) %>% invisible()
+dbCon$disconnect()
 ```
 
 

@@ -13,7 +13,8 @@ building the the OFPE database schemas and initial tables.
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{db}}{Database connection, such as PostgreSQLConnection.}
+\item{\code{dbCon}}{DBCon class object that holds a database connection,
+such as PostgreSQLConnection.}
 
 \item{\code{postgis_version}}{Version of PostGIS installed (i.e. 2.5, 3.0).}
 
@@ -38,13 +39,14 @@ building the the OFPE database schemas and initial tables.
 \subsection{Method \code{new()}}{
 Create a database builder object.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{BuildDB$new(db = NA, postgis_version = NA, farmers = NA)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{BuildDB$new(dbCon, postgis_version, farmers)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{db}}{Database connection, such as PostgreSQLConnection.}
+\item{\code{dbCon}}{DBCon class object that holds a database connection,
+such as PostgreSQLConnection.}
 
 \item{\code{postgis_version}}{Version of PostGIS installed (i.e. 2.5, 3.0).}
 

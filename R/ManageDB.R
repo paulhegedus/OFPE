@@ -8,8 +8,9 @@
 ManageDB <- R6::R6Class(
   "ManageDB",
   public = list(
-    #' @field db Database connection, such as PostgreSQLConnection.
-    db = NULL,
+    #' @field dbCon DBCon class object that holds a database connection,
+    #' such as PostgreSQLConnection.
+    dbCon = NULL,
     #' @field action_list List of lists with the names of the action methods
     #' to execute and their associated parameters.
     action_list = NULL,
@@ -20,15 +21,16 @@ ManageDB <- R6::R6Class(
     #' Create a database manager object. The database connection and each
     #' action class list is passed to an internal method that initializes
     #' the specified action classes.
-    #' @param db Database connection.
+    #' @param dbCon DBCon class object that holds a database connection,
+    #' such as PostgreSQLConnection.
     #' @param action_list List of lists with the names of the action methods
     #' to execute and their associated parameters.
     #' @return A new 'ManageDB' object with initialized action classes.
-    initialize = function(db = NA, action_list = NA) {
+    initialize = function(dbCon, action_list) {
       stopifnot(
         !is.null(action_list)
       )
-      self$db <- db
+      self$dbCon <- dbCon
       self$action_list <- action_list
       self$do_actions <- lapply(self$action_list, private$.initializeActions)
     },
@@ -55,14 +57,14 @@ ManageDB <- R6::R6Class(
   ),
   private = list(
     .initializeActions = function(action_item) {
-      init_text <- "$new(self$db, action_item)"
+      init_text <- "$new(self$dbCon, action_item)"
       return(eval(parse(text = paste0(action_item$action, init_text))))
     },
     .setupActions = function(action) {
       action$setup()
     },
     .executeActions = function(action) {
-      action$upload()
+      action$execute()
     }
   )
 )

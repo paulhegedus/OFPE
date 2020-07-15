@@ -12,7 +12,8 @@ own methods.
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{db}}{Database connection, such as PostgreSQLConnection.}
+\item{\code{dbCon}}{DBCon class object that holds a database connection,
+such as PostgreSQLConnection.}
 
 \item{\code{action_list}}{List of lists with the names of the action methods
 to execute and their associated parameters.}
@@ -38,13 +39,14 @@ Create a database manager object. The database connection and each
 action class list is passed to an internal method that initializes
 the specified action classes.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ManageDB$new(db = NA, action_list = NA)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ManageDB$new(dbCon, action_list)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{db}}{Database connection.}
+\item{\code{dbCon}}{DBCon class object that holds a database connection,
+such as PostgreSQLConnection.}
 
 \item{\code{action_list}}{List of lists with the names of the action methods
 to execute and their associated parameters.}

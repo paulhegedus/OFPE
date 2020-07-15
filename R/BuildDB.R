@@ -6,8 +6,9 @@
 BuildDB <- R6::R6Class(
   "BuildDB",
   public = list(
-    #' @field db Database connection, such as PostgreSQLConnection.
-    db = NULL,
+    #' @field dbCon DBCon class object that holds a database connection,
+    #' such as PostgreSQLConnection.
+    dbCon = NULL,
     #' @field postgis_version Version of PostGIS installed (i.e. 2.5, 3.0).
     postgis_version = NULL,
     #' @field farmers Vector of farmer names to use for building initial schemas.
@@ -15,15 +16,16 @@ BuildDB <- R6::R6Class(
 
     #' @description
     #' Create a database builder object.
-    #' @param db Database connection, such as PostgreSQLConnection.
+    #' @param dbCon DBCon class object that holds a database connection,
+    #' such as PostgreSQLConnection.
     #' @param postgis_version Version of PostGIS installed (i.e. 2.5, 3.0).
     #' @param farmers Vector of farmer names to use for building initial schemas.
     #' @return A new 'BuildDB' object.
-    initialize = function(db = NA, postgis_version = NA, farmers = NA) {
+    initialize = function(dbCon, postgis_version, farmers) {
       stopifnot(
         class(farmers) == "character"
       )
-      self$db <- db
+      self$dbCon <- dbCon
       self$postgis_version <- postgis_version
       self$farmers <- farmers
     },
@@ -51,7 +53,7 @@ BuildDB <- R6::R6Class(
     #' @source \url{https://trac.osgeo.org/postgis/wiki/UsersWikiCreateFishnet}
     .loadExtensions = function(db = NULL, postgis_version = NULL) {
       if (is.null(db)) {
-        db <- self$db
+        db <- self$dbCon$db
       }
       if (is.null(postgis_version)) {
         postgis_version <- self$postgis_version
@@ -107,7 +109,7 @@ BuildDB <- R6::R6Class(
     #' @return Built database schemas.
     .buildSchemas = function(db = NULL, farmers = NULL) {
       if (is.null(db)) {
-        db <- self$db
+        db <- self$dbCon$db
       }
       if (is.null(farmers)) {
         farmers <- self$farmers
@@ -137,26 +139,26 @@ BuildDB <- R6::R6Class(
     #' @return Built 'all_farms' tables
     .buildTables = function(db = NULL) {
       if (is.null(db)) {
-        db <- self$db
+        db <- self$dbCon$db
       }
       DBI::dbSendQuery(
         db,
         "CREATE TABLE all_farms.farmers (
-           farmeridx INTEGER NOT NULL,
+           farmeridx SERIAL NOT NULL,
            farmer VARCHAR(100) NOT NULL,
            PRIMARY KEY (farmeridx));
         CREATE TABLE all_farms.farms (
-           farmidx INTEGER NOT NULL,
+           farmidx SERIAL NOT NULL,
            farm VARCHAR(100) NOT NULL,
            farmeridx INTEGER REFERENCES all_farms.farmers(farmeridx),
            PRIMARY KEY (farmidx));
         CREATE TABLE all_farms.fields (
           wfid INTEGER NOT NULL,
-          fieldidx INTEGER NOT NULL,
+          fieldidx SERIAL NOT NULL,
           farmidx INTEGER REFERENCES all_farms.farms(farmidx),
           farmeridx INTEGER REFERENCES all_farms.farmers(farmeridx),
           fieldname VARCHAR(100) NOT NULL,
-          PRIMARY KEY (fieldidx,wfid));"
+          PRIMARY KEY (fieldidx, wfid));"
       )
       DBI::dbSendQuery(db, "ALTER TABLE all_farms.farms ADD COLUMN geom geometry")
       DBI::dbSendQuery(db, "ALTER TABLE all_farms.fields ADD COLUMN geom geometry")
