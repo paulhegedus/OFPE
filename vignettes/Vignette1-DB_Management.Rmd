@@ -49,13 +49,11 @@ The below contains the packages used in the vignette and a demonstration of conn
 #devtools::install_github("paulhegedus/OFPEDATA")
 library(OFPE)
 library(OFPEDATA)
-#library(sf)
-#library(RPostgreSQL)
 ```
 
 ### Connect to Database
 
-First, a connection is formed to the database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette, and the rest of the vignettes are working with an example database named 'OFPE' (as named in the tutorial). This package utilizes an R6 class for containing the database connection information and the connection itself. This class is PostgreSQL sp
+First, a connection is formed to the database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette, and the rest of the vignettes are working with an example database named 'OFPE' (as named in the tutorial). This package utilizes an R6 class for containing the database connection information and the connection itself. This class defaults to a PostgreSQL database.
 
 ```{r, eval = FALSE}
 dbCon <- DBCon$new(

@@ -29,6 +29,8 @@
 #'
 #' The OFPE data import functions and R6 class generators...
 #'
+#' The GEE data import functions and R6 class generators...
+#'
 #' @section Data Aggregation:
 #' See Vignette 3 for examples aggregating data from disparate sources.
 #'

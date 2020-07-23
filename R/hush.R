@@ -14,3 +14,26 @@ hush <- function(code){
   sink()
   return(tmp)
 }
+
+
+#' @title Put data in temp folder
+#'
+#' @description From OFPEDATA package to temp folder
+#'
+#' @param x file name in OFPEDATA package.
+#' @param y file name to save data as in temp folder.
+#' @return Result of function or code chunk.
+#' @export
+toTempFoldr <- function(x, y) {
+  browser()
+
+  x <- eval(parse(text = x))
+
+
+  sf::st_write(x,
+               paste0(temp_path, y, ".shp"),
+               quiet = TRUE)
+}
+
+
+

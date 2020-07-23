@@ -55,7 +55,7 @@ More information/products of the MSU OFPE Project can be found at;
   * [OFPE Technical Website](https://paulhegedus.github.io/OFPE-Website/)
   * [OFPE Web Application](https://paulhegedus.shinyapps.io/OFPE_AnalysisAndSim_App_v1/?_ga=2.189182059.1336631904.1592115204-590292424.1592115204)
   * The OFPE Tools package vignettes & OFPE Data Package ([OFPEDATA]([here](https://github.com/paulhegedus/OFPEDATA.git)))
-  * [OFPE CropScan 3300H Visualization Application](https://paulhegedus.shinyapps.io/OFPE_Protein_Application/?_ga=2.69643152.1880072526.1592481594-590292424.1592115204)
+  * [OFPE CropScan Application](https://paulhegedus.shinyapps.io/OFPE_Protein_Application/?_ga=2.69643152.1880072526.1592481594-590292424.1592115204)
 
 It is **strongly** recommended that the user familiarizes themselves with the OFPE project and the data workflow that this package supports by reading the general project information on the [OFPE Project Website](https://sites.google.com/site/ofpeframework/) and the detailed descriptions and diagrams of the OFPE data cycle on the [OFPE Technical Website](https://paulhegedus.github.io/OFPE-Website/). The [OFPE Web Application](https://paulhegedus.shinyapps.io/OFPE_AnalysisAndSim_App_v1/?_ga=2.189182059.1336631904.1592115204-590292424.1592115204) may also be illuminating to see the intended use of this package's functions in a user friendly GUI. Finally, **please** read the *Workflow/Vignettes* section below and work through Vignettes 1 - 5 for a complete understanding of the usage of this package in supporting your own or your client's on-farm precision experiments. 
 
