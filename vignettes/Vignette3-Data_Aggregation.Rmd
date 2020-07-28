@@ -11,6 +11,18 @@ vignette: >
 # Introduction
 This tutorial covers the data aggregation process. This step requires an OFPE formatted database as created on this  [page](https://paulhegedus.github.io/OFPE-Website/db_creation.html) or as done in Vignette 1 of this package. This vignette also requires the user to have completed Vignette 2 or have data imported into an OFPE formatted database. This includes both data collected on-farms and data collected from remote sensing sources. Please refer to the [OFPE Technical Website](https://paulhegedus.github.io/OFPE-Website/index.html) for more information. This tutorial covers the aggregation of the data imported to the database from various sources to the response variables of interest, yield and protein. This creates an 'aggregated' dataset stored in the '*farmername*_a' schema in the database that holds data containing information from all of the disparate sources at a common location. 
 
+Data aggregation is required for the analysis and prescription generation steps of the OFPE worfklow. Data is gathered from many different sources, but to be useful for statistical analysis and simulation, the data must be brought together into one dataset per field/year of interest in order to use for the OFPE data cycle. 
+
+The process for aggregating data in the database is outlined and a more detailed descriptionin the activity diagram on [this page](https://paulhegedus.github.io/OFPE-Website/dat_agg.html), where a component diagram can also be found.
+
+```{r, out.width='100%', fig.align='center', fig.cap='**Figure 1.** Data aggregate workflow part 1. Blue processes are chained together by arrows indicating the next step in the workflow, and black boxes indicate the addition of user inputs.', echo = FALSE}
+knitr::include_graphics('figures/ofpe_dat_agg_pt1.png')
+```
+
+```{r, out.width='100%', fig.align='center', fig.cap='**Figure 2.** Data aggregate workflow part 2. Blue processes are chained together by arrows indicating the next step in the workflow, and black boxes indicate the addition of user inputs.', echo = FALSE}
+knitr::include_graphics('figures/ofpe_dat_agg_pt2.png')
+```
+
 # Resources
 The resources below are strongly recommended as supplemental information regarding the use and intent of this vignette and associated functions.
 
@@ -64,12 +76,56 @@ dbCon <- DBCon$new(
 OFPE::removeTempTables(dbCon$db) # removes temporary tables
 ```
 
+## Aggregate Data
+The steps for aggregating covariate information to yield or protein data consists of selecting the options and inputs related to the aggregation process and then executing the aggregation workflow. Both of these processes use R6 classes. The 'AggInput' class holds all of the options related to the aggregation workflow and is required for instantiating the 'AggDat' class. Note that you can only aggregate data that you have collected and imported into the database. This will not go collect your data, that is what Vignettes 1 and 2 cover.
+
+### Initialize AggInput Class
+This class holds information related to the data aggregation workflow seen in the activity diagrams on [this page](https://paulhegedus.github.io/OFPE-Website/dat_agg.html). 
+
+<describe how this calss works> ... This class can be instantiated with all necessary information, or has methods for interactively choosing inputs based on information in the database ... <describe how this calss works> 
+
+The aggregation process includes multiple options. First, the user must choose the field to aggregate data in. If using the interactive feature, the user can supply a shapefile bounding box to use for querying the database for information available to aggregate, otherwise the field selection is used for querying usign database relations. The user then has the choice of what response variable to aggregate data to. Yield and protein are separated because they are collected at different resolutions. This also includes the 'Satellite' option, in which farmers can aggregate remotely sensed data for any year they have data for. The user also selects the 'current year', or the year of interest to collect data. This year represents the year that the crop was harvested and observed. The 'previous year' is the last year a crop was harvested in the field.
+
+The user then selects the appropriate experimental variable (as-applied nitrogen or seeding rates). The option is provided to aggregate data to the raw locations ('Observed') of the yield or protein data, or to aggregate data to the centroids of 10m grid cells ('Grids'). The 'Satellite' option uses the 'Grid' option by default since there are no observed locations. The user also has the option on the range of data to use for aggregating. In winter-wheat systems, farmers face a decision point at March 30th when they must decide how much N fertilzier to apply. This also is relavent for spring wheat farmers deciding on seeding rates. When making decisions farmers will not have information past this point, so the OFPE ethos is that no data is used for characterizing crop responses that won't be available for the farmer at this decision point. The user has the option, however, to collect data from the 'current year' up to the 'Decision Point' at March 30th, or from the 'Full Year' through December 31st.
+
+When selecting options interactively, the 'AggInputs' class will guide the user through selecting the sepcific data in the database to use for all years specified. The user is also guided through the selection of the columns of interest within each file. If not using the interactive funcitons, these must be supplied. For each year, response, and explanatory variable, the corresponding filenames in the database must be selected for accuracy and to ensure the user is using the data that they intend. For each file selected, the user needs to specifyc the column that contains the information of interest, for example in yield data, the user must select the column that corresponds to the measurement for yield. If the user is aggregating as-applied nitrogen fertilizer, the user also needs to specify if a/the conversion rate from the applied product to lbs-N/acre is needed.
+
+```{r}
+
+```
+
+### Initialize AggDat Class
+After the user selects the inputs, they can pass the 'AggInputs' class to the 'AggDat' class to execute the aggregation action. This process takes the AggInputs class and executes the aggregation process depending on these inputs. Most operations occur within the PostgreSQL database for speed and memory purposes. The response variable data is separted from the raw file to make the base of the aggregation file based on whenther using the observed or gridded locations. The 'previous year' response variable data are then extracted from the raw files and associated with the 'current year' data by intersection of grid cells or nearest neighbor to observed data. This is repeated for the experimental varaible, with any product conversion applied. Blank application areas indicate the application of 0 fertilizer rates, and filled in appropriately before a 30m buffer is taken from the field edge as part of the cleaning process. Across the whole field, data falling outside of 4SD from the mean is removed, as well as any negative yield and protein values (as they are impossible). If the grid option is selected, this process is repeated with 1SD within each gridcell. After all on-farm data has been aggregated, the remotely sensed raster data is extracted to the locations of the aggregated data. Finally, if SSURGO data is present it is added, otherwise skipped. 
+
+If the 'Satellite' response variable is chosen, then the process begins with the creation of 10m centroid locations and the extraction of remotely sensed and SSURGO data if present. Aggregated data are saved in the '*farmername*_a' schemas in tables appropriately labelede based on the response variable. 
+
+```{r}
+
+```
 
 
+## Multiple Fields
+In most cases, you will be aggregating multiple fields and years. The section below shows how to set up and implement your inputs to aggregate multiple files based on pre-determined inputs.
+
+This includes making a list contianing the inputs required for each separate aggregation process, then passing this list iteratively to the AggInputs class and subsequently to the AggDat classes.
+
+```{r}
+
+```
+
+# Conclusion
+This vignette provided a demonstration of how to aggregate data that you have imported to your database. Data aggregation is required for the analysis and prescription generation steps of the OFPE worfklow. Data is gathered from many different sources, but to be useful for statistical analysis and simulation, the data must be brought together into one dataset per field/year of interest in order to use for the OFPE data cycle. 
+
+Component diagrams of the process outlining the R6 classes used and their relations is described in Figures 3 and 4 below.
+
+```{r, out.width='100%', fig.align='center', fig.cap='**Figure 3.** Component diagram of the data aggregation workflow...', echo = FALSE}
+knitr::include_graphics('figures/ofpe_dat_agg_component.png')
+```
 
 
-
-
-
+Whenever a database connection is open it needs to be closed.
+```{r, eval = FALSE}
+dbCon$disconnect()
+```
 
 

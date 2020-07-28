@@ -208,8 +208,8 @@ This vignette provided a demonstration of how to import your on-farm data and da
 
 Component diagrams of the process outlining the R6 classes used and their relations is described in Figures 3 and 4 below.
 
-```{r, out.width='100%', fig.align='center', fig.cap='**Figure 2.** Component diagram of the database management workflow. A database connection is established using the DBCon class and the BuildDB class is used to format the OFPE database. The ManageDB class calls other classes of the same interface that are specified by the user.', echo = FALSE}
-knitr::include_graphics('figures/ofpe_db_mgmt_component.png')
+```{r, out.width='100%', fig.align='center', fig.cap='**Figure 3.** Component diagram of the data import workflows...', echo = FALSE}
+knitr::include_graphics('figures/ofpe_dat_import_component.png')
 ```
 
 
