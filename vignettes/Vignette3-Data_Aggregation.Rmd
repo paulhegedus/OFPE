@@ -1,0 +1,75 @@
+---
+title: "Vignette3-Data_Aggregation"
+author: "Paul Hegedus"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette3-Data_Aggregation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+# Introduction
+This tutorial covers the data aggregation process. This step requires an OFPE formatted database as created on this  [page](https://paulhegedus.github.io/OFPE-Website/db_creation.html) or as done in Vignette 1 of this package. This vignette also requires the user to have completed Vignette 2 or have data imported into an OFPE formatted database. This includes both data collected on-farms and data collected from remote sensing sources. Please refer to the [OFPE Technical Website](https://paulhegedus.github.io/OFPE-Website/index.html) for more information. This tutorial covers the aggregation of the data imported to the database from various sources to the response variables of interest, yield and protein. This creates an 'aggregated' dataset stored in the '*farmername*_a' schema in the database that holds data containing information from all of the disparate sources at a common location. 
+
+# Resources
+The resources below are strongly recommended as supplemental information regarding the use and intent of this vignette and associated functions.
+
+  * [OFPE Project Website](https://sites.google.com/site/ofpeframework/): Project information and products from the MSU OFPE project.
+  * [OFPE Technical Website](https://paulhegedus.github.io/OFPE-Website/index.html): Website with more detailed descriptions of the OFPE data cycle and workflow, as well as tutorials for external data processes that cannot be performed in R.
+  * [OFPE Overview](https://paulhegedus.github.io/OFPE-Website/ofpe_overview.html): Page of the OFPE Technical Website describing an overview of the OFPE data cycle and workflow.
+  * [OFPE Data Import](https://paulhegedus.github.io/OFPE-Website/dat_import.html): Detailed description of the OFPE on-farm data import process.
+
+Again, it is assumed that the user has completed Vignette 1 and 2 and understands the database creation and management methods described at this [site](https://paulhegedus.github.io/OFPE-Website/index.html).
+
+# Workflow
+Raw data from various sources need to be wrangled and aggregated together before statistical analysis and model development. Because yield and protein data are related to crop production and quality, the source of winter wheat value, covariate and explanatory data are used to enrich yield and protein datasets Due to equipment differences, yield and protein are gathered at different temporal resolutions (3 and 10 seconds, respectively) and subsequent spatial resolution, so are treated as separate datasets and not combined based on interpolation or estimation of protein data. The OFPE project aims to use the finest resolution of data possible to make decisions with data that has as little natural variation removed as possible.
+
+The activity workflow for enriching yield and protein datasets and a more detailed description is described on [this page](https://paulhegedus.github.io/OFPE-Website/data_agg.html), where a component diagram can also be found.
+
+## Set-Up
+The user must have access to an OFPE formatted database for using the vignette below. If using your own data and database, modify the pertinent information to your paths and file/folder/database names. This vignette does not use the OFPEDATA package directly, however references data from the package that was imported to the example database in Vignettes 1 and 2.
+
+### Load Packages
+
+```{r setup, message = FALSE, eval = FALSE}
+#devtools::install_github("paulhegedus/OFPE")
+#devtools::install_github("paulhegedus/OFPEDATA")
+library(magrittr)
+library(OFPE)
+library(OFPEDATA)
+```
+
+
+### Connect to Database
+First, a connection is formed to the database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette, and the rest of the vignettes are working with an example database named 'OFPE' (as named in the tutorial above and exemplified in Vignettes 1 and 2). This class defaults to a PostgreSQL database.
+
+```{r, eval = FALSE}
+dbCon <- DBCon$new(
+  user = "postgres",
+  password = "<your_password>",
+  dbname = "<your_db_name>", 
+  host = "localhost",
+  port = "5432"
+)
+```
+
+```{r, echo = FALSE, eval = FALSE}
+dbCon <- DBCon$new(
+  user = "postgres",
+  password = "Paul210220",
+  dbname = "OFPE", 
+  host = "localhost",
+  port = "5432"
+)
+OFPE::removeTempTables(dbCon$db) # removes temporary tables
+```
+
+
+
+
+
+
+
+
+
+

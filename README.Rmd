@@ -65,7 +65,7 @@ This package is intended to be used with dryland winter wheat harvest and applic
 The OFPE package is not intended for use outside of Montana or for crops other than dryland winter wheat. We are not liable for any damages, actions, or outcomes of any decision made while using this this package or influenced by any associated intellectual property.
 
 ## Requirements
-The workflows outlined and supported by functions in this package operate with the assumption that the user has access to or has created a PostgreSQL database. Associated tools such as PostGIS are required for data management. If a user is setting up a database on a local machine, the user will need to download [PostgreSQL](https://www.postgresql.org) and enable a *postgres* server account. This process is describe in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This is not needed if you have credentials to a preexisting OFPE formatted database.
+The workflows outlined and supported by functions in this package operate with the assumption that the user has access to or has created a PostgreSQL database. Associated tools such as PostGIS are required for data management. If a user is setting up a database on a local machine, the user will need to download [PostgreSQL](https://www.postgresql.org) and enable a *postgres* server account. This process is describe in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This is not needed if you have credentials to a preexisting OFPE formatted database. Note that depending on the size of your fields and farms and how many farmers you are managing, databases can be quite large (>100GB) and require dedicated storage space.
 
 This package includes functions for interfacing with Google Earth Engine and Google Drive. To access and operate these functions, or for complete usage of the OFPE workflow, the user will need to set up a [Google Earth Engine](https://earthengine.google.com) account and sign up for [Google Drive](https://www.google.com/drive/).
 
@@ -83,7 +83,7 @@ knitr::include_graphics('man/figures/ofpe_data_workflow.png')
 
 For more detailed information about the OFPE data workflow and framework, see this [website](https://paulhegedus.github.io/OFPE-Website/). This includes the tutorials linked above, as well as activity and component diagrams of the processes/vignettes described below.
 
-Example data used in the vignettes can be found [here](https://github.com/paulhegedus/OFPEDATA.git) and installed using the code above.
+Example data used in the vignettes can be found [here](https://github.com/paulhegedus/OFPEDATA.git) and installed using the code above. The vignettes show a workflow using data from "FarmerB" in the OFPEDATA package. This is to save memory and time when creating example databases. Users are encouraged to explore with "FarmerC" and "FarmerI" data.
 
 ### Database Creation/Management
 This process begins with the creation of a spatial database for storing data gathered from farms and from satellite sources. This database is set up in  a specific OFPE format to support the ensuing workflow and requires the user to specify the boundaries of fields selected for data intensive management and the farm boundary within which a farmer's fields fall. This is a one-time process where once the database is set up it will only need management to keep it up to date.

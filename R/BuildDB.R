@@ -73,8 +73,7 @@ BuildDB <- R6::R6Class(
         }
       } else {
         if (!any(grepl("postgis", extensions$extname))) {
-          DBI::dbSendQuery(db, paste0("CREATE EXTENSION postgis;
-                                      CREATE EXTENSION postgis_raster;"))
+          DBI::dbSendQuery(db, paste0("CREATE EXTENSION postgis;"))
         }
       }
       DBI::dbSendQuery(

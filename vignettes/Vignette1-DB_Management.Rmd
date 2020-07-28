@@ -61,8 +61,8 @@ dbCon <- DBCon$new(
   user = "postgres",
   password = "<your_password>",
   dbname = "<your_db_name>", 
-  host = "localhost",
-  port = "5432"
+  host = "localhost", # if you made your own db
+  port = "5432" # default 
 )
 ```
 
@@ -118,10 +118,10 @@ This section is for building the database and loading required extensions such a
 ### Initialize BuildDB
 The BuildDB class is initialized with a database connection and a list of farmers for which to build schemas for. This list of farmers does not need to be exhaustive, as farmers can be added later. When adding farmers using the ManageDB class (see section below), the appropriate schemas will be built. This BuildDB class is only for use when setting up an OFPE database for the first time.
 
-For demonstrative purposes, not all of the farmers available in the example data from the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) package are used to initialize the database. This is to show how to add a farmer later in the Manage Database section of this vignette.
+For demonstrative purposes, not all of the farmers available in the example data from the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) package are used to initialize the database. Only FarmerB is used as an example in the vignettes, use FarmerC and FarmerI data from the OFPEDATA pacakge to test out adding more farmers, fields, and farms with the same method for FarmerB.
 
 ```{r, eval = FALSE}
-farmers <- c("FarmerB", "FarmerC")
+farmers <- c("FarmerB") # an initial farmer to setup data with
 buildDB <- BuildDB$new(dbCon, "2.5", farmers)
 ```
 
@@ -143,10 +143,9 @@ Again, the function below simply runs each of the functions above in the intende
 The last step in the database build process involves building spatial indices for the tables with geometries that we just created. These are used to speed up spatial queries used later. After building spatial indices, it is recommended to vacuum/analyze your database regularly to keept these up to date. See this [page](https://postgis.net/workshops/postgis-intro/indexing.html) for more information on PostGIS spatial indexes.
 
 ### Build Database: buildDatabase()
-The method that wraps all of the above functions up and executes in the proper order is the buildDatabase() method and is the only intended public method of the BuildDB class. However, the methods above are public for transparency and in order to document them.
+The method that wraps all of the above functions up and executes in the proper order is the buildDatabase() method and is the only intended public method of the BuildDB class. However, the methods above are public for transparency and in order to document them. This function only needs to be run ONCE per database creation.
 
 ```{r, eval = FALSE}
-# not run
 buildDB$buildDatabase()
 ```
 
@@ -172,10 +171,7 @@ First, supply your inputs for farm information. For each farm, create a list wit
 farms <- list(
   list(farm_name = "FarmerB_FarmName",
        farm_shp_name = "FarmerB_FarmName_bbox",
-       farmer_name = "FarmerB"),
-  list(farm_name = "FarmerC_FarmName",
-       farm_shp_name = "FarmerC_FarmName_bbox",
-       farmer_name = "FarmerC")
+       farmer_name = "FarmerB")
 )
 farm_path <- "~/INIT_UPLOADS/"
 ```
@@ -186,10 +182,7 @@ Next, supply your inputs for field information. For each field, create a list wi
 fields <- list(
   list(field_name = "sec35middle",
        field_shp_name = "sec35middle_bbox",
-       farmer_name = "FarmerB"),
-  list(field_name = "millview",
-       field_shp_name = "millview_bbox",
-       farmer_name = "FarmerC")
+       farmer_name = "FarmerB")
 )
 field_path <- "~/INIT_UPLOADS/"
 ```
@@ -239,24 +232,26 @@ Now there should be data filled in the 'farmers', 'farms', and 'fields' tables i
 ### Adding Data
 Adding more data utilizes the same process and R6 classes as above in the 'Initial Upload' section above. Remember that if you attempt to upload a farm or field that already exists in the database it will be updated. This is determined based off of the farm or field name passed in. The section below adds the third farmer's data contained in the *OFPEDATA* package. Because this section mirrors the section above, it contains less information as above.
 
+Note that if you choose to execute the code below and add all associated data, this will take an additional >10GB memory. If testing on the server where you plan to store your OFPE database you should have at least 5-10x this much space dedicated to your OFPE data, depending on the size and number of your farmers, farms, and fields.
+
 #### Create Parameters
 Create your parameter objects that are passed onto the R6 classes and associated methods. This section will 'reload' Farmer B's data into the database in order to demonstrate that this will not negatively affect your relations.
 
 ```{r, eval = FALSE}
-farmers <- c("FarmerB", "FarmerI")
+farmers <- c("FarmerC", "FarmerI")
 farms <- list(
-  list(farm_name = "FarmerB_FarmName",
-       farm_shp_name = "FarmerB_FarmName_bbox",
-       farmer_name = "FarmerB"),
+  list(farm_name = "FarmerC_FarmName",
+       farm_shp_name = "FarmerC_FarmName_bbox",
+       farmer_name = "FarmerC"),
   list(farm_name = "FarmerI_FarmName",
        farm_shp_name = "FarmerI_FarmName_bbox",
        farmer_name = "FarmerI")
 )
 farm_path <- "~/INIT_UPLOADS/"
 fields <- list(
-  list(field_name = "sec35middle",
-       field_shp_name = "sec35middle_bbox",
-       farmer_name = "FarmerB"),
+  list(field_name = "millview",
+       field_shp_name = "millview_bbox",
+       farmer_name = "FarmerC"),
   list(field_name = "henrys",
        field_shp_name = "henrys_bbox",
        farmer_name = "FarmerI")

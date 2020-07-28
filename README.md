@@ -8,7 +8,7 @@
 [![Project Status: WIP – Initial development is in progress, but there
 has not yet been a stable, usable release suitable for the
 public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-[![Last-changedate](https://img.shields.io/badge/last%20change-2020--07--23-yellowgreen.svg)](/commits/master)
+[![Last-changedate](https://img.shields.io/badge/last%20change-2020--07--28-yellowgreen.svg)](/commits/master)
 [![R build
 status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
 [![Build
@@ -127,7 +127,9 @@ the user will need to download [PostgreSQL](https://www.postgresql.org)
 and enable a *postgres* server account. This process is describe in this
 [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html).
 This is not needed if you have credentials to a preexisting OFPE
-formatted database.
+formatted database. Note that depending on the size of your fields and
+farms and how many farmers you are managing, databases can be quite
+large (\>100GB) and require dedicated storage space.
 
 This package includes functions for interfacing with Google Earth Engine
 and Google Drive. To access and operate these functions, or for complete
@@ -200,7 +202,10 @@ of the processes/vignettes described below.
 
 Example data used in the vignettes can be found
 [here](https://github.com/paulhegedus/OFPEDATA.git) and installed using
-the code above.
+the code above. The vignettes show a workflow using data from “FarmerB”
+in the OFPEDATA package. This is to save memory and time when creating
+example databases. Users are encouraged to explore with “FarmerC” and
+“FarmerI” data.
 
 ### Database Creation/Management
 

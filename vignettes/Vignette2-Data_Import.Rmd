@@ -94,7 +94,7 @@ OFPE::removeTempTables(dbCon$db) # removes temporary tables
 ```
 
 ### Prepare Example Data
-This section is for creating a folder that contains the experimental field data. **NOTE:** when using your own data, this section is irrelevant, but you still might want to check out that tutorial.
+This section is for creating a folder that contains the experimental field data. **NOTE:** when using your own data, this section is irrelevant, but you still might want to check out that tutorial. This vignette only uses FarmerB, as with Vignette1. Modify the code below to include data from FarmerC or FarmerI from the OFPEDATA package.
 
 First, get the names of the data in the OFPEDATA package that has example data for these vignettes. Isolate the names of data corresponding to field data which does not have "_bbox" suffix. Extract from OFPEDATA.
 
@@ -108,7 +108,7 @@ dat_list <- as.list(dat_names) %>%
 rm(dat, dat_names) 
 ```
 
-Second, save boundaries to a temporary folder. Again, in your real world situation you do not need to do this. **NOTE:** This example will create a temporary folder called 'INIT_UPLOADS' in your home directory and WILL delete any folder called 'INIT_UPLOADS' in your home directory.
+Second, save boundaries to a temporary folder. Again, in your real world situation you do not need to do this. **NOTE:** This example will create a temporary folder called 'INIT_UPLOADS' in your home directory and WILL delete any folder called 'INIT_UPLOADS' in your home directory. 
 
 ```{r, eval = FALSE}
 temp_path <- "~/INIT_UPLOADS/"
@@ -118,16 +118,20 @@ ifelse(dir.exists(temp_path),
          dir.create(temp_path)},
        dir.create(temp_path)) %>% 
   invisible()
-toTempFolder <- function (x, y) {
-  if (!grepl("pro", y)) {
-    sf::st_write(x, paste0(temp_path, y, ".shp"), quiet = TRUE)
-  } else {
-    data.table::fwrite(x, paste0(temp_path, y, ".csv"))
+toTempFolder <- function (x, y, farmer) {
+  if (grepl(farmer, y)) {
+    if (!grepl("pro", y)) {
+      sf::st_write(x, paste0(temp_path, y, ".shp"), quiet = TRUE)
+    } else {
+      data.table::fwrite(x, paste0(temp_path, y, ".csv"))
+    }
   }
 }
+# only using farmer B as an example, repeat for other farmers if desired
 mapply(toTempFolder,
        dat_list, 
-       names(dat_list)) %>% 
+       names(dat_list),
+       MoreArgs = list(farmer = "FarmerB")) %>% 
   invisible()
 rm(dat_list, temp_path)
 ```
@@ -142,7 +146,7 @@ The ImportOF class is initialized with the path to the location of the data that
 All of the data available in the example data from the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) package are used as an example here. The steps for uploading data are always the same.  
 
 ```{r, eval = FALSE}
-pathToDat <- "C:/Users/paulhegedus/Documents/INIT_UPLOADS"  #"~/INIT_UPLOADS/"
+pathToDat <- "~/INIT_UPLOADS/" # MAC # "C:/Users/paulhegedus/Documents/INIT_UPLOADS" # PC
 importOF <- ImportOF$new(dbCon, pathToDat)
 ```
 
@@ -173,7 +177,7 @@ Before using the ImportGEE class, the Google Drive account where the user data i
 googledrive::drive_auth("<your_email@address>")
 ```
 
-```{r}
+```{r, eval = FALSE, echo = FALse}
 googledrive::drive_auth("paulhegedus@montana.edu")
 ```
 
@@ -182,10 +186,14 @@ googledrive::drive_auth("paulhegedus@montana.edu")
 The ImportGEE class is initialized with the path to the location of the Google Drive folder where the data is connected, and a database connection. This class can be initialized and executed as many times as needed. Data that is already present in the database and re-uploaded to the database will be replaced if desired by setting the option of OVERWRITE to TRUE.
 
 ```{r, eval = FALSE}
-pathToDat <- "GEE_Surfaces_4package"
+pathToDat <- "<your_google_drive_foldername>"
 importGEE <- ImportGEE$new(dbCon, pathToDat, FALSE)
 ```
 
+```{r, eval = FALSE, echo = FALse}
+pathToDat <- "GEE_Surfaces_4package"
+importGEE <- ImportGEE$new(dbCon, pathToDat, FALSE)
+```
 
 ### Import Google Earth Engine Data
 The execution method of the ImportGEE class simply requires the name of the Google Drive folder with data to be uploaded into the database. As data is uploaded, messages will appear on the status of the import.
