@@ -60,8 +60,6 @@ ManageFarmers <- R6::R6Class(
     #' @param farmer Name of a farmer for upload into 'all_farms.farmers'.
     #' @return Farmer upload into database.
     .uploadFarmers = function(farmer, db) {
-      browser()
-
       DBI::dbSendQuery(
         db,
         paste0("INSERT INTO all_farms.farmers(farmer)

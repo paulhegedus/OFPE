@@ -63,6 +63,7 @@ The below contains the packages used in the vignette and a demonstration of conn
 ```{r setup, message = FALSE, eval = FALSE}
 #devtools::install_github("paulhegedus/OFPE")
 #devtools::install_github("paulhegedus/OFPEDATA")
+library(magrittr)
 library(OFPE)
 library(OFPEDATA)
 ```
@@ -141,7 +142,7 @@ The ImportOF class is initialized with the path to the location of the data that
 All of the data available in the example data from the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) package are used as an example here. The steps for uploading data are always the same.  
 
 ```{r, eval = FALSE}
-pathToDat <- "~/INIT_UPLOADS/"
+pathToDat <- "C:/Users/paulhegedus/Documents/INIT_UPLOADS"  #"~/INIT_UPLOADS/"
 importOF <- ImportOF$new(dbCon, pathToDat)
 ```
 
