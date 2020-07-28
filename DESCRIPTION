@@ -25,7 +25,9 @@ Authors@R: c(
     person(given = "Montana State University", 
            role = c("cph"))
     )
-Depends: R (>= 3.0.0)
+Depends: 
+    R (>= 3.0.0),
+    magrittr
 Suggests: 
     knitr,
     rmarkdown,
