@@ -124,7 +124,8 @@ Farm data uploaded into the 'all_farms.farms' table in the database.
 \subsection{Method \code{.setupFarms()}}{
 Converts a list with information about the farms into a format ready for
 uploading to the database. Imports the shapefile using the path name
-in the list provided and adds a column for the farmer name.
+in the list provided and adds a column for the farmer name. Converts
+to EPSG 4326 for storage.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ManageFarms$.setupFarms(farm_info, farm_path = NULL)}\if{html}{\out{</div>}}
 }
@@ -150,8 +151,9 @@ Uploads a farm to the database. Takes the farm shapefile and identifies the
 coresponding farmeridx, adds it as a column, and then uploads to the
 'all_farms.farms' table. Makes sure there is no conflict defined in the
 .buildTables method of the BuildDB class. A farmidx is automatically
-generated upon upload by PostgreSQL. The dot indicates that this function
-would be private if not for documentations sake.
+generated upon upload by PostgreSQL and the area of the farm is calculated
+and converted to acres. The dot indicates that this function would be private
+if not for documentations sake.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ManageFarms$.uploadFarms(farm, db)}\if{html}{\out{</div>}}
 }

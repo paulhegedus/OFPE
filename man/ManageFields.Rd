@@ -127,7 +127,8 @@ Converts a list with information about the fields into a format ready for
 uploading to the database. Imports the shapefile using the path name
 in the list provided and adds a column for the farmer name. If fields
 contain multiple unconnected portions, the 'id' column associated with
-these sections is renamed 'wfid' for 'within field ID'.
+these sections is renamed 'wfid' for 'within field ID'. Converts
+to EPSG 4326 for storage.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ManageFields$.setupFields(field_info, field_path = NULL)}\if{html}{\out{</div>}}
 }
@@ -156,7 +157,8 @@ no conflict defined in the .buildTables method of the BuildDB class.
 A fieldidx is automatically generated upon upload by PostgreSQL based
 on the 'wfid' and 'fieldname'. After uploading, PostGIS is used to
 identify the farm the field falls within and a the 'farmidx' column is
-filled. The dot indicates that this function would be private if not for
+filled and the area of the field is calculated and converted to acres.
+The dot indicates that this function would be private if not for
 documentations sake.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ManageFields$.uploadFields(field, db)}\if{html}{\out{</div>}}

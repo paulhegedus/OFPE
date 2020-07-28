@@ -21,9 +21,13 @@ After the schema that the data should be imported to is identified, the data is 
 
 Finally, the data either creates a new table or is appended to an existing table in the appropriate database schema. After each import session spatial indices on each table are generated, if not previously present, or updated. 
 
+Note that the OFPE formatted database can also handle the upload of [SSURGO soil data](https://www.nrcs.usda.gov/wps/portal/nrcs/detail/soils/survey/?cid=nrcs142p2_053627) that can be used as a covariate. This data can be gathered from the SSURGO database. **NOTE:** when uploading this data, MAKE SURE to have "ssurgo" somewhere in the name of the file.
+
+Also of note is that when import seeding rate data, this **NEEDS** to have either "seed" or "_SR_" in the filename. This is because the seeding rate and as-applied nitrogen rate data are not easily distinguishable from each other.
+
 The process for importing on-farm data to the database is outlined and a more detailed descriptionin the activity diagram on [this page](https://paulhegedus.github.io/OFPE-Website/dat_import.html), where a component diagram can also be found.
 
-```{r, out.width='100%', fig.align='center', fig.cap='**Figure 1.** Blue processes are chained together by arrows indicating the next step in the workflow, and black boxes indicate the addition of user inputs.', echo = FALSE}
+```{r, out.width='100%', fig.align='center', fig.cap='**Figure 1.** On-Farm data import workflow. Blue processes are chained together by arrows indicating the next step in the workflow, and black boxes indicate the addition of user inputs.', echo = FALSE}
 knitr::include_graphics('figures/ofpe_dat_import.png')
 ```
 
@@ -34,7 +38,7 @@ This [tutorial](https://paulhegedus.github.io/OFPE-Website/run_gee.html) outline
 
 The process for importing Google Earth Engine data to the database and a more detailed description is outlined in the activity diagram on [this page](https://paulhegedus.github.io/OFPE-Website/dat_import.html), where a component diagram can also be found.
 
-```{r, out.width='100%', fig.align='center', fig.cap='**Figure 1.** Blue processes are chained together by arrows indicating the next step in the workflow, and black boxes indicate the addition of user inputs.', echo = FALSE}
+```{r, out.width='100%', fig.align='center', fig.cap='**Figure 2.** Google Earth Engine data import workflow. Blue processes are chained together by arrows indicating the next step in the workflow, and black boxes indicate the addition of user inputs.', echo = FALSE}
 knitr::include_graphics('figures/ofpe_gee_import.png')
 ```
 
@@ -85,6 +89,7 @@ dbCon <- DBCon$new(
   host = "localhost",
   port = "5432"
 )
+OFPE::removeTempTables(dbCon$db) # removes temporary tables
 ```
 
 ### Prepare Example Data
@@ -111,10 +116,15 @@ ifelse(dir.exists(temp_path),
          file.remove(temp_path);
          dir.create(temp_path)},
        dir.create(temp_path)) %>% 
-  invisible
-mapply(function (x, y) sf::st_write(x, 
-                                    paste0(temp_path, y, ".shp"), 
-                                    quiet = TRUE),
+  invisible()
+toTempFolder <- function (x, y) {
+  if (!grepl("pro", y)) {
+    sf::st_write(x, paste0(temp_path, y, ".shp"), quiet = TRUE)
+  } else {
+    data.table::fwrite(x, paste0(temp_path, y, ".csv"))
+  }
+}
+mapply(toTempFolder,
        dat_list, 
        names(dat_list)) %>% 
   invisible()
@@ -132,29 +142,81 @@ All of the data available in the example data from the [OFPEDATA](https://github
 
 ```{r, eval = FALSE}
 pathToDat <- "~/INIT_UPLOADS/"
-importOF <- ImportOF$new(pathToDat, dbCon)
+importOF <- ImportOF$new(dbCon, pathToDat)
 ```
 
 ### Import On-Farm Data
 The execution method of the ImportOF class simply requires the file names to the data that is to be uploaded into the database. After the method has completed execution, the 'status' object in the ImportOF R6 class will indicate which files uploaded successfully and which did not.
 
-```{r}
-#importOF$executeUpload()
+```{r, eval = FALSE}
+importOF$executeUpload()
 ```
 
 
 ### Check Status
 After the 'uploadData' method of the 'ImportOF' class has been executed, the import status of your data can be found in the 'status' object, a dataframe indicating the completion/fail of each file name.
 
-```{r}
-#importOF$status
+```{r, eval = FALSE}
+importOF$status
 ```
 
 
 ## Import Google Earth Engine Data
-The steps required for importing data from Google Earth Engine consists of initializing the import data R6 class with the path to the ... folder in which the data to be uploaded is saved. It is efficient to put all the data you want to import into one folder and path to that. That way you can instantiate the class, run it, and walk away for awhile while it loads. The on-farm import class has a method for intializing and a method for running. After the completion of the execution method, a data frame with the status of each attempted file is generated.
+The steps required for importing data from Google Earth Engine are outlined below. Google Earth Engine data is gathered as discussed in these tutorials, [Google Earth Engine Set-Up](https://paulhegedus.github.io/OFPE-Website/gee_setup.html) and  [Run Google Earth Engine](https://paulhegedus.github.io/OFPE-Website/run_gee.html). Data is downloaded from GEE to Google Drive, where it is accessed by the R6 class below.
+
+This class utilizes the same database connection used for importing data on-farms.
+
+Before using the ImportGEE class, the Google Drive account where the user data is stored needs to be authorized. Simply insert your email address in the line below.
+
+```{r, eval = FALSE}
+googledrive::drive_auth("<your_email@address>")
+```
+
+```{r}
+googledrive::drive_auth("paulhegedus@montana.edu")
+```
+
 
 ### Initialize ImportGEE
+The ImportGEE class is initialized with the path to the location of the Google Drive folder where the data is connected, and a database connection. This class can be initialized and executed as many times as needed. Data that is already present in the database and re-uploaded to the database will be replaced if desired by setting the option of OVERWRITE to TRUE.
+
+```{r, eval = FALSE}
+pathToDat <- "GEE_Surfaces_4package"
+importGEE <- ImportGEE$new(dbCon, pathToDat, FALSE)
+```
+
+
+### Import Google Earth Engine Data
+The execution method of the ImportGEE class simply requires the name of the Google Drive folder with data to be uploaded into the database. As data is uploaded, messages will appear on the status of the import.
+
+```{r, eval = FALSE}
+importGEE$executeUpload()
+```
+
+
+# Conclusion
+This vignette provided a demonstration of how to import your on-farm data and data gathered from Google Earth Engine. This also covers how to import SSURGO data to the database. **IMPORTANT:** when uploading seeding rate data include "seed" or "_SR_" in the filename to distinguish from as-applied nitrogen fertilizer data and when uploading SSURGO data include "SSURGO" or "ssurgo" to the filename.
+
+Component diagrams of the process outlining the R6 classes used and their relations is described in Figures 3 and 4 below.
+
+```{r, out.width='100%', fig.align='center', fig.cap='**Figure 2.** Component diagram of the database management workflow. A database connection is established using the DBCon class and the BuildDB class is used to format the OFPE database. The ManageDB class calls other classes of the same interface that are specified by the user.', echo = FALSE}
+knitr::include_graphics('figures/ofpe_db_mgmt_component.png')
+```
+
+
+Whenever a database connection is open it needs to be closed.
+```{r, eval = FALSE}
+dbCon$disconnect()
+```
+
+
+
+
+
+
+
+
+
 
 
 

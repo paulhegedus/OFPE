@@ -28,6 +28,7 @@
 #' Google Earth Engine.
 #'
 #' The OFPE data import functions and R6 class generators...
+#' ImportOF,
 #'
 #' The GEE data import functions and R6 class generators...
 #'

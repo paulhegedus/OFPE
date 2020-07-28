@@ -15,13 +15,14 @@ and generation of prescriptive application maps for optimized inputs.
 }
 \section{General Functions}{
 
+DBCon
 }
 
 \section{Database Creation & Managements}{
 
 See Vignette 1 for database management and updating examples.
 
-The OFPE database creation and management functions and R6 class generators...
+BuildDB, ManageDB, ManageFarmers, ManageFarms, ManageFields
 }
 
 \section{Data Import}{
@@ -30,6 +31,9 @@ See the Vignettes 2A and 2B for examples importing data from farms and
 Google Earth Engine.
 
 The OFPE data import functions and R6 class generators...
+ImportOF,
+
+The GEE data import functions and R6 class generators...
 }
 
 \section{Data Aggregation}{
