@@ -78,7 +78,7 @@ removeTempTables <- function(DB){
 removeTempFarmerTables <- function(DB,FARMERNAME){
   ## remove old temporary tables
   tempExist <- as.logical(
-    dbGetQuery(
+    DBI::dbGetQuery(
       DB,
       paste0("SELECT EXISTS (
              SELECT 1
@@ -89,7 +89,7 @@ removeTempFarmerTables <- function(DB,FARMERNAME){
   )
   if(tempExist){
     invisible(
-      dbGetQuery(
+      DBI::dbGetQuery(
         DB,
         paste0("DROP TABLE ",
                FARMERNAME,
@@ -98,7 +98,7 @@ removeTempFarmerTables <- function(DB,FARMERNAME){
     )
   }
   tempExist <- as.logical(
-    dbGetQuery(
+    DBI::dbGetQuery(
       DB,
       paste0("SELECT EXISTS (
              SELECT 1
@@ -109,7 +109,7 @@ removeTempFarmerTables <- function(DB,FARMERNAME){
   )
   if(tempExist){
     invisible(
-      dbGetQuery(
+      DBI::dbGetQuery(
         DB,
         paste0("DROP TABLE ",
                FARMERNAME,

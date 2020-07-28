@@ -177,7 +177,7 @@ Before using the ImportGEE class, the Google Drive account where the user data i
 googledrive::drive_auth("<your_email@address>")
 ```
 
-```{r, eval = FALSE, echo = FALse}
+```{r, eval = FALSE, echo = FALSE}
 googledrive::drive_auth("paulhegedus@montana.edu")
 ```
 
@@ -190,7 +190,7 @@ pathToDat <- "<your_google_drive_foldername>"
 importGEE <- ImportGEE$new(dbCon, pathToDat, FALSE)
 ```
 
-```{r, eval = FALSE, echo = FALse}
+```{r, eval = FALSE, echo = FALSE}
 pathToDat <- "GEE_Surfaces_4package"
 importGEE <- ImportGEE$new(dbCon, pathToDat, FALSE)
 ```
