@@ -90,27 +90,154 @@ The user then selects the appropriate experimental variable (as-applied nitrogen
 
 When selecting options interactively, the 'AggInputs' class will guide the user through selecting the sepcific data in the database to use for all years specified. The user is also guided through the selection of the columns of interest within each file. If not using the interactive funcitons, these must be supplied. For each year, response, and explanatory variable, the corresponding filenames in the database must be selected for accuracy and to ensure the user is using the data that they intend. For each file selected, the user needs to specifyc the column that contains the information of interest, for example in yield data, the user must select the column that corresponds to the measurement for yield. If the user is aggregating as-applied nitrogen fertilizer, the user also needs to specify if a/the conversion rate from the applied product to lbs-N/acre is needed.
 
-```{r}
-
+```{r, eval = FALSE}
+aggInputs <- AggInputs$new(dbCon)
+aggInputs$selectInputs()
 ```
 
-### Initialize AggDat Class
+### Aggregate Data
 After the user selects the inputs, they can pass the 'AggInputs' class to the 'AggDat' class to execute the aggregation action. This process takes the AggInputs class and executes the aggregation process depending on these inputs. Most operations occur within the PostgreSQL database for speed and memory purposes. The response variable data is separted from the raw file to make the base of the aggregation file based on whenther using the observed or gridded locations. The 'previous year' response variable data are then extracted from the raw files and associated with the 'current year' data by intersection of grid cells or nearest neighbor to observed data. This is repeated for the experimental varaible, with any product conversion applied. Blank application areas indicate the application of 0 fertilizer rates, and filled in appropriately before a 30m buffer is taken from the field edge as part of the cleaning process. Across the whole field, data falling outside of 4SD from the mean is removed, as well as any negative yield and protein values (as they are impossible). If the grid option is selected, this process is repeated with 1SD within each gridcell. After all on-farm data has been aggregated, the remotely sensed raster data is extracted to the locations of the aggregated data. Finally, if SSURGO data is present it is added, otherwise skipped. 
 
 If the 'Satellite' response variable is chosen, then the process begins with the creation of 10m centroid locations and the extraction of remotely sensed and SSURGO data if present. Aggregated data are saved in the '*farmername*_a' schemas in tables appropriately labelede based on the response variable. 
 
-```{r}
-
+```{r, eval = FALSE}
+aggDat <- AggDat$new(aggInputs)
+aggDat$aggregateData()
 ```
 
 
 ## Multiple Fields
 In most cases, you will be aggregating multiple fields and years. The section below shows how to set up and implement your inputs to aggregate multiple files based on pre-determined inputs.
 
-This includes making a list contianing the inputs required for each separate aggregation process, then passing this list iteratively to the AggInputs class and subsequently to the AggDat classes.
+This includes making a list contianing the inputs required for each separate aggregation process, then passing this list iteratively to the AggInputs class and subsequently to the AggDat classes. 
 
-```{r}
+```{r, eval = FALSE}
+aggYld16 <- list(dbCon = dbCon,
+                 bboxImport = "No",
+                 bboxLocation = NULL,
+                 FIELDNAME = "sec35middle",
+                 FARMERNAME = "farmerb",
+                 RESPVAR = "Yield",
+                 EXPVAR = "As-Applied Nitrogen",
+                 CY_RESP = 2016,
+                 PY_RESP = 2014,
+                 CY_EXP = 2016,
+                 PY_EXP = 2014,
+                 GRID = "Grid",
+                 DAT_USED = "Decision Point",
+                 CY_RESP_FILES = "FarmerB_yld_2016.shp",
+                 PY_RESP_FILES = "None",
+                 CY_EXP_FILES = data.frame(orig_file = "FarmerB_N_2016.shp",
+                                           table = "aa_n_poly"),
+                 PY_EXP_FILES = data.frame(orig_file = "None"),
+                 saveInDB = "Yes",
+                 export = "No",
+                 exportName = NULL,
+                 CY_RESP_COL = data.frame(RESP = "vryieldvol",
+                                          DIST = "distance",
+                                          orig_file = "FarmerB_yld_2016.shp"),
+                 PY_RESP_COL = NULL,
+                 CY_EXP_COL = data.frame(EXP = "vrappratev",
+                                         DIST = NA,
+                                         PRODUCT = NA,
+                                         orig_file = "FarmerB_N_2016.shp"),
+                 PY_EXP_COL = NULL,
+                 CY_EXP_CONV = data.frame(FORMULA = NA,
+                                          CONVERSION = NA,
+                                          orig_file = "FarmerB_N_2016.shp"),
+                 PY_EXP_CONV = NULL)
 
+aggPro18 <- list(dbCon = dbCon,
+                 bboxImport = "No",
+                 bboxLocation = NULL,
+                 FIELDNAME = "sec35middle",
+                 FARMERNAME = "farmerb",
+                 RESPVAR = "Protein",
+                 EXPVAR = "As-Applied Nitrogen",
+                 CY_RESP = 2018,
+                 PY_RESP = 2016,
+                 CY_EXP = 2018,
+                 PY_EXP = 2016,
+                 GRID = "Grid",
+                 DAT_USED = "Decision Point",
+                 CY_RESP_FILES = "FarmerB_pro_2018.csv",
+                 PY_RESP_FILES = "FarmerB_pro_2016.csv",
+                 CY_EXP_FILES = data.frame(orig_file = "FarmerB_N_2018.shp",
+                                           table = "aa_n_pnts"),
+                 PY_EXP_FILES = data.frame(orig_file = "FarmerB_N_2016.shp",
+                                           table = "aa_n_poly"),
+                 saveInDB = "Yes",
+                 export = "No",
+                 exportName = NULL,
+                 CY_RESP_COL = data.frame(RESP = "protein",
+                                          DIST = NA,
+                                          orig_file = "FarmerB_pro_2018.csv"),
+                 PY_RESP_COL = data.frame(RESP = "protein",
+                                          DIST = NA,
+                                          orig_file = "FarmerB_pro_2016.csv"),
+                 CY_EXP_COL = data.frame(EXP = "vrrtppl",
+                                         DIST = "dist",
+                                         PRODUCT = NA,
+                                         orig_file = "FarmerB_N_2018.shp"),
+                 PY_EXP_COL = data.frame(EXP = "vrappratev",
+                                         DIST = NA,
+                                         PRODUCT = NA,
+                                         orig_file = "FarmerB_N_2016.shp"),
+                 CY_EXP_CONV = data.frame(FORMULA = NA,
+                                          CONVERSION = NA,
+                                          orig_file = "FarmerB_N_2018.shp"),
+                 PY_EXP_CONV = data.frame(FORMULA = NA,
+                                          CONVERSION = NA,
+                                          orig_file = "FarmerB_N_2016.shp"))
+
+aggPro16 <- list(dbCon = dbCon,
+                 bboxImport = "No",
+                 bboxLocation = NULL,
+                 FIELDNAME = "sec35middle",
+                 FARMERNAME = "farmerb",
+                 RESPVAR = "Protein",
+                 EXPVAR = "As-Applied Nitrogen",
+                 CY_RESP = 2016,
+                 PY_RESP = 2014,
+                 CY_EXP = 2016,
+                 PY_EXP = 2014,
+                 GRID = "Grid",
+                 DAT_USED = "Decision Point",
+                 CY_RESP_FILES = "FarmerB_pro_2016.csv",
+                 PY_RESP_FILES = "None",
+                 CY_EXP_FILES = data.frame(orig_file = "FarmerB_N_2016.shp",
+                                           table = "aa_n_poly"),
+                 PY_EXP_FILES = data.frame(orig_file = "None"),
+                 saveInDB = "Yes",
+                 export = "No",
+                 exportName = NULL,
+                 CY_RESP_COL = data.frame(RESP = "protein",
+                                          DIST = NA,
+                                          orig_file = "FarmerB_pro_2016.csv"),
+                 PY_RESP_COL = NULL,
+                 CY_EXP_COL = data.frame(EXP = "vrappratev",
+                                         DIST = NA,
+                                         PRODUCT = NA,
+                                         orig_file = "FarmerB_N_2016.shp"),
+                 PY_EXP_COL = NULL,
+                 CY_EXP_CONV = data.frame(FORMULA = NA,
+                                          CONVERSION = NA,
+                                          orig_file = "FarmerB_N_2016.shp"),
+                 PY_EXP_CONV = NULL)
+```
+
+```{r, eval = FALSE}
+aggLoopInputs <- list(
+  aggInputsY16 = do.call(AggInputs$new, aggYld16),
+  aggInputsP18 = do.call(AggInputs$new, aggPro18),
+  aggInputsP16 = do.call(AggInputs$new, aggPro16)
+)
+
+# for (i in 1:length(aggLoopInputs)) {
+#   AggDat$new(aggLoopInputs[[i]])$
+#     aggregateData()
+# }
+invisible(lapply(aggLoopInputs, function(x) AggDat$new(x)$aggregateData()))
 ```
 
 # Conclusion
@@ -119,7 +246,7 @@ This vignette provided a demonstration of how to aggregate data that you have im
 Component diagrams of the process outlining the R6 classes used and their relations is described in Figures 3 and 4 below.
 
 ```{r, out.width='100%', fig.align='center', fig.cap='**Figure 3.** Component diagram of the data aggregation workflow...', echo = FALSE}
-knitr::include_graphics('figures/ofpe_dat_agg_component.png')
+#knitr::include_graphics('figures/ofpe_dat_agg_component.png')
 ```
 
 

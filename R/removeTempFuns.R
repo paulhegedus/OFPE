@@ -63,7 +63,6 @@ removeTempTables <- function(DB){
       )
     )
   }
-  return(invisible())
 }
 #' @title Remove temporary tables from a farmer's schemas
 #'

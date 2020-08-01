@@ -261,11 +261,7 @@ ImportOF <- R6::R6Class(
           FILE <- sf::st_transform(FILE, "epsg:4326")
         }
         #******************************************************************
-        bounds <- sf::st_bbox(FILE) # get boundary of file
-        utmZone <- ceiling((bounds["xmin"] + 180) / 6) %>% as.numeric()
-        utmEpsg <- ifelse(utmZone == 14,
-                          32614, # use right epsg code for utm zone 14
-                          32612) # use right epsg code for utm zone 12
+        utmEpsg <- OFPE::findUTMzone(FILE)
         tempCRS <- paste0("epsg:", utmEpsg)
         FILE <- sf::st_transform(FILE, tempCRS)
 
@@ -315,9 +311,7 @@ ImportOF <- R6::R6Class(
           FILE <- sf::st_buffer(FILE, dist=0)
         }
       }
-      utmEpsg <- ifelse(grepl("zone=12", raster::crs(FILE), ignore.case = TRUE),
-                        32612,
-                        32614)
+      utmEpsg <- OFPE::findUTMzone(FILE)
       self$fields <-
         sf::st_transform(self$fields,
                          paste0("epsg:", utmEpsg))
