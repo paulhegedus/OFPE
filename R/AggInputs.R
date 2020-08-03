@@ -209,6 +209,11 @@ AggInputs <- R6::R6Class(
     #' rates unless seeding rates are reported in units besides lbs per acre. The
     #' 'orig_file' is the same as those selected in the 'CY_EXP_FILES' table.
     PY_EXP_CONV = NULL,
+    #' @field SIZE Optional, the size, in meters, to make a grid across the field.
+    #' Mostly necessary for when 'Grid' is selected for the 'GRID' parameter, however
+    #' is the scale at which the finest resolution cleaning of data occurs. Defaults
+    #' to 10m if left NULL.
+    SIZE = 10,
 
     #' @description
     #' Initialize an object for storing aggregation inputs.
@@ -378,6 +383,10 @@ AggInputs <- R6::R6Class(
     #' applied to lbs per acre. Again, this is only really applicable for fertilzier
     #' rates unless seeding rates are reported in units besides lbs per acre. The
     #' 'orig_file' is the same as those selected in the 'CY_EXP_FILES' table.
+    #' @param SIZE Optional, the size, in meters, to make a grid across the field.
+    #' Mostly necessary for when 'Grid' is selected for the 'GRID' parameter, however
+    #' is the scale at which the finest resolution cleaning of data occurs. Defaults
+    #' to 10m if left NULL.
     #' @return A new 'AggInputs' object.
     initialize = function(dbCon,
                           bboxImport = NULL,
@@ -404,7 +413,8 @@ AggInputs <- R6::R6Class(
                           CY_EXP_COL = NULL,
                           PY_EXP_COL = NULL,
                           CY_EXP_CONV = NULL,
-                          PY_EXP_CONV = NULL) {
+                          PY_EXP_CONV = NULL,
+                          SIZE = 10) {
       stopifnot(!is.null(dbCon))
       self$dbCon <- dbCon
       if (!is.null(bboxImport)) {
@@ -609,6 +619,12 @@ AggInputs <- R6::R6Class(
         )
         self$PY_EXP_CONV <- PY_EXP_CONV
       }
+      if (!is.null(SIZE)) {
+        stopifnot(
+          is.numeric(SIZE)
+        )
+        self$SIZE <- SIZE
+      }
     },
     #' @description
     #' Interactive method for selecting aggregation input options.
@@ -756,6 +772,8 @@ AggInputs <- R6::R6Class(
         )
       )
       self$GRID <- ifelse(gridOrObs == "Grid", "grid", "obs")
+
+      self$SIZE <- readline(prompt = "Enter the size of grid to use for aggregation and/or cleaning: ")
     },
     .selectAggLOY = function() {
       ## Select constraints on data to gather

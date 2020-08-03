@@ -212,6 +212,11 @@ and used to ask the user the desired conversion factor from the product
 applied to lbs per acre. Again, this is only really applicable for fertilzier
 rates unless seeding rates are reported in units besides lbs per acre. The
 'orig_file' is the same as those selected in the 'CY_EXP_FILES' table.}
+
+\item{\code{SIZE}}{Optional, the size, in meters, to make a grid across the field.
+Mostly necessary for when 'Grid' is selected for the 'GRID' parameter, however
+is the scale at which the finest resolution cleaning of data occurs. Defaults
+to 10m if left NULL.}
 }
 \if{html}{\out{</div>}}
 }
@@ -255,7 +260,8 @@ Initialize an object for storing aggregation inputs.
   CY_EXP_COL = NULL,
   PY_EXP_COL = NULL,
   CY_EXP_CONV = NULL,
-  PY_EXP_CONV = NULL
+  PY_EXP_CONV = NULL,
+  SIZE = 10
 )}\if{html}{\out{</div>}}
 }
 
@@ -453,6 +459,11 @@ and used to ask the user the desired conversion factor from the product
 applied to lbs per acre. Again, this is only really applicable for fertilzier
 rates unless seeding rates are reported in units besides lbs per acre. The
 'orig_file' is the same as those selected in the 'CY_EXP_FILES' table.}
+
+\item{\code{SIZE}}{Optional, the size, in meters, to make a grid across the field.
+Mostly necessary for when 'Grid' is selected for the 'GRID' parameter, however
+is the scale at which the finest resolution cleaning of data occurs. Defaults
+to 10m if left NULL.}
 }
 \if{html}{\out{</div>}}
 }

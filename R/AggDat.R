@@ -111,7 +111,7 @@ AggDat <- R6::R6Class(
         self$aggInputs$dbCon$db,
         self$aggInputs$bboxImport,
         self$aggInputs$FIELDNAME,
-        10, # size is 10m, but could be changed
+        ifelse(is.null(self$aggInputs$SIZE), 10, self$aggInputs$SIZE), # size is 10m, but could be changed
         self$aggInputs$FARMERNAME
       )
 
@@ -123,7 +123,8 @@ AggDat <- R6::R6Class(
         self$aggInputs$CY_RESP,
         self$aggInputs$PY_RESP,
         self$aggInputs$GRID,
-        self$aggInputs$DAT_USED
+        self$aggInputs$DAT_USED,
+        ifelse(is.null(self$aggInputs$SIZE), 10, self$aggInputs$SIZE)
       )
 
       # if not sat data
@@ -149,7 +150,8 @@ AggDat <- R6::R6Class(
             self$aggInputs$GRID,
             self$aggInputs$CY_RESP,
             self$aggInputs$PY_RESP,
-            self$aggInputs$DAT_USED
+            self$aggInputs$DAT_USED,
+            ifelse(is.null(self$aggInputs$SIZE), 10, self$aggInputs$SIZE)
           )
         } else { # end if file != none
           invisible(
@@ -175,11 +177,15 @@ AggDat <- R6::R6Class(
             self$aggInputs$FARMERNAME
           )
           self$.aggRespData(
-            self$aggInputs$dbCon$db,
-            self$aggInputs$FARMERNAME,
-            self$aggInputs$RESPVAR,
-            self$aggInputs$FIELDNAME,
-            self$aggInputs$GRID
+            DB = self$aggInputs$dbCon$db,
+            FARMERNAME = self$aggInputs$FARMERNAME,
+            RESPVAR = self$aggInputs$RESPVAR,
+            FIELDNAME = self$aggInputs$FIELDNAME,
+            GRID = self$aggInputs$GRID,
+            CY = NULL,
+            PY = NULL,
+            DAT_USED = self$aggInputs$DAT_USED,
+            SIZE = ifelse(is.null(self$aggInputs$SIZE), 10, self$aggInputs$SIZE)
           )
         } else { # end if file != none
           invisible(
@@ -209,7 +215,8 @@ AggDat <- R6::R6Class(
             self$aggInputs$FARMERNAME,
             self$aggInputs$EXPVAR,
             self$aggInputs$GRID,
-            CY=TRUE
+            CY=TRUE,
+            SIZE = ifelse(is.null(self$aggInputs$SIZE), 10, self$aggInputs$SIZE)
           )
         } else { #
           ## if no exp data files
@@ -250,7 +257,8 @@ AggDat <- R6::R6Class(
             self$aggInputs$FARMERNAME,
             self$aggInputs$EXPVAR,
             self$aggInputs$GRID,
-            CY=FALSE
+            CY=FALSE,
+            SIZE = ifelse(is.null(self$aggInputs$SIZE), 10, self$aggInputs$SIZE)
           )
         } else { #
           ## if no exp data files
@@ -308,10 +316,10 @@ AggDat <- R6::R6Class(
       )
       # export data
       if (self$aggInputs$saveInDB == "Yes") {
-        self$.saveAggDat
+        self$.saveAggDat()
       }
       if (self$aggInputs$export == "Yes") {
-        self$.exportAggDat
+        self$.exportAggDat()
       }
       # clean up
       OFPE::removeTempTables(self$aggInputs$dbCon$db)
@@ -326,10 +334,10 @@ AggDat <- R6::R6Class(
     #' @param BBOXIMPORT Whether the user uploaded their own field boundary
     #' or are using a boundary stored in the database.
     #' @param FIELDNAME Name of the field for aggregation.
-    #' @param SIZE Size of grid to make (meters).
+    #' @param SIZE Size of grid to make (meters), default = 10.
     #' @param FARMERNAME Name of farmer that owns the field.
     #' @return None.
-    .make10mGrid = function(DB, BBOXIMPORT, FIELDNAME, SIZE, FARMERNAME) {
+    .make10mGrid = function(DB, BBOXIMPORT, FIELDNAME, SIZE = 10, FARMERNAME) {
       utmEpsg <- OFPE::findUTMzone(FARMERNAME = FARMERNAME)
       gridsExist <- FALSE
       fieldExist <- FALSE
@@ -353,7 +361,8 @@ AggDat <- R6::R6Class(
             paste0("SELECT EXISTS (
                  SELECT 1
                  FROM all_farms.grids grids
-                 WHERE grids.field = '", FIELDNAME, "')")
+                 WHERE grids.field = '", FIELDNAME, "'
+                 AND grids.size = ", SIZE,")")
           )
         )
         # if it does copy to gridtemp
@@ -364,7 +373,8 @@ AggDat <- R6::R6Class(
               paste0("CREATE TABLE all_farms.gridtemp AS
                 SELECT *
                 FROM all_farms.grids
-                WHERE field = '", FIELDNAME, "'")
+                WHERE field = '", FIELDNAME, "'
+                AND size = ", SIZE)
             )
           )
         }
@@ -374,7 +384,7 @@ AggDat <- R6::R6Class(
         BBOX <- sf::st_read(
           DB,
           query = paste0("SELECT * FROM all_farms.temp"),
-          geometry_column="geometry") %>%
+          geometry_column = "geometry") %>%
           sf::st_transform(paste0("epsg:", utmEpsg)) %>%
           as("Spatial") %>%
           sp::bbox()
@@ -389,10 +399,12 @@ AggDat <- R6::R6Class(
                FROM ST_CreateFishnet (", NROW, ", ", NCOL, ", ", SIZE, ", ", SIZE, ", ", BBOX["x", "min"], ", ", BBOX["y", "min"], ") AS cells;
                ALTER TABLE all_farms.gridtemp
                ADD COLUMN cell_id VARCHAR,
-               ADD COLUMN field VARCHAR;
+               ADD COLUMN field VARCHAR,
+               ADD COLUMN size double precision;
                UPDATE all_farms.gridtemp SET
                cell_id = row::text ||'_'|| col::text,
-               field = '", FIELDNAME, "';
+               field = '", FIELDNAME, "',
+               size = ", SIZE, ";
                UPDATE all_farms.gridtemp SET geom = ST_SetSRID (geom, ", utmEpsg, ");
                ALTER TABLE all_farms.gridtemp
                ADD COLUMN x double precision,
@@ -401,7 +413,7 @@ AggDat <- R6::R6Class(
                x = ST_X(ST_Centroid(geom)),
                y = ST_Y(ST_Centroid(geom));
                ALTER TABLE all_farms.gridtemp
-               ADD PRIMARY KEY (cell_id, field);
+               ADD PRIMARY KEY (cell_id, field, size);
                CREATE INDEX gridtemp_geom_idx
                ON all_farms.gridtemp
                USING gist (geom);")
@@ -453,6 +465,7 @@ AggDat <- R6::R6Class(
     #' @param GRID Whether to aggregate data to the centroids of a grid or use
     #' the raw observed data locations.
     #' @param DAT_USED The length of year to gather data over for the CY.
+    #' @param SIZE Size of grid to make (meters), default = 10.
     #' @return Temporary table in the database.
     .createAggTable = function(DB,
                                FARMERNAME,
@@ -460,7 +473,8 @@ AggDat <- R6::R6Class(
                                CY,
                                PY,
                                GRID,
-                               DAT_USED) {
+                               DAT_USED,
+                               SIZE) {
       utmEpsg <- OFPE::findUTMzone(FARMERNAME = FARMERNAME)
 
       if (GRID == "grid") {
@@ -470,7 +484,8 @@ AggDat <- R6::R6Class(
             paste0("CREATE TABLE ", FARMERNAME, "_a.temp AS
                     SELECT *
                     FROM all_farms.gridtemp gridtemp
-                    WHERE gridtemp.field = '", FIELDNAME, "';
+                    WHERE gridtemp.field = '", FIELDNAME, "'
+                    AND gridtemp.size = ", SIZE, ";
                     ALTER TABLE ", FARMERNAME, "_a.temp
                     DROP COLUMN row,
                     DROP COLUMN col,
@@ -501,12 +516,7 @@ AggDat <- R6::R6Class(
           )
         )
         invisible(
-          DBI::dbSendQuery(
-            DB,
-            paste0("VACUUM ANALYZE ",
-                   FARMERNAME,
-                   "_a.temp")
-          )
+          DBI::dbSendQuery(DB, paste0("VACUUM ANALYZE ", FARMERNAME, "_a.temp"))
         )
       }else{
         invisible(
@@ -517,6 +527,7 @@ AggDat <- R6::R6Class(
             y double precision,
             cell_id VARCHAR,
             field VARCHAR,
+            size double precision,
             grid VARCHAR,
             datused VARCHAR,
             farmer  VARCHAR,
@@ -742,6 +753,7 @@ AggDat <- R6::R6Class(
     #' @param PY The year prior to the year of interest that a crop was harvested
     #' in the field.
     #' @param DAT_USED The length of year to gather data over for the CY.
+    #' @param SIZE Size of grid to make (meters), default = 10.
     #' @return Data in temporary aggregated table.
     .aggRespData = function(DB,
                             FARMERNAME,
@@ -750,7 +762,8 @@ AggDat <- R6::R6Class(
                             GRID,
                             CY = NULL,
                             PY = NULL,
-                            DAT_USED) {
+                            DAT_USED,
+                            SIZE) {
       utmEpsg <- OFPE::findUTMzone(FARMERNAME = FARMERNAME)
       # Get the cell_id for each point in the temporary table
       invisible(
@@ -765,6 +778,7 @@ AggDat <- R6::R6Class(
                   SET cell_id = gridtemp.cell_id
                   FROM all_farms.gridtemp
                   WHERE gridtemp.field = '", FIELDNAME, "'
+                  AND gridtemp.size = ", SIZE, "
                   AND ST_Within(temp.geometry, gridtemp.geom);")
         )
       )
@@ -875,6 +889,7 @@ AggDat <- R6::R6Class(
                       field = '", FIELDNAME, "',
                       grid = '", GRID, "',
                       datused = '", DAT_USED, "',
+                      size = ", SIZE,"
                       farmer = '", FARMERNAME, "',
                       year = '", CY, "',
                       prev_year = '", PY, "';
@@ -931,12 +946,7 @@ AggDat <- R6::R6Class(
         }
       }
       invisible(
-        DBI::dbSendQuery(
-          DB,
-          paste0("DROP TABLE ",
-                 FARMERNAME,
-                 "_r.temp")
-        )
+        DBI::dbSendQuery(DB, paste0("DROP TABLE ", FARMERNAME, "_r.temp"))
       )
       invisible(
         DBI::dbSendQuery(DB, paste0("VACUUM ANALYZE ", FARMERNAME, "_a.temp"))
@@ -1223,6 +1233,7 @@ AggDat <- R6::R6Class(
     #' the raw observed data locations.
     #' @param CY Logical, whether the data for aggregation is from the year of
     #' interest (aka the 'current year').
+    #' @param SIZE Size of grid to make (meters), default = 10.
     #' @return Data in temporary aggregated table.
     .aggExpData = function(EXP_FILES,
                            DB,
@@ -1231,7 +1242,8 @@ AggDat <- R6::R6Class(
                            FARMERNAME,
                            EXPVAR,
                            GRID,
-                           CY = TRUE) {
+                           CY = TRUE,
+                           SIZE) {
       utmEpsg <- OFPE::findUTMzone(FARMERNAME = FARMERNAME)
       isPoly <- ifelse(any(grepl("poly", EXP_FILES$table)),
                        "MULTIPOLYGON",
@@ -1521,6 +1533,8 @@ AggDat <- R6::R6Class(
     #' @param None No arguments needed because of class instantiation.
     #' @return Aggregated data in the OFPE database.
     .saveAggDat = function() {
+      browser()
+
       aggExist <- as.logical(
         DBI::dbGetQuery(
           self$aggInputs$dbCon$db,
@@ -1547,8 +1561,10 @@ AggDat <- R6::R6Class(
           query = paste0("SELECT *
                           FROM ", self$aggInputs$FARMERNAME, "_a.", self$aggInputs$RESPVAR, "
                           LIMIT 1"),
-          geometry_column="geometry") %>%
+          geometry_column = "geometry") %>%
           as.data.frame()
+        dbCols$geometry <- NULL
+        dbCols <- paste(c("geometry" ,names(dbCols)), collapse=", ")
 
         ## else append to it
         invisible(
@@ -1556,6 +1572,7 @@ AggDat <- R6::R6Class(
             self$aggInputs$dbCon$db,
             paste0("DELETE FROM ", self$aggInputs$FARMERNAME, "_a.", self$aggInputs$RESPVAR, "
                     WHERE field = '", self$aggInputs$FIELDNAME, "'
+                    AND size = ", ifelse(is.null(self$aggInputs$SIZE), 10, self$aggInputs$SIZE), "
                     AND grid = '", self$aggInputs$GRID, "'
                     AND year = '", self$aggInputs$CY_RESP, "'
                     AND datused = '", self$aggInputs$DAT_USED, "';

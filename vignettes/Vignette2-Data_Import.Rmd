@@ -192,7 +192,7 @@ importGEE <- ImportGEE$new(dbCon, pathToDat, FALSE)
 
 ```{r, eval = FALSE, echo = FALSE}
 pathToDat <- "GEE_Surfaces_4package"
-importGEE <- ImportGEE$new(dbCon, pathToDat, FALSE)
+importGEE <- ImportGEE$new(dbCon, pathToDat, TRUE)
 ```
 
 ### Import Google Earth Engine Data

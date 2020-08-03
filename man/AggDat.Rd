@@ -117,7 +117,7 @@ Makes a grid across a field of a specified size. The dot indicates that
 this function would be private
 if not for documentations sake.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AggDat$.make10mGrid(DB, BBOXIMPORT, FIELDNAME, SIZE, FARMERNAME)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{AggDat$.make10mGrid(DB, BBOXIMPORT, FIELDNAME, SIZE = 10, FARMERNAME)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -130,7 +130,7 @@ or are using a boundary stored in the database.}
 
 \item{\code{FIELDNAME}}{Name of the field for aggregation.}
 
-\item{\code{SIZE}}{Size of grid to make (meters).}
+\item{\code{SIZE}}{Size of grid to make (meters), default = 10.}
 
 \item{\code{FARMERNAME}}{Name of farmer that owns the field.}
 }
@@ -148,7 +148,7 @@ Creates a temporary aggregated table in the database for processing.
 The dot indicates that this function would be private if not for
 documentations sake.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AggDat$.createAggTable(DB, FARMERNAME, FIELDNAME, CY, PY, GRID, DAT_USED)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{AggDat$.createAggTable(DB, FARMERNAME, FIELDNAME, CY, PY, GRID, DAT_USED, SIZE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -168,6 +168,8 @@ documentations sake.
 the raw observed data locations.}
 
 \item{\code{DAT_USED}}{The length of year to gather data over for the CY.}
+
+\item{\code{SIZE}}{Size of grid to make (meters), default = 10.}
 }
 \if{html}{\out{</div>}}
 }
@@ -247,7 +249,8 @@ private if not for documentations sake.
   GRID,
   CY = NULL,
   PY = NULL,
-  DAT_USED
+  DAT_USED,
+  SIZE
 )}\if{html}{\out{</div>}}
 }
 
@@ -271,6 +274,8 @@ the raw observed data locations.}
 in the field.}
 
 \item{\code{DAT_USED}}{The length of year to gather data over for the CY.}
+
+\item{\code{SIZE}}{Size of grid to make (meters), default = 10.}
 }
 \if{html}{\out{</div>}}
 }
@@ -336,7 +341,8 @@ would be private if not for documentations sake.
   FARMERNAME,
   EXPVAR,
   GRID,
-  CY = TRUE
+  CY = TRUE,
+  SIZE
 )}\if{html}{\out{</div>}}
 }
 
@@ -362,6 +368,8 @@ the raw observed data locations.}
 
 \item{\code{CY}}{Logical, whether the data for aggregation is from the year of
 interest (aka the 'current year').}
+
+\item{\code{SIZE}}{Size of grid to make (meters), default = 10.}
 }
 \if{html}{\out{</div>}}
 }

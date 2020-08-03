@@ -285,11 +285,11 @@ ImportGEE <- R6::R6Class(
       # identify farmidx and farmeridx
       if (any(grepl(paste(as.data.frame(self$farms[, 2])$farm,
                          collapse = '|'),
-                   INFO$orig_file))) {
-        strLocs <- stringr::str_locate(INFO$orig_file,
+                   tolower(INFO$orig_file)))) {
+        strLocs <- stringr::str_locate(tolower(INFO$orig_file),
                                        paste(as.data.frame(self$farms[, 2])$farm,
                                              collapse = '|'))
-        farm <- stringr::str_sub(INFO$orig_file,
+        farm <- stringr::str_sub(tolower(INFO$orig_file),
                                  strLocs[1],
                                  strLocs[2])
         INFO$farmidx <- as.data.frame(self$farms)[which(as.data.frame(self$farms)$farm == farm), "farmidx"]
