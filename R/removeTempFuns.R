@@ -3,14 +3,14 @@
 #' @description Removes any temporary tables from the 'all_farms' schema of an
 #' OFPE formatted database.
 #'
-#' @param DB Connection to an OFPE formatted database.
+#' @param db Connection to an OFPE formatted database.
 #' @return NULL, tables removed in database.
 #' @export
-removeTempTables <- function(DB){
+removeTempTables <- function(db) {
   ## remove old temp bboxes (user input bboxes)
-  geomtempExist <- as.logical(
+  geom_temp_exist <- as.logical(
     DBI::dbGetQuery(
-      DB,
+      db,
       paste0("SELECT EXISTS (
              SELECT 1
              FROM   information_schema.tables
@@ -18,47 +18,47 @@ removeTempTables <- function(DB){
              AND table_name = 'temp')")
     )
   )
-  if(geomtempExist){
+  if(geom_temp_exist){
     invisible(
       DBI::dbGetQuery(
-        DB,
+        db,
         paste0("DROP TABLE all_farms.temp")
       )
     )
 
   }
   ## remove any temporary grids
-  gridtempExist <- as.logical(
+  grid_temp_exist <- as.logical(
     DBI::dbGetQuery(
-      DB,
+      db,
       paste0("SELECT EXISTS (SELECT 1 FROM
              information_schema.tables
              WHERE table_schema = 'all_farms'
              AND table_name = 'gridtemp')")
     )
   )
-  if(gridtempExist){
+  if(grid_temp_exist){
     invisible(
       DBI::dbGetQuery(
-        DB,
+        db,
         paste0("DROP TABLE all_farms.gridtemp")
       )
     )
   }
   ## remove any temporary geetemp
-  geetempExist <- as.logical(
+  gee_temp_exist <- as.logical(
     DBI::dbGetQuery(
-      DB,
+      db,
       paste0("SELECT EXISTS (SELECT 1 FROM
              information_schema.tables
              WHERE table_schema = 'all_farms'
              AND table_name = 'geetemp')")
     )
   )
-  if(geetempExist){
+  if(gee_temp_exist){
     invisible(
       DBI::dbGetQuery(
-        DB,
+        db,
         paste0("DROP TABLE all_farms.geetemp")
       )
     )
@@ -69,50 +69,70 @@ removeTempTables <- function(DB){
 #' @description Removes any temporary tables from the schemas
 #' in an OFPE formatted database of the specified farmer. .
 #'
-#' @param DB Connection to an OFPE formatted database,
-#' @param FARMERNAME Name of the farmer corresponding to the schemas to search
+#' @param db Connection to an OFPE formatted database,
+#' @param farmername Name of the farmer corresponding to the schemas to search
 #' in for removal of temporary tables.
 #' @return NULL, tables removed in database.
 #' @export
-removeTempFarmerTables <- function(DB,FARMERNAME){
+removeTempFarmerTables <- function(db, farmername) {
   ## remove old temporary tables
-  tempExist <- as.logical(
+  temp_exist <- as.logical(
     DBI::dbGetQuery(
-      DB,
+      db,
       paste0("SELECT EXISTS (
              SELECT 1
              FROM information_schema.tables
-             WHERE table_schema = '",FARMERNAME,"_a'
+             WHERE table_schema = '",farmername,"_a'
              AND table_name = 'temp')")
     )
   )
-  if(tempExist){
+  if(temp_exist){
     invisible(
       DBI::dbGetQuery(
-        DB,
+        db,
         paste0("DROP TABLE ",
-               FARMERNAME,
+               farmername,
                "_a.temp")
       )
     )
   }
-  tempExist <- as.logical(
+  temp_exist <- as.logical(
     DBI::dbGetQuery(
-      DB,
+      db,
       paste0("SELECT EXISTS (
              SELECT 1
              FROM information_schema.tables
-             WHERE table_schema = '",FARMERNAME,"_r'
+             WHERE table_schema = '",farmername,"_r'
              AND table_name = 'temp')")
     )
   )
-  if(tempExist){
+  if(temp_exist){
     invisible(
       DBI::dbGetQuery(
-        DB,
+        db,
         paste0("DROP TABLE ",
-               FARMERNAME,
+               farmername,
                "_r.temp")
+      )
+    )
+  }
+  means_exist <- as.logical(
+    DBI::dbGetQuery(
+      db,
+      paste0("SELECT EXISTS (
+             SELECT 1
+             FROM information_schema.tables
+             WHERE table_schema = '",farmername,"_r'
+             AND table_name = 'means')")
+    )
+  )
+  if(means_exist){
+    invisible(
+      DBI::dbGetQuery(
+        db,
+        paste0("DROP TABLE ",
+               farmername,
+               "_r.means")
       )
     )
   }

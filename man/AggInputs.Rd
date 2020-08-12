@@ -24,48 +24,48 @@ in the database.
 \item{\code{dbCon}}{Database connection object connected to an OFPE formatted
 database, see DBCon class.}
 
-\item{\code{bboxImport}}{Yes/No, will user be uploading their own field boundary?
+\item{\code{boundary_import}}{Yes/No, will user be uploading their own field boundary?
 Used for spatially querying the database for intersecting data.}
 
-\item{\code{bboxLocation}}{Only relevant if bboxImport == "Yes". Is the location
+\item{\code{boundary_location}}{Only relevant if boundary_import == "Yes". Is the location
 of the shapefile containing the field boundary to use for spatial queries.}
 
-\item{\code{FIELDNAME}}{Name of the field to aggregate data for. Selected from
+\item{\code{fieldname}}{Name of the field to aggregate data for. Selected from
 the 'all_farms.fields' table of an OFPE formatted database.}
 
-\item{\code{FARMERNAME}}{Name of the farmer that owns the selected field.}
+\item{\code{farmername}}{Name of the farmer that owns the selected field.}
 
-\item{\code{RESPVAR}}{Response variable to aggregate data for, select/input
+\item{\code{respvar}}{Response variable to aggregate data for, select/input
 'Yield', 'Protein', 'Satellite'. 'Satellite' data aggregates only
 remotely sensed data and does not include any on-farm collected data.}
 
-\item{\code{EXPVAR}}{Experimental variable to aggregate data for, select/input
+\item{\code{expvar}}{Experimental variable to aggregate data for. Select or supply
 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
 input that was experimentally varied across the field as part of the
 on-farm experimentation.}
 
-\item{\code{CY_RESP}}{The year of interest of the selected response variable.
+\item{\code{cy_resp}}{The year of interest of the selected response variable.
 This is considered the 'current year' (CY), and differs from the 'previous
 year' (PY), which is the latest year before the CY during which the field
-was cropped. This is separate from the CY_EXP variable because in some
+was cropped. This is separate from the cy_exp variable because in some
 instances, applied data was categorized as or applied in the year prior
 (i.e. WW seeding rates occur in fall of the year before harvest in the
 following August).}
 
-\item{\code{PY_RESP}}{The year prior to the selected CY that a crop was harvested
+\item{\code{py_resp}}{The year prior to the selected CY that a crop was harvested
 in the specified field. This iss the latest year before the CY during which
 the field was cropped. If you do not data from any previous year, you can
 provide a year for labeling and annotations sake in output figures.}
 
-\item{\code{CY_EXP}}{The year of interest of the selected experimental variable.
+\item{\code{cy_exp}}{The year of interest of the selected experimental variable.
 This is the year that the experimental variable was applied to grow the
-crop in the selected 'CY_RESP' year. This is separate from the CY_RESP
+crop in the selected 'cy_resp' year. This is separate from the cy_resp
 variable because in some instances, applied data was categorized as or
 applied in the year prior (i.e. WW seeding rates occur in fall of the year
 before harvest in the following August).}
 
-\item{\code{PY_EXP}}{The application year of the experimental variable that was
-used to grow the crop in the 'PY_RESP' year. If you do not data from any
+\item{\code{py_exp}}{The application year of the experimental variable that was
+used to grow the crop in the 'py_resp' year. If you do not data from any
 previous year, you can provide a year for labeling and annotations sake in
 output figures.}
 
@@ -76,41 +76,41 @@ of the observed response variable (yield or protein). Note that when
 'Satellite' is selected there are no observed points to use, so the 'Grid'
 option is selected by default.}
 
-\item{\code{DAT_USED}}{Option for the length of year to use for CY data. In
-winter wheat conventional systems and organic spring wheat systems,
-there is a decision point around March 30th at which farmers must make
-decisions on their fertilizer or seeding rates, respectively. When making
-these decisions, farmers will only have data up to that decision point. This
-options determines the covariate data aggregated for the CY, where
-'Decision Point' aggregates data for the CY from January 1st to March 30th
-of that year, while 'Full Year' aggregates data for the CY from January 1st
-to December 31st. This is a residual special use case for Paul Hegedus' 2020
-ICPA work.}
+\item{\code{dat_used}}{Option for the length of year to use for data. Either select
+'Decision Point' or 'Full Year'. In winter wheat conventional systems and
+organic spring wheat systems, there is a decision point around March 30th at
+which farmers must make decisions on their fertilizer or seeding rates,
+respectively. When making these decisions, farmers will only have data up to
+that decision point. This options determines the covariate data aggregated
+for the CY, where 'Decision Point' aggregates data for the CY from January
+1st to March 30th of that year, while 'Full Year' aggregates data for the CY
+from January 1st to December 31st. This is a residual special use case for
+Paul Hegedus' 2020 ICPA work.}
 
-\item{\code{CY_RESP_FILES}}{Vector of names. Based on the user's selected field
+\item{\code{cy_resp_files}}{Vector of names. Based on the user's selected field
 and year, the database can be queried for the original file names of the
 data uploaded to the database. The user selects the correct file name that
 corresponds to the response variable data in the specified field and year.
-In this case the 'CY_RESP' year. Multiple files are allowed for selection
+In this case the 'cy_resp' year. Multiple files are allowed for selection
 because of the cases in which multiple files correspond to the data in the
 given year and field (i.e. if harvest took multiple days etc.).}
 
-\item{\code{PY_RESP_FILES}}{Vector of names. Based on the user's selected field
+\item{\code{py_resp_files}}{Vector of names. Based on the user's selected field
 and year, the database can be queried for the original file names of the
 data uploaded to the database. The user selects the correct file name that
 corresponds to the response variable data in the specified field and year.
-In this case the 'PY_RESP' year. Multiple files are allowed for selection
+In this case the 'py_resp' year. Multiple files are allowed for selection
 because of the cases in which multiple files correspond to the data in the
 given year and field (i.e. if harvest took multiple days etc.). If you do
 not have data available from a previous year and are not using the
 interactive input selectors, simply input "None", otherwise when using the
 interactive methods this is handled for you.}
 
-\item{\code{CY_EXP_FILES}}{Data.frame with 2 columns, 'orig_file' and 'table'.
+\item{\code{cy_exp_files}}{Data.frame with 2 columns, 'orig_file' and 'table'.
 Based on the user's selected field and year, the database can be queried
 for the original file names of the data uploaded to the database. The user
 selects the correct file name that corresponds to the experimental variable
-data in the specified field and year. In this case, the 'CY_EXP' year.
+data in the specified field and year. In this case, the 'cy_exp' year.
 Multiple files are allowed for selection because of the cases in which
 multiple files correspond to the data in the given year and field (i.e.
 if application took multiple days etc.). The 'orig_file' column contains
@@ -119,11 +119,11 @@ data and 'table' contains the table within the farmer schema that the
 data is housed. This is because some as-applied experimental data are
 point vectors and some are polygons.}
 
-\item{\code{PY_EXP_FILES}}{Data.frame with 2 columns, 'orig_file' and 'table'.
+\item{\code{py_exp_files}}{Data.frame with 2 columns, 'orig_file' and 'table'.
 Based on the user's selected field and year, the database can be queried
 for the original file names of the data uploaded to the database. The user
 selects the correct file name that corresponds to the experimental variable
-data in the specified field and year. In this case, the 'PY_EXP' year.
+data in the specified field and year. In this case, the 'py_exp' year.
 Multiple files are allowed for selection because of the cases in which
 multiple files correspond to the data in the given year and field (i.e. if
 application took multiple days etc.). The 'orig_file' column contains
@@ -133,87 +133,87 @@ data is housed. This is because some as-applied experimental data are
 point vectors and some are polygons. If no data from the desired year
 is available, put "None" in the 'orig_file' column.}
 
-\item{\code{saveInDB}}{Yes/No. Logical, whether to save the aggregated data into
+\item{\code{save_in_db}}{Yes/No. Logical, whether to save the aggregated data into
 the OFPE formatted database. Not an option if you are supplying your own
 boundary for which to aggregate data.}
 
 \item{\code{export}}{Yes/No. Logical, whether to export the aggregated data as
-a '.csv' file. If yes, the user will need to provide the 'exportName'.}
+a '.csv' file. If yes, the user will need to provide the 'export_name'.}
 
-\item{\code{exportName}}{If exporting the aggregated data as a '.csv', the user
+\item{\code{export_name}}{If exporting the aggregated data as a '.csv', the user
 needs to specify the name of the file to export. This includes the file
 path.}
 
-\item{\code{CY_RESP_COL}}{Data.frame with 3 columns, 'RESP', 'DIST', and
+\item{\code{cy_resp_col}}{Data.frame with 3 columns, 'resp', 'dist', and
 'orig_file'. This data.frame contains the column containing data for
-the selected response variable ('RESP') and the column (if any) that
-correspond to the distance between observations ('DIST'). The 'DIST'
+the selected response variable ('resp') and the column (if any) that
+correspond to the distance between observations ('dist'). The 'dist'
 selection is optional (can be NA) and optionally used during a cleaning
 step where points are removed if they are more than 4SD from the mean
 distance between observations as this indicates that the equipment was
 moving at an abnormal speed and potentially resulting in erroneous
 measurements. The 'orig_file' is the same as those selected in the
-'CY_RESP_FILES' vector.}
+'cy_resp_files' vector.}
 
-\item{\code{PY_RESP_COL}}{Data.frame with 3 columns, 'RESP', 'DIST', and
+\item{\code{py_resp_col}}{Data.frame with 3 columns, 'resp', 'dist', and
 'orig_file'. This data.frame contains the column containing data for
-the selected response variable ('RESP') and the column (if any) that
-correspond to the distance between observations ('DIST'). The 'DIST'
+the selected response variable ('resp') and the column (if any) that
+correspond to the distance between observations ('dist'). The 'dist'
 selection is optional and optionally used during a cleaning step where
 points are removed if they are more than 4SD from the mean distance
 between observations as this indicates that the equipment was moving
 at an abnormal speed and potentially resulting in erroneous measurements.
-The 'orig_file' is the same as those selected in the 'PY_RESP_FILES' vector.}
+The 'orig_file' is the same as those selected in the 'py_resp_files' vector.}
 
-\item{\code{CY_EXP_COL}}{Data.frame with 4 columns, 'EXP', 'DIST', 'PRODUCT',
+\item{\code{cy_exp_col}}{Data.frame with 4 columns, 'EXP', 'dist', 'product',
 and 'orig_file'. This data.frame contains the column containing data for
 the selected experimental variable ('EXP') and the column (if any) that
-correspond to the distance between observations ('DIST'). The 'DIST'
+correspond to the distance between observations ('dist'). The 'dist'
 selection is optional (can be NA) and optionally used during a cleaning
 step where points are removed if they are more than 4SD from the mean
 distance between observations as this indicates that the equipment was
 moving at an abnormal speed and potentially resulting in erroneous
-measurements. The 'PRODUCT' column is also optional, and not relevant
+measurements. The 'product' column is also optional, and not relevant
 for seeding rate data, and used if there is a column corresponding to
 the product applied. When left blank, it is assumed that the 'EXP' column
 contains data in lbs/acre and the user is not given an option to provide
 a conversion rate. It is good practice to always select a column (even if
 no specific 'product' column) here to explicitly state a conversion factor.
-The 'orig_file' is the same as those selected in the 'CY_EXP_FILES' table.}
+The 'orig_file' is the same as those selected in the 'cy_exp_files' table.}
 
-\item{\code{PY_EXP_COL}}{Data.frame with 4 columns, 'EXP', 'DIST', 'PRODUCT',
+\item{\code{py_exp_col}}{Data.frame with 4 columns, 'EXP', 'dist', 'product',
 and 'orig_file'. This data.frame contains the column containing data for
 the selected experimental variable ('EXP') and the column (if any) that
-correspond to the distance between observations ('DIST'). The 'DIST'
+correspond to the distance between observations ('dist'). The 'dist'
 selection is optional (can be NA) and optionally used during a cleaning
 step where points are removed if they are more than 4SD from the mean
 distance between observations as this indicates that the equipment was
 moving at an abnormal speed and potentially resulting in erroneous
-measurements. The 'PRODUCT' column is also optional, and not relevant
+measurements. The 'product' column is also optional, and not relevant
 for seeding rate data, and used if there is a column corresponding to
 the product applied. When left blank, it is assumed that the 'EXP' column
 contains data in lbs/acre and the user is not given an option to provide
 a conversion rate. It is good practice to always select a column (even if
 no specific 'product' column) here to explicitly state a conversion factor.
-The 'orig_file' is the same as those selected in the 'PY_EXP_FILES' table.}
+The 'orig_file' is the same as those selected in the 'py_exp_files' table.}
 
-\item{\code{CY_EXP_CONV}}{Data.frame with 3 columns, 'FORMULA', 'CONVERSION',
-and 'orig_file'. Based on the users selection of 'PRODUCT' in the
-CY_EXP_COL data.frame, the formula from the 'PRODUCT' column is extracted
+\item{\code{cy_exp_conv}}{Data.frame with 3 columns, 'FORMULA', 'conversion',
+and 'orig_file'. Based on the users selection of 'product' in the
+cy_exp_col data.frame, the formula from the 'product' column is extracted
 and used to ask the user the desired conversion factor from the product
 applied to lbs per acre. Again, this is only really applicable for fertilzier
 rates unless seeding rates are reported in units besides lbs per acre. The
-'orig_file' is the same as those selected in the 'CY_EXP_FILES' table.}
+'orig_file' is the same as those selected in the 'cy_exp_files' table.}
 
-\item{\code{PY_EXP_CONV}}{Data.frame with 3 columns, 'FORMULA', 'CONVERSION',
-and 'orig_file'. Based on the users selection of 'PRODUCT' in the
-CY_EXP_COL data.frame, the formula from the 'PRODUCT' column is extracted
+\item{\code{py_exp_conv}}{Data.frame with 3 columns, 'FORMULA', 'conversion',
+and 'orig_file'. Based on the users selection of 'product' in the
+cy_exp_col data.frame, the formula from the 'product' column is extracted
 and used to ask the user the desired conversion factor from the product
 applied to lbs per acre. Again, this is only really applicable for fertilzier
 rates unless seeding rates are reported in units besides lbs per acre. The
-'orig_file' is the same as those selected in the 'CY_EXP_FILES' table.}
+'orig_file' is the same as those selected in the 'cy_exp_files' table.}
 
-\item{\code{SIZE}}{Optional, the size, in meters, to make a grid across the field.
+\item{\code{size}}{Optional, the size, in meters, to make a grid across the field.
 Mostly necessary for when 'Grid' is selected for the 'GRID' parameter, however
 is the scale at which the finest resolution cleaning of data occurs. Defaults
 to 10m if left NULL.}
@@ -236,32 +236,32 @@ Initialize an object for storing aggregation inputs.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AggInputs$new(
   dbCon,
-  bboxImport = NULL,
-  bboxLocation = NULL,
-  FIELDNAME = NULL,
-  FARMERNAME = NULL,
-  RESPVAR = NULL,
-  EXPVAR = NULL,
-  CY_RESP = NULL,
-  PY_RESP = NULL,
-  CY_EXP = NULL,
-  PY_EXP = NULL,
+  boundary_import = NULL,
+  boundary_location = NULL,
+  fieldname = NULL,
+  farmername = NULL,
+  respvar = NULL,
+  expvar = NULL,
+  cy_resp = NULL,
+  py_resp = NULL,
+  cy_exp = NULL,
+  py_exp = NULL,
   GRID = NULL,
-  DAT_USED = NULL,
-  CY_RESP_FILES = NULL,
-  PY_RESP_FILES = NULL,
-  CY_EXP_FILES = NULL,
-  PY_EXP_FILES = NULL,
-  saveInDB = NULL,
+  dat_used = NULL,
+  cy_resp_files = NULL,
+  py_resp_files = NULL,
+  cy_exp_files = NULL,
+  py_exp_files = NULL,
+  save_in_db = NULL,
   export = NULL,
-  exportName = NULL,
-  CY_RESP_COL = NULL,
-  PY_RESP_COL = NULL,
-  CY_EXP_COL = NULL,
-  PY_EXP_COL = NULL,
-  CY_EXP_CONV = NULL,
-  PY_EXP_CONV = NULL,
-  SIZE = 10
+  export_name = NULL,
+  cy_resp_col = NULL,
+  py_resp_col = NULL,
+  cy_exp_col = NULL,
+  py_exp_col = NULL,
+  cy_exp_conv = NULL,
+  py_exp_conv = NULL,
+  size = 10
 )}\if{html}{\out{</div>}}
 }
 
@@ -271,48 +271,48 @@ Initialize an object for storing aggregation inputs.
 \item{\code{dbCon}}{Database connection object connected to an OFPE formatted
 database, see DBCon class.}
 
-\item{\code{bboxImport}}{Yes/No, will user be uploading their own field boundary?
+\item{\code{boundary_import}}{Yes/No, will user be uploading their own field boundary?
 Used for spatially querying the database for intersecting data.}
 
-\item{\code{bboxLocation}}{Only relevant if bboxImport == "Yes". Is the location
+\item{\code{boundary_location}}{Only relevant if boundary_import == "Yes". Is the location
 of the shapefile containing the field boundary to use for spatial queries.}
 
-\item{\code{FIELDNAME}}{Name of the field to aggregate data for. Selected from
+\item{\code{fieldname}}{Name of the field to aggregate data for. Selected from
 the 'all_farms.fields' table of an OFPE formatted database.}
 
-\item{\code{FARMERNAME}}{Name of the farmer that owns the selected field.}
+\item{\code{farmername}}{Name of the farmer that owns the selected field.}
 
-\item{\code{RESPVAR}}{Response variable to aggregate data for, select/input
+\item{\code{respvar}}{Response variable to aggregate data for, select/input
 'Yield', 'Protein', 'Satellite'. 'Satellite' data aggregates only
 remotely sensed data and does not include any on-farm collected data.}
 
-\item{\code{EXPVAR}}{Experimental variable to aggregate data for, select/input
+\item{\code{expvar}}{Experimental variable to aggregate data for, select/input
 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
 input that was experimentally varied across the field as part of the
 on-farm experimentation.}
 
-\item{\code{CY_RESP}}{The year of interest of the selected response variable.
+\item{\code{cy_resp}}{The year of interest of the selected response variable.
 This is considered the 'current year' (CY), and differs from the 'previous
 year' (PY), which is the latest year before the CY during which the field
-was cropped. This is separate from the CY_EXP variable because in some
+was cropped. This is separate from the cy_exp variable because in some
 instances, applied data was categorized as or applied in the year prior
 (i.e. WW seeding rates occur in fall of the year before harvest in the
 following August).}
 
-\item{\code{PY_RESP}}{The year prior to the selected CY that a crop was harvested
+\item{\code{py_resp}}{The year prior to the selected CY that a crop was harvested
 in the specified field. This iss the latest year before the CY during which
 the field was cropped. If you do not data from any previous year, you can
 provide a year for labeling and annotations sake in output figures.}
 
-\item{\code{CY_EXP}}{The year of interest of the selected experimental variable.
+\item{\code{cy_exp}}{The year of interest of the selected experimental variable.
 This is the year that the experimental variable was applied to grow the
-crop in the selected 'CY_RESP' year. This is separate from the CY_RESP
+crop in the selected 'cy_resp' year. This is separate from the cy_resp
 variable because in some instances, applied data was categorized as or
 applied in the year prior (i.e. WW seeding rates occur in fall of the year
 before harvest in the following August).}
 
-\item{\code{PY_EXP}}{The application year of the experimental variable that was
-used to grow the crop in the 'PY_RESP' year. If you do not data from any
+\item{\code{py_exp}}{The application year of the experimental variable that was
+used to grow the crop in the 'py_resp' year. If you do not data from any
 previous year, you can provide a year for labeling and annotations sake in
 output figures.}
 
@@ -323,7 +323,7 @@ of the observed response variable (yield or protein). Note that when
 'Satellite' is selected there are no observed points to use, so the 'Grid'
 option is selected by default.}
 
-\item{\code{DAT_USED}}{Option for the length of year to use for CY data. In
+\item{\code{dat_used}}{Option for the length of year to use for CY data. In
 winter wheat conventional systems and organic spring wheat systems,
 there is a decision point around March 30th at which farmers must make
 decisions on their fertilizer or seeding rates, respectively. When making
@@ -334,30 +334,30 @@ of that year, while 'Full Year' aggregates data for the CY from January 1st
 to December 31st. This is a residual special use case for Paul Hegedus' 2020
 ICPA work.}
 
-\item{\code{CY_RESP_FILES}}{Vector of names. Based on the user's selected field
+\item{\code{cy_resp_files}}{Vector of names. Based on the user's selected field
 and year, the database can be queried for the original file names of the
 data uploaded to the database. The user selects the correct file name that
 corresponds to the response variable data in the specified field and year.
-In this case the 'CY_RESP' year. Multiple files are allowed for selection
+In this case the 'cy_resp' year. Multiple files are allowed for selection
 because of the cases in which multiple files correspond to the data in the
 given year and field (i.e. if harvest took multiple days etc.).}
 
-\item{\code{PY_RESP_FILES}}{Vector of names. Based on the user's selected field
+\item{\code{py_resp_files}}{Vector of names. Based on the user's selected field
 and year, the database can be queried for the original file names of the
 data uploaded to the database. The user selects the correct file name that
 corresponds to the response variable data in the specified field and year.
-In this case the 'PY_RESP' year. Multiple files are allowed for selection
+In this case the 'py_resp' year. Multiple files are allowed for selection
 because of the cases in which multiple files correspond to the data in the
 given year and field (i.e. if harvest took multiple days etc.). If you do
 not have data available from a previous year and are not using the
 interactive input selectors, simply input "None", otherwise when using the
 interactive methods this is handled for you.}
 
-\item{\code{CY_EXP_FILES}}{Data.frame with 2 columns, 'orig_file' and 'table'.
+\item{\code{cy_exp_files}}{Data.frame with 2 columns, 'orig_file' and 'table'.
 Based on the user's selected field and year, the database can be queried
 for the original file names of the data uploaded to the database. The user
 selects the correct file name that corresponds to the experimental variable
-data in the specified field and year. In this case, the 'CY_EXP' year.
+data in the specified field and year. In this case, the 'cy_exp' year.
 Multiple files are allowed for selection because of the cases in which
 multiple files correspond to the data in the given year and field (i.e.
 if application took multiple days etc.). The 'orig_file' column contains
@@ -366,11 +366,11 @@ data and 'table' contains the table within the farmer schema that the
 data is housed. This is because some as-applied experimental data are
 point vectors and some are polygons.}
 
-\item{\code{PY_EXP_FILES}}{Data.frame with 2 columns, 'orig_file' and 'table'.
+\item{\code{py_exp_files}}{Data.frame with 2 columns, 'orig_file' and 'table'.
 Based on the user's selected field and year, the database can be queried
 for the original file names of the data uploaded to the database. The user
 selects the correct file name that corresponds to the experimental variable
-data in the specified field and year. In this case, the 'PY_EXP' year.
+data in the specified field and year. In this case, the 'py_exp' year.
 Multiple files are allowed for selection because of the cases in which
 multiple files correspond to the data in the given year and field (i.e. if
 application took multiple days etc.). The 'orig_file' column contains
@@ -380,87 +380,87 @@ data is housed. This is because some as-applied experimental data are
 point vectors and some are polygons. If no data from the desired year
 is available, put "None" in the 'orig_file' column.}
 
-\item{\code{saveInDB}}{Yes/No. Logical, whether to save the aggregated data into
+\item{\code{save_in_db}}{Yes/No. Logical, whether to save the aggregated data into
 the OFPE formatted database. Not an option if you are supplying your own
 boundary for which to aggregate data.}
 
 \item{\code{export}}{Yes/No. Logical, whether to export the aggregated data as
-a '.csv' file. If yes, the user will need to provide the 'exportName'.}
+a '.csv' file. If yes, the user will need to provide the 'export_name'.}
 
-\item{\code{exportName}}{If exporting the aggregated data as a '.csv', the user
+\item{\code{export_name}}{If exporting the aggregated data as a '.csv', the user
 needs to specify the name of the file to export. This includes the file
 path.}
 
-\item{\code{CY_RESP_COL}}{Data.frame with 3 columns, 'RESP', 'DIST', and
+\item{\code{cy_resp_col}}{Data.frame with 3 columns, 'resp', 'dist', and
 'orig_file'. This data.frame contains the column containing data for
-the selected response variable ('RESP') and the column (if any) that
-correspond to the distance between observations ('DIST'). The 'DIST'
+the selected response variable ('resp') and the column (if any) that
+correspond to the distance between observations ('dist'). The 'dist'
 selection is optional (can be NA) and optionally used during a cleaning
 step where points are removed if they are more than 4SD from the mean
 distance between observations as this indicates that the equipment was
 moving at an abnormal speed and potentially resulting in erroneous
 measurements. The 'orig_file' is the same as those selected in the
-'CY_RESP_FILES' vector.}
+'cy_resp_files' vector.}
 
-\item{\code{PY_RESP_COL}}{Data.frame with 3 columns, 'RESP', 'DIST', and
+\item{\code{py_resp_col}}{Data.frame with 3 columns, 'resp', 'dist', and
 'orig_file'. This data.frame contains the column containing data for
-the selected response variable ('RESP') and the column (if any) that
-correspond to the distance between observations ('DIST'). The 'DIST'
+the selected response variable ('resp') and the column (if any) that
+correspond to the distance between observations ('dist'). The 'dist'
 selection is optional and optionally used during a cleaning step where
 points are removed if they are more than 4SD from the mean distance
 between observations as this indicates that the equipment was moving
 at an abnormal speed and potentially resulting in erroneous measurements.
-The 'orig_file' is the same as those selected in the 'PY_RESP_FILES' vector.}
+The 'orig_file' is the same as those selected in the 'py_resp_files' vector.}
 
-\item{\code{CY_EXP_COL}}{Data.frame with 4 columns, 'EXP', 'DIST', 'PRODUCT',
+\item{\code{cy_exp_col}}{Data.frame with 4 columns, 'EXP', 'dist', 'product',
 and 'orig_file'. This data.frame contains the column containing data for
 the selected experimental variable ('EXP') and the column (if any) that
-correspond to the distance between observations ('DIST'). The 'DIST'
+correspond to the distance between observations ('dist'). The 'dist'
 selection is optional (can be NA) and optionally used during a cleaning
 step where points are removed if they are more than 4SD from the mean
 distance between observations as this indicates that the equipment was
 moving at an abnormal speed and potentially resulting in erroneous
-measurements. The 'PRODUCT' column is also optional, and not relevant
+measurements. The 'product' column is also optional, and not relevant
 for seeding rate data, and used if there is a column corresponding to
 the product applied. When left blank, it is assumed that the 'EXP' column
 contains data in lbs/acre and the user is not given an option to provide
 a conversion rate. It is good practice to always select a column (even if
 no specific 'product' column) here to explicitly state a conversion factor.
-The 'orig_file' is the same as those selected in the 'CY_EXP_FILES' table.}
+The 'orig_file' is the same as those selected in the 'cy_exp_files' table.}
 
-\item{\code{PY_EXP_COL}}{Data.frame with 4 columns, 'EXP', 'DIST', 'PRODUCT',
+\item{\code{py_exp_col}}{Data.frame with 4 columns, 'EXP', 'dist', 'product',
 and 'orig_file'. This data.frame contains the column containing data for
 the selected experimental variable ('EXP') and the column (if any) that
-correspond to the distance between observations ('DIST'). The 'DIST'
+correspond to the distance between observations ('dist'). The 'dist'
 selection is optional (can be NA) and optionally used during a cleaning
 step where points are removed if they are more than 4SD from the mean
 distance between observations as this indicates that the equipment was
 moving at an abnormal speed and potentially resulting in erroneous
-measurements. The 'PRODUCT' column is also optional, and not relevant
+measurements. The 'product' column is also optional, and not relevant
 for seeding rate data, and used if there is a column corresponding to
 the product applied. When left blank, it is assumed that the 'EXP' column
 contains data in lbs/acre and the user is not given an option to provide
 a conversion rate. It is good practice to always select a column (even if
 no specific 'product' column) here to explicitly state a conversion factor.
-The 'orig_file' is the same as those selected in the 'PY_EXP_FILES' table.}
+The 'orig_file' is the same as those selected in the 'py_exp_files' table.}
 
-\item{\code{CY_EXP_CONV}}{Data.frame with 3 columns, 'FORMULA', 'CONVERSION',
-and 'orig_file'. Based on the users selection of 'PRODUCT' in the
-CY_EXP_COL data.frame, the formula from the 'PRODUCT' column is extracted
+\item{\code{cy_exp_conv}}{Data.frame with 3 columns, 'FORMULA', 'conversion',
+and 'orig_file'. Based on the users selection of 'product' in the
+cy_exp_col data.frame, the formula from the 'product' column is extracted
 and used to ask the user the desired conversion factor from the product
 applied to lbs per acre. Again, this is only really applicable for fertilzier
 rates unless seeding rates are reported in units besides lbs per acre. The
-'orig_file' is the same as those selected in the 'CY_EXP_FILES' table.}
+'orig_file' is the same as those selected in the 'cy_exp_files' table.}
 
-\item{\code{PY_EXP_CONV}}{Data.frame with 3 columns, 'FORMULA', 'CONVERSION',
-and 'orig_file'. Based on the users selection of 'PRODUCT' in the
-CY_EXP_COL data.frame, the formula from the 'PRODUCT' column is extracted
+\item{\code{py_exp_conv}}{Data.frame with 3 columns, 'FORMULA', 'conversion',
+and 'orig_file'. Based on the users selection of 'product' in the
+cy_exp_col data.frame, the formula from the 'product' column is extracted
 and used to ask the user the desired conversion factor from the product
 applied to lbs per acre. Again, this is only really applicable for fertilzier
 rates unless seeding rates are reported in units besides lbs per acre. The
-'orig_file' is the same as those selected in the 'CY_EXP_FILES' table.}
+'orig_file' is the same as those selected in the 'cy_exp_files' table.}
 
-\item{\code{SIZE}}{Optional, the size, in meters, to make a grid across the field.
+\item{\code{size}}{Optional, the size, in meters, to make a grid across the field.
 Mostly necessary for when 'Grid' is selected for the 'GRID' parameter, however
 is the scale at which the finest resolution cleaning of data occurs. Defaults
 to 10m if left NULL.}
@@ -475,7 +475,69 @@ A new 'AggInputs' object.
 \if{html}{\out{<a id="method-selectInputs"></a>}}
 \if{latex}{\out{\hypertarget{method-selectInputs}{}}}
 \subsection{Method \code{selectInputs()}}{
-Interactive method for selecting aggregation input options.
+Interactive method for selecting aggregation input options. The description
+below describes the process of interactively selecting the necessary parameters
+for automated data aggregation.
+
+The user selects whether to import bounding box or select from field in
+database. If user uploads their own field boundary they are asked for the
+field name and to identify the associated farmer. If using a field boundary
+from the database the user simply selects which field.
+
+Select the response variable to aggregate data for (yield or protein).
+Using this information the database is queried for years that data is
+available for this field. Also, if the user selected to only collect
+satellite data, the user can choose any year from 2000 to present to gather
+data from. Also select the experimental variable to aggregate data for
+(as-applied nitrogen or as-applied seed rate).
+
+Select a data constraint for determining the time span for which to gather data.
+If 'Decision Point' is selected, then data from the current year is gathered up
+until 03-31. If 'Full Year' is selected, then data from the current year is
+gathered past the decision point and harvest through the entire year to 12-31
+of the current selected year.
+
+Select the variable that was experimentally varied across the field. This
+package was developed with options for "As-Applied Nitrogen" and "As-Applied
+Seed Rate".
+
+User needs to select whether to aggregate data to a grid or to use
+observed locations. This is required now because if using observed locations
+the user can only select one file, whereas with the grid option the user can
+select multiple files because data will be averaged to the grid cell centroid
+locations. This only applies to yield or protein data because by default
+satellite data is aggregated to the grid cell locations.
+
+Select current year and previous year(s) to aggregate data for. If user impprts
+their own field boundary it needs to be added to a temporary folder to do PostGIS
+functions within the database and not R.
+
+Using the selected experimental variable the database is queried for years that
+data is available for this field. Select current year and previous year(s) to get
+experimental data for.
+
+Get column names from the current year response variable table to identify that
+which corresponds to response and the distance column. The distance column is
+used to clean the data and will be removed eventually. The distance column is
+also not typically present in protein data and can be omitted as it is an
+optional argument to the cleaning function. If no response files for the
+current year are selected this section will be skipped.
+
+Also, get column names from the previous year response variable table to identify
+that which corresponds to response and the distance column. The distance column
+is used to clean the data and will be removed eventually. The distance column
+is also not typically present in protein data and can be omitted as it is an
+optional argument to the cleaning function. If no previous year response
+variable selected this section will be skipped.
+
+Get column names from the current year experimental data to identify the column
+that corresponds to the experimental variable. Get column names from the previous
+year experimental data to identify the column that corresponds to the experimental
+variable.
+
+Fill in parameters for export, such as whether to save in the database
+or to export as a .csv file. If the user imported their own field boundary
+for aggregating data, it will not be saved in the database.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AggInputs$selectInputs()}\if{html}{\out{</div>}}
 }

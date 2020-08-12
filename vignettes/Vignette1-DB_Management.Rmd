@@ -291,13 +291,17 @@ manageDB$executeActions()
 ```
 
 # Conclusion
-This vignette provided a demonstration of how to set-up a freshly created database following the completion of this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). A BuildDB class object is generated once per database and it's buildDatabase() method is used to load necessary extensions, build schemas and tables, and create spatial indices.
+This vignette provided a demonstration of how to set-up a freshly created database following the completion of this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). A BuildDB class object is generated once per database and it's buildDatabase() method is used to load necessary extensions, build schemas and tables, and create spatial indices. 
+
+I HIGHLY recommend you vacuum/analyze the database frequently to keep it running smoothly.
 
 The ManageDB class can be initialized and executed whenever the user has new information to add to the database. The user specifies the list of actions to take and provides the necessary arguments to that list. The actions are then initialized, setup, and executed. 
 
-A component diagram of the process outlining the R6 classes used and their relations is described in Figure 2 below.
+A diagram demonstrating the implementation and existence of modules related to the database creation and management can be seen below (Figure 4). This is a component diagram outlining the R6 classes used and the inputs required for the creation and management of the OFPE database. Each class is represented by a table with the title of the class as the header, with the first row showing inputs, the second row showing public methods, the third row showing private methods, and an optional fourth row showing any tangible outputs from the class. Most methods have nothing to return as their functions modify the OFPE database. 
 
-```{r, out.width='100%', fig.align='center', fig.cap='**Figure 2.** Component diagram of the database management workflow. A database connection is established using the DBCon class and the BuildDB class is used to format the OFPE database. The ManageDB class calls other classes of the same interface that are specified by the user.', echo = FALSE}
+This diagram also implements elements of an activity diagram to represent the assortment of optional ways to run the methods. The BuildDB class is used once to build the initial OFPE database. When new farmers are added or new farm or field boundaries are added to the database, the ManageDB class should be used. The user has the option of choosing which other management classes they want to run. Any combination of these can be run, however it is recommneded that logic be used when running these methods. For a farm or field boundary to be connected to a specific farmer, that farmer's information needs to be uploaded to the database first. For a field to be connected to a farm, the farm boundary and information needs to be uploaded first. 
+
+```{r, out.width="100%", fig.align="center", fig.cap="**Figure 2.** Component diagram of the database management workflow. A database connection is established using the DBCon class and the BuildDB class is used to format the OFPE database. The ManageDB class calls other classes of the same interface that are specified by the user.", echo = FALSE}
 knitr::include_graphics('figures/ofpe_db_mgmt_component.png')
 ```
 

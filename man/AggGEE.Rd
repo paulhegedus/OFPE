@@ -14,23 +14,23 @@ within the 'AggDat' R6 class.
 \item{\code{aggInputs}}{An object of the 'AggInputs' class containaing the options
 for aggregating data. This includes the database connection.}
 
-\item{\code{FARMIDX}}{The ID of the farm in which the field falls within.}
+\item{\code{farmidx}}{The ID of the farm in which the field falls within.}
 
-\item{\code{FARMERIDX}}{The ID of the farmer that owns the farm that the field
+\item{\code{farmeridx}}{The ID of the farmer that owns the farm that the field
 falls within.}
 
-\item{\code{PY}}{The year prior to the selected year of interest (CY_RESP).
+\item{\code{PY}}{The year prior to the selected year of interest (cy_resp).
 This differs from the previous crop year used prior.}
 
 \item{\code{PY2}}{The year two years prior to the selected year of interest
-(CY_RESP).}
+(cy_resp).}
 
 \item{\code{labels}}{The labels of the GEE covariates that are collected and
 aggregated.}
 
 \item{\code{type}}{The type of data corresponding to each respective label.}
 
-\item{\code{source}}{The source of data corresponding to each respective label.}
+\item{\code{SOURCE}}{The SOURCE of data corresponding to each respective label.}
 
 \item{\code{year}}{The year of data to gather,  corresponding to each respective
 label.}
@@ -58,7 +58,7 @@ Google Earth Engine data to OFPE data. Adds necessary columns to
 the temporary aggregated table,  sets up the necessary options for
 gathering and extracting GEE data.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AggGEE$new(aggInputs, FARMIDX, FARMERIDX)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{AggGEE$new(aggInputs, farmidx, farmeridx)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -67,9 +67,9 @@ gathering and extracting GEE data.
 \item{\code{aggInputs}}{An 'AggInputs' R6 class with the user's aggregation
 options.}
 
-\item{\code{FARMIDX}}{The ID of the farm in which the field falls within.}
+\item{\code{farmidx}}{The ID of the farm in which the field falls within.}
 
-\item{\code{FARMERIDX}}{The ID of the farmer that owns the farm that the field
+\item{\code{farmeridx}}{The ID of the farmer that owns the farm that the field
 falls within.}
 }
 \if{html}{\out{</div>}}
@@ -83,7 +83,18 @@ An initialized 'AggGEE' object.
 \if{latex}{\out{\hypertarget{method-aggregateGEE}{}}}
 \subsection{Method \code{aggregateGEE()}}{
 Method for executing the aggregation of GEE data to the on-farm data
-within the OFPE database.
+within the OFPE database. First, gather the environmental variables
+that do not change year to year. Gather from 2015 to make sure they
+are there. Gather Daymet V3 and GRIDMET data, when possible, for
+both the current and previous year. Get current and previous year
+precipitation and growing degree day data. Gather vegetation index
+data from the current, previous, and two years prior. Do this for
+NDVI, NDRE, and CIRE indices. Additionally, when applicable, gather
+Landsat 8 and Sentinel 2 data. Because Landsat does not have the
+band frequencies to calculate NDRE and CIRE these are only available
+when Sentinel 2 data is available. If available, gather SMAP data
+from the current and previous year. Get the surface soil moisture
+and subsurface soil moisture from SMAP.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AggGEE$aggregateGEE()}\if{html}{\out{</div>}}
 }
@@ -108,44 +119,44 @@ in the database.
 Method for aggregating the Google Earth Engine data to the on-farm
 aggregated data. Identifies the appropirate data from the 'all_farms.
 gee' schema and extracts the values of each raster to each point in
-the field. All labels, type, source etc. are identified in the GEE
+the field. All labels, type, SOURCE etc. are identified in the GEE
 data original filenames exported from GEE. The dot indicates that
 this function would be private if not for documentations sake.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AggGEE$.getGEEdata(
-  LABEL,
-  TYPE,
+  label,
+  type,
   SOURCE,
-  YEAR,
-  LOY,
-  DB,
-  FARMIDX,
-  FARMERIDX,
-  FARMERNAME
+  year,
+  loy,
+  db,
+  farmidx,
+  farmeridx,
+  farmername
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{LABEL}}{The labels for the GEE data to aggregate.}
+\item{\code{label}}{The labels for the GEE data to aggregate.}
 
-\item{\code{TYPE}}{The type of data to aggregate.}
+\item{\code{type}}{The type of data to aggregate.}
 
-\item{\code{SOURCE}}{The source of the data. (i.e. Landsat vs. Sentinel etc.).}
+\item{\code{SOURCE}}{The SOURCE of the data. (i.e. Landsat vs. Sentinel etc.).}
 
-\item{\code{YEAR}}{The year of the data to gather.}
+\item{\code{year}}{The year of the data to gather.}
 
-\item{\code{LOY}}{The length of year to get data from (i.e. 'mar' vs. 'full').}
+\item{\code{loy}}{The length of year to get data from (i.e. 'mar' vs. 'full').}
 
-\item{\code{DB}}{Connection to an OFPE database.}
+\item{\code{db}}{Connection to an OFPE database.}
 
-\item{\code{FARMIDX}}{ID of the farm that the field falls within.}
+\item{\code{farmidx}}{ID of the farm that the field falls within.}
 
-\item{\code{FARMERIDX}}{ID of the farmer that owns the farm that the field
+\item{\code{farmeridx}}{ID of the farmer that owns the farm that the field
 falls within.}
 
-\item{\code{FARMERNAME}}{Name of the farmer that owns the field for aggregation.}
+\item{\code{farmername}}{Name of the farmer that owns the field for aggregation.}
 }
 \if{html}{\out{</div>}}
 }

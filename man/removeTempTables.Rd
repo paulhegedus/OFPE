@@ -4,10 +4,10 @@
 \alias{removeTempTables}
 \title{Remove temporary tables from 'all_farms' schema}
 \usage{
-removeTempTables(DB)
+removeTempTables(db)
 }
 \arguments{
-\item{DB}{Connection to an OFPE formatted database.}
+\item{db}{Connection to an OFPE formatted database.}
 }
 \value{
 NULL, tables removed in database.

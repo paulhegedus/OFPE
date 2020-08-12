@@ -34,7 +34,9 @@ knitr::include_graphics('figures/ofpe_dat_import.png')
 #### Google Earth Engine Data
 Remote sensing data is collected from Google Earth Engine and includes data temporally variable data such as weather and static data such as topogrophy. The user is responsible for running the Google Earth Engine Javascript code to download data for each year required. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/gee_setup.html) for adding farm boundaries to GEE as asset and this [tutorial](https://paulhegedus.github.io/OFPE-Website/run_gee.html) for editing and using Javascript code. This data is downloaded to Google Drive, where the data can be batch uploaded to the database. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/gd_setup.html) for setting up Google Drive to receive your data from Google Earth Engine.
 
-This [tutorial](https://paulhegedus.github.io/OFPE-Website/run_gee.html) outlines how to gather data from Google Earth Engine. This step needs to be completed before executing section 2 of this vignette.
+The user can use the farm boundary shapefiles in the OFPE data package as assets in Google Earth Engine. This way the user will be able to follow along with the rest of the vignettes of this package. Simply write "OFPEDATA::FarmerB_FarmName_bbox", "OFPEDATA::FarmerC_FarmName_bbox", and "OFPEDATA::FarmerI_FarmName_bbox" the as shapefiles with the 'sf::st_write()' function and upload as a GEE asset as shown in this [tutorial](https://paulhegedus.github.io/OFPE-Website/gee_setup.html).
+
+This [tutorial](https://paulhegedus.github.io/OFPE-Website/run_gee.html) outlines how to gather data from Google Earth Engine. This step needs to be completed before executing section 2 of this vignette. This vignette gatheres all variables from all farms from 2015 to 2020, however only 'FarmerB' is used for examples.
 
 The process for importing Google Earth Engine data to the database and a more detailed description is outlined in the activity diagram on [this page](https://paulhegedus.github.io/OFPE-Website/dat_import.html), where a component diagram can also be found.
 
@@ -146,13 +148,20 @@ The ImportOF class is initialized with the path to the location of the data that
 All of the data available in the example data from the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) package are used as an example here. The steps for uploading data are always the same.  
 
 ```{r, eval = FALSE}
-pathToDat <- "~/INIT_UPLOADS/" # MAC # "C:/Users/paulhegedus/Documents/INIT_UPLOADS" # PC
-importOF <- ImportOF$new(dbCon, pathToDat)
+dat_path <- "<your/folder/path>"
+importOF <- ImportOF$new(dbCon, dat_path)
 ```
+
+```{r, eval = FALSE, echo = FALSE}
+dat_path <- "~/INIT_UPLOADS/" # MAC # "C:/Users/paulhegedus/Documents/INIT_UPLOADS" # PC
+importOF <- ImportOF$new(dbCon, dat_path)
+```
+
 
 ### Import On-Farm Data
 The execution method of the ImportOF class simply requires the file names to the data that is to be uploaded into the database. After the method has completed execution, the 'status' object in the ImportOF R6 class will indicate which files uploaded successfully and which did not.
 
+**NOTE:** This process may take some significant time depending on how much data you have in your specified upload folder. Go grab a coffee or take a break and work on something else.
 ```{r, eval = FALSE}
 importOF$executeUpload()
 ```
@@ -186,18 +195,19 @@ googledrive::drive_auth("paulhegedus@montana.edu")
 The ImportGEE class is initialized with the path to the location of the Google Drive folder where the data is connected, and a database connection. This class can be initialized and executed as many times as needed. Data that is already present in the database and re-uploaded to the database will be replaced if desired by setting the option of OVERWRITE to TRUE.
 
 ```{r, eval = FALSE}
-pathToDat <- "<your_google_drive_foldername>"
-importGEE <- ImportGEE$new(dbCon, pathToDat, FALSE)
+dat_path <- "<your_google_drive_foldername>"
+importGEE <- ImportGEE$new(dbCon, dat_path, FALSE)
 ```
 
 ```{r, eval = FALSE, echo = FALSE}
-pathToDat <- "GEE_Surfaces_4package"
-importGEE <- ImportGEE$new(dbCon, pathToDat, TRUE)
+dat_path <- "GEE_Surfaces_4package"
+importGEE <- ImportGEE$new(dbCon, dat_path, TRUE)
 ```
 
 ### Import Google Earth Engine Data
 The execution method of the ImportGEE class simply requires the name of the Google Drive folder with data to be uploaded into the database. As data is uploaded, messages will appear on the status of the import.
 
+**NOTE:** This process takes some significant time depending on how much data you have in your specified Google Drive folder. Go grab a coffee or take a break and work on something else.
 ```{r, eval = FALSE}
 importGEE$executeUpload()
 ```
@@ -206,10 +216,10 @@ importGEE$executeUpload()
 # Conclusion
 This vignette provided a demonstration of how to import your on-farm data and data gathered from Google Earth Engine. This also covers how to import SSURGO data to the database. **IMPORTANT:** when uploading seeding rate data include "seed" or "_SR_" in the filename to distinguish from as-applied nitrogen fertilizer data and when uploading SSURGO data include "SSURGO" or "ssurgo" to the filename.
 
-Component diagrams of the process outlining the R6 classes used and their relations is described in Figures 3 and 4 below.
+A component diagram outlining the R6 classes used and the inputs required for the import of data from farms and from Google Earth Engine is represented below in Figure 3. Each class is represented by a table with the title of the class as the header, with the first row showing inputs, the second row showing public methods, the third row showing private methods, and an optional fourth row showing any tangible outputs from the class. Most methods have nothing to return as their functions modify the OFPE database.
 
-```{r, out.width='100%', fig.align='center', fig.cap='**Figure 3.** Component diagram of the data import workflows...', echo = FALSE}
-#knitr::include_graphics('figures/ofpe_dat_import_component.png')
+```{r, out.width="100%", fig.align="center", fig.cap="**Figure 3.** Component diagram of the data import workflows. Both the ImportOF and ImportGEE classes take an object of the DBCon class and a path to either the folder on the user's local machine in which their on-farm data is stored for import, or the folder name in the user's Google Drive that contains their GEE data stored for import.", echo = FALSE}
+knitr::include_graphics('figures/ofpe_dat_import_component.png')
 ```
 
 

@@ -61,7 +61,7 @@ ImportGEE <- R6::R6Class(
         apply(self$file_names,
               1,
               self$.uploadGEE,
-              OVERWRITE = self$overwrite,
+              overwrite = self$overwrite,
               self$dbCon$db)
       )
     },
@@ -70,10 +70,10 @@ ImportGEE <- R6::R6Class(
     #' The dot indicates that this function would be private if not for
     #' documentations sake.
     #' @param FILE Name of the data file to upload to the database.
-    #' @param OVERWRITE Logical, whether to overwrite when data already present.
+    #' @param overwrite Logical, whether to overwrite when data already present.
     #' @param db Connection to an OFPE formatted database.
     #' @return See 'GEE' table in database.
-    .uploadGEE = function(FILE, OVERWRITE, db) {
+    .uploadGEE = function(FILE, overwrite, db) {
       # check if table exists yet (after first upload it should)
       gee <- as.logical(
         DBI::dbGetQuery(db,
@@ -82,25 +82,25 @@ ImportGEE <- R6::R6Class(
                          WHERE table_schema = 'all_farms'
                          AND table_name = 'gee')")
       )
-      dbCheck <- FALSE # assumes file not in db
+      db_check <- FALSE # assumes file not in db
       if (gee) { # if GEE file exists & user selects to overwrite
         #check for if the FILE exists in db by checking 'orig_file' col
-        dbCheck <- as.logical(
+        db_check <- as.logical(
           DBI::dbGetQuery(db,
                           paste0("SELECT EXISTS (SELECT 1
                                   FROM all_farms.gee
                                  WHERE orig_file = '", FILE$name,"')"))
         )
-        if (dbCheck & OVERWRITE) {
+        if (db_check & overwrite) {
           DBI::dbSendQuery(
             db,
             paste0("DELETE FROM all_farms.gee
                     WHERE orig_file = '", FILE$name,"'")
           )
-          dbCheck <- FALSE
+          db_check <- FALSE
         }
       }
-      if (!dbCheck) { # if file exists in db
+      if (!db_check) { # if file exists in db
         ## download file to working directory
         suppressMessages(
           googledrive::drive_download(googledrive::as_id(FILE$id),
@@ -173,12 +173,12 @@ ImportGEE <- R6::R6Class(
     #' @description
     #' Function for identifying information from the filenames exported from
     #' Google Drive
-    #' @param NAME Name of the data file to upload to the database.
+    #' @param name Name of the data file to upload to the database.
     #' @return Raster information.
-    .getInfo = function(NAME) {
+    .getInfo = function(name) {
       ## identify queriable info
-      INFO <- rep(as.list(NA), 8) # 8 slots for orig_file, year, loy, type, scale, source, farmidx, and farmeridx
-      names(INFO) <- c("orig_file",
+      info <- rep(as.list(NA), 8) # 8 slots for orig_file, year, loy, type, scale, source, farmidx, and farmeridx
+      names(info) <- c("orig_file",
                        "year",
                        "loy",
                        "type",
@@ -187,130 +187,131 @@ ImportGEE <- R6::R6Class(
                        "farmidx",
                        "farmeridx")
       # get orig_file name
-      INFO$orig_file <- NAME
+      info$orig_file <- name
       # identify year
-      if (grepl("2020", INFO$orig_file)) {
-        INFO$year <- '2020'
+      if (grepl("2020", info$orig_file)) {
+        info$year <- '2020'
       } else {
         # only looks for data more recent than 1999 NEEDS 2020 UPDATING
-        strLocs <- as.data.frame(stringr::str_locate_all(INFO$orig_file,
-                                                         "200|201|1999"))
-        if (!anyNA(strLocs)) {
-          if (strLocs[2] - strLocs[1] == 3) { # if the year is 1999
-            INFO$year <- '1999'
+        str_locs <- as.data.frame(
+          stringr::str_locate_all(info$orig_file, "200|201|1999")
+        )
+        if (!anyNA(str_locs)) {
+          if (str_locs[2] - str_locs[1] == 3) { # if the year is 1999
+            info$year <- '1999'
           } else { # else if year is 20something
-            INFO$year <- suppressWarnings(
-              stringr::str_sub(INFO$orig_file,
-                               strLocs[1, "end"] + 1,
-                               strLocs[1, "end"] + 2) %>%
+            info$year <- suppressWarnings(
+              stringr::str_sub(info$orig_file,
+                               str_locs[1, "start"],
+                               str_locs[1, "end"] + 1) %>%
                 as.numeric()
             )
-            if (!is.na(INFO$year)) {
-              INFO$year <- stringr::str_sub(INFO$orig_file,
-                                            strLocs[1, "start"],
-                                            strLocs[1, "start"] + 3)
+            if (!is.na(info$year)) {
+              info$year <- stringr::str_sub(info$orig_file,
+                                            str_locs[1, "start"],
+                                            str_locs[1, "start"] + 3)
             } else {
-              INFO$year <- suppressWarnings(
-                stringr::str_sub(INFO$orig_file,
-                                 strLocs[2, "end"] + 1,
-                                 strLocs[2, "end"] + 2) %>%
+              info$year <- suppressWarnings(
+                stringr::str_sub(info$orig_file,
+                                 str_locs[2, "end"] + 1,
+                                 str_locs[2, "end"] + 2) %>%
                   as.numeric()
               )
-              if (!is.na(INFO$year)) {
-                INFO$year <- stringr::str_sub(INFO$orig_file,
-                                              strLocs[2, "start"],
-                                              strLocs[2, "start"] + 3)
+              if (!is.na(info$year)) {
+                info$year <- stringr::str_sub(info$orig_file,
+                                              str_locs[2, "start"],
+                                              str_locs[2, "start"] + 3)
               } else {
-                INFO$year <- "see_README" # if the year is not in the second slot then users naming convention wrong
+                info$year <- "see_README" # if the year is not in the second slot then users naming convention wrong
               }
             }
           }
         } else {
-          INFO$year <- "see_README" # go to the README file and look for GEE file naming conventions
+          info$year <- "see_README" # go to the README file and look for GEE file naming conventions
         }
       }
 
       # identify length of year (loy) of measurement (either thru mar 30 or full year) specified by _mar in filename
-      if (grepl("sep", INFO$orig_file)) {
-        INFO$loy <- "sep"
+      if (grepl("sep", info$orig_file)) {
+        info$loy <- "sep"
       } else {
         # id whether the file corresponds to a full year or partial to mar 30
-        INFO$loy <- ifelse(grepl("mar|currYr",
-                                 INFO$orig_file),
+        info$loy <- ifelse(grepl("mar|currYr",
+                                 info$orig_file),
                            "mar",
                            "full")
       }
       # identify the data type
       if (any(grepl("ndvi|ndre|clre|aspect_rad|slope|elev|tpi|prec|gdd|ssm|susm",
-                   INFO$orig_file))) {
+                   info$orig_file))) {
         #******************************************************************
         # < IF OTHER DATATYPES NEED DEALING WITH, INSERT IN IF STATEMENT ^ >
         #******************************************************************
-        strLocs <- stringr::str_locate(INFO$orig_file,
+        str_locs <- stringr::str_locate(info$orig_file,
                                        "ndvi|ndre|clre|aspect_rad|slope|elev|tpi|prec|gdd|ssm|susm") # CHANGED dem to elev
-        INFO$type <- stringr::str_sub(INFO$orig_file,
-                                      strLocs[1],
-                                      strLocs[2])
+        info$type <- stringr::str_sub(info$orig_file,
+                                      str_locs[1],
+                                      str_locs[2])
       } else {
-        INFO$type <- "see_README" # if the data type is not specified see naming convention and document what data this is.
+        info$type <- "see_README" # if the data type is not specified see naming convention and document what data this is.
       }
       # identify scale (look for 4km or 10m or 20m or 30m or 20km or 1km )
-      if (any(grepl("4km|10m|20m|30m|20km|1km", INFO$orig_file))) {
+      if (any(grepl("4km|10m|20m|30m|20km|1km", info$orig_file))) {
         #******************************************************************
         # < IF OTHER SCALES NEED DEALING WITH, INSERT IN IF STATEMENT ^ >
         #******************************************************************
-        strLocs <- stringr::str_locate(INFO$orig_file,
+        str_locs <- stringr::str_locate(info$orig_file,
                                        "4km|10m|20m|30m|20km|1km")
-        INFO$scale <- stringr::str_sub(INFO$orig_file,
-                                       strLocs[1],
-                                       strLocs[2])
-        INFO$scale <- ifelse(INFO$scale == "20km", "9km", INFO$scale) # mistakenly labeled ssm/susm as 20km when it is 9km
+        info$scale <- stringr::str_sub(info$orig_file,
+                                       str_locs[1],
+                                       str_locs[2])
+        info$scale <- ifelse(info$scale == "20km", "9km", info$scale) # mistakenly labeled ssm/susm as 20km when it is 9km
       } else {
-        INFO$scale <- "see_README" # scale not identified
+        info$scale <- "see_README" # scale not identified
       }
       # identify source (look for gridmet, daymet, ned, cdem, srtm, smap, S2, L5, L7, L8)
       if (any(grepl("gridmet|daymet|ned|cdem|srtm|smap|S2|L5|L7|L8",
-                   INFO$orig_file))) {
+                   info$orig_file))) {
         #******************************************************************
         # < IF OTHER SOURCES NEED DEALING WITH, INSERT IN IF STATEMENT ^ >
         #******************************************************************
-        strLocs <- stringr::str_locate(INFO$orig_file,
+        str_locs <- stringr::str_locate(info$orig_file,
                                        "gridmet|daymet|ned|cdem|srtm|smap|S2|L5|L7|L8")
-        INFO$source <- stringr::str_sub(INFO$orig_file,
-                                        strLocs[1],
-                                        strLocs[2])
+        info$source <- stringr::str_sub(info$orig_file,
+                                        str_locs[1],
+                                        str_locs[2])
       } else {
-        INFO$source <- "see_README" # scale not identified
+        info$source <- "see_README" # scale not identified
       }
       # identify farmidx and farmeridx
       if (any(grepl(paste(as.data.frame(self$farms[, 2])$farm,
                          collapse = '|'),
-                   tolower(INFO$orig_file)))) {
-        strLocs <- stringr::str_locate(tolower(INFO$orig_file),
+                   tolower(info$orig_file)))) {
+        str_locs <- stringr::str_locate(tolower(info$orig_file),
                                        paste(as.data.frame(self$farms[, 2])$farm,
                                              collapse = '|'))
-        farm <- stringr::str_sub(tolower(INFO$orig_file),
-                                 strLocs[1],
-                                 strLocs[2])
-        INFO$farmidx <- as.data.frame(self$farms)[which(as.data.frame(self$farms)$farm == farm), "farmidx"]
-        INFO$farmeridx <- as.data.frame(self$farms)[which(as.data.frame(self$farms)$farm == farm), "farmeridx"]
+        farm <- stringr::str_sub(tolower(info$orig_file),
+                                 str_locs[1],
+                                 str_locs[2])
+        info$farmidx <- as.data.frame(self$farms)[which(as.data.frame(self$farms)$farm == farm), "farmidx"]
+        info$farmeridx <- as.data.frame(self$farms)[which(as.data.frame(self$farms)$farm == farm), "farmeridx"]
       } else {
-        INFO$farmidx <- "see_README" # the farm name does not match a farm name in database
-        INFO$farmeridx <- "see_README"
+        info$farmidx <- "see_README" # the farm name does not match a farm name in database
+        info$farmeridx <- "see_README"
       }
-      return(INFO)
+      return(info)
     },
     #' @description
     #' Adds columns to the data file importing to the database.
-    #' @param INFO Object holding all necessary information about the data.
+    #' @param info Object holding all necessary information about the data.
     #' @param name The name of the column to add.
     #' @param db The conncetion to the OFPE database.
     #' @return Columns added to database table.
-    .addColsToDB = function(INFO, name, db) {
+    .addColsToDB = function(info, name, db) {
      DBI::dbGetQuery(db,
                      paste0("ALTER TABLE all_farms.temp
                             ADD COLUMN ", name, " TEXT
-                            DEFAULT '", INFO, "'"))
+                            DEFAULT '", info, "'"))
     }
   )
 )

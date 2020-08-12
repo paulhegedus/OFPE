@@ -95,7 +95,7 @@ Uploads data to an OFPE formatted database from a Google Drive folder.
 The dot indicates that this function would be private if not for
 documentations sake.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ImportGEE$.uploadGEE(FILE, OVERWRITE, db)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ImportGEE$.uploadGEE(FILE, overwrite, db)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -103,7 +103,7 @@ documentations sake.
 \describe{
 \item{\code{FILE}}{Name of the data file to upload to the database.}
 
-\item{\code{OVERWRITE}}{Logical, whether to overwrite when data already present.}
+\item{\code{overwrite}}{Logical, whether to overwrite when data already present.}
 
 \item{\code{db}}{Connection to an OFPE formatted database.}
 }
@@ -120,13 +120,13 @@ See 'GEE' table in database.
 Function for identifying information from the filenames exported from
 Google Drive
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ImportGEE$.getInfo(NAME)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ImportGEE$.getInfo(name)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{NAME}}{Name of the data file to upload to the database.}
+\item{\code{name}}{Name of the data file to upload to the database.}
 }
 \if{html}{\out{</div>}}
 }
@@ -140,13 +140,13 @@ Raster information.
 \subsection{Method \code{.addColsToDB()}}{
 Adds columns to the data file importing to the database.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ImportGEE$.addColsToDB(INFO, name, db)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ImportGEE$.addColsToDB(info, name, db)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{INFO}}{Object holding all necessary information about the data.}
+\item{\code{info}}{Object holding all necessary information about the data.}
 
 \item{\code{name}}{The name of the column to add.}
 

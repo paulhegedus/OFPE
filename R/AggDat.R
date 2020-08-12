@@ -20,7 +20,7 @@
 #' each 10m grid cell, data are removed when exceeding 1SD from the cell mean.
 #' This occurs regardless of whether 'Grid' or 'Observed' is selected. Then,
 #' data from remotely sensed sources are gathered. The data selected is dependent
-#' on the 'DAT_USED' variable, which indicates whether to use data from Jan 1 to
+#' on the 'dat_used' variable, which indicates whether to use data from Jan 1 to
 #' Mar 30 for the year of interest or to use data from Jan 1 to Dec 31. This is
 #' discussed more in the 'AggInputs' class documentation. Finally, after all on-farm
 #' and remotely sensed data has been combined into one dataset, this is saved to the
@@ -32,11 +32,11 @@ AggDat <- R6::R6Class(
     #' @field aggInputs An object of the 'AggInputs' class containaing the options
     #' for aggregating data. This includes the database connection
     aggInputs = NULL,
-    #' @field FARMIDX The ID of the farm in which the field falls within.
-    FARMIDX = NULL,
-    #' @field FARMERIDX The ID of the farmer that owns the farm that the field
+    #' @field farmidx The ID of the farm in which the field falls within.
+    farmidx = NULL,
+    #' @field farmeridx The ID of the farmer that owns the farm that the field
     #' falls within.
-    FARMERIDX = NULL,
+    farmeridx = NULL,
 
     #' @description
     #' Initialize an object for executing the process of aggregating OFPE
@@ -49,23 +49,23 @@ AggDat <- R6::R6Class(
       self$aggInputs <- aggInputs
       OFPE::removeTempTables(self$aggInputs$dbCon$db)
 
-      if (self$aggInputs$bboxImport == "No") {
+      if (self$aggInputs$boundary_import == "No") {
         invisible(
           DBI::dbSendQuery(
             self$aggInputs$dbCon$db,
             paste0("CREATE TABLE all_farms.temp AS
              SELECT * FROM all_farms.fields fields
-             WHERE fields.fieldname = '", self$aggInputs$FIELDNAME, "';
+             WHERE fields.fieldname = '", self$aggInputs$fieldname, "';
              ALTER TABLE all_farms.temp
              RENAME COLUMN geom TO geometry;")
           )
         )
       } else {
         stopifnot(
-          !is.null(self$aggInputs$bboxLocation)
+          !is.null(self$aggInputs$boundary_location)
         )
         ## import bounding box
-        BBOX <- sf::read_sf(self$aggInputs$bboxLocation) %>%
+        BBOX <- sf::read_sf(self$aggInputs$boundary_location) %>%
           sf::st_zm() %>%
           sf::`st_crs<-`(4326) %>%
           sf::st_transform("epsg:4326")
@@ -94,7 +94,7 @@ AggDat <- R6::R6Class(
           "VACUUM ANALYZE all_farms.temp"
         )
       )
-      OFPE::removeTempFarmerTables(self$aggInputs$dbCon$db, self$aggInputs$FARMERNAME)
+      OFPE::removeTempFarmerTables(self$aggInputs$dbCon$db, self$aggInputs$farmername)
     },
     #' @description
     #' Execution of the aggregation method for OFPE data. Occurs mainly
@@ -109,174 +109,174 @@ AggDat <- R6::R6Class(
       # make 10m grid
       self$.make10mGrid(
         self$aggInputs$dbCon$db,
-        self$aggInputs$bboxImport,
-        self$aggInputs$FIELDNAME,
-        ifelse(is.null(self$aggInputs$SIZE), 10, self$aggInputs$SIZE), # size is 10m, but could be changed
-        self$aggInputs$FARMERNAME
+        self$aggInputs$boundary_import,
+        self$aggInputs$fieldname,
+        ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size), # size is 10m, but could be changed
+        self$aggInputs$farmername
       )
 
       # create agg table
       self$.createAggTable(
         self$aggInputs$dbCon$db,
-        self$aggInputs$FARMERNAME,
-        self$aggInputs$FIELDNAME,
-        self$aggInputs$CY_RESP,
-        self$aggInputs$PY_RESP,
+        self$aggInputs$farmername,
+        self$aggInputs$fieldname,
+        self$aggInputs$cy_resp,
+        self$aggInputs$py_resp,
         self$aggInputs$GRID,
-        self$aggInputs$DAT_USED,
-        ifelse(is.null(self$aggInputs$SIZE), 10, self$aggInputs$SIZE)
+        self$aggInputs$dat_used,
+        ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size)
       )
 
       # if not sat data
-      if (self$aggInputs$RESPVAR != "sat") {
+      if (self$aggInputs$respvar != "sat") {
 
         # clean resp data (CY) & aggregate resp data (CY)
-        if (!any(self$aggInputs$CY_RESP_FILES == "None")) {
+        if (!any(self$aggInputs$cy_resp_files == "None")) {
           self$.cleanRespData(
-            self$aggInputs$RESPVAR,
+            self$aggInputs$respvar,
             self$aggInputs$dbCon$db,
-            self$aggInputs$CY_RESP_FILES,
-            self$aggInputs$bboxImport,
-            self$aggInputs$CY_RESP_COL,
-            self$aggInputs$CY_RESP,
-            self$aggInputs$FIELDNAME,
-            self$aggInputs$FARMERNAME
+            self$aggInputs$cy_resp_files,
+            self$aggInputs$boundary_import,
+            self$aggInputs$cy_resp_col,
+            self$aggInputs$cy_resp,
+            self$aggInputs$fieldname,
+            self$aggInputs$farmername
           )
           self$.aggRespData(
             self$aggInputs$dbCon$db,
-            self$aggInputs$FARMERNAME,
-            self$aggInputs$RESPVAR,
-            self$aggInputs$FIELDNAME,
+            self$aggInputs$farmername,
+            self$aggInputs$respvar,
+            self$aggInputs$fieldname,
             self$aggInputs$GRID,
-            self$aggInputs$CY_RESP,
-            self$aggInputs$PY_RESP,
-            self$aggInputs$DAT_USED,
-            ifelse(is.null(self$aggInputs$SIZE), 10, self$aggInputs$SIZE)
+            self$aggInputs$cy_resp,
+            self$aggInputs$py_resp,
+            self$aggInputs$dat_used,
+            ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size)
           )
         } else { # end if file != none
           invisible(
             DBI::dbSendQuery(
               self$aggInputs$dbCon$db,
               paste0("ALTER TABLE ",
-                     self$aggInputs$FARMERNAME, "_a.temp
-                     ADD COLUMN ", self$aggInputs$RESPVAR, " REAL;")
+                     self$aggInputs$farmername, "_a.temp
+                     ADD COLUMN ", self$aggInputs$respvar, " REAL;")
             )
           )
         }
 
         # clean resp data (PY) & aggregate resp data (PY)
-        if (!any(self$aggInputs$PY_RESP_FILES == "None")) {
+        if (!any(self$aggInputs$py_resp_files == "None")) {
           self$.cleanRespData(
-            self$aggInputs$RESPVAR,
+            self$aggInputs$respvar,
             self$aggInputs$dbCon$db,
-            self$aggInputs$PY_RESP_FILES,
-            self$aggInputs$bboxImport,
-            self$aggInputs$PY_RESP_COL,
-            self$aggInputs$PY_RESP,
-            self$aggInputs$FIELDNAME,
-            self$aggInputs$FARMERNAME
+            self$aggInputs$py_resp_files,
+            self$aggInputs$boundary_import,
+            self$aggInputs$py_resp_col,
+            self$aggInputs$py_resp,
+            self$aggInputs$fieldname,
+            self$aggInputs$farmername
           )
           self$.aggRespData(
-            DB = self$aggInputs$dbCon$db,
-            FARMERNAME = self$aggInputs$FARMERNAME,
-            RESPVAR = self$aggInputs$RESPVAR,
-            FIELDNAME = self$aggInputs$FIELDNAME,
+            db = self$aggInputs$dbCon$db,
+            farmername = self$aggInputs$farmername,
+            respvar = self$aggInputs$respvar,
+            fieldname = self$aggInputs$fieldname,
             GRID = self$aggInputs$GRID,
             CY = NULL,
             PY = NULL,
-            DAT_USED = self$aggInputs$DAT_USED,
-            SIZE = ifelse(is.null(self$aggInputs$SIZE), 10, self$aggInputs$SIZE)
+            dat_used = self$aggInputs$dat_used,
+            size = ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size)
           )
         } else { # end if file != none
           invisible(
             DBI::dbSendQuery(
               self$aggInputs$dbCon$db,
               paste0("ALTER TABLE ",
-                     self$aggInputs$FARMERNAME, "_a.temp
-                     ADD COLUMN prev_", self$aggInputs$RESPVAR, " REAL;")
+                     self$aggInputs$farmername, "_a.temp
+                     ADD COLUMN prev_", self$aggInputs$respvar, " REAL;")
             )
           )
         }
         # clean exp data (CY) & aggregate exp data (CY)
-        if (!any(self$aggInputs$CY_EXP_FILES == "None")) {
+        if (!any(self$aggInputs$cy_exp_files == "None")) {
           ## if file exist
           self$.cleanExpData(
-            self$aggInputs$CY_EXP_FILES,
+            self$aggInputs$cy_exp_files,
             self$aggInputs$dbCon$db,
-            self$aggInputs$CY_EXP_COL,
-            self$aggInputs$FARMERNAME,
-            self$aggInputs$CY_EXP
+            self$aggInputs$cy_exp_col,
+            self$aggInputs$farmername,
+            self$aggInputs$cy_exp
           )
           self$.aggExpData(
-            self$aggInputs$CY_EXP_FILES,
+            self$aggInputs$cy_exp_files,
             self$aggInputs$dbCon$db,
-            self$aggInputs$CY_EXP_COL,
-            self$aggInputs$CY_EXP_CONV,
-            self$aggInputs$FARMERNAME,
-            self$aggInputs$EXPVAR,
+            self$aggInputs$cy_exp_col,
+            self$aggInputs$cy_exp_conv,
+            self$aggInputs$farmername,
+            self$aggInputs$expvar,
             self$aggInputs$GRID,
-            CY=TRUE,
-            SIZE = ifelse(is.null(self$aggInputs$SIZE), 10, self$aggInputs$SIZE)
+            CY = TRUE,
+            size = ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size)
           )
         } else { #
           ## if no exp data files
           invisible(
             DBI::dbSendQuery(
               self$aggInputs$dbCon$db,
-              paste0("ALTER TABLE ", self$aggInputs$FARMERNAME, "_a.temp
-                     ADD COLUMN ", self$aggInputs$EXPVAR, " REAL;")
+              paste0("ALTER TABLE ", self$aggInputs$farmername, "_a.temp
+                     ADD COLUMN ", self$aggInputs$expvar, " REAL;")
             )
           )
-          if (self$aggInputs$FARMERNAME == "merja" &
-              self$aggInputs$CY_EXP == "2019") {
+          if (self$aggInputs$farmername == "merja" &
+              self$aggInputs$cy_exp == "2019") {
             ## chuck only applied 15lbs N/ac in 2019
             invisible(
               DBI::dbSendQuery(
                 self$aggInputs$dbCon$db,
-                paste0("UPDATE ", self$aggInputs$FARMERNAME, "_a.temp
-                       SET ", self$aggInputs$EXPVAR, " = 15;")
+                paste0("UPDATE ", self$aggInputs$farmername, "_a.temp
+                       SET ", self$aggInputs$expvar, " = 15;")
               )
             )
           }
         }
         # clean exp data (PY) & aggregate exp data (PY)
-        if (!any(self$aggInputs$PY_EXP_FILES == "None")) {
+        if (!any(self$aggInputs$py_exp_files == "None")) {
           ## if files exist
           self$.cleanExpData(
-            self$aggInputs$PY_EXP_FILES,
+            self$aggInputs$py_exp_files,
             self$aggInputs$dbCon$db,
-            self$aggInputs$PY_EXP_COL,
-            self$aggInputs$FARMERNAME,
-            self$aggInputs$PY_EXP
+            self$aggInputs$py_exp_col,
+            self$aggInputs$farmername,
+            self$aggInputs$py_exp
           )
           self$.aggExpData(
-            self$aggInputs$PY_EXP_FILES,
+            self$aggInputs$py_exp_files,
             self$aggInputs$dbCon$db,
-            self$aggInputs$PY_EXP_COL,
-            self$aggInputs$PY_EXP_CONV,
-            self$aggInputs$FARMERNAME,
-            self$aggInputs$EXPVAR,
+            self$aggInputs$py_exp_col,
+            self$aggInputs$py_exp_conv,
+            self$aggInputs$farmername,
+            self$aggInputs$expvar,
             self$aggInputs$GRID,
-            CY=FALSE,
-            SIZE = ifelse(is.null(self$aggInputs$SIZE), 10, self$aggInputs$SIZE)
+            CY = FALSE,
+            size = ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size)
           )
         } else { #
           ## if no exp data files
           invisible(
             DBI::dbSendQuery(
               self$aggInputs$dbCon$db,
-              paste0("ALTER TABLE ", self$aggInputs$FARMERNAME, "_a.temp
-                       ADD COLUMN prev_", self$aggInputs$EXPVAR, " REAL;")
+              paste0("ALTER TABLE ", self$aggInputs$farmername, "_a.temp
+                       ADD COLUMN prev_", self$aggInputs$expvar, " REAL;")
             )
           )
-          if (self$aggInputs$FARMERNAME == "merja" &
-              self$aggInputs$PY_EXP == "2019") {
+          if (self$aggInputs$farmername == "merja" &
+              self$aggInputs$py_exp == "2019") {
             ## chuck only applied 15lbs N/ac in 2019
             invisible(
               DBI::dbSendQuery(
                 self$aggInputs$dbCon$db,
-                paste0("UPDATE ", self$aggInputs$FARMERNAME, "_a.temp
-                         SET prev_", self$aggInputs$EXPVAR, " = 15;")
+                paste0("UPDATE ", self$aggInputs$farmername, "_a.temp
+                         SET prev_", self$aggInputs$expvar, " = 15;")
               )
             )
           }
@@ -287,19 +287,19 @@ AggDat <- R6::R6Class(
       private$.idFarm()
       # remote sensing data
       aggGEE <- OFPE::AggGEE$new(self$aggInputs,
-                                 self$FARMIDX,
-                                 self$FARMERIDX)
+                                 self$farmidx,
+                                 self$farmeridx)
       aggGEE$aggregateGEE()
       # ssurgo data
       self$.aggSSURGO()
       # remove 0 rates from seed data
-      if (self$aggInputs$RESPVAR != "sat") {
-        if (self$aggInputs$EXPVAR == "aa_sr") {
+      if (self$aggInputs$respvar != "sat") {
+        if (self$aggInputs$expvar == "aa_sr") {
           invisible(
             DBI::dbSendQuery(
               self$aggInputs$dbCon$db,
               paste0("DELETE FROM ",
-                      self$aggInputs$FARMERNAME, "_a.temp temp
+                      self$aggInputs$farmername, "_a.temp temp
                       WHERE temp.aa_sr = 0
                       OR temp.prev_aa_sr = 0;")
             )
@@ -311,11 +311,11 @@ AggDat <- R6::R6Class(
         DBI::dbSendQuery(
           self$aggInputs$dbCon$db,
           paste0("VACUUM ANALYZE ",
-                 self$aggInputs$FARMERNAME, "_a.temp;")
+                 self$aggInputs$farmername, "_a.temp;")
         )
       )
       # export data
-      if (self$aggInputs$saveInDB == "Yes") {
+      if (self$aggInputs$save_in_db == "Yes") {
         self$.saveAggDat()
       }
       if (self$aggInputs$export == "Yes") {
@@ -324,27 +324,41 @@ AggDat <- R6::R6Class(
       # clean up
       OFPE::removeTempTables(self$aggInputs$dbCon$db)
       OFPE::removeTempFarmerTables(self$aggInputs$dbCon$db,
-                                   self$aggInputs$FARMERNAME)
+                                   self$aggInputs$farmername)
     },
     #' @description
-    #' Makes a grid across a field of a specified size. The dot indicates that
-    #' this function would be private
-    #' if not for documentations sake.
-    #' @param DB Connection to an OFPE formatted database.
-    #' @param BBOXIMPORT Whether the user uploaded their own field boundary
+    #' Makes a grid across a field of a specified size. If the grid
+    #' option was selected observations will be aggregated onto
+    #' the centroids of 10m grid cells generated from the bounding box of
+    #' the field boundary. If the field boundary is from the database, the
+    #' centroid locations will be consistent for aggregted data across years.
+    #' If the user imported a field boundary, these points may not be consistent
+    #' across years unless the user uses the same field boundary each year.
+    #' Again, it is strongly encouraged that the user updates the database with
+    #' the field boundary they have imported, to assure the centroid location
+    #' remains constant year to year. To create the aggregation table, a 10m grid
+    #' is applied to the field using the bounding box of the field boundary. The
+    #' locations of the center of the grid cells are extracted, as well as the
+    #' grid ID. These create the basis of the aggregation table. If the observed
+    #' option was selected, a grid is still made to identify the grid cells,
+    #' however data is not aggregated to the grid cell centroid locations. The
+    #' dot indicates that this function would be private if not for
+    #' documentations sake.
+    #' @param db Connection to an OFPE formatted database.
+    #' @param boundary_import Whether the user uploaded their own field boundary
     #' or are using a boundary stored in the database.
-    #' @param FIELDNAME Name of the field for aggregation.
-    #' @param SIZE Size of grid to make (meters), default = 10.
-    #' @param FARMERNAME Name of farmer that owns the field.
+    #' @param fieldname Name of the field for aggregation.
+    #' @param size Size of grid to make (meters), default = 10.
+    #' @param farmername Name of farmer that owns the field.
     #' @return None.
-    .make10mGrid = function(DB, BBOXIMPORT, FIELDNAME, SIZE = 10, FARMERNAME) {
-      utmEpsg <- OFPE::findUTMzone(FARMERNAME = FARMERNAME)
-      gridsExist <- FALSE
-      fieldExist <- FALSE
+    .make10mGrid = function(db, boundary_import, fieldname, size = 10, farmername) {
+      utmEpsg <- OFPE::findUTMzone(farmername = farmername)
+      grids_exist <- FALSE
+      field_exist <- FALSE
       # check if grids exist
-      gridsExist <- as.logical(
+      grids_exist <- as.logical(
         DBI::dbGetQuery(
-          DB,
+          db,
           paste0("SELECT EXISTS (
                SELECT 1
                FROM information_schema.tables
@@ -353,58 +367,58 @@ AggDat <- R6::R6Class(
         )
       )
       # if grids exists check if field exists
-      if (gridsExist) {
+      if (grids_exist) {
         # check if field has a grid
-        fieldExist <- as.logical(
+        field_exist <- as.logical(
           DBI::dbGetQuery(
-            DB,
+            db,
             paste0("SELECT EXISTS (
                  SELECT 1
                  FROM all_farms.grids grids
-                 WHERE grids.field = '", FIELDNAME, "'
-                 AND grids.size = ", SIZE,")")
+                 WHERE grids.field = '", fieldname, "'
+                 AND grids.size = ", size,")")
           )
         )
         # if it does copy to gridtemp
-        if (fieldExist) {
+        if (field_exist) {
           invisible(
             DBI::dbSendQuery(
-              DB,
+              db,
               paste0("CREATE TABLE all_farms.gridtemp AS
                 SELECT *
                 FROM all_farms.grids
-                WHERE field = '", FIELDNAME, "'
-                AND size = ", SIZE)
+                WHERE field = '", fieldname, "'
+                AND size = ", size)
             )
           )
         }
       }
       # if field does not exists
-      if (!fieldExist) {
+      if (!field_exist) {
         BBOX <- sf::st_read(
-          DB,
+          db,
           query = paste0("SELECT * FROM all_farms.temp"),
           geometry_column = "geometry") %>%
           sf::st_transform(paste0("epsg:", utmEpsg)) %>%
           as("Spatial") %>%
           sp::bbox()
-        NCOL <- ceiling((BBOX["x", "max"] - BBOX["x", "min"]) / SIZE)
-        NROW <- ceiling((BBOX["y", "max"] - BBOX["y", "min"]) / SIZE)
+        NCOL <- ceiling((BBOX["x", "max"] - BBOX["x", "min"]) / size)
+        NROW <- ceiling((BBOX["y", "max"] - BBOX["y", "min"]) / size)
 
         invisible(
           DBI::dbSendQuery(
-            DB,
+            db,
             paste0("CREATE TABLE all_farms.gridtemp AS
                SELECT *
-               FROM ST_CreateFishnet (", NROW, ", ", NCOL, ", ", SIZE, ", ", SIZE, ", ", BBOX["x", "min"], ", ", BBOX["y", "min"], ") AS cells;
+               FROM ST_CreateFishnet (", NROW, ", ", NCOL, ", ", size, ", ", size, ", ", BBOX["x", "min"], ", ", BBOX["y", "min"], ") AS cells;
                ALTER TABLE all_farms.gridtemp
                ADD COLUMN cell_id VARCHAR,
                ADD COLUMN field VARCHAR,
                ADD COLUMN size double precision;
                UPDATE all_farms.gridtemp SET
                cell_id = row::text ||'_'|| col::text,
-               field = '", FIELDNAME, "',
-               size = ", SIZE, ";
+               field = '", fieldname, "',
+               size = ", size, ";
                UPDATE all_farms.gridtemp SET geom = ST_SetSRID (geom, ", utmEpsg, ");
                ALTER TABLE all_farms.gridtemp
                ADD COLUMN x double precision,
@@ -420,12 +434,12 @@ AggDat <- R6::R6Class(
           )
         )
       }
-      # if bboximport = no, field does not exist in grids
-      if (BBOXIMPORT == "No" & !fieldExist) {
-        if (gridsExist) { # if gridsExists append
+      # if boundary_import = no, field does not exist in grids
+      if (boundary_import == "No" & !field_exist) {
+        if (grids_exist) { # if grids_exists append
           invisible(
             DBI::dbSendQuery(
-              DB,
+              db,
               paste0("INSERT INTO all_farms.grids
                  SELECT * FROM all_farms.gridtemp;")
             )
@@ -433,7 +447,7 @@ AggDat <- R6::R6Class(
         }else{ # if not create grids
           invisible(
             DBI::dbSendQuery(
-              DB,
+              db,
               paste0("CREATE TABLE all_farms.grids AS
                  SELECT * FROM all_farms.gridtemp;")
             )
@@ -441,14 +455,14 @@ AggDat <- R6::R6Class(
         }
         invisible(
           DBI::dbSendQuery(
-            DB,
+            db,
             paste0("VACUUM ANALYZE all_farms.grids")
           )
         )
       }
       invisible(
         DBI::dbSendQuery(
-          DB,
+          db,
           paste0("VACUUM ANALYZE all_farms.gridtemp")
         )
       )
@@ -456,37 +470,44 @@ AggDat <- R6::R6Class(
     #' @description
     #' Creates a temporary aggregated table in the database for processing.
     #' The dot indicates that this function would be private if not for
-    #' documentations sake.
-    #' @param DB Connection to an OFPE formatted database.
-    #' @param FARMERNAME Name of farmer that owns the field.
-    #' @param FIELDNAME Name of the field for aggregation.
+    #' documentations sake. Create the initial aggregated table based on the
+    #' option, either grid or observed locations. If the grid option is
+    #' selected, create the initial aggregated table with the centroid
+    #' locations and grid cell identifier. Fill in informational variables
+    #' for the farmer and field name, the year data is aggregated for,
+    #' and the previous harvest year, as well as whether it is a grid or
+    #' observed values (grid vs obs). Finally, upload to database for
+    #' aggregation.
+    #' @param db Connection to an OFPE formatted database.
+    #' @param farmername Name of farmer that owns the field.
+    #' @param fieldname Name of the field for aggregation.
     #' @param CY The year of interest for aggregation (aka 'current year').
     #' @param PY The 'previous year' in which the crop was harvested in the field.
     #' @param GRID Whether to aggregate data to the centroids of a grid or use
     #' the raw observed data locations.
-    #' @param DAT_USED The length of year to gather data over for the CY.
-    #' @param SIZE Size of grid to make (meters), default = 10.
+    #' @param dat_used The length of year to gather data over for the CY.
+    #' @param size Size of grid to make (meters), default = 10.
     #' @return Temporary table in the database.
-    .createAggTable = function(DB,
-                               FARMERNAME,
-                               FIELDNAME,
+    .createAggTable = function(db,
+                               farmername,
+                               fieldname,
                                CY,
                                PY,
                                GRID,
-                               DAT_USED,
-                               SIZE) {
-      utmEpsg <- OFPE::findUTMzone(FARMERNAME = FARMERNAME)
+                               dat_used,
+                               size) {
+      utmEpsg <- OFPE::findUTMzone(farmername = farmername)
 
       if (GRID == "grid") {
         invisible(
           DBI::dbSendQuery(
-            DB,
-            paste0("CREATE TABLE ", FARMERNAME, "_a.temp AS
+            db,
+            paste0("CREATE TABLE ", farmername, "_a.temp AS
                     SELECT *
                     FROM all_farms.gridtemp gridtemp
-                    WHERE gridtemp.field = '", FIELDNAME, "'
-                    AND gridtemp.size = ", SIZE, ";
-                    ALTER TABLE ", FARMERNAME, "_a.temp
+                    WHERE gridtemp.field = '", fieldname, "'
+                    AND gridtemp.size = ", size, ";
+                    ALTER TABLE ", farmername, "_a.temp
                     DROP COLUMN row,
                     DROP COLUMN col,
                     ADD COLUMN grid VARCHAR,
@@ -494,35 +515,35 @@ AggDat <- R6::R6Class(
                     ADD COLUMN farmer VARCHAR,
                     ADD COLUMN year VARCHAR,
                     ADD COLUMN prev_year VARCHAR;
-                    UPDATE ", FARMERNAME, "_a.temp SET
+                    UPDATE ", farmername, "_a.temp SET
                     grid = '", GRID, "',
-                    datused = '", DAT_USED, "',
-                    farmer = '", FARMERNAME, "',
+                    datused = '", dat_used, "',
+                    farmer = '", farmername, "',
                     year = '", CY, "',
                     prev_year = '", PY, "';
-                    ALTER TABLE ", FARMERNAME, "_a.temp
+                    ALTER TABLE ", farmername, "_a.temp
                     ALTER COLUMN geom TYPE geometry(Point, ", utmEpsg, ")
                     USING ST_Centroid(geom);
-                    ALTER TABLE ", FARMERNAME, "_a.temp
+                    ALTER TABLE ", farmername, "_a.temp
                     RENAME COLUMN geom TO geometry;")
           )
         )
         invisible(
           DBI::dbSendQuery(
-            DB,
+            db,
             paste0("CREATE INDEX aggtemp_geom_idx ON ",
-                   FARMERNAME,
+                   farmername,
                    "_a.temp USING gist (geometry)")
           )
         )
         invisible(
-          DBI::dbSendQuery(DB, paste0("VACUUM ANALYZE ", FARMERNAME, "_a.temp"))
+          DBI::dbSendQuery(db, paste0("VACUUM ANALYZE ", farmername, "_a.temp"))
         )
       }else{
         invisible(
           DBI::dbSendQuery(
-            DB,
-            paste0("CREATE TABLE ", FARMERNAME, "_a.temp (
+            db,
+            paste0("CREATE TABLE ", farmername, "_a.temp (
             x double precision,
             y double precision,
             cell_id VARCHAR,
@@ -533,7 +554,7 @@ AggDat <- R6::R6Class(
             farmer  VARCHAR,
             year  VARCHAR,
             prev_year  VARCHAR);
-            ALTER TABLE ", FARMERNAME, "_a.temp
+            ALTER TABLE ", farmername, "_a.temp
             ADD COLUMN geometry geometry;")
           )
         )
@@ -547,82 +568,82 @@ AggDat <- R6::R6Class(
     #' raw database schema before it is processed and added to the temporary
     #' table in the farmer's aggregated schema. The dot indicates that this
     #' function would be private if not for documentations sake.
-    #' @param RESPVAR The response variable to aggregate.
-    #' @param DB Connection to an OFPE database.
-    #' @param RESP_FILES Files used for aggregation.
-    #' @param BBOXIMPORT Whether the user imported thier own field boundary or
+    #' @param respvar The response variable to aggregate.
+    #' @param db Connection to an OFPE database.
+    #' @param resp_files Files used for aggregation.
+    #' @param boundary_import Whether the user imported thier own field boundary or
     #' using a predefined experimental field in the database.
-    #' @param RESP_COL The column in the response variable data that corresponds
+    #' @param resp_col The column in the response variable data that corresponds
     #' to the measured response.
-    #' @param YEAR The year of the data being aggregated.
-    #' @param FIELDNAME Name of the field for aggregation.
-    #' @param FARMERNAME Name of the farmer that owns the field for aggregation.
+    #' @param year The year of the data being aggregated.
+    #' @param fieldname Name of the field for aggregation.
+    #' @param farmername Name of the farmer that owns the field for aggregation.
     #' @return Temporary table in farmer's 'raw' schema.
-    .cleanRespData = function(RESPVAR,
-                              DB,
-                              RESP_FILES,
-                              BBOXIMPORT,
-                              RESP_COL,
-                              YEAR,
-                              FIELDNAME,
-                              FARMERNAME) {
+    .cleanRespData = function(respvar,
+                              db,
+                              resp_files,
+                              boundary_import,
+                              resp_col,
+                              year,
+                              fieldname,
+                              farmername) {
       ## create temp file to clean
-      for (i in 1:length(RESP_FILES)) {
+      for (i in 1:length(resp_files)) {
         if (i == 1) {
-          if (is.na(RESP_COL[i, "DIST"])) {
+          if (is.na(resp_col[i, "dist"])) {
             invisible(
               DBI::dbSendQuery(
-                DB,
-                paste0("CREATE TABLE ", FARMERNAME, "_r.temp AS
-                        SELECT ", RESP_COL[i, "RESP"], " resp, orig_file, ", RESPVAR, ".geometry
-                        FROM ", FARMERNAME, "_r.", RESPVAR, " ", RESPVAR, "
+                db,
+                paste0("CREATE TABLE ", farmername, "_r.temp AS
+                        SELECT ", resp_col[i, "resp"], " resp, orig_file, ", respvar, ".geometry
+                        FROM ", farmername, "_r.", respvar, " ", respvar, "
                         JOIN all_farms.temp temp
-                        ON ST_Within(", RESPVAR, ".geometry, temp.geometry)
-                        WHERE ", RESPVAR, ".year = '", YEAR, "'
-                        AND ", RESPVAR, ".orig_file = '", RESP_FILES[i], "';
-                        ALTER TABLE ", FARMERNAME, "_r.temp
+                        ON ST_Within(", respvar, ".geometry, temp.geometry)
+                        WHERE ", respvar, ".year = '", year, "'
+                        AND ", respvar, ".orig_file = '", resp_files[i], "';
+                        ALTER TABLE ", farmername, "_r.temp
                         ADD COLUMN dist VARCHAR;")
               )
             )
           }else{
             invisible(
               DBI::dbSendQuery(
-                DB,
-                paste0("CREATE TABLE ", FARMERNAME, "_r.temp AS
-                        SELECT ", RESP_COL[i, "RESP"], " resp, orig_file, ", RESPVAR, ".geometry, ", RESP_COL[i, "DIST"], " dist
-                        FROM ", FARMERNAME, "_r.", RESPVAR, " ", RESPVAR, "
+                db,
+                paste0("CREATE TABLE ", farmername, "_r.temp AS
+                        SELECT ", resp_col[i, "resp"], " resp, orig_file, ", respvar, ".geometry, ", resp_col[i, "dist"], " dist
+                        FROM ", farmername, "_r.", respvar, " ", respvar, "
                         JOIN all_farms.temp temp
-                        ON ST_Within(", RESPVAR, ".geometry, temp.geometry)
-                        WHERE ", RESPVAR, ".year = '", YEAR, "'
-                        AND ", RESPVAR, ".orig_file = '", RESP_FILES[i], "';")
+                        ON ST_Within(", respvar, ".geometry, temp.geometry)
+                        WHERE ", respvar, ".year = '", year, "'
+                        AND ", respvar, ".orig_file = '", resp_files[i], "';")
               )
             )
           }
         }else{
-          if (is.na(RESP_COL[i, "DIST"])) {
+          if (is.na(resp_col[i, "dist"])) {
             invisible(
               DBI::dbSendQuery(
-                DB,
-                paste0("INSERT INTO ", FARMERNAME, "_r.temp
-                        SELECT ", RESP_COL[i, "RESP"], " resp, orig_file, ", RESPVAR, ".geometry
-                        FROM ", FARMERNAME, "_r.", RESPVAR, " ", RESPVAR, "
+                db,
+                paste0("INSERT INTO ", farmername, "_r.temp
+                        SELECT ", resp_col[i, "resp"], " resp, orig_file, ", respvar, ".geometry
+                        FROM ", farmername, "_r.", respvar, " ", respvar, "
                         JOIN all_farms.temp temp
-                        ON ST_Within(", RESPVAR, ".geometry, temp.geometry)
-                        WHERE ", RESPVAR, ".year = '", YEAR, "'
-                        AND ", RESPVAR, ".orig_file = '", RESP_FILES[i], "'")
+                        ON ST_Within(", respvar, ".geometry, temp.geometry)
+                        WHERE ", respvar, ".year = '", year, "'
+                        AND ", respvar, ".orig_file = '", resp_files[i], "'")
               )
             )
           }else{
             invisible(
               DBI::dbSendQuery(
-                DB,
-                paste0("INSERT INTO ", FARMERNAME, "_r.temp
-                        SELECT ", RESP_COL[i, "RESP"], " resp, orig_file, ", RESPVAR, ".geometry, ", RESP_COL[i, "DIST"], " dist
-                        FROM ", FARMERNAME, "_r.", RESPVAR, " ", RESPVAR, "
+                db,
+                paste0("INSERT INTO ", farmername, "_r.temp
+                        SELECT ", resp_col[i, "resp"], " resp, orig_file, ", respvar, ".geometry, ", resp_col[i, "dist"], " dist
+                        FROM ", farmername, "_r.", respvar, " ", respvar, "
                         JOIN all_farms.temp temp
-                        ON ST_Within(", RESPVAR, ".geometry, temp.geometry)
-                        WHERE ", RESPVAR, ".year = '", YEAR, "'
-                        AND ", RESPVAR, ".orig_file = '", RESP_FILES[i], "';")
+                        ON ST_Within(", respvar, ".geometry, temp.geometry)
+                        WHERE ", respvar, ".year = '", year, "'
+                        AND ", respvar, ".orig_file = '", resp_files[i], "';")
               )
             )
           }
@@ -630,71 +651,71 @@ AggDat <- R6::R6Class(
       }
       invisible(
         DBI::dbSendQuery(
-          DB,
-          paste0("ALTER TABLE ", FARMERNAME, "_r.temp
+          db,
+          paste0("ALTER TABLE ", farmername, "_r.temp
                   ALTER COLUMN resp TYPE real USING resp::real,
                   ALTER COLUMN dist TYPE real USING dist::real,
                   ADD COLUMN max_resp REAL,
                   ADD COLUMN min_resp REAL,
                   ADD COLUMN max_dist REAL,
                   ADD COLUMN min_dist REAL;
-                  DELETE FROM ", FARMERNAME, "_r.temp temp
+                  DELETE FROM ", farmername, "_r.temp temp
                   WHERE temp.resp = 'NaN';
-                  CREATE INDEX temp_geom_idx ON ", FARMERNAME, "_r.temp USING gist (geometry);")
+                  CREATE INDEX temp_geom_idx ON ", farmername, "_r.temp USING gist (geometry);")
         )
       )
       invisible(
         DBI::dbSendQuery(
-          DB,
+          db,
           paste0("VACUUM ANALYZE ",
-                 FARMERNAME,
+                 farmername,
                  "_r.temp")
         )
       )
 
       ## Calculate the mean and 4SD for the response and distance variable if present by the orig_file.
-      meansNsd <- DBI::dbGetQuery(
-        DB,
+      means_sd <- DBI::dbGetQuery(
+        db,
         paste0("SELECT AVG(resp) mean_resp, STDDEV(resp) sd_resp, AVG(dist) mean_dist, STDDEV(dist) sd_dist, orig_file
-                FROM ", FARMERNAME, "_r.temp
+                FROM ", farmername, "_r.temp
                 GROUP BY temp.orig_file;")
       )
-      meansNsd$max_resp <- meansNsd$mean_resp + (4 * meansNsd$sd_resp)
-      meansNsd$max_dist <- meansNsd$mean_dist + (4 * meansNsd$sd_dist)
-      meansNsd$min_resp <- ifelse((meansNsd$mean_resp - (4 * meansNsd$sd_resp)) < 0,
+      means_sd$max_resp <- means_sd$mean_resp + (4 * means_sd$sd_resp)
+      means_sd$max_dist <- means_sd$mean_dist + (4 * means_sd$sd_dist)
+      means_sd$min_resp <- ifelse((means_sd$mean_resp - (4 * means_sd$sd_resp)) < 0,
                                   0,
-                                  (meansNsd$mean_resp - (4 * meansNsd$sd_resp)))
-      meansNsd$min_dist <- ifelse((meansNsd$mean_dist - (4 * meansNsd$sd_dist)) < 0,
+                                  (means_sd$mean_resp - (4 * means_sd$sd_resp)))
+      means_sd$min_dist <- ifelse((means_sd$mean_dist - (4 * means_sd$sd_dist)) < 0,
                                   0,
-                                  (meansNsd$mean_dist - (4 * meansNsd$sd_dist)))
-      for (i in 1:nrow(meansNsd)) {
-        if (is.na(meansNsd[i, "mean_dist"]) | is.na(meansNsd[i, "sd_dist"])) {
-          meansNsd[i, "max_dist"] <- 10000
-          meansNsd[i, "min_dist"] <- 0
+                                  (means_sd$mean_dist - (4 * means_sd$sd_dist)))
+      for (i in 1:nrow(means_sd)) {
+        if (is.na(means_sd[i, "mean_dist"]) | is.na(means_sd[i, "sd_dist"])) {
+          means_sd[i, "max_dist"] <- 10000
+          means_sd[i, "min_dist"] <- 0
         }
         invisible(
           DBI::dbSendQuery(
-            DB,
-            paste0("UPDATE ", FARMERNAME, "_r.temp temp
-                    SET max_resp = ", meansNsd[i, "max_resp"], "
-                    WHERE temp.orig_file = '", meansNsd[i, "orig_file"], "';
-                    UPDATE ", FARMERNAME, "_r.temp temp
-                    SET min_resp = ", meansNsd[i, "min_resp"], "
-                    WHERE temp.orig_file = '", meansNsd[i, "orig_file"], "';
-                    UPDATE ", FARMERNAME, "_r.temp temp
-                    SET max_dist = ", meansNsd[i, "max_dist"], "
-                    WHERE temp.orig_file = '", meansNsd[i, "orig_file"], "';
-                    UPDATE ", FARMERNAME, "_r.temp temp
-                    SET min_dist = ", meansNsd[i, "min_dist"], "
-                    WHERE temp.orig_file = '", meansNsd[i, "orig_file"], "';")
+            db,
+            paste0("UPDATE ", farmername, "_r.temp temp
+                    SET max_resp = ", means_sd[i, "max_resp"], "
+                    WHERE temp.orig_file = '", means_sd[i, "orig_file"], "';
+                    UPDATE ", farmername, "_r.temp temp
+                    SET min_resp = ", means_sd[i, "min_resp"], "
+                    WHERE temp.orig_file = '", means_sd[i, "orig_file"], "';
+                    UPDATE ", farmername, "_r.temp temp
+                    SET max_dist = ", means_sd[i, "max_dist"], "
+                    WHERE temp.orig_file = '", means_sd[i, "orig_file"], "';
+                    UPDATE ", farmername, "_r.temp temp
+                    SET min_dist = ", means_sd[i, "min_dist"], "
+                    WHERE temp.orig_file = '", means_sd[i, "orig_file"], "';")
           )
         )
       }
       ## Remove observations by orig_file above or below 4SD of the mean response or distance
       invisible(
         DBI::dbSendQuery(
-          DB,
-          paste0("DELETE FROM ", FARMERNAME, "_r.temp
+          db,
+          paste0("DELETE FROM ", farmername, "_r.temp
                   WHERE resp >= max_resp
                   OR resp <= min_resp
                   OR dist >= max_dist
@@ -704,20 +725,20 @@ AggDat <- R6::R6Class(
       ## Remove observations by orig_file that are within 30m of the field boundary
       invisible(
         DBI::dbSendQuery(
-          DB,
+          db,
           paste0( "WITH buff AS(
                   SELECT ST_Buffer(geometry, -30) geometry
                   FROM all_farms.temp temp)
 
-                  DELETE FROM ", FARMERNAME, "_r.temp AS temp
+                  DELETE FROM ", farmername, "_r.temp AS temp
                   USING buff
                   WHERE ST_Within(temp.geometry, buff.geometry);")
         )
       )
       invisible(
         DBI::dbSendQuery(
-          DB,
-          paste0("ALTER TABLE ", FARMERNAME, "_r.temp
+          db,
+          paste0("ALTER TABLE ", farmername, "_r.temp
                   DROP COLUMN dist,
                   DROP COLUMN max_resp,
                   DROP COLUMN min_resp,
@@ -727,9 +748,9 @@ AggDat <- R6::R6Class(
       )
       invisible(
         DBI::dbSendQuery(
-          DB,
+          db,
           paste0("VACUUM ANALYZE ",
-                 FARMERNAME,
+                 farmername,
                  "_r.temp")
         )
       )
@@ -743,107 +764,109 @@ AggDat <- R6::R6Class(
     #' grid cells where observations outside of one standard deviation of the mean
     #' in each grid cell are omitted. The dot indicates that this function would be
     #' private if not for documentations sake.
-    #' @param DB Connection to an OFPE database.
-    #' @param FARMERNAME Name of the farmer that owns the field for aggregation.
-    #' @param RESPVAR The response variable to aggregate.
-    #' @param FIELDNAME Name of the field for aggregation.
+    #' @param db Connection to an OFPE database.
+    #' @param farmername Name of the farmer that owns the field for aggregation.
+    #' @param respvar The response variable to aggregate.
+    #' @param fieldname Name of the field for aggregation.
     #' @param GRID Whether to aggregate data to the centroids of a grid or use
     #' the raw observed data locations.
     #' @param CY The year of interest for aggregation (aka the 'current year').
+    #' NOTE: that when aggregating "PY" data, leave NULL.
     #' @param PY The year prior to the year of interest that a crop was harvested
-    #' in the field.
-    #' @param DAT_USED The length of year to gather data over for the CY.
-    #' @param SIZE Size of grid to make (meters), default = 10.
+    #' in the field. NOTE: that when aggregating "PY" data, leave NULL
+    #' (Counterintuitive... I know).
+    #' @param dat_used The length of year to gather data over for the CY.
+    #' @param size Size of grid to make (meters), default = 10.
     #' @return Data in temporary aggregated table.
-    .aggRespData = function(DB,
-                            FARMERNAME,
-                            RESPVAR,
-                            FIELDNAME,
+    .aggRespData = function(db,
+                            farmername,
+                            respvar,
+                            fieldname,
                             GRID,
                             CY = NULL,
                             PY = NULL,
-                            DAT_USED,
-                            SIZE) {
-      utmEpsg <- OFPE::findUTMzone(FARMERNAME = FARMERNAME)
+                            dat_used,
+                            size) {
+      utmEpsg <- OFPE::findUTMzone(farmername = farmername)
       # Get the cell_id for each point in the temporary table
       invisible(
         DBI::dbSendQuery(
-          DB,
-          paste0("ALTER TABLE ", FARMERNAME, "_r.temp
+          db,
+          paste0("ALTER TABLE ", farmername, "_r.temp
                   ADD COLUMN cell_id VARCHAR;
-                  ALTER TABLE ", FARMERNAME, "_r.temp
+                  ALTER TABLE ", farmername, "_r.temp
                   ALTER COLUMN geometry TYPE geometry(POINT, ", utmEpsg, ")
                   USING ST_Transform(geometry, ", utmEpsg, ");
-                  UPDATE ", FARMERNAME, "_r.temp temp
+                  UPDATE ", farmername, "_r.temp temp
                   SET cell_id = gridtemp.cell_id
                   FROM all_farms.gridtemp
-                  WHERE gridtemp.field = '", FIELDNAME, "'
-                  AND gridtemp.size = ", SIZE, "
+                  WHERE gridtemp.field = '", fieldname, "'
+                  AND gridtemp.size = ", size, "
                   AND ST_Within(temp.geometry, gridtemp.geom);")
         )
       )
       # Get the mean and 1SD of the response for all cell_ids and remove rows with outliers
-      meansNsd <- DBI::dbGetQuery(
-        DB,
+      means_sd <- DBI::dbGetQuery(
+        db,
         paste0("SELECT AVG(resp) mean_resp, STDDEV(resp) sd_resp, cell_id
-                FROM ", FARMERNAME, "_r.temp
+                FROM ", farmername, "_r.temp
                 GROUP BY temp.cell_id;")
       )
-      meansNsd$sd_resp[is.na(meansNsd$sd_resp)|
-                         meansNsd$sd_resp == 0] <- 10
-      meansNsd$max_resp <- meansNsd$mean_resp + meansNsd$sd_resp
-      meansNsd$min_resp <- ifelse((meansNsd$mean_resp - meansNsd$sd_resp) < 0,
+      means_sd$sd_resp[is.na(means_sd$sd_resp)|
+                         means_sd$sd_resp == 0] <- 10
+      means_sd$max_resp <- means_sd$mean_resp + means_sd$sd_resp
+      means_sd$min_resp <- ifelse((means_sd$mean_resp - means_sd$sd_resp) < 0,
                                   0,
-                                  (meansNsd$mean_resp - meansNsd$sd_resp))
+                                  (means_sd$mean_resp - means_sd$sd_resp))
       invisible(
         DBI::dbWriteTable(
-          DB,
-          c(paste0(FARMERNAME, "_r"), "means"),
-          meansNsd,
+          db,
+          c(paste0(farmername, "_r"), "means"),
+          means_sd,
           row.names=FALSE)
       )
       invisible(
         DBI::dbSendQuery(
-          DB,
-          paste0("ALTER TABLE ", FARMERNAME, "_r.temp
+          db,
+          paste0("ALTER TABLE ", farmername, "_r.temp
                   ADD COLUMN max_resp REAL,
                   ADD COLUMN min_resp REAL;")
         )
       )
       invisible(
         DBI::dbSendQuery(
-          DB,
-          paste0("UPDATE ", FARMERNAME, "_r.temp temp
+          db,
+          paste0("UPDATE ", farmername, "_r.temp temp
                   SET max_resp = means.max_resp
-                  FROM ", FARMERNAME, "_r.means means
+                  FROM ", farmername, "_r.means means
                   WHERE temp.cell_id = means.cell_id;
-                  UPDATE ", FARMERNAME, "_r.temp temp
+                  UPDATE ", farmername, "_r.temp temp
                   SET min_resp = means.min_resp
-                  FROM ", FARMERNAME, "_r.means means
+                  FROM ", farmername, "_r.means means
                   WHERE temp.cell_id = means.cell_id;")
         )
       )
       invisible(
         DBI::dbSendQuery(
-          DB,
-          paste0("DELETE FROM ", FARMERNAME, "_r.temp
+          db,
+          paste0("DELETE FROM ", farmername, "_r.temp
                   WHERE resp >= max_resp
                   OR resp <= min_resp;")
         )
       )
       invisible(
-        DBI::dbSendQuery( DB, paste0("DROP TABLE ", FARMERNAME, "_r.means"))
+        DBI::dbSendQuery( db, paste0("DROP TABLE ", farmername, "_r.means"))
       )
 
       ## add to agg table
       if (GRID == "grid") {
-        newcol <- ifelse(is.null(CY), paste0("prev_", RESPVAR), RESPVAR)
+        newcol <- ifelse(is.null(CY), paste0("prev_", respvar), respvar)
         # if gridded option & current year
         # Add the mean response to the aggregated table by cell_id
         invisible(
           DBI::dbSendQuery(
-            DB,
-            paste0("ALTER TABLE ", FARMERNAME, "_a.temp
+            db,
+            paste0("ALTER TABLE ", farmername, "_a.temp
                     ADD COLUMN ", newcol, " REAL;
 
                     WITH vtemp AS (
@@ -853,12 +876,12 @@ AggDat <- R6::R6Class(
                         AVG (b.resp),
                         '99999999999999999D99'
                       ) AS resp
-                    FROM ", FARMERNAME, "_r.temp b
-                    INNER JOIN ", FARMERNAME, "_a.temp a ON a.cell_id = b.cell_id
+                    FROM ", farmername, "_r.temp b
+                    INNER JOIN ", farmername, "_a.temp a ON a.cell_id = b.cell_id
                     GROUP BY  b.cell_id
                     )
 
-                    UPDATE ", FARMERNAME, "_a.temp aggtemp
+                    UPDATE ", farmername, "_a.temp aggtemp
                     SET ", newcol, " = CAST ( vtemp.resp AS REAL )
                     FROM vtemp
                     WHERE aggtemp.cell_id = vtemp.cell_id;")
@@ -869,44 +892,44 @@ AggDat <- R6::R6Class(
           # if aggregating to obs points and cy; add x, y, grid, etc. from farmername_r.temp
           invisible(
             DBI::dbSendQuery(
-              DB,
-              paste0("ALTER TABLE ", FARMERNAME, "_r.temp
+              db,
+              paste0("ALTER TABLE ", farmername, "_r.temp
                       ADD COLUMN x double precision,
                       ADD COLUMN y double precision;
-                      UPDATE ", FARMERNAME, "_r.temp SET
+                      UPDATE ", farmername, "_r.temp SET
                       x = ST_X(geometry),
                       y = ST_Y(geometry);
 
-                      INSERT INTO ", FARMERNAME, "_a.temp
+                      INSERT INTO ", farmername, "_a.temp
                       SELECT x, y, cell_id
-                      FROM ", FARMERNAME, "_r.temp;
+                      FROM ", farmername, "_r.temp;
 
-                      UPDATE ", FARMERNAME, "_a.temp SET
+                      UPDATE ", farmername, "_a.temp SET
                       geometry = ST_MakePoint(x, y, ", utmEpsg, ");
 
-                      UPDATE ", FARMERNAME, "_a.temp SET
+                      UPDATE ", farmername, "_a.temp SET
                       geometry = ST_SetSRID (geometry, ", utmEpsg, "),
-                      field = '", FIELDNAME, "',
+                      field = '", fieldname, "',
                       grid = '", GRID, "',
-                      datused = '", DAT_USED, "',
-                      size = ", SIZE,"
-                      farmer = '", FARMERNAME, "',
+                      datused = '", dat_used, "',
+                      size = ", size,",
+                      farmer = '", farmername, "',
                       year = '", CY, "',
                       prev_year = '", PY, "';
 
-                      ALTER TABLE ", FARMERNAME, "_a.temp
-                      ADD COLUMN ", RESPVAR, " REAL;
-                      UPDATE ", FARMERNAME, "_a.temp aggtemp
-                      SET ", RESPVAR, " = temp.resp
-                      FROM ", FARMERNAME, "_r.temp temp
+                      ALTER TABLE ", farmername, "_a.temp
+                      ADD COLUMN ", respvar, " REAL;
+                      UPDATE ", farmername, "_a.temp aggtemp
+                      SET ", respvar, " = temp.resp
+                      FROM ", farmername, "_r.temp temp
                       WHERE aggtemp.x = temp.x
                       AND aggtemp.y = temp.y;")
             )
           )
           invisible(
             DBI::dbSendQuery(
-              DB,
-              paste0("CREATE INDEX aggtemp_geom_idx ON ", FARMERNAME,
+              db,
+              paste0("CREATE INDEX aggtemp_geom_idx ON ", farmername,
                      "_a.temp USING gist (geometry)")
             )
           )
@@ -915,9 +938,9 @@ AggDat <- R6::R6Class(
           # otherwise append to current agg table with coordinates (gridded or PY obs)
           invisible(
             DBI::dbSendQuery(
-              DB,
-              paste0("ALTER TABLE ", FARMERNAME, "_a.temp
-                      ADD COLUMN prev_", RESPVAR, " REAL;
+              db,
+              paste0("ALTER TABLE ", farmername, "_a.temp
+                      ADD COLUMN prev_", respvar, " REAL;
 
                       WITH vtemp AS (
                         SELECT a.cell_id,
@@ -925,18 +948,18 @@ AggDat <- R6::R6Class(
                         a.x,
                         a.y,
                         a.geometry
-                        FROM ", FARMERNAME, "_a.temp a
+                        FROM ", farmername, "_a.temp a
                         JOIN LATERAL (
                           SELECT resp
-                          FROM ", FARMERNAME, "_r.temp temp
+                          FROM ", farmername, "_r.temp temp
                           ORDER BY a.geometry <-> temp.geometry
                           LIMIT 1
                         ) AS b
                         ON true
                       )
 
-                      UPDATE ", FARMERNAME, "_a.temp a SET
-                      prev_", RESPVAR, " = vtemp.resp
+                      UPDATE ", farmername, "_a.temp a SET
+                      prev_", respvar, " = vtemp.resp
                       FROM vtemp
                       WHERE vtemp.cell_id = a.cell_id
                       AND vtemp.x = a.x
@@ -946,10 +969,10 @@ AggDat <- R6::R6Class(
         }
       }
       invisible(
-        DBI::dbSendQuery(DB, paste0("DROP TABLE ", FARMERNAME, "_r.temp"))
+        DBI::dbSendQuery(db, paste0("DROP TABLE ", farmername, "_r.temp"))
       )
       invisible(
-        DBI::dbSendQuery(DB, paste0("VACUUM ANALYZE ", FARMERNAME, "_a.temp"))
+        DBI::dbSendQuery(db, paste0("VACUUM ANALYZE ", farmername, "_a.temp"))
       )
     },
     #' @description
@@ -963,140 +986,140 @@ AggDat <- R6::R6Class(
     #' required for the experimental data and because experimental data may
     #' include polygon data. The dot indicates that this function would be
     #' private if not for documentations sake.
-    #' @param EXP_FILES The experimental variable files for aggregating.
-    #' @param DB Connection to an OFPE database.
-    #' @param EXP_COL The column in the experimental variable data that corresponds
+    #' @param exp_files The experimental variable files for aggregating.
+    #' @param db Connection to an OFPE database.
+    #' @param exp_col The column in the experimental variable data that corresponds
     #' to the measured experimental variable.
-    #' @param FARMERNAME Name of the farmer that owns the field for aggregation.
-    #' @param YEAR The year of the data being aggregated.
+    #' @param farmername Name of the farmer that owns the field for aggregation.
+    #' @param year The year of the data being aggregated.
     #' @return Temporary table in the farmer's 'raw' schema.
-    .cleanExpData = function(EXP_FILES, DB, EXP_COL, FARMERNAME, YEAR) {
+    .cleanExpData = function(exp_files, db, exp_col, farmername, year) {
       ## create temp file to clean, but check if polygon
-      isPoly <- ifelse(any(grepl("poly", EXP_FILES$table)),
+      isPoly <- ifelse(any(grepl("poly", exp_files$table)),
                        "MULTIPOLYGON",
                        "POINT")
       if (grepl("POLY", isPoly) ) {
         ## if polygon data
-        EXP_FILES <- EXP_FILES[grep("poly", EXP_FILES$table), ]
-        for (i in 1:nrow(EXP_FILES)) {
+        exp_files <- exp_files[grep("poly", exp_files$table), ]
+        for (i in 1:nrow(exp_files)) {
           if (i == 1) {
-            if (is.na(EXP_COL[i, "DIST"])) {
+            if (is.na(exp_col[i, "dist"])) {
               invisible(
                 DBI::dbSendQuery(
-                  DB,
-                  paste0("CREATE TABLE ", FARMERNAME, "_r.temp AS
-                          SELECT ", EXP_COL[i, "EXP"], " exp, orig_file, geometry
-                          FROM ", FARMERNAME, "_r.", EXP_FILES$table[i], " ", EXP_FILES$table[i], "
-                          WHERE ", EXP_FILES$table[i], ".orig_file = '",
+                  db,
+                  paste0("CREATE TABLE ", farmername, "_r.temp AS
+                          SELECT ", exp_col[i, "EXP"], " exp, orig_file, geometry
+                          FROM ", farmername, "_r.", exp_files$table[i], " ", exp_files$table[i], "
+                          WHERE ", exp_files$table[i], ".orig_file = '",
                                      as.character(
-                                       EXP_COL[i, "orig_file"]
+                                       exp_col[i, "orig_file"]
                                      ), "';
-                          ALTER TABLE ", FARMERNAME, "_r.temp
+                          ALTER TABLE ", farmername, "_r.temp
                           ADD COLUMN dist VARCHAR;")
                 )
               )
             }else{
               invisible(
                 DBI::dbSendQuery(
-                  DB,
-                  paste0("CREATE TABLE ", FARMERNAME, "_r.temp AS
-                          SELECT ", EXP_COL[i, "EXP"], " exp, orig_file, geometry, ", EXP_COL[i, "DIST"], " dist
-                          FROM ", FARMERNAME, "_r.", EXP_FILES$table[i], " ", EXP_FILES$table[i], "
-                          WHERE ", EXP_FILES$table[i], ".orig_file = '",
+                  db,
+                  paste0("CREATE TABLE ", farmername, "_r.temp AS
+                          SELECT ", exp_col[i, "EXP"], " exp, orig_file, geometry, ", exp_col[i, "dist"], " dist
+                          FROM ", farmername, "_r.", exp_files$table[i], " ", exp_files$table[i], "
+                          WHERE ", exp_files$table[i], ".orig_file = '",
                                      as.character(
-                                       EXP_COL[i, "orig_file"]
+                                       exp_col[i, "orig_file"]
                                      ), "';")
                             )
               )
             }
           }else{
-            if (is.na(EXP_COL[i, "DIST"])) {
+            if (is.na(exp_col[i, "dist"])) {
               invisible(
                 DBI::dbSendQuery(
-                  DB,
-                  paste0("INSERT INTO ", FARMERNAME, "_r.temp
-                          SELECT ", EXP_COL[i, "EXP"], " exp, orig_file, geometry
-                          FROM ", FARMERNAME, "_r.", EXP_FILES$table[i], " ", EXP_FILES$table[i], "
-                          WHERE ", EXP_FILES$table[i], ".orig_file = '",
+                  db,
+                  paste0("INSERT INTO ", farmername, "_r.temp
+                          SELECT ", exp_col[i, "EXP"], " exp, orig_file, geometry
+                          FROM ", farmername, "_r.", exp_files$table[i], " ", exp_files$table[i], "
+                          WHERE ", exp_files$table[i], ".orig_file = '",
                                      as.character(
-                                       EXP_COL[i, "orig_file"]
+                                       exp_col[i, "orig_file"]
                                      ), "';")
                 )
               )
             }else{
               invisible(
                 DBI::dbSendQuery(
-                  DB,
-                  paste0("INSERT INTO ", FARMERNAME, "_r.temp
-                          SELECT ", EXP_COL[i, "EXP"], " exp, orig_file, geometry, ", EXP_COL[i, "DIST"], " dist
-                          FROM ", FARMERNAME, "_r.", EXP_FILES$table[i], " ", EXP_FILES$table[i], "
-                          WHERE ", EXP_FILES$table[i], ".orig_file = '",
+                  db,
+                  paste0("INSERT INTO ", farmername, "_r.temp
+                          SELECT ", exp_col[i, "EXP"], " exp, orig_file, geometry, ", exp_col[i, "dist"], " dist
+                          FROM ", farmername, "_r.", exp_files$table[i], " ", exp_files$table[i], "
+                          WHERE ", exp_files$table[i], ".orig_file = '",
                                      as.character(
-                                       EXP_COL[i, "orig_file"]
+                                       exp_col[i, "orig_file"]
                                      ), "';")
                 )
               )
             }
           }
         }
-      }else{
+      } else {
         ## if point data
-        for (i in 1:nrow(EXP_FILES)) {
+        for (i in 1:nrow(exp_files)) {
           if (i == 1) {
-            if (is.na(EXP_COL[i, "DIST"])) {
+            if (is.na(exp_col[i, "dist"])) {
               invisible(
                 DBI::dbSendQuery(
-                  DB,
-                  paste0("CREATE TABLE ", FARMERNAME, "_r.temp AS
-                          SELECT ", EXP_COL[i, "EXP"], " exp, orig_file, ", EXP_FILES$table[i], ".geometry
-                          FROM ", FARMERNAME, "_r.", EXP_FILES$table[i], " ", EXP_FILES$table[i], "
+                  db,
+                  paste0("CREATE TABLE ", farmername, "_r.temp AS
+                          SELECT ", exp_col[i, "EXP"], " exp, orig_file, ", exp_files$table[i], ".geometry
+                          FROM ", farmername, "_r.", exp_files$table[i], " ", exp_files$table[i], "
                           JOIN all_farms.temp temp
-                          ON ST_Within(", EXP_FILES$table[i], ".geometry, temp.geometry)
-                          WHERE ", EXP_FILES$table[i], ".year = '", YEAR, "'
-                          AND ", EXP_FILES$table[i], ".orig_file = '", as.character(EXP_COL[i, "orig_file"]), "';
-                          ALTER TABLE ", FARMERNAME, "_r.temp
+                          ON ST_Within(", exp_files$table[i], ".geometry, temp.geometry)
+                          WHERE ", exp_files$table[i], ".year = '", year, "'
+                          AND ", exp_files$table[i], ".orig_file = '", as.character(exp_col[i, "orig_file"]), "';
+                          ALTER TABLE ", farmername, "_r.temp
                           ADD COLUMN dist VARCHAR;")
                 )
               )
             }else{
               invisible(
                 DBI::dbSendQuery(
-                  DB,
-                  paste0("CREATE TABLE ", FARMERNAME, "_r.temp  AS
-                          SELECT ", EXP_COL[i, "EXP"], " exp, orig_file, ", EXP_FILES$table[i], ".geometry, ", EXP_COL[i, "DIST"], " dist
-                          FROM ", FARMERNAME, "_r.", EXP_FILES$table[i], " ", EXP_FILES$table[i], "
+                  db,
+                  paste0("CREATE TABLE ", farmername, "_r.temp  AS
+                          SELECT ", exp_col[i, "EXP"], " exp, orig_file, ", exp_files$table[i], ".geometry, ", exp_col[i, "dist"], " dist
+                          FROM ", farmername, "_r.", exp_files$table[i], " ", exp_files$table[i], "
                           JOIN all_farms.temp temp
-                          ON ST_Within(", EXP_FILES$table[i], ".geometry, temp.geometry)
-                          WHERE ", EXP_FILES$table[i], ".year = '", YEAR, "'
-                          AND ", EXP_FILES$table[i], ".orig_file = '", as.character(EXP_COL[i, "orig_file"]), "';")
+                          ON ST_Within(", exp_files$table[i], ".geometry, temp.geometry)
+                          WHERE ", exp_files$table[i], ".year = '", year, "'
+                          AND ", exp_files$table[i], ".orig_file = '", as.character(exp_col[i, "orig_file"]), "';")
                 )
               )
             }
           }else{
-            if (is.na(EXP_COL[i, "DIST"])) {
+            if (is.na(exp_col[i, "dist"])) {
               invisible(
                 DBI::dbSendQuery(
-                  DB,
-                  paste0("INSERT INTO ", FARMERNAME, "_r.temp
-                          SELECT ", EXP_COL[i, "EXP"], " exp, orig_file, ", EXP_FILES$table[i], ".geometry
-                          FROM ", FARMERNAME, "_r.", EXP_FILES$table[i], " ", EXP_FILES$table[i], "
+                  db,
+                  paste0("INSERT INTO ", farmername, "_r.temp
+                          SELECT ", exp_col[i, "EXP"], " exp, orig_file, ", exp_files$table[i], ".geometry
+                          FROM ", farmername, "_r.", exp_files$table[i], " ", exp_files$table[i], "
                           JOIN all_farms.temp temp
-                          ON ST_Within(", EXP_FILES$table[i], ".geometry, temp.geometry)
-                          WHERE ", EXP_FILES$table[i], ".year = '", YEAR, "'
-                          AND ", EXP_FILES$table[i], ".orig_file = '", as.character(EXP_COL[i, "orig_file"]), "'")
+                          ON ST_Within(", exp_files$table[i], ".geometry, temp.geometry)
+                          WHERE ", exp_files$table[i], ".year = '", year, "'
+                          AND ", exp_files$table[i], ".orig_file = '", as.character(exp_col[i, "orig_file"]), "'")
                 )
               )
             }else{
               invisible(
                 DBI::dbSendQuery(
-                  DB,
-                  paste0("INSERT INTO ", FARMERNAME, "_r.temp
-                          SELECT ", EXP_COL[i, "EXP"], " exp, orig_file, ", EXP_FILES$table[i], ".geometry, ", EXP_COL[i, "DIST"], " dist
-                          FROM ", FARMERNAME, "_r.", EXP_FILES$table[i], " ", EXP_FILES$table[i], "
+                  db,
+                  paste0("INSERT INTO ", farmername, "_r.temp
+                          SELECT ", exp_col[i, "EXP"], " exp, orig_file, ", exp_files$table[i], ".geometry, ", exp_col[i, "dist"], " dist
+                          FROM ", farmername, "_r.", exp_files$table[i], " ", exp_files$table[i], "
                           JOIN all_farms.temp temp
-                          ON ST_Within(", EXP_FILES$table[i], ".geometry, temp.geometry)
-                          WHERE ", EXP_FILES$table[i], ".year = '", YEAR, "'
-                          AND ", EXP_FILES$table[i], ".orig_file = '", as.character(EXP_COL[i, "orig_file"]), "';")
+                          ON ST_Within(", exp_files$table[i], ".geometry, temp.geometry)
+                          WHERE ", exp_files$table[i], ".year = '", year, "'
+                          AND ", exp_files$table[i], ".orig_file = '", as.character(exp_col[i, "orig_file"]), "';")
                 )
               )
             }
@@ -1105,67 +1128,67 @@ AggDat <- R6::R6Class(
       }
       invisible(
         DBI::dbSendQuery(
-          DB,
-          paste0("ALTER TABLE ", FARMERNAME, "_r.temp
+          db,
+          paste0("ALTER TABLE ", farmername, "_r.temp
                   ALTER COLUMN exp TYPE real USING exp::real,
                   ALTER COLUMN dist TYPE real USING dist::real,
                   ADD COLUMN max_exp REAL,
                   ADD COLUMN min_exp REAL,
                   ADD COLUMN max_dist REAL,
                   ADD COLUMN min_dist REAL;
-                  DELETE FROM ", FARMERNAME, "_r.temp temp
+                  DELETE FROM ", farmername, "_r.temp temp
                   WHERE temp.exp = 'NaN';
-                  CREATE INDEX temp_geom_idx ON ", FARMERNAME, "_r.temp
+                  CREATE INDEX temp_geom_idx ON ", farmername, "_r.temp
                   USING gist (geometry);")
         )
       )
       invisible(
-        DBI::dbSendQuery(DB, paste0("VACUUM ANALYZE ", FARMERNAME, "_r.temp"))
+        DBI::dbSendQuery(db, paste0("VACUUM ANALYZE ", farmername, "_r.temp"))
       )
 
       ## Calculate the mean and 4SD for the experimental variable and distance variable if present by the orig_file.
-      meansNsd <- DBI::dbGetQuery(
-        DB,
+      means_sd <- DBI::dbGetQuery(
+        db,
         paste0("SELECT AVG(exp) mean_exp, STDDEV(exp) sd_exp, AVG(dist) mean_dist, STDDEV(dist) sd_dist, orig_file
-                FROM ", FARMERNAME, "_r.temp GROUP BY temp.orig_file;")
+                FROM ", farmername, "_r.temp GROUP BY temp.orig_file;")
       )
-      meansNsd$max_exp <- meansNsd$mean_exp + (4 * meansNsd$sd_exp)
-      meansNsd$max_dist <- meansNsd$mean_dist + (4 * meansNsd$sd_dist)
-      meansNsd$min_exp <- ifelse((meansNsd$mean_exp - (4 * meansNsd$sd_exp)) < 0,
+      means_sd$max_exp <- means_sd$mean_exp + (4 * means_sd$sd_exp)
+      means_sd$max_dist <- means_sd$mean_dist + (4 * means_sd$sd_dist)
+      means_sd$min_exp <- ifelse((means_sd$mean_exp - (4 * means_sd$sd_exp)) < 0,
                                  0,
-                                 (meansNsd$mean_exp - (4 * meansNsd$sd_exp)))
-      meansNsd$min_dist <- ifelse((meansNsd$mean_dist - (4 * meansNsd$sd_dist)) < 0,
+                                 (means_sd$mean_exp - (4 * means_sd$sd_exp)))
+      means_sd$min_dist <- ifelse((means_sd$mean_dist - (4 * means_sd$sd_dist)) < 0,
                                   0,
-                                  (meansNsd$mean_dist - (4 * meansNsd$sd_dist)))
+                                  (means_sd$mean_dist - (4 * means_sd$sd_dist)))
 
-      for (i in 1:nrow(meansNsd)) {
-        if (is.na(meansNsd[i, "mean_dist"]) | is.na(meansNsd[i, "sd_dist"])) {
-          meansNsd[i, "max_dist"] <- 10000
-          meansNsd[i, "min_dist"] <- 0
+      for (i in 1:nrow(means_sd)) {
+        if (is.na(means_sd[i, "mean_dist"]) | is.na(means_sd[i, "sd_dist"])) {
+          means_sd[i, "max_dist"] <- 10000
+          means_sd[i, "min_dist"] <- 0
         }
         invisible(
           DBI::dbSendQuery(
-            DB,
-            paste0("UPDATE ", FARMERNAME, "_r.temp temp
-                    SET max_exp = ", meansNsd[i, "max_exp"], "
-                    WHERE temp.orig_file = '", meansNsd[i, "orig_file"], "';
-                    UPDATE ", FARMERNAME, "_r.temp temp
-                    SET min_exp = ", meansNsd[i, "min_exp"], "
-                    WHERE temp.orig_file = '", meansNsd[i, "orig_file"], "';
-                    UPDATE ", FARMERNAME, "_r.temp temp
-                    SET max_dist = ", meansNsd[i, "max_dist"], "
-                    WHERE temp.orig_file = '", meansNsd[i, "orig_file"], "';
-                    UPDATE ", FARMERNAME, "_r.temp temp
-                    SET min_dist = ", meansNsd[i, "min_dist"], "
-                    WHERE temp.orig_file = '", meansNsd[i, "orig_file"], "';")
+            db,
+            paste0("UPDATE ", farmername, "_r.temp temp
+                    SET max_exp = ", means_sd[i, "max_exp"], "
+                    WHERE temp.orig_file = '", means_sd[i, "orig_file"], "';
+                    UPDATE ", farmername, "_r.temp temp
+                    SET min_exp = ", means_sd[i, "min_exp"], "
+                    WHERE temp.orig_file = '", means_sd[i, "orig_file"], "';
+                    UPDATE ", farmername, "_r.temp temp
+                    SET max_dist = ", means_sd[i, "max_dist"], "
+                    WHERE temp.orig_file = '", means_sd[i, "orig_file"], "';
+                    UPDATE ", farmername, "_r.temp temp
+                    SET min_dist = ", means_sd[i, "min_dist"], "
+                    WHERE temp.orig_file = '", means_sd[i, "orig_file"], "';")
           )
         )
       }
       ## Remove observations by orig_file above or below 4SD of the mean experimental variable or distance
       invisible(
         DBI::dbSendQuery(
-          DB,
-          paste0("DELETE FROM ", FARMERNAME, "_r.temp
+          db,
+          paste0("DELETE FROM ", farmername, "_r.temp
                   WHERE exp >= max_exp
                   OR exp <= min_exp
                   OR dist >= max_dist
@@ -1176,8 +1199,8 @@ AggDat <- R6::R6Class(
       ## if any null values replace with 0 for as-applied data
       invisible(
         DBI::dbSendQuery(
-          DB,
-          paste0("UPDATE ", FARMERNAME, "_r.temp
+          db,
+          paste0("UPDATE ", farmername, "_r.temp
                SET exp = 0
                WHERE exp IS NULL;")
         )
@@ -1187,12 +1210,12 @@ AggDat <- R6::R6Class(
       if (!grepl("POLY", isPoly)) {
         invisible(
           DBI::dbSendQuery(
-            DB,
+            db,
             paste0("WITH buff AS(
                     SELECT ST_Buffer(geometry, -30) geometry
                     FROM all_farms.temp temp)
 
-                    DELETE FROM ", FARMERNAME, "_r.temp AS temp
+                    DELETE FROM ", farmername, "_r.temp AS temp
                     USING buff
                     WHERE ST_Within(temp.geometry, buff.geometry);")
           )
@@ -1200,8 +1223,8 @@ AggDat <- R6::R6Class(
       }
       invisible(
         DBI::dbSendQuery(
-          DB,
-          paste0("ALTER TABLE ", FARMERNAME, "_r.temp
+          db,
+          paste0("ALTER TABLE ", farmername, "_r.temp
                   DROP COLUMN dist,
                   DROP COLUMN max_exp,
                   DROP COLUMN min_exp,
@@ -1210,7 +1233,7 @@ AggDat <- R6::R6Class(
         )
       )
       invisible(
-        DBI::dbSendQuery(DB, paste0("VACUUM ANALYZE ", FARMERNAME, "_r.temp"))
+        DBI::dbSendQuery(db, paste0("VACUUM ANALYZE ", farmername, "_r.temp"))
       )
     },
     #' @description
@@ -1221,62 +1244,62 @@ AggDat <- R6::R6Class(
     #' based on the grid cells where observations outside of one standard deviation
     #' of the mean in each grid cell are omitted. The dot indicates that this function
     #' would be private if not for documentations sake.
-    #' @param EXP_FILES The experimental variable files for use in aggregating.
-    #' @param DB Connection to an OFPE database.
-    #' @param EXP_COL The data.frame containaing the information on the columns
+    #' @param exp_files The experimental variable files for use in aggregating.
+    #' @param db Connection to an OFPE database.
+    #' @param exp_col The data.frame containaing the information on the columns
     #' corresponding to the experimental variable.
-    #' @param EXP_CONV The data.frame containaing the information for the product
+    #' @param exp_conv The data.frame containaing the information for the product
     #' formula and any conversion to lbs per acre.
-    #' @param FARMERNAME Name of the farmer that owns the field for aggregation.
-    #' @param EXPVAR The experimental variable to aggregate.
+    #' @param farmername Name of the farmer that owns the field for aggregation.
+    #' @param expvar The experimental variable to aggregate.
     #' @param GRID Whether to aggregate data to the centroids of a grid or use
     #' the raw observed data locations.
     #' @param CY Logical, whether the data for aggregation is from the year of
     #' interest (aka the 'current year').
-    #' @param SIZE Size of grid to make (meters), default = 10.
+    #' @param size Size of grid to make (meters), default = 10.
     #' @return Data in temporary aggregated table.
-    .aggExpData = function(EXP_FILES,
-                           DB,
-                           EXP_COL,
-                           EXP_CONV,
-                           FARMERNAME,
-                           EXPVAR,
+    .aggExpData = function(exp_files,
+                           db,
+                           exp_col,
+                           exp_conv,
+                           farmername,
+                           expvar,
                            GRID,
                            CY = TRUE,
-                           SIZE) {
-      utmEpsg <- OFPE::findUTMzone(FARMERNAME = FARMERNAME)
-      isPoly <- ifelse(any(grepl("poly", EXP_FILES$table)),
+                           size) {
+      utmEpsg <- OFPE::findUTMzone(farmername = farmername)
+      isPoly <- ifelse(any(grepl("poly", exp_files$table)),
                        "MULTIPOLYGON",
                        "POINT")
-      for (i in 1:nrow(EXP_FILES)) {
-        if (!any(is.na(EXP_COL[i, "PRODUCT"]) |
-                is.na(EXP_CONV[i, "CONVERSION"]))) {
+      for (i in 1:nrow(exp_files)) {
+        if (!any(is.na(exp_col[i, "product"]) |
+                is.na(exp_conv[i, "conversion"]))) {
           invisible(
             DBI::dbSendQuery(
-              DB,
-              paste0("UPDATE ", FARMERNAME, "_r.temp temp
-                      SET exp = exp * ", EXP_CONV[i, "CONVERSION"], "
-                      WHERE orig_file = '", EXP_CONV[i, "orig_file"], "'")
+              db,
+              paste0("UPDATE ", farmername, "_r.temp temp
+                      SET exp = exp * ", exp_conv[i, "conversion"], "
+                      WHERE orig_file = '", exp_conv[i, "orig_file"], "'")
             )
           )
         }
       }
-      newcol <- ifelse(CY, EXPVAR, paste0("prev_", EXPVAR))
+      newcol <- ifelse(CY, expvar, paste0("prev_", expvar))
       if (grepl("POLY", isPoly)) {
         ## if polygon
         invisible(
           DBI::dbSendQuery(
-            DB,
-            paste0("ALTER TABLE ", FARMERNAME, "_a.temp
+            db,
+            paste0("ALTER TABLE ", farmername, "_a.temp
                     ADD COLUMN ", newcol, " REAL;
-                    ALTER TABLE ", FARMERNAME, "_r.temp
+                    ALTER TABLE ", farmername, "_r.temp
                     ALTER COLUMN geometry TYPE geometry(",
                                as.character(isPoly),
                                ", ", utmEpsg, ")
                     USING ST_Transform(geometry, ", utmEpsg, ");
-                    UPDATE ", FARMERNAME, "_a.temp aggtemp
+                    UPDATE ", farmername, "_a.temp aggtemp
                     SET ", newcol, " = temp.exp
-                    FROM ", FARMERNAME, "_r.temp temp
+                    FROM ", farmername, "_r.temp temp
                     WHERE ST_Within(aggtemp.geometry, temp.geometry);")
           )
         )
@@ -1285,13 +1308,13 @@ AggDat <- R6::R6Class(
         # Get the cell_id for each point in the temporary table
         invisible(
           DBI::dbSendQuery(
-            DB,
-            paste0("ALTER TABLE ", FARMERNAME, "_r.temp
+            db,
+            paste0("ALTER TABLE ", farmername, "_r.temp
                     ADD COLUMN cell_id VARCHAR;
-                    ALTER TABLE ", FARMERNAME, "_r.temp
+                    ALTER TABLE ", farmername, "_r.temp
                     ALTER COLUMN geometry TYPE geometry(POINT, ", utmEpsg, ")
                     USING ST_Transform(geometry, ", utmEpsg, ");
-                    UPDATE ", FARMERNAME, "_r.temp temp
+                    UPDATE ", farmername, "_r.temp temp
                     SET cell_id = gridtemp.cell_id
                     FROM all_farms.gridtemp
                     WHERE ST_Within(temp.geometry, gridtemp.geom);")
@@ -1299,64 +1322,64 @@ AggDat <- R6::R6Class(
         )
 
         # Get the mean and 1SD of the experimental variable for all cell_ids and remove rows with outliers
-        meansNsd <- DBI::dbGetQuery(
-          DB,
+        means_sd <- DBI::dbGetQuery(
+          db,
           paste0("SELECT AVG(exp) mean_exp, STDDEV(exp) sd_exp, cell_id
-                  FROM ", FARMERNAME, "_r.temp
+                  FROM ", farmername, "_r.temp
                   GROUP BY temp.cell_id;")
         )
-        meansNsd$sd_exp[is.na(meansNsd$sd_exp)|
-                          meansNsd$sd_exp == 0] <- 10
-        meansNsd$max_exp <- meansNsd$mean_exp + meansNsd$sd_exp
-        meansNsd$min_exp <- ifelse((meansNsd$mean_exp - meansNsd$sd_exp) < 0,
+        means_sd$sd_exp[is.na(means_sd$sd_exp)|
+                          means_sd$sd_exp == 0] <- 10
+        means_sd$max_exp <- means_sd$mean_exp + means_sd$sd_exp
+        means_sd$min_exp <- ifelse((means_sd$mean_exp - means_sd$sd_exp) < 0,
                                    0,
-                                   (meansNsd$mean_exp - meansNsd$sd_exp))
+                                   (means_sd$mean_exp - means_sd$sd_exp))
         invisible(
           DBI::dbWriteTable(
-            DB,
-            c(paste0(FARMERNAME, "_r"), "means"),
-            meansNsd,
+            db,
+            c(paste0(farmername, "_r"), "means"),
+            means_sd,
             row.names = FALSE)
         )
         invisible(
           DBI::dbSendQuery(
-            DB,
-            paste0("ALTER TABLE ", FARMERNAME, "_r.temp
+            db,
+            paste0("ALTER TABLE ", farmername, "_r.temp
                     ADD COLUMN max_exp REAL,
                     ADD COLUMN min_exp REAL;")
           )
         )
         invisible(
           DBI::dbSendQuery(
-            DB,
-            paste0("UPDATE ", FARMERNAME, "_r.temp temp
+            db,
+            paste0("UPDATE ", farmername, "_r.temp temp
                     SET max_exp = means.max_exp
-                    FROM ", FARMERNAME, "_r.means means
+                    FROM ", farmername, "_r.means means
                     WHERE temp.cell_id = means.cell_id;
-                    UPDATE ", FARMERNAME, "_r.temp temp
+                    UPDATE ", farmername, "_r.temp temp
                     SET min_exp = means.min_exp
-                    FROM ", FARMERNAME, "_r.means means
+                    FROM ", farmername, "_r.means means
                     WHERE temp.cell_id = means.cell_id;")
           )
         )
         invisible(
           DBI::dbSendQuery(
-            DB,
-            paste0("DELETE FROM ", FARMERNAME, "_r.temp
+            db,
+            paste0("DELETE FROM ", farmername, "_r.temp
                     WHERE exp >= max_exp
                     OR exp <= min_exp;")
           )
         )
         invisible(
-          DBI::dbSendQuery(DB, paste0("DROP TABLE ", FARMERNAME, "_r.means"))
+          DBI::dbSendQuery(db, paste0("DROP TABLE ", farmername, "_r.means"))
         )
         if (GRID == "grid") {
           # if gridded option get average from cell id
           # Add the mean experimental var to the aggregated table by cell_id
           invisible(
             DBI::dbSendQuery(
-              DB,
-              paste0("ALTER TABLE ", FARMERNAME, "_a.temp
+              db,
+              paste0("ALTER TABLE ", farmername, "_a.temp
                       ADD COLUMN ", newcol, " REAL;
 
                       WITH vtemp AS (
@@ -1366,12 +1389,12 @@ AggDat <- R6::R6Class(
                           AVG (b.exp),
                           '99999999999999999D99'
                         ) AS exp
-                      FROM ", FARMERNAME, "_r.temp b
-                      INNER JOIN ", FARMERNAME, "_a.temp a ON a.cell_id = b.cell_id
+                      FROM ", farmername, "_r.temp b
+                      INNER JOIN ", farmername, "_a.temp a ON a.cell_id = b.cell_id
                       GROUP BY  b.cell_id
                       )
 
-                      UPDATE ", FARMERNAME, "_a.temp aggtemp
+                      UPDATE ", farmername, "_a.temp aggtemp
                       SET ", newcol, " = CAST ( vtemp.exp AS REAL )
                       FROM vtemp
                       WHERE aggtemp.cell_id = vtemp.cell_id;")
@@ -1381,8 +1404,8 @@ AggDat <- R6::R6Class(
           # if obs get nearest
           invisible(
             DBI::dbSendQuery(
-              DB,
-              paste0("ALTER TABLE ", FARMERNAME, "_a.temp
+              db,
+              paste0("ALTER TABLE ", farmername, "_a.temp
                       ADD COLUMN ", newcol, " REAL;
 
                       WITH vtemp AS (
@@ -1391,17 +1414,17 @@ AggDat <- R6::R6Class(
                         a.x,
                         a.y,
                         a.geometry
-                        FROM ", FARMERNAME, "_a.temp a
+                        FROM ", farmername, "_a.temp a
                         JOIN LATERAL (
                           SELECT exp
-                          FROM ", FARMERNAME, "_r.temp temp
+                          FROM ", farmername, "_r.temp temp
                           ORDER BY a.geometry <-> temp.geometry
                           LIMIT 1
                         ) AS b
                         ON true
                       )
 
-                      UPDATE ", FARMERNAME, "_a.temp a
+                      UPDATE ", farmername, "_a.temp a
                       SET ", newcol, " = vtemp.exp
                       FROM vtemp
                       WHERE vtemp.cell_id = a.cell_id
@@ -1412,10 +1435,10 @@ AggDat <- R6::R6Class(
         }
       }
       invisible(
-        DBI::dbSendQuery(DB, paste0("DROP TABLE ", FARMERNAME, "_r.temp"))
+        DBI::dbSendQuery(db, paste0("DROP TABLE ", farmername, "_r.temp"))
       )
       invisible(
-        DBI::dbSendQuery(DB, paste0("VACUUM ANALYZE ", FARMERNAME, "_a.temp"))
+        DBI::dbSendQuery(db, paste0("VACUUM ANALYZE ", farmername, "_a.temp"))
       )
     },
     #' @description
@@ -1424,14 +1447,17 @@ AggDat <- R6::R6Class(
     #' the field boundary for faster processing. If experimental rates are
     #' null convert to zero because the sprayer does not record rather than
     #' recording zeroes. The dot indicates that this function would be private
-    #' if not for documentations sake.
+    #' if not for documentations sake. Put the aggregated data into long lat
+    #' for raster extraction. Clip the aggregated dataset to the field boundary
+    #' for faster processing. If experimental rates are null convert to zero
+    #' because the sprayer does not record rather than recording zeroes.
     #' @param None No arguments needed because of class instantiation.
     #' @return None.
     .clipAggDat = function() {
       epsg <- sf::st_read(self$aggInputs$dbCon$db,
                           query = paste0(
                             "SELECT *
-                            FROM ", self$aggInputs$FARMERNAME, "_a.temp"
+                            FROM ", self$aggInputs$farmername, "_a.temp"
                           ))  %>%
         sf::st_crs()
       utmEpsg <- stringr::str_sub(epsg$input, 6, nchar(epsg$input))
@@ -1440,11 +1466,11 @@ AggDat <- R6::R6Class(
       invisible(
         DBI::dbSendQuery(
           self$aggInputs$dbCon$db,
-          paste0("ALTER TABLE ", self$aggInputs$FARMERNAME, "_a.temp
+          paste0("ALTER TABLE ", self$aggInputs$farmername, "_a.temp
                  ALTER COLUMN geometry
                  TYPE geometry(POINT, ", utmEpsg, ")
                  USING ST_Force2D(geometry);
-                 ALTER TABLE ", self$aggInputs$FARMERNAME, "_a.temp
+                 ALTER TABLE ", self$aggInputs$farmername, "_a.temp
                  ALTER COLUMN geometry TYPE geometry(POINT, 4326)
                  USING ST_Transform(geometry, 4326);")
         )
@@ -1452,18 +1478,18 @@ AggDat <- R6::R6Class(
       invisible(
         DBI::dbSendQuery(
           self$aggInputs$dbCon$db,
-          paste0("ALTER TABLE ", self$aggInputs$FARMERNAME, "_a.temp
+          paste0("ALTER TABLE ", self$aggInputs$farmername, "_a.temp
                  ADD COLUMN id SERIAL;
-                 DELETE FROM ", self$aggInputs$FARMERNAME, "_a.temp AS temp
+                 DELETE FROM ", self$aggInputs$farmername, "_a.temp AS temp
                  WHERE temp.id IN (
                  SELECT a.id
-                 FROM ", self$aggInputs$FARMERNAME, "_a.temp a, (
+                 FROM ", self$aggInputs$farmername, "_a.temp a, (
                  SELECT ST_Union(geometry) As geometry
                  FROM all_farms.temp
                  ) b
                  WHERE NOT ST_Within(a.geometry, b.geometry)
                  );
-                 ALTER TABLE ", self$aggInputs$FARMERNAME, "_a.temp
+                 ALTER TABLE ", self$aggInputs$farmername, "_a.temp
                  DROP COLUMN id;")
           )
         )
@@ -1475,7 +1501,7 @@ AggDat <- R6::R6Class(
     #' @param None No arguments needed because of class instantiation.
     #' @return None.
     .aggSSURGO = function() {
-      if (!length(self$FARMIDX) == 0) {
+      if (!length(self$farmidx) == 0) {
         ssurgoExist <- as.logical(
           DBI::dbGetQuery(
             self$aggInputs$dbCon$db,
@@ -1492,7 +1518,7 @@ AggDat <- R6::R6Class(
               self$aggInputs$dbCon$db,
               paste0("SELECT DISTINCT orig_file
                     FROM all_farms.ssurgo
-                    WHERE farmidx = '", self$FARMIDX, "'")
+                    WHERE farmidx = '", self$farmidx, "'")
             )
           )
           if (length(fileExist) != 0) { # if a file exists
@@ -1502,13 +1528,13 @@ AggDat <- R6::R6Class(
                 paste0("CREATE TABLE all_farms.ssurgo_temp AS
                       SELECT *
                       FROM all_farms.ssurgo
-                      WHERE farmidx = '", self$FARMIDX, "'")
+                      WHERE farmidx = '", self$farmidx, "'")
               )
             )
             invisible(
               DBI::dbSendQuery(
                 self$aggInputs$dbCon$db,
-                paste0("UPDATE ", self$aggInputs$FARMERNAME, "_a.temp aggtemp
+                paste0("UPDATE ", self$aggInputs$farmername, "_a.temp aggtemp
                       SET musym = ssurgo_temp.musym
                       FROM all_farms.ssurgo_temp ssurgo_temp
                       WHERE ST_Within(aggtemp.geometry, ssurgo_temp.geometry);")
@@ -1527,22 +1553,25 @@ AggDat <- R6::R6Class(
     #' @description
     #' Save the temporary aggregated table to the appropriate table in
     #' the OFPE database. Puts the data in the correct farmer's aggregated
-    #' schema in the table corresponding to the response variable (RESPVAR).
-    #' The dot indicates that this function would be private if not for
-    #' documentations sake.
+    #' schema in the table corresponding to the response variable (respvar).
+    #' If using a field boundary from the database and the user selected to
+    #' save the data to the database, the aggregated file is added to the
+    #' aggregated schema for the variable type (yld, pro, sat). Sat = data
+    #' aggregated without response or explanatory variables. This includes
+    #' only data collected from remote sensing sources or SSURGO, and are
+    #' aggregated to the center points of the gridcells. The dot indicates
+    #' that this function would be private if not for documentations sake.
     #' @param None No arguments needed because of class instantiation.
     #' @return Aggregated data in the OFPE database.
     .saveAggDat = function() {
-      browser()
-
       aggExist <- as.logical(
         DBI::dbGetQuery(
           self$aggInputs$dbCon$db,
           paste0("SELECT EXISTS (
                   SELECT 1
                   FROM   information_schema.tables
-                  WHERE  table_schema = '", self$aggInputs$FARMERNAME, "_a'
-                  AND    table_name = '", self$aggInputs$RESPVAR, "')")
+                  WHERE  table_schema = '", self$aggInputs$farmername, "_a'
+                  AND    table_name = '", self$aggInputs$respvar, "')")
         )
       )
       if (!aggExist) {
@@ -1550,36 +1579,36 @@ AggDat <- R6::R6Class(
         invisible(
           DBI::dbSendQuery(
             self$aggInputs$dbCon$db,
-            paste0("CREATE TABLE ", self$aggInputs$FARMERNAME, "_a.", self$aggInputs$RESPVAR, " AS
-                    SELECT * FROM ", self$aggInputs$FARMERNAME, "_a.temp;")
+            paste0("CREATE TABLE ", self$aggInputs$farmername, "_a.", self$aggInputs$respvar, " AS
+                    SELECT * FROM ", self$aggInputs$farmername, "_a.temp;")
           )
         )
       } else {
         ## get column names of agg table
-        dbCols <- sf::st_read(
+        db_cols <- sf::st_read(
           self$aggInputs$dbCon$db,
           query = paste0("SELECT *
-                          FROM ", self$aggInputs$FARMERNAME, "_a.", self$aggInputs$RESPVAR, "
+                          FROM ", self$aggInputs$farmername, "_a.", self$aggInputs$respvar, "
                           LIMIT 1"),
           geometry_column = "geometry") %>%
           as.data.frame()
-        dbCols$geometry <- NULL
-        dbCols <- paste(c("geometry" ,names(dbCols)), collapse=", ")
+        db_cols$geometry <- NULL
+        db_cols <- paste(c("geometry" ,names(db_cols)), collapse=", ")
 
         ## else append to it
         invisible(
           DBI::dbSendQuery(
             self$aggInputs$dbCon$db,
-            paste0("DELETE FROM ", self$aggInputs$FARMERNAME, "_a.", self$aggInputs$RESPVAR, "
-                    WHERE field = '", self$aggInputs$FIELDNAME, "'
-                    AND size = ", ifelse(is.null(self$aggInputs$SIZE), 10, self$aggInputs$SIZE), "
+            paste0("DELETE FROM ", self$aggInputs$farmername, "_a.", self$aggInputs$respvar, "
+                    WHERE field = '", self$aggInputs$fieldname, "'
+                    AND size = ", ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size), "
                     AND grid = '", self$aggInputs$GRID, "'
-                    AND year = '", self$aggInputs$CY_RESP, "'
-                    AND datused = '", self$aggInputs$DAT_USED, "';
+                    AND year = '", self$aggInputs$cy_resp, "'
+                    AND datused = '", self$aggInputs$dat_used, "';
 
-                    INSERT INTO ", self$aggInputs$FARMERNAME, "_a.", self$aggInputs$RESPVAR, "
-                    SELECT ", paste(names(dbCols), collapse=", "), "
-                    FROM ", self$aggInputs$FARMERNAME, "_a.temp;")
+                    INSERT INTO ", self$aggInputs$farmername, "_a.", self$aggInputs$respvar, "
+                    SELECT ", db_cols, "
+                    FROM ", self$aggInputs$farmername, "_a.temp;")
           )
         )
       }
@@ -1587,7 +1616,7 @@ AggDat <- R6::R6Class(
         DBI::dbSendQuery(
           self$aggInputs$dbCon$db,
           paste0("VACUUM ANALYZE ",
-                 self$aggInputs$FARMERNAME, "_a.", self$aggInputs$RESPVAR, ";")
+                 self$aggInputs$farmername, "_a.", self$aggInputs$respvar, ";")
         )
       )
     },
@@ -1599,42 +1628,42 @@ AggDat <- R6::R6Class(
     #' @return Exported data from the OFPE database.
     .exportAggDat = function() {
       stopifnot(
-        !is.null(self$aggInputs$exportName)
+        !is.null(self$aggInputs$export_name)
       )
       ## drop column geometry from aggregated table
       invisible(
         DBI::dbSendQuery(
           self$aggInputs$dbCon$db,
           paste0("ALTER TABLE ",
-                 self$aggInputs$FARMERNAME, "_a.temp
+                 self$aggInputs$farmername, "_a.temp
                  DROP COLUMN geometry;")
         )
       )
       dat <- sf::st_read(
         self$aggInputs$dbCon$db,
-        query = paste0("SELECT * FROM ", self$aggInputs$FARMERNAME, "_a.temp")) %>%
+        query = paste0("SELECT * FROM ", self$aggInputs$farmername, "_a.temp")) %>%
         as.data.frame() %<%
-        sf::st_write(paste0(self$inputs$exportName))
+        sf::st_write(paste0(self$inputs$export_name))
     }
   ),
 
   private = list(
     .idFarm = function() {
-      self$FARMIDX <- as.character(
+      self$farmidx <- as.character(
         DBI::dbGetQuery(
           self$aggInputs$dbCon$db,
           paste0("SELECT DISTINCT farmidx
                  FROM  all_farms.farms farms
-                 JOIN ", self$aggInputs$FARMERNAME, "_a.temp temp
+                 JOIN ", self$aggInputs$farmername, "_a.temp temp
                  ON ST_Within(temp.geometry, farms.geom);")
         )
       )
-      self$FARMERIDX <- as.character(
+      self$farmeridx <- as.character(
         DBI::dbGetQuery(
           self$aggInputs$dbCon$db,
           paste0("SELECT DISTINCT farmeridx
                  FROM  all_farms.farms farms
-                 WHERE farms.farmidx = '", self$FARMIDX, "';")
+                 WHERE farms.farmidx = '", self$farmidx, "';")
         )
       )
     }

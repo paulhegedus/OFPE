@@ -7,12 +7,12 @@
 https://apollomapping.com/blog/gtm-finding-a-utm-zone-number-easily
 }
 \usage{
-findUTMzone(FILE = NULL, FARMERNAME = NULL)
+findUTMzone(FILE = NULL, farmername = NULL)
 }
 \arguments{
 \item{FILE}{Spatial shapefile for determining UTM zone.}
 
-\item{FARMERNAME}{Name of the OFPE farmer, for hardcoded cases (i.e. Loewen).}
+\item{farmername}{Name of the OFPE farmer, for hardcoded cases (i.e. Loewen).}
 }
 \value{
 WGS84 UTM code (i.e. 32612, 32614).
@@ -23,7 +23,7 @@ returns a UTM code for WGS84 (i.e. 32612, 32614). Any of the three
 arguments can be used to identify the UTM zone. When a shapefile is
 passed in with the 'FILE' argument, the spatial data is used to determine
 the UTM zone mathematically, same if the 'bounds' argument is used. If only
-the 'FARMERNAME' is passed in, the UTM zone returned will be for Montana,
+the 'farmername' is passed in, the UTM zone returned will be for Montana,
 unless the farmer's name is "loewen", in which case the UTM zone is for Manitoba.
 
 NEEDS UPDATING. This function needs to be updated to use the

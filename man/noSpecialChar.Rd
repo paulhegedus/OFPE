@@ -4,12 +4,12 @@
 \alias{noSpecialChar}
 \title{Remove special characters from strings}
 \usage{
-noSpecialChar(STRNG, FILES)
+noSpecialChar(strng, files)
 }
 \arguments{
-\item{STRNG}{Character string for cleaning.}
+\item{strng}{Character string for cleaning.}
 
-\item{FILES}{Logical, are the strings filenames? If TRUE, "." not removed,
+\item{files}{Logical, are the strings filenames? If TRUE, "." not removed,
 if FALSE, "." removed.}
 }
 \value{

@@ -99,13 +99,13 @@ Uploads data to an OFPE formatted database following a chain of mehtods
 and returning the status of the upload. The dot indicates that this
 function would be private if not for documentations sake.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ImportOF$.uploadData(NAME)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ImportOF$.uploadData(name)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{NAME}}{Name of the data file to upload to the database.}
+\item{\code{name}}{Name of the data file to upload to the database.}
 }
 \if{html}{\out{</div>}}
 }
@@ -122,13 +122,13 @@ imported directly using 'sf' package, otherwise brings in data as .csv.
 The dot indicates that this function would be private if not for
 documentations sake.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ImportOF$.impDat(NAME)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ImportOF$.impDat(name)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{NAME}}{Name of the data file to upload to the database.}
+\item{\code{name}}{Name of the data file to upload to the database.}
 }
 \if{html}{\out{</div>}}
 }
@@ -145,7 +145,7 @@ applies to non-shapefiles, as they are already spatial. This is for the
 .csv protein or SSURGO data that is imported. The dot indicates that this
 function would be private if not for documentations sake.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ImportOF$.makeSptl(FILE, NAME)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ImportOF$.makeSptl(FILE, name)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -153,7 +153,7 @@ function would be private if not for documentations sake.
 \describe{
 \item{\code{FILE}}{The imported data from the .impDat method.}
 
-\item{\code{NAME}}{The filename for the data imported from the .impDat method.}
+\item{\code{name}}{The filename for the data imported from the .impDat method.}
 }
 \if{html}{\out{</div>}}
 }
@@ -193,7 +193,7 @@ present, the corresponding farmer, and the year the data is collected.
 The dot indicates that this would be private if not for documentations
 sake.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ImportOF$.findInfo(FILE, NAME)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ImportOF$.findInfo(FILE, name)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -201,7 +201,7 @@ sake.
 \describe{
 \item{\code{FILE}}{The imported data for upload.}
 
-\item{\code{NAME}}{The name of the file for upload.}
+\item{\code{name}}{The name of the file for upload.}
 }
 \if{html}{\out{</div>}}
 }
@@ -240,7 +240,7 @@ database. This function identifies the data type and uses the information
 identified in the data to organize and upload the data. The dot
 indicates that this would be private if not for documentations sake.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ImportOF$.uploadFun(FILE, NAME, db)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ImportOF$.uploadFun(FILE, name, db)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -248,7 +248,7 @@ indicates that this would be private if not for documentations sake.
 \describe{
 \item{\code{FILE}}{The imported data for upload.}
 
-\item{\code{NAME}}{The name of the file for upload.}
+\item{\code{name}}{The name of the file for upload.}
 
 \item{\code{db}}{Connection to an OFPE database.}
 }

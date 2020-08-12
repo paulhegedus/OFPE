@@ -10,24 +10,24 @@ AggGEE <- R6::R6Class(
     #' @field aggInputs An object of the 'AggInputs' class containaing the options
     #' for aggregating data. This includes the database connection.
     aggInputs = NULL,
-    #' @field FARMIDX The ID of the farm in which the field falls within.
-    FARMIDX = NULL,
-    #' @field FARMERIDX The ID of the farmer that owns the farm that the field
+    #' @field farmidx The ID of the farm in which the field falls within.
+    farmidx = NULL,
+    #' @field farmeridx The ID of the farmer that owns the farm that the field
     #' falls within.
-    FARMERIDX = NULL,
-    #' @field PY The year prior to the selected year of interest (CY_RESP).
+    farmeridx = NULL,
+    #' @field PY The year prior to the selected year of interest (cy_resp).
     #' This differs from the previous crop year used prior.
     PY = NULL,
     #' @field PY2 The year two years prior to the selected year of interest
-    #' (CY_RESP).
+    #' (cy_resp).
     PY2 = NULL,
     #' @field labels The labels of the GEE covariates that are collected and
     #' aggregated.
     labels = NULL,
     #' @field type The type of data corresponding to each respective label.
     type = NULL,
-    #' @field source The source of data corresponding to each respective label.
-    source = NULL,
+    #' @field SOURCE The SOURCE of data corresponding to each respective label.
+    SOURCE = NULL,
     #' @field year The year of data to gather,  corresponding to each respective
     #' label.
     year = NULL,
@@ -42,20 +42,20 @@ AggGEE <- R6::R6Class(
     #' gathering and extracting GEE data.
     #' @param aggInputs An 'AggInputs' R6 class with the user's aggregation
     #' options.
-    #' @param FARMIDX The ID of the farm in which the field falls within.
-    #' @param FARMERIDX The ID of the farmer that owns the farm that the field
+    #' @param farmidx The ID of the farm in which the field falls within.
+    #' @param farmeridx The ID of the farmer that owns the farm that the field
     #' falls within.
     #' @return An initialized 'AggGEE' object.
-    initialize = function(aggInputs, FARMIDX, FARMERIDX) {
+    initialize = function(aggInputs, farmidx, farmeridx) {
       self$aggInputs <- aggInputs
-      self$FARMIDX <- FARMIDX
-      self$FARMERIDX <- FARMERIDX
+      self$farmidx <- farmidx
+      self$farmeridx <- farmeridx
 
 
       invisible(
         DBI::dbSendQuery(
           self$aggInputs$dbCon$db,
-          paste0("ALTER TABLE ", self$aggInputs$FARMERNAME, "_a.temp
+          paste0("ALTER TABLE ", self$aggInputs$farmername, "_a.temp
                   ADD COLUMN aspect_rad REAL,
                   ADD COLUMN slope REAL,
                   ADD COLUMN elev REAL,
@@ -91,12 +91,12 @@ AggGEE <- R6::R6Class(
         DBI::dbSendQuery(
           self$aggInputs$dbCon$db,
           paste0("VACUUM ANALYZE ",
-                 self$aggInputs$FARMERNAME, "_a.temp")
+                 self$aggInputs$farmername, "_a.temp")
         )
       )
 
-      self$PY <-  as.character(as.numeric(self$aggInputs$CY_RESP) - 1 )
-      self$PY2 <-  as.character(as.numeric(self$aggInputs$CY_RESP) - 2 )
+      self$PY <-  as.character(as.numeric(self$aggInputs$cy_resp) - 1 )
+      self$PY2 <-  as.character(as.numeric(self$aggInputs$cy_resp) - 2 )
       self$labels <- c("aspect_rad", "slope", "elev", "tpi",
                   "prec_cy_d", "prec_py_d", "gdd_cy_d", "gdd_py_d",
                   "prec_cy_g", "prec_py_g", "gdd_cy_g", "gdd_py_g",
@@ -109,20 +109,20 @@ AggGEE <- R6::R6Class(
                 rep(("prec"), 2), rep("gdd", 2), rep("prec", 2),
                 rep("gdd", 2), rep("ndvi", 6), rep("ndre", 3),
                 rep("cire", 3), rep("ssm", 2), rep("susm", 2))
-      self$source <- c(ifelse(self$aggInputs$FARMERNAME == "loewen", "srtm", "ned"),
-                  ifelse(self$aggInputs$FARMERNAME == "loewen", "srtm", "ned"),
-                  ifelse(self$aggInputs$FARMERNAME == "loewen", "cdem", "ned"),
-                  ifelse(self$aggInputs$FARMERNAME == "loewen", "srtm", "ned"),
+      self$SOURCE <- c(ifelse(self$aggInputs$farmername == "loewen", "srtm", "ned"),
+                  ifelse(self$aggInputs$farmername == "loewen", "srtm", "ned"),
+                  ifelse(self$aggInputs$farmername == "loewen", "cdem", "ned"),
+                  ifelse(self$aggInputs$farmername == "loewen", "srtm", "ned"),
                   rep("daymet", 4), rep("gridmet", 4), rep("S2", 3),
-                  ifelse(self$aggInputs$CY_RESP >= 2014, "L8",
-                         ifelse(self$aggInputs$CY_RESP == 2013, "L7", "L5")),
+                  ifelse(self$aggInputs$cy_resp >= 2014, "L8",
+                         ifelse(self$aggInputs$cy_resp == 2013, "L7", "L5")),
                   rep(ifelse(self$PY >= 2013, "L8",
                            ifelse(self$PY == 2012, "L7", "L5")), 2),
                   rep("S2", 6), rep("smap", 4))
-      self$year <- c(rep("2015", 4), rep(c(self$aggInputs$CY_RESP, self$PY), 4),
-                rep(c(self$aggInputs$CY_RESP, self$PY, self$PY2), 4),
-                rep(c(self$aggInputs$CY_RESP, self$PY), 2))
-      if (self$aggInputs$DAT_USED == "decision_point") {
+      self$year <- c(rep("2015", 4), rep(c(self$aggInputs$cy_resp, self$PY), 4),
+                rep(c(self$aggInputs$cy_resp, self$PY, self$PY2), 4),
+                rep(c(self$aggInputs$cy_resp, self$PY), 2))
+      if (self$aggInputs$dat_used == "decision_point") {
         self$loy <- c(rep("full", 4),
                  rep(c("mar", "full"), 4),
                  rep(c("mar", "full", "full"), 4),
@@ -133,25 +133,36 @@ AggGEE <- R6::R6Class(
     },
     #' @description
     #' Method for executing the aggregation of GEE data to the on-farm data
-    #' within the OFPE database.
+    #' within the OFPE database. First, gather the environmental variables
+    #' that do not change year to year. Gather from 2015 to make sure they
+    #' are there. Gather Daymet V3 and GRIDMET data, when possible, for
+    #' both the current and previous year. Get current and previous year
+    #' precipitation and growing degree day data. Gather vegetation index
+    #' data from the current, previous, and two years prior. Do this for
+    #' NDVI, NDRE, and CIRE indices. Additionally, when applicable, gather
+    #' Landsat 8 and Sentinel 2 data. Because Landsat does not have the
+    #' band frequencies to calculate NDRE and CIRE these are only available
+    #' when Sentinel 2 data is available. If available, gather SMAP data
+    #' from the current and previous year. Get the surface soil moisture
+    #' and subsurface soil moisture from SMAP.
     #' @param None No argumetns necessary because identified in class
     #' instantiation.
     #' @return GEE data aggregated to the temporary aggregated table
     #' in the database.
     aggregateGEE = function() {
-      if (!length(self$FARMIDX) == 0) {
+      if (!length(self$farmidx) == 0) {
         invisible(
           mapply(
             self$.getGEEdata,
             self$labels,
             self$type,
-            self$source,
+            self$SOURCE,
             self$year,
             self$loy,
-            MoreArgs = list(DB=self$aggInputs$dbCon$db,
-                            FARMIDX=self$FARMIDX,
-                            FARMERIDX=self$FARMERIDX,
-                            FARMERNAME=self$aggInputs$FARMERNAME)
+            MoreArgs = list(db=self$aggInputs$dbCon$db,
+                            farmidx=self$farmidx,
+                            farmeridx=self$farmeridx,
+                            farmername=self$aggInputs$farmername)
           )
         )
       }
@@ -160,58 +171,58 @@ AggGEE <- R6::R6Class(
     #' Method for aggregating the Google Earth Engine data to the on-farm
     #' aggregated data. Identifies the appropirate data from the 'all_farms.
     #' gee' schema and extracts the values of each raster to each point in
-    #' the field. All labels, type, source etc. are identified in the GEE
+    #' the field. All labels, type, SOURCE etc. are identified in the GEE
     #' data original filenames exported from GEE. The dot indicates that
     #' this function would be private if not for documentations sake.
-    #' @param LABEL The labels for the GEE data to aggregate.
-    #' @param TYPE The type of data to aggregate.
-    #' @param SOURCE The source of the data. (i.e. Landsat vs. Sentinel etc.).
-    #' @param YEAR The year of the data to gather.
-    #' @param LOY The length of year to get data from (i.e. 'mar' vs. 'full').
-    #' @param DB Connection to an OFPE database.
-    #' @param FARMIDX ID of the farm that the field falls within.
-    #' @param FARMERIDX ID of the farmer that owns the farm that the field
+    #' @param label The labels for the GEE data to aggregate.
+    #' @param type The type of data to aggregate.
+    #' @param SOURCE The SOURCE of the data. (i.e. Landsat vs. Sentinel etc.).
+    #' @param year The year of the data to gather.
+    #' @param loy The length of year to get data from (i.e. 'mar' vs. 'full').
+    #' @param db Connection to an OFPE database.
+    #' @param farmidx ID of the farm that the field falls within.
+    #' @param farmeridx ID of the farmer that owns the farm that the field
     #' falls within.
-    #' @param FARMERNAME Name of the farmer that owns the field for aggregation.
+    #' @param farmername Name of the farmer that owns the field for aggregation.
     #' @return Data in temporary aggregated table.
-    .getGEEdata = function(LABEL,
-                           TYPE,
+    .getGEEdata = function(label,
+                           type,
                            SOURCE,
-                           YEAR,
-                           LOY,
-                           DB,
-                           FARMIDX,
-                           FARMERIDX,
-                           FARMERNAME) {
+                           year,
+                           loy,
+                           db,
+                           farmidx,
+                           farmeridx,
+                           farmername) {
       ## check if file exists in db
-      fileExist <- as.character(
+      file_exist <- as.character(
         DBI::dbGetQuery(
-          DB,
+          db,
           paste0("SELECT DISTINCT orig_file
                   FROM all_farms.gee
-                  WHERE farmidx = '", FARMIDX, "'
-                  AND year = '", YEAR, "'
-                  AND type = '", TYPE, "'
-                  AND source = '", SOURCE, "'
-                  AND loy = '", LOY, "'
-                  AND farmeridx = '", FARMERIDX, "';")
+                  WHERE farmidx = '", farmidx, "'
+                  AND year = '", year, "'
+                  AND type = '", type, "'
+                  AND SOURCE = '", SOURCE, "'
+                  AND loy = '", loy, "'
+                  AND farmeridx = '", farmeridx, "';")
         )
       )
-      if (length(fileExist) != 0) { # if a file exists
+      if (length(file_exist) != 0) { # if a file exists
         # make temporary table
         invisible(
           DBI::dbSendQuery(
-            DB,
+            db,
             paste0("CREATE TABLE all_farms.geetemp AS
                     SELECT *
                     FROM all_farms.gee
-                    WHERE orig_file = '", fileExist, "'")
+                    WHERE orig_file = '", file_exist, "'")
           )
         )
         # clip raster
         invisible(
           DBI::dbSendQuery(
-            DB,
+            db,
             paste0("ALTER TABLE all_farms.geetemp
                     ADD COLUMN id SERIAL;
 
@@ -231,7 +242,7 @@ AggGEE <- R6::R6Class(
         ## below only works if not multipolygon
         #invisible(
         #  dbSendQuery(
-        #    DB,
+        #    db,
         #    paste0( "WITH temp AS(
         #    SELECT *
         #    FROM all_farms.temp temp)
@@ -244,16 +255,16 @@ AggGEE <- R6::R6Class(
         # extract values
         invisible(
           DBI::dbSendQuery(
-            DB,
-            paste0("WITH temp AS (SELECT * FROM ", FARMERNAME, "_a.temp)
-                    UPDATE ", FARMERNAME, "_a.temp
-                    SET ", LABEL, " = ST_Value(geetemp.rast, temp.geometry)
+            db,
+            paste0("WITH temp AS (SELECT * FROM ", farmername, "_a.temp)
+                    UPDATE ", farmername, "_a.temp
+                    SET ", label, " = ST_Value(geetemp.rast, temp.geometry)
                     FROM all_farms.geetemp
                     WHERE ST_Intersects(geetemp.rast, temp.geometry);")
           )
         )
         invisible(
-          DBI::dbSendQuery(DB, paste0("DROP TABLE all_farms.geetemp;"))
+          DBI::dbSendQuery(db, paste0("DROP TABLE all_farms.geetemp;"))
         )
       }
     }

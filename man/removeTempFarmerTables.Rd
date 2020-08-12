@@ -4,12 +4,12 @@
 \alias{removeTempFarmerTables}
 \title{Remove temporary tables from a farmer's schemas}
 \usage{
-removeTempFarmerTables(DB, FARMERNAME)
+removeTempFarmerTables(db, farmername)
 }
 \arguments{
-\item{DB}{Connection to an OFPE formatted database,}
+\item{db}{Connection to an OFPE formatted database,}
 
-\item{FARMERNAME}{Name of the farmer corresponding to the schemas to search
+\item{farmername}{Name of the farmer corresponding to the schemas to search
 in for removal of temporary tables.}
 }
 \value{

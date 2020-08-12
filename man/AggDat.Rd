@@ -24,7 +24,7 @@ whole field, data are removed when exceeding 4SD from the mean, and within
 each 10m grid cell, data are removed when exceeding 1SD from the cell mean.
 This occurs regardless of whether 'Grid' or 'Observed' is selected. Then,
 data from remotely sensed sources are gathered. The data selected is dependent
-on the 'DAT_USED' variable, which indicates whether to use data from Jan 1 to
+on the 'dat_used' variable, which indicates whether to use data from Jan 1 to
 Mar 30 for the year of interest or to use data from Jan 1 to Dec 31. This is
 discussed more in the 'AggInputs' class documentation. Finally, after all on-farm
 and remotely sensed data has been combined into one dataset, this is saved to the
@@ -36,9 +36,9 @@ database in the farmer's aggregated ('_a') schema.
 \item{\code{aggInputs}}{An object of the 'AggInputs' class containaing the options
 for aggregating data. This includes the database connection}
 
-\item{\code{FARMIDX}}{The ID of the farm in which the field falls within.}
+\item{\code{farmidx}}{The ID of the farm in which the field falls within.}
 
-\item{\code{FARMERIDX}}{The ID of the farmer that owns the farm that the field
+\item{\code{farmeridx}}{The ID of the farmer that owns the farm that the field
 falls within.}
 }
 \if{html}{\out{</div>}}
@@ -113,26 +113,40 @@ Aggregated data in the 'farmername_a' schema
 \if{html}{\out{<a id="method-.make10mGrid"></a>}}
 \if{latex}{\out{\hypertarget{method-.make10mGrid}{}}}
 \subsection{Method \code{.make10mGrid()}}{
-Makes a grid across a field of a specified size. The dot indicates that
-this function would be private
-if not for documentations sake.
+Makes a grid across a field of a specified size. If the grid
+option was selected observations will be aggregated onto
+the centroids of 10m grid cells generated from the bounding box of
+the field boundary. If the field boundary is from the database, the
+centroid locations will be consistent for aggregted data across years.
+If the user imported a field boundary, these points may not be consistent
+across years unless the user uses the same field boundary each year.
+Again, it is strongly encouraged that the user updates the database with
+the field boundary they have imported, to assure the centroid location
+remains constant year to year. To create the aggregation table, a 10m grid
+is applied to the field using the bounding box of the field boundary. The
+locations of the center of the grid cells are extracted, as well as the
+grid ID. These create the basis of the aggregation table. If the observed
+option was selected, a grid is still made to identify the grid cells,
+however data is not aggregated to the grid cell centroid locations. The
+dot indicates that this function would be private if not for
+documentations sake.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AggDat$.make10mGrid(DB, BBOXIMPORT, FIELDNAME, SIZE = 10, FARMERNAME)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{AggDat$.make10mGrid(db, boundary_import, fieldname, size = 10, farmername)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{DB}}{Connection to an OFPE formatted database.}
+\item{\code{db}}{Connection to an OFPE formatted database.}
 
-\item{\code{BBOXIMPORT}}{Whether the user uploaded their own field boundary
+\item{\code{boundary_import}}{Whether the user uploaded their own field boundary
 or are using a boundary stored in the database.}
 
-\item{\code{FIELDNAME}}{Name of the field for aggregation.}
+\item{\code{fieldname}}{Name of the field for aggregation.}
 
-\item{\code{SIZE}}{Size of grid to make (meters), default = 10.}
+\item{\code{size}}{Size of grid to make (meters), default = 10.}
 
-\item{\code{FARMERNAME}}{Name of farmer that owns the field.}
+\item{\code{farmername}}{Name of farmer that owns the field.}
 }
 \if{html}{\out{</div>}}
 }
@@ -146,19 +160,26 @@ None.
 \subsection{Method \code{.createAggTable()}}{
 Creates a temporary aggregated table in the database for processing.
 The dot indicates that this function would be private if not for
-documentations sake.
+documentations sake. Create the initial aggregated table based on the
+option, either grid or observed locations. If the grid option is
+selected, create the initial aggregated table with the centroid
+locations and grid cell identifier. Fill in informational variables
+for the farmer and field name, the year data is aggregated for,
+and the previous harvest year, as well as whether it is a grid or
+observed values (grid vs obs). Finally, upload to database for
+aggregation.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AggDat$.createAggTable(DB, FARMERNAME, FIELDNAME, CY, PY, GRID, DAT_USED, SIZE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{AggDat$.createAggTable(db, farmername, fieldname, CY, PY, GRID, dat_used, size)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{DB}}{Connection to an OFPE formatted database.}
+\item{\code{db}}{Connection to an OFPE formatted database.}
 
-\item{\code{FARMERNAME}}{Name of farmer that owns the field.}
+\item{\code{farmername}}{Name of farmer that owns the field.}
 
-\item{\code{FIELDNAME}}{Name of the field for aggregation.}
+\item{\code{fieldname}}{Name of the field for aggregation.}
 
 \item{\code{CY}}{The year of interest for aggregation (aka 'current year').}
 
@@ -167,9 +188,9 @@ documentations sake.
 \item{\code{GRID}}{Whether to aggregate data to the centroids of a grid or use
 the raw observed data locations.}
 
-\item{\code{DAT_USED}}{The length of year to gather data over for the CY.}
+\item{\code{dat_used}}{The length of year to gather data over for the CY.}
 
-\item{\code{SIZE}}{Size of grid to make (meters), default = 10.}
+\item{\code{size}}{Size of grid to make (meters), default = 10.}
 }
 \if{html}{\out{</div>}}
 }
@@ -190,37 +211,37 @@ table in the farmer's aggregated schema. The dot indicates that this
 function would be private if not for documentations sake.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AggDat$.cleanRespData(
-  RESPVAR,
-  DB,
-  RESP_FILES,
-  BBOXIMPORT,
-  RESP_COL,
-  YEAR,
-  FIELDNAME,
-  FARMERNAME
+  respvar,
+  db,
+  resp_files,
+  boundary_import,
+  resp_col,
+  year,
+  fieldname,
+  farmername
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{RESPVAR}}{The response variable to aggregate.}
+\item{\code{respvar}}{The response variable to aggregate.}
 
-\item{\code{DB}}{Connection to an OFPE database.}
+\item{\code{db}}{Connection to an OFPE database.}
 
-\item{\code{RESP_FILES}}{Files used for aggregation.}
+\item{\code{resp_files}}{Files used for aggregation.}
 
-\item{\code{BBOXIMPORT}}{Whether the user imported thier own field boundary or
+\item{\code{boundary_import}}{Whether the user imported thier own field boundary or
 using a predefined experimental field in the database.}
 
-\item{\code{RESP_COL}}{The column in the response variable data that corresponds
+\item{\code{resp_col}}{The column in the response variable data that corresponds
 to the measured response.}
 
-\item{\code{YEAR}}{The year of the data being aggregated.}
+\item{\code{year}}{The year of the data being aggregated.}
 
-\item{\code{FIELDNAME}}{Name of the field for aggregation.}
+\item{\code{fieldname}}{Name of the field for aggregation.}
 
-\item{\code{FARMERNAME}}{Name of the farmer that owns the field for aggregation.}
+\item{\code{farmername}}{Name of the farmer that owns the field for aggregation.}
 }
 \if{html}{\out{</div>}}
 }
@@ -242,40 +263,42 @@ in each grid cell are omitted. The dot indicates that this function would be
 private if not for documentations sake.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AggDat$.aggRespData(
-  DB,
-  FARMERNAME,
-  RESPVAR,
-  FIELDNAME,
+  db,
+  farmername,
+  respvar,
+  fieldname,
   GRID,
   CY = NULL,
   PY = NULL,
-  DAT_USED,
-  SIZE
+  dat_used,
+  size
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{DB}}{Connection to an OFPE database.}
+\item{\code{db}}{Connection to an OFPE database.}
 
-\item{\code{FARMERNAME}}{Name of the farmer that owns the field for aggregation.}
+\item{\code{farmername}}{Name of the farmer that owns the field for aggregation.}
 
-\item{\code{RESPVAR}}{The response variable to aggregate.}
+\item{\code{respvar}}{The response variable to aggregate.}
 
-\item{\code{FIELDNAME}}{Name of the field for aggregation.}
+\item{\code{fieldname}}{Name of the field for aggregation.}
 
 \item{\code{GRID}}{Whether to aggregate data to the centroids of a grid or use
 the raw observed data locations.}
 
-\item{\code{CY}}{The year of interest for aggregation (aka the 'current year').}
+\item{\code{CY}}{The year of interest for aggregation (aka the 'current year').
+NOTE: that when aggregating "PY" data, leave NULL.}
 
 \item{\code{PY}}{The year prior to the year of interest that a crop was harvested
-in the field.}
+in the field. NOTE: that when aggregating "PY" data, leave NULL
+(Counterintuitive... I know).}
 
-\item{\code{DAT_USED}}{The length of year to gather data over for the CY.}
+\item{\code{dat_used}}{The length of year to gather data over for the CY.}
 
-\item{\code{SIZE}}{Size of grid to make (meters), default = 10.}
+\item{\code{size}}{Size of grid to make (meters), default = 10.}
 }
 \if{html}{\out{</div>}}
 }
@@ -298,22 +321,22 @@ required for the experimental data and because experimental data may
 include polygon data. The dot indicates that this function would be
 private if not for documentations sake.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AggDat$.cleanExpData(EXP_FILES, DB, EXP_COL, FARMERNAME, YEAR)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{AggDat$.cleanExpData(exp_files, db, exp_col, farmername, year)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{EXP_FILES}}{The experimental variable files for aggregating.}
+\item{\code{exp_files}}{The experimental variable files for aggregating.}
 
-\item{\code{DB}}{Connection to an OFPE database.}
+\item{\code{db}}{Connection to an OFPE database.}
 
-\item{\code{EXP_COL}}{The column in the experimental variable data that corresponds
+\item{\code{exp_col}}{The column in the experimental variable data that corresponds
 to the measured experimental variable.}
 
-\item{\code{FARMERNAME}}{Name of the farmer that owns the field for aggregation.}
+\item{\code{farmername}}{Name of the farmer that owns the field for aggregation.}
 
-\item{\code{YEAR}}{The year of the data being aggregated.}
+\item{\code{year}}{The year of the data being aggregated.}
 }
 \if{html}{\out{</div>}}
 }
@@ -334,34 +357,34 @@ of the mean in each grid cell are omitted. The dot indicates that this function
 would be private if not for documentations sake.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AggDat$.aggExpData(
-  EXP_FILES,
-  DB,
-  EXP_COL,
-  EXP_CONV,
-  FARMERNAME,
-  EXPVAR,
+  exp_files,
+  db,
+  exp_col,
+  exp_conv,
+  farmername,
+  expvar,
   GRID,
   CY = TRUE,
-  SIZE
+  size
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{EXP_FILES}}{The experimental variable files for use in aggregating.}
+\item{\code{exp_files}}{The experimental variable files for use in aggregating.}
 
-\item{\code{DB}}{Connection to an OFPE database.}
+\item{\code{db}}{Connection to an OFPE database.}
 
-\item{\code{EXP_COL}}{The data.frame containaing the information on the columns
+\item{\code{exp_col}}{The data.frame containaing the information on the columns
 corresponding to the experimental variable.}
 
-\item{\code{EXP_CONV}}{The data.frame containaing the information for the product
+\item{\code{exp_conv}}{The data.frame containaing the information for the product
 formula and any conversion to lbs per acre.}
 
-\item{\code{FARMERNAME}}{Name of the farmer that owns the field for aggregation.}
+\item{\code{farmername}}{Name of the farmer that owns the field for aggregation.}
 
-\item{\code{EXPVAR}}{The experimental variable to aggregate.}
+\item{\code{expvar}}{The experimental variable to aggregate.}
 
 \item{\code{GRID}}{Whether to aggregate data to the centroids of a grid or use
 the raw observed data locations.}
@@ -369,7 +392,7 @@ the raw observed data locations.}
 \item{\code{CY}}{Logical, whether the data for aggregation is from the year of
 interest (aka the 'current year').}
 
-\item{\code{SIZE}}{Size of grid to make (meters), default = 10.}
+\item{\code{size}}{Size of grid to make (meters), default = 10.}
 }
 \if{html}{\out{</div>}}
 }
@@ -386,7 +409,10 @@ into long lat for raster extraction. Clip the aggregated dataset to
 the field boundary for faster processing. If experimental rates are
 null convert to zero because the sprayer does not record rather than
 recording zeroes. The dot indicates that this function would be private
-if not for documentations sake.
+if not for documentations sake. Put the aggregated data into long lat
+for raster extraction. Clip the aggregated dataset to the field boundary
+for faster processing. If experimental rates are null convert to zero
+because the sprayer does not record rather than recording zeroes.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AggDat$.clipAggDat()}\if{html}{\out{</div>}}
 }
@@ -430,9 +456,14 @@ None.
 \subsection{Method \code{.saveAggDat()}}{
 Save the temporary aggregated table to the appropriate table in
 the OFPE database. Puts the data in the correct farmer's aggregated
-schema in the table corresponding to the response variable (RESPVAR).
-The dot indicates that this function would be private if not for
-documentations sake.
+schema in the table corresponding to the response variable (respvar).
+If using a field boundary from the database and the user selected to
+save the data to the database, the aggregated file is added to the
+aggregated schema for the variable type (yld, pro, sat). Sat = data
+aggregated without response or explanatory variables. This includes
+only data collected from remote sensing sources or SSURGO, and are
+aggregated to the center points of the gridcells. The dot indicates
+that this function would be private if not for documentations sake.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AggDat$.saveAggDat()}\if{html}{\out{</div>}}
 }

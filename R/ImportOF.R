@@ -73,106 +73,106 @@ ImportOF <- R6::R6Class(
     #' Uploads data to an OFPE formatted database following a chain of mehtods
     #' and returning the status of the upload. The dot indicates that this
     #' function would be private if not for documentations sake.
-    #' @param NAME Name of the data file to upload to the database.
+    #' @param name Name of the data file to upload to the database.
     #' @return See 'status' object.
-    .uploadData = function(NAME) { # MASTER FUNCTION
+    .uploadData = function(name) { # MASTER FUNCTION
       tryCatch(
         {
-          FILE <- self$.impDat(NAME)
+          FILE <- self$.impDat(name)
         }, warning = function(w) {print()},
         error = function(e) {
-          self$status[[which(names(self$status) == NAME)]] <-
-            paste0("!!! ERROR IN impDat() FOR ", NAME, " !!!")
-          print(paste0("!!! ERROR IN impDat() FOR " ,NAME, " !!!"))
+          self$status[[which(names(self$status) == name)]] <-
+            paste0("!!! ERROR IN impDat() FOR ", name, " !!!")
+          print(paste0("!!! ERROR IN impDat() FOR " ,name, " !!!"))
         }
       )
-      if (self$status[[which(names(self$status) == NAME)]] == 0) {
+      if (self$status[[which(names(self$status) == name)]] == 0) {
         tryCatch(
           {
-            FILE <- self$.makeSptl(FILE, NAME)
+            FILE <- self$.makeSptl(FILE, name)
           }, warning = function(w) {print()},
           error = function(e) {
-            self$status[[which(names(self$status) == NAME)]] <-
-              paste0("!!! ERROR IN makeSptl() FOR ", NAME, " !!!")
-            print(paste0("!!! ERROR IN makeSptl() FOR ", NAME," !!!"))
+            self$status[[which(names(self$status) == name)]] <-
+              paste0("!!! ERROR IN makeSptl() FOR ", name, " !!!")
+            print(paste0("!!! ERROR IN makeSptl() FOR ", name," !!!"))
           }
         )
       }
-      if (self$status[[which(names(self$status) == NAME)]] == 0) {
+      if (self$status[[which(names(self$status) == name)]] == 0) {
         tryCatch(
           {
             FILE <- self$.oldDatClean(FILE)
           }, warning = function(w) {print()},
           error = function(e) {
-            self$status[[which(names(self$status) == NAME)]] <-
-              paste0("!!! ERROR IN oldDatClean() FOR ", NAME, " !!!")
-            print(paste0("!!! ERROR IN oldDatClean() FOR ", NAME, " !!!"))
+            self$status[[which(names(self$status) == name)]] <-
+              paste0("!!! ERROR IN oldDatClean() FOR ", name, " !!!")
+            print(paste0("!!! ERROR IN oldDatClean() FOR ", name, " !!!"))
           }
         )
       }
-      if (self$status[[which(names(self$status) == NAME)]] == 0) {
+      if (self$status[[which(names(self$status) == name)]] == 0) {
         tryCatch(
           {
-            FILE <- self$.findInfo(FILE, NAME)
+            FILE <- self$.findInfo(FILE, name)
           },warning = function(w) {print()},
           error = function(e) {
-            self$status[[which(names(self$status) == NAME)]] <-
-              paste0("!!! ERROR IN findInfo() FOR ", NAME, " !!!")
-            print(paste0("!!! ERROR IN findInfo() FOR ", NAME, " !!!"))
+            self$status[[which(names(self$status) == name)]] <-
+              paste0("!!! ERROR IN findInfo() FOR ", name, " !!!")
+            print(paste0("!!! ERROR IN findInfo() FOR ", name, " !!!"))
           }
         )
       }
-      if (self$status[[which(names(self$status) == NAME)]] == 0) {
+      if (self$status[[which(names(self$status) == name)]] == 0) {
         tryCatch(
           {
             FILE <- self$.fixCols(FILE)
           }, warning = function(w) {print()},
           error = function(e) {
-            self$status[[which(names(self$status) == NAME)]] <-
-              paste0("!!! ERROR IN fixCols() FOR ", NAME, " !!!")
-            print(paste0("!!! ERROR IN fixCols() FOR ", NAME, " !!!"))
+            self$status[[which(names(self$status) == name)]] <-
+              paste0("!!! ERROR IN fixCols() FOR ", name, " !!!")
+            print(paste0("!!! ERROR IN fixCols() FOR ", name, " !!!"))
           }
         )
       }
-      if (self$status[[which(names(self$status) == NAME)]] == 0) {
+      if (self$status[[which(names(self$status) == name)]] == 0) {
         tryCatch(
           {
             FILE <- FILE %>%
               sf::st_transform("epsg:4326")
           }, warning = function(w) {print()},
           error = function(e) {
-            self$status[[which(names(self$status) == NAME)]] <-
-              paste0("!!! ERROR IN st_transform(", NAME,
+            self$status[[which(names(self$status) == name)]] <-
+              paste0("!!! ERROR IN st_transform(", name,
                      ") TO LONGLAT WGS84 !!!")
-            print(paste0("!!! ERROR IN st_transform(", NAME,
+            print(paste0("!!! ERROR IN st_transform(", name,
                          ") TO LONGLAT WGS84 !!!"))
           }
         )
       }
-      if (self$status[[which(names(self$status) == NAME)]] == 0) {
+      if (self$status[[which(names(self$status) == name)]] == 0) {
         tryCatch(
           {
             FILE <- as(FILE, "Spatial")
           }, warning = function(w) {print()},
           error = function(e) {
-            self$status[[which(names(self$status) == NAME)]] <-
-              paste0("!!! ERROR CONVERTING ", NAME, " TO CLASS 'sp' !!!")
-            print(paste0("!!! ERROR IN CONVERTING ", NAME, " TO CLASS 'sp' !!!"))
+            self$status[[which(names(self$status) == name)]] <-
+              paste0("!!! ERROR CONVERTING ", name, " TO CLASS 'sp' !!!")
+            print(paste0("!!! ERROR IN CONVERTING ", name, " TO CLASS 'sp' !!!"))
           }
         )
       }
-      if (self$status[[which(names(self$status) == NAME)]] == 0) {
-        self$.uploadFun(FILE, NAME, dbCon$db)
-        self$status[[which(names(self$status) == NAME)]] <-
-          paste0("IMPORT COMPLETE: ", NAME)
+      if (self$status[[which(names(self$status) == name)]] == 0) {
+        self$.uploadFun(FILE, name, dbCon$db)
+        self$status[[which(names(self$status) == name)]] <-
+          paste0("IMPORT COMPLETE: ", name)
         # tryCatch(
         #   {
         #
         #   }, warning = function(w) {print()},
         #   error = function(e) {
-        #     self$status[[which(names(self$status) == NAME)]] <-
-        #       paste0("!!! ERROR UPLOADING ", NAME, " TO DB !!!")
-        #     print(paste0("!!! ERROR UPLOADING ", NAME, " TO DB !!!"))
+        #     self$status[[which(names(self$status) == name)]] <-
+        #       paste0("!!! ERROR UPLOADING ", name, " TO DB !!!")
+        #     print(paste0("!!! ERROR UPLOADING ", name, " TO DB !!!"))
         #   }
         # )
       }
@@ -182,18 +182,18 @@ ImportOF <- R6::R6Class(
     #' imported directly using 'sf' package, otherwise brings in data as .csv.
     #' The dot indicates that this function would be private if not for
     #' documentations sake.
-    #' @param NAME Name of the data file to upload to the database.
+    #' @param name Name of the data file to upload to the database.
     #' @return Imported data.
-    .impDat = function(NAME) {
-      if (grepl("shp$", NAME)) {
+    .impDat = function(name) {
+      if (grepl("shp$", name)) {
         FILE <- sf::read_sf(self$dat_path,
-                            stringr::str_sub(NAME, 1, nchar(NAME) - 4)) %>%
+                            stringr::str_sub(name, 1, nchar(name) - 4)) %>%
           sf::st_zm()
       }
-      if (grepl("csv$",NAME)) {
+      if (grepl("csv$",name)) {
         tryCatch(
           {
-            FILE <- data.table::fread(paste0(self$dat_path, NAME)) %>%
+            FILE <- data.table::fread(paste0(self$dat_path, name)) %>%
               as.data.frame()
             if (any(grepl("Longitude|Latitude", names(FILE)))) {
               names(FILE)[which(names(FILE) == "Longitude")] <- "x"
@@ -205,9 +205,9 @@ ImportOF <- R6::R6Class(
           error = function(e) {
             tryCatch(
               {
-                FILE <- read.csv(paste0(self$dat_path, NAME),
+                FILE <- read.csv(paste0(self$dat_path, name),
                                  skip=2, header=FALSE)
-                header <- read.csv(paste0(self$dat_path, NAME),
+                header <- read.csv(paste0(self$dat_path, name),
                                    header = TRUE, nrows = 1)
                 names(FILE) <- c(names(header), "utc_time", "y", "n", "x", "w")
                 FILE$x <- ifelse(FILE$x > 0, FILE$x * -1, FILE$x)
@@ -215,23 +215,23 @@ ImportOF <- R6::R6Class(
               warning = function(w) {
                 print()},
               error = function(e) {
-                print(paste0("Error: loading ", NAME, " !!!"))
+                print(paste0("Error: loading ", name, " !!!"))
               }
             )
           }
         )
       }
       if (length(FILE) == 1) {
-        FILE <- read.csv(paste0(self$dat_path, NAME), skip=2, header=FALSE)
-        header <- read.csv(paste0(self$dat_path, NAME), header = TRUE, nrows=1)
+        FILE <- read.csv(paste0(self$dat_path, name), skip=2, header=FALSE)
+        header <- read.csv(paste0(self$dat_path, name), header = TRUE, nrows=1)
         names(FILE) <- c(names(header), "utc_time", "y", "n", "x", "w")
         FILE$x <- ifelse(FILE$x > 0, FILE$x * -1, FILE$x)
       }
       if (any(names(FILE) == "orig_file")) {
         names(FILE)[which(names(FILE) == "orig_file")] <- "orig_filePREV"
       }
-      FILE$orig_file <- paste(NAME)
-      if (grepl("GMC", NAME, ignore.case = TRUE)) {
+      FILE$orig_file <- paste(name)
+      if (grepl("GMC", name, ignore.case = TRUE)) {
         FILE$farmer <- "broyles"
       }
       return(FILE)
@@ -242,11 +242,11 @@ ImportOF <- R6::R6Class(
     #' .csv protein or SSURGO data that is imported. The dot indicates that this
     #' function would be private if not for documentations sake.
     #' @param FILE The imported data from the .impDat method.
-    #' @param NAME The filename for the data imported from the .impDat method.
+    #' @param name The filename for the data imported from the .impDat method.
     #' @return Data in spatial format.
-    .makeSptl = function(FILE, NAME) {
+    .makeSptl = function(FILE, name) {
       tryCatch({
-        if (grepl("csv$",NAME)) {
+        if (grepl("csv$",name)) {
           FILE$X <- FILE$x
           FILE$Y <- FILE$y
           sp::coordinates(FILE) <- c("X", "Y") # makes spatial points df
@@ -269,7 +269,7 @@ ImportOF <- R6::R6Class(
         return(FILE)
       },
       warning = function(w) {print()},
-      error = function(e) {print(paste0("Error: making ", NAME, " spatial."))}
+      error = function(e) {print(paste0("Error: making ", name, " spatial."))}
       )
     },
     #' @description
@@ -297,9 +297,9 @@ ImportOF <- R6::R6Class(
     #' The dot indicates that this would be private if not for documentations
     #' sake.
     #' @param FILE The imported data for upload.
-    #' @param NAME The name of the file for upload.
+    #' @param name The name of the file for upload.
     #' @return Data without old columns.
-    .findInfo = function(FILE, NAME) {
+    .findInfo = function(FILE, name) {
       anyFarmer <- 0 # index arg
       ## look for bad polygons
       if (any(grepl("geometry", names(FILE)))) {
@@ -319,7 +319,7 @@ ImportOF <- R6::R6Class(
         sf::st_transform(self$farms,
                          paste0("epsg:", utmEpsg))
       ## get info
-      if (!grepl("ssurgo", NAME)) {
+      if (!grepl("ssurgo", name)) {
         ## 1) update "fieldname" and "fieldidx" and "farmeridx" if possible in FILE
         # see if the file intersects any of the exp fields in db
         if (any(unlist(lapply(sf::st_intersects(self$fields, FILE), length)) > 0)) {
@@ -339,7 +339,7 @@ ImportOF <- R6::R6Class(
             FILE$wfid <- 0
             FILE$fieldidx <- 0
             if (FILE$fieldname[1] == "unknown") {
-              print(paste0("no fieldname in ", NAME, " identificed."))
+              print(paste0("no fieldname in ", name, " identificed."))
             }
           }
         } else { # if not, look in column names for a like "field" to extract name for fieldname, fieldidx = 0 (non exp field)
@@ -347,7 +347,7 @@ ImportOF <- R6::R6Class(
           FILE$wfid <- 0
           FILE$fieldidx <- 0
           if (FILE$fieldname[1] == "unknown") {
-            print(paste0("no fieldname in ", NAME, " identified."))
+            print(paste0("no fieldname in ", name, " identified."))
           }
         }
       }
@@ -365,7 +365,7 @@ ImportOF <- R6::R6Class(
           ## NOTE: output will either be a farmeridx or 0 (= no farmer identified)
           ## NOTE: when querying from db, if farmeridx != 0 get farmer name
           if (FILE$farmeridx[1] == 0) {
-            print(paste0("no farmer in ", NAME, " identified."))
+            print(paste0("no farmer in ", name, " identified."))
           }
         }
       }
@@ -373,8 +373,8 @@ ImportOF <- R6::R6Class(
       ## identify and extract the year from columns in table & update 'year' col in FILE
       FILE$year <- private$.findYear(FILE)
       if (FILE$year[1] == "unknown") {
-        if (!grepl("ssurgo", NAME)) {
-          print(paste0("no year in ", NAME, " identified."))
+        if (!grepl("ssurgo", name)) {
+          print(paste0("no year in ", name, " identified."))
         }
       }
       return(FILE)
@@ -400,12 +400,12 @@ ImportOF <- R6::R6Class(
     #' identified in the data to organize and upload the data. The dot
     #' indicates that this would be private if not for documentations sake.
     #' @param FILE The imported data for upload.
-    #' @param NAME The name of the file for upload.
+    #' @param name The name of the file for upload.
     #' @param db Connection to an OFPE database.
     #' @return Data uploaded to the database
-    .uploadFun = function(FILE, NAME, db) {
+    .uploadFun = function(FILE, name, db) {
 
-      if (grepl("ssurgo", NAME)) {
+      if (grepl("ssurgo", name)) {
         FILE@data$year <- NULL
         NAMES <- names(FILE)
       } else {
@@ -418,12 +418,12 @@ ImportOF <- R6::R6Class(
                                WHERE farmeridx = ",
                                FILE$farmeridx[1]))
       )
-      dtype <- private$.findDtype(FILE, NAME, NAMES)
+      dtype <- private$.findDtype(FILE, name, NAMES)
       #******************************************************************
       #******************************************************************
       # check if table exists for data type in farmer's schema
       if (dtype == "rx") {
-        tabExist <- as.logical(
+        tab_exist <- as.logical(
           DBI::dbGetQuery(db,
                           paste0("SELECT EXISTS (
                                   SELECT 1
@@ -434,7 +434,7 @@ ImportOF <- R6::R6Class(
         )
       } else {
         if (dtype == "ssurgo") {
-          tabExist <- as.logical(
+          tab_exist <- as.logical(
             DBI::dbGetQuery(db,
                             paste0("SELECT EXISTS (
                                     SELECT 1
@@ -444,7 +444,7 @@ ImportOF <- R6::R6Class(
                             )
           )
         } else {
-          tabExist <- as.logical(
+          tab_exist <- as.logical(
             DBI::dbGetQuery(db,
                             paste0("SELECT EXISTS (
                                     SELECT 1
@@ -456,12 +456,12 @@ ImportOF <- R6::R6Class(
         }
       }
       # if not exists, create table called dtype and upload the data
-      if (!tabExist) { # if exists = false this returns true
+      if (!tab_exist) { # if exists = false this returns true
         if (dtype == "rx") {
           for (j in 1:ncol(FILE)) { # convert NA to NaN for db import
             if (anyNA(as.data.frame(FILE[, j])[1])) {
-              naIndex <- which(is.na(as.data.frame(FILE[, j])[1]))
-              FILE[naIndex[1]:naIndex[length(naIndex)], j] <- NaN
+              na_index <- which(is.na(as.data.frame(FILE[, j])[1]))
+              FILE[na_index[1]:na_index[length(na_index)], j] <- NaN
             }
           }
           suppressMessages(
@@ -527,8 +527,8 @@ ImportOF <- R6::R6Class(
           if (dtype=="ssurgo") {
             for (j in 1:ncol(FILE)) { # convert NA to NaN for db import
               if (anyNA(as.data.frame(FILE[, j])[1])) {
-                naIndex <- which(is.na(as.data.frame(FILE[, j])[1]))
-                FILE[naIndex[1]:naIndex[length(naIndex)], j] <- NaN
+                na_index <- which(is.na(as.data.frame(FILE[, j])[1]))
+                FILE[na_index[1]:na_index[length(na_index)], j] <- NaN
               }
             }
             suppressMessages(
@@ -594,8 +594,8 @@ ImportOF <- R6::R6Class(
           } else { ## if not ssurgo or rx
             for (j in 1:ncol(FILE)) { # convert NA to NaN for db import
               if (anyNA(as.data.frame(FILE[, j])[1])) {
-                naIndex <- which(is.na(as.data.frame(FILE[, j])[1]))
-                FILE[naIndex[1]:naIndex[length(naIndex)], j] <- NaN
+                na_index <- which(is.na(as.data.frame(FILE[, j])[1]))
+                FILE[na_index[1]:na_index[length(na_index)], j] <- NaN
               }
             }
             suppressMessages(
@@ -663,39 +663,39 @@ ImportOF <- R6::R6Class(
       } else { # if table does exist. if exists = true than if () returns false
         if (dtype=="rx") {
           # get column names from db
-          dbCols <- DBI::dbGetQuery(
+          db_cols <- DBI::dbGetQuery(
             db,
             paste0("SELECT column_name
                     FROM information_schema.columns
                     WHERE table_schema = '", farmer, "_a'
                    AND table_name = '", dtype,"'")
           )[,1]
-          dbCols <- dbCols[c(-which(dbCols == "gid"),
-                             -which(dbCols == "geometry"))] # take out "gid" & "geometry" column, will be added later
+          db_cols <- db_cols[c(-which(db_cols == "gid"),
+                             -which(db_cols == "geometry"))] # take out "gid" & "geometry" column, will be added later
           # get columns from db that are not in file & columns from file that are not in db
-          inDB <- private$.noMatch(dbCols, NAMES)
-          inDF <- private$.noMatch(NAMES, dbCols)
+          in_db <- private$.noMatch(db_cols, NAMES)
+          in_dat <- private$.noMatch(NAMES, db_cols)
           # add cols from db to file and cols from file to db
-          if (length(inDB) > 0) {
+          if (length(in_db) > 0) {
             row.names(FILE) <- as.character(seq(1, nrow(FILE), 1))
             FILE <- maptools::spCbind(
               FILE,
-              as.data.frame(matrix(NA, nrow(FILE), length(inDB)))
+              as.data.frame(matrix(NA, nrow(FILE), length(in_db)))
             )
-            names(FILE) <- c(NAMES, inDB)
+            names(FILE) <- c(NAMES, in_db)
           }
-          if (length(inDF) > 0) {
-            for (j in 1:length(inDF)) {
+          if (length(in_dat) > 0) {
+            for (j in 1:length(in_dat)) {
               DBI::dbGetQuery(db,
                               paste0("ALTER TABLE ", farmer, "_a.", dtype,
-                                     " ADD COLUMN ", inDF[j], " TEXT"))
+                                     " ADD COLUMN ", in_dat[j], " TEXT"))
             }
           }
           # convert NA to NaN for db import
           for (j in 1:ncol(FILE)) {
             if (anyNA(as.data.frame(FILE[, j])[1])) {
-              naIndex <- which(is.na(as.data.frame(FILE[, j])[1]))
-              FILE[naIndex[1]:naIndex[length(naIndex)], j] <- NaN
+              na_index <- which(is.na(as.data.frame(FILE[, j])[1]))
+              FILE[na_index[1]:na_index[length(na_index)], j] <- NaN
             }
           }
           # if geometry is polygon change to multipolygon
@@ -773,41 +773,41 @@ ImportOF <- R6::R6Class(
         } else {
           if (dtype=="ssurgo") {
             # get column names from db
-            dbCols <- DBI::dbGetQuery(
+            db_cols <- DBI::dbGetQuery(
               db,
               paste0("SELECT column_name
                      FROM information_schema.columns
                      WHERE table_schema = 'all_farms'
                      AND table_name = '",dtype,"'")
             )[,1]
-            dbCols <- dbCols[c(-which(dbCols=="gid"),
-                               -which(dbCols=="geometry"))] # take out "gid" & "geometry" column, will be added later
+            db_cols <- db_cols[c(-which(db_cols=="gid"),
+                               -which(db_cols=="geometry"))] # take out "gid" & "geometry" column, will be added later
             # get columns from db that are not in file & columns from file that are not in db
-            inDB <- private$.noMatch(dbCols, NAMES)
-            inDF <- private$.noMatch(NAMES, dbCols)
+            in_db <- private$.noMatch(db_cols, NAMES)
+            in_dat <- private$.noMatch(NAMES, db_cols)
             # add cols from db to file and cols from file to db
-            if (length(inDB) > 0) {
+            if (length(in_db) > 0) {
               row.names(FILE) <- as.character(seq(1, nrow(FILE), 1))
               FILE <- maptools::spCbind(
                 FILE,
-                as.data.frame(matrix(NA, nrow(FILE), length(inDB)))
+                as.data.frame(matrix(NA, nrow(FILE), length(in_db)))
               )
-              names(FILE) <- c(NAMES, inDB)
+              names(FILE) <- c(NAMES, in_db)
             }
-            if (length(inDF) > 0) {
-              for (j in 1:length(inDF)) {
+            if (length(in_dat) > 0) {
+              for (j in 1:length(in_dat)) {
                 DBI::dbGetQuery(
                   db,
                   paste0("ALTER TABLE all_farms.", dtype,
-                         " ADD COLUMN ", inDF[j], " TEXT")
+                         " ADD COLUMN ", in_dat[j], " TEXT")
                 )
               }
             }
             # convert NA to NaN for db import
             for (j in 1:ncol(FILE)) {
               if (anyNA(as.data.frame(FILE[, j])[1])) {
-                naIndex <- which(is.na(as.data.frame(FILE[, j])[1]))
-                FILE[naIndex[1]:naIndex[length(naIndex)], j] <- NaN
+                na_index <- which(is.na(as.data.frame(FILE[, j])[1]))
+                FILE[na_index[1]:na_index[length(na_index)], j] <- NaN
               }
             }
             # if geometry is polygon change to multipolygon
@@ -881,41 +881,41 @@ ImportOF <- R6::R6Class(
             }
           } else { ## if not rx or ssurgo data
             # get column names from db
-            dbCols <- DBI::dbGetQuery(
+            db_cols <- DBI::dbGetQuery(
               db,
               paste0("SELECT column_name
                      FROM information_schema.columns
                      WHERE table_schema = '", farmer, "_r'
                      AND table_name = '", dtype, "'")
             )[,1]
-            dbCols <- dbCols[c(-which(dbCols=="gid"),
-                               -which(dbCols=="geometry"))] # take out "gid" & "geometry" column, will be added later
+            db_cols <- db_cols[c(-which(db_cols=="gid"),
+                               -which(db_cols=="geometry"))] # take out "gid" & "geometry" column, will be added later
             # get columns from db that are not in file & columns from file that are not in db
-            inDB <- private$.noMatch(dbCols, NAMES)
-            inDF <- private$.noMatch(NAMES, dbCols)
+            in_db <- private$.noMatch(db_cols, NAMES)
+            in_dat <- private$.noMatch(NAMES, db_cols)
             # add cols from db to file and cols from file to db
-            if (length(inDB) > 0) {
+            if (length(in_db) > 0) {
               row.names(FILE) <- as.character(seq(1, nrow(FILE), 1))
               FILE <- maptools::spCbind(
                 FILE,
-                as.data.frame(matrix(NA, nrow(FILE), length(inDB)))
+                as.data.frame(matrix(NA, nrow(FILE), length(in_db)))
               )
-              names(FILE) <- c(NAMES, inDB)
+              names(FILE) <- c(NAMES, in_db)
             }
-            if (length(inDF) > 0) {
-              for (j in 1:length(inDF)) {
+            if (length(in_dat) > 0) {
+              for (j in 1:length(in_dat)) {
                 DBI::dbGetQuery(
                   db,
                   paste0("ALTER TABLE ", farmer, "_r.", dtype,
-                         " ADD COLUMN ", inDF[j], " TEXT")
+                         " ADD COLUMN ", in_dat[j], " TEXT")
                 )
               }
             }
             # convert NA to NaN for db import
             for (j in 1:ncol(FILE)) {
               if (anyNA(as.data.frame(FILE[,j])[1])) {
-                naIndex <- which(is.na(as.data.frame(FILE[,j])[1]))
-                FILE[naIndex[1]:naIndex[length(naIndex)],j] <- NaN
+                na_index <- which(is.na(as.data.frame(FILE[,j])[1]))
+                FILE[na_index[1]:na_index[length(na_index)],j] <- NaN
               }
             }
             # if geometry is polygon change to multipolygon
@@ -1034,14 +1034,14 @@ ImportOF <- R6::R6Class(
       }
       return(farmeridx)
     },
-    .extractFarmer = function(FARMER, COL, FILE) {
-      # second element of FARMER is farmer name
-      if (any(grepl(FARMER[2],FILE[1,COL],ignore.case = TRUE))) {
+    .extractFarmer = function(farmer, COL, FILE) {
+      # second element of farmer is farmer name
+      if (any(grepl(farmer[2],FILE[1,COL],ignore.case = TRUE))) {
         farmeridx <- as.numeric(
           DBI::dbGetQuery(db,
                           paste0("SELECT farmers.farmeridx
                                  FROM all_farms.farmers
-                                 WHERE farmers.farmer = '",FARMER[2],"'"))
+                                 WHERE farmers.farmer = '",farmer[2],"'"))
         )
       } else {
         farmeridx <- NA
@@ -1062,14 +1062,14 @@ ImportOF <- R6::R6Class(
             FILE[1, which(grepl("orig_file", names(FILE), ignore.case = TRUE))]
           )
         )[1]
-      strLocs <- stringr::str_locate(OGfile, "20")
-      if (!anyNA(strLocs)) {
+      str_locs <- stringr::str_locate(OGfile, "20")
+      if (!anyNA(str_locs)) {
         yr <- suppressWarnings(
-          stringr::str_sub(OGfile, strLocs[2] + 1, strLocs[2] + 2) %>%
+          stringr::str_sub(OGfile, str_locs[2] + 1, str_locs[2] + 2) %>%
             as.numeric()
           )
         if (!is.na(yr)) {
-          year <- stringr::str_sub(OGfile, strLocs[1], strLocs[1] + 3)
+          year <- stringr::str_sub(OGfile, str_locs[1], str_locs[1] + 3)
           # to be more sure that it is actually a date and not a measure
           if (year > 2000 & year < 2030) {
             return(year)
@@ -1152,15 +1152,15 @@ ImportOF <- R6::R6Class(
       return(year)
     },
     .anyYear = function(VEC) {
-      strLocs <- stringr::str_locate(VEC[1], "20")
-      if (!anyNA(strLocs)) {
+      str_locs <- stringr::str_locate(VEC[1], "20")
+      if (!anyNA(str_locs)) {
         # warnings are if it is NA, which is okay (see next lines logic)
         yr <- suppressWarnings(
-          stringr::str_sub(VEC[1], strLocs[2] + 1, strLocs[2] + 2) %>%
+          stringr::str_sub(VEC[1], str_locs[2] + 1, str_locs[2] + 2) %>%
             as.numeric()
         )
         if (!is.na(yr)) {
-          year <- stringr::str_sub(VEC[1], strLocs[1], strLocs[1] + 3)
+          year <- stringr::str_sub(VEC[1], str_locs[1], str_locs[1] + 3)
           # to be more sure that it is actually a date and not a measure
           if (year > 2000 & year < 2030) {
             return(year)
@@ -1171,17 +1171,17 @@ ImportOF <- R6::R6Class(
         }
       }
     },
-    .findDtype = function(FILE, NAME, NAMES) {
+    .findDtype = function(FILE, name, NAMES) {
       dtype <- NA
       #******************************************************************
       ## < NOTE: UPDATE grepl() STATEMENTS BELOW IF NEW KEYWORDS >
       #******************************************************************
-      if (is.na(dtype) & grepl("ssurgo", NAME)) {
+      if (is.na(dtype) & grepl("ssurgo", name)) {
         dtype <- "ssurgo"
       }
       # RX or ssopt data
       if (is.na(dtype) &
-          any(grepl("RX|ssopt", NAME, ignore.case = TRUE)|
+          any(grepl("RX|ssopt", name, ignore.case = TRUE)|
               any(grepl("RX|ssopt", NAMES, ignore.case = TRUE)))) {
         if (any(grepl("poly",
                       class(sf::st_geometry(sf::st_as_sf(FILE))),
@@ -1195,7 +1195,7 @@ ImportOF <- R6::R6Class(
       if (is.na(dtype) &
           any(any(grepl("yield", NAMES, ignore.case = TRUE))|
               any(grepl("yld", NAMES, ignore.case = TRUE))|
-              any(grepl("yld", NAME, ignore.case = TRUE)))) {
+              any(grepl("yld", name, ignore.case = TRUE)))) {
         if (!any(grepl("rate|bulk_rt|blk_rt_", NAMES, ignore.case = TRUE))) {
           dtype <- "yld"
         } else {
@@ -1212,7 +1212,7 @@ ImportOF <- R6::R6Class(
       if (is.na(dtype) &
           any(grepl("rate|AA", NAMES, ignore.case = TRUE))|
           any(grepl("rate|aaN|AA|_aa|Rate|RATE|AA_N|_N_",
-                    NAME, ignore.case = FALSE))) {
+                    name, ignore.case = FALSE))) {
         if (!any(grepl("seed", NAMES, ignore.case = TRUE))) {
           # check in data file for "seed"
           anySeed <- private$.findSeed(FILE)
@@ -1233,7 +1233,7 @@ ImportOF <- R6::R6Class(
         }
       }
       # looks for seed or rate b/c N should have been identified earlier
-      if (is.na(dtype) & any(grepl("seed|_SR_", NAME, ignore.case = TRUE))) {
+      if (is.na(dtype) & any(grepl("seed|_SR_", name, ignore.case = TRUE))) {
         dtype <- "aa_sr"
       }
       # looks for seed or rate b/c N should have been identified earlier
