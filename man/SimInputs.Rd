@@ -21,10 +21,200 @@ outputter, activating and executing the 'LikeYear' class to identify the year
 from the past that is most likely to reflect the upcoming year. This class
 also is used to instantiate the simulation class.
 }
+\section{Public fields}{
+\if{html}{\out{<div class="r6-fields">}}
+\describe{
+\item{\code{dbCon}}{Database connection object connected to an OFPE formatted
+database, see DBCon class.}
+
+\item{\code{farmername}}{Provide the name of the farmer who owns the field that is
+the target of analysis/simulation/prescription generation.}
+
+\item{\code{fxn}}{Select the functional form of a model to use for analysis.
+The user can select 'GAM' for a generalized additive model, 'Non-Linear
+Logistic' for a logistic function, or... More model options can be added
+here.}
+
+\item{\code{sPr}}{Provide the number of iterations to run the simulation. Without
+user inputs the default will be 100.}
+
+\item{\code{opt}}{The user also has the option to select the optimization method.
+There are two current options, 'Maximum' or 'Derivative'. Both methods select
+the optimum as-applied rate at each location in the field based on calculating
+the net-return at each point under a sequence of as-applied rates. Selecting
+'Maximum' selects the optimim rate as the as-applied rate with the highest
+calculated net-return. The 'Derivative' approach calculates the first
+derivatives (slope) at each as-applied rate at each point and selects the
+optimum as the as-applied rate where an increase of one unit of the as-applied
+input results does not result in an increase in net-return that exceeds the
+cost of one unit of the as-applied input. For example, at one point in the field,
+if the net-return is \$100 at 20 lbs N/acre and \$101 at 21 lbs N/acre where N
+costs \$1.50 per lbs, the 'Maximum' approach would consider 21 lbs N/acre the
+optimum at that point because \$100 < \$101, whereas the 'Derivative' approach
+would select 20 lbs N/acre the optimum because the $1 increase between 20 and
+21 lbs N/acre is less than the \$1.50 cost for the 1 unit increase in N.}
+
+\item{\code{sim_year}}{Select the year(s) for which to simulate net-return outcomes for.
+Multiple years can be selected and will be simulated in sequence or one year can
+be selected. The user can only select from years that they have aggregated with
+the 'Satellite' option in the aggregation step of the OFPE data cycle. However,
+when using the interactive selection method of this class, the user also has
+the option of performing an analysis of all of the years the user has
+aggregated in the database and identifying the wettest, driest, average,
+and the predicted year from the past that will most resemble an upcoming
+year. See the 'LikeYear' class for more information on this option.}
+
+\item{\code{fcr}}{Input the uniform as-applied rate the farmer would have applied
+to the field if an experiment was not conducted (i.e. 70 lbs N or SR/acre).}
+
+\item{\code{AArateCutoff}}{Select the maximum as-applied rate to simulate management
+outcomues to (i.e. 200 lbs N or seed per acre).}
+
+\item{\code{AAmin}}{Select the minimum as-applied rate to simulate management
+outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
+}
+\if{html}{\out{</div>}}
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
+\item \href{#method-new}{\code{SimInputs$new()}}
+\item \href{#method-selectInputs}{\code{SimInputs$selectInputs()}}
 \item \href{#method-clone}{\code{SimInputs$clone()}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
+\subsection{Method \code{new()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SimInputs$new(
+  dbCon,
+  farmername,
+  fxn = NULL,
+  sPr = NULL,
+  opt = NULL,
+  sim_year = NULL,
+  fcr = NULL,
+  AArateCutoff = NULL,
+  AAmin = NULL
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{dbCon}}{Database connection object connected to an OFPE formatted
+database, see DBCon class.}
+
+\item{\code{farmername}}{Provide the name of the farmer who owns the field that is
+the target of analysis/simulation/prescription generation.}
+
+\item{\code{fxn}}{Select the functional form of a model to use for analysis.
+The user can select 'GAM' for a generalized additive model, 'Non-Linear
+Logistic' for a logistic function, or... More model options can be added
+here.}
+
+\item{\code{sPr}}{Provide the number of iterations to run the simulation. Without
+user inputs the default will be 100.}
+
+\item{\code{opt}}{The user also has the option to select the optimization method.
+There are two current options, 'Maximum' or 'Derivative'. Both methods select
+the optimum as-applied rate at each location in the field based on calculating
+the net-return at each point under a sequence of as-applied rates. Selecting
+'Maximum' selects the optimim rate as the as-applied rate with the highest
+calculated net-return. The 'Derivative' approach calculates the first
+derivatives (slope) at each as-applied rate at each point and selects the
+optimum as the as-applied rate where an increase of one unit of the as-applied
+input results does not result in an increase in net-return that exceeds the
+cost of one unit of the as-applied input. For example, at one point in the field,
+if the net-return is \$100 at 20 lbs N/acre and \$101 at 21 lbs N/acre where N
+costs \$1.50 per lbs, the 'Maximum' approach would consider 21 lbs N/acre the
+optimum at that point because \$100 < \$101, whereas the 'Derivative' approach
+would select 20 lbs N/acre the optimum because the $1 increase between 20 and
+21 lbs N/acre is less than the \$1.50 cost for the 1 unit increase in N.}
+
+\item{\code{sim_year}}{Select the year(s) for which to simulate net-return outcomes for.
+Multiple years can be selected and will be simulated in sequence or one year can
+be selected. The user can only select from years that they have aggregated with
+the 'Satellite' option in the aggregation step of the OFPE data cycle. However,
+when using the interactive selection method of this class, the user also has
+the option of performing an analysis of all of the years the user has
+aggregated in the database and identifying the wettest, driest, average,
+and the predicted year from the past that will most resemble an upcoming
+year. See the 'LikeYear' class for more information on this option.}
+
+\item{\code{fcr}}{Input the uniform as-applied rate the farmer would have applied
+to the field if an experiment was not conducted (i.e. 70 lbs N or SR/acre).}
+
+\item{\code{AArateCutoff}}{Select the maximum as-applied rate to simulate management
+outcomues to (i.e. 200 lbs N or seed per acre).}
+
+\item{\code{AAmin}}{Select the minimum as-applied rate to simulate management
+outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A new 'SimInputs' object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-selectInputs"></a>}}
+\if{latex}{\out{\hypertarget{method-selectInputs}{}}}
+\subsection{Method \code{selectInputs()}}{
+Interactive method for selecting inputs related to the analysis and the
+subsequent simulations and prescription generation. The description below
+describes the process of interactively selecting the necessary parameters
+needed for the automated analysis, simulation, and prescription building.
+
+The user will need to select the functional form of a model to use for
+analysis. The user can select 'GAM' for a generalized additive model,
+'Non-Linear Logistic' for a logistic function, or... if more model
+options are added, they will need to be added here. They will also
+need to provide the number of iterations to run the Monte Carlo
+simulation, as well as the optimization method to use.
+
+There are two current options, 'Maximum' or 'Derivative'. Both methods select
+the optimum as-applied rate at each location in the field based on calculating
+the net-return at each point under a sequence of as-applied rates. Selecting
+'Maximum' selects the optimim rate as the as-applied rate with the highest
+calculated net-return. The 'Derivative' approach calculates the first
+derivatives (slope) at each as-applied rate at each point and selects the
+optimum as the as-applied rate where an increase of one unit of the as-applied
+input results does not result in an increase in net-return that exceeds the
+cost of one unit of the as-applied input. For example, at one point in the field,
+if the net-return is \$100 at 20 lbs N/acre and \$101 at 21 lbs N/acre where N
+costs \$1.50 per lbs, the 'Maximum' approach would consider 21 lbs N/acre the
+optimum at that point because \$100 < \$101, whereas the 'Derivative' approach
+would select 20 lbs N/acre the optimum because the $1 increase between 20 and
+21 lbs N/acre is less than the \$1.50 cost for the 1 unit increase in N.
+
+Finally, the user has to select the year or sequence of years for which to
+assess management outcomes in under the various economic scenarios of the
+Monte Carlo simulation. The user must aggregate 'Satellite' data for each
+year that they would like to simulate. See the 'AggInputs' class and
+Vignette 3 for an overview of the aggregations step. Alternatively,
+the user can select to perform an analysis of all of the years that
+they have aggregated 'Satellite' data for to identify the wettest,
+driest, and average years from the historic record the user has
+generated. It also will identify the year most expected to follow
+a specified year based off of the trend in the historic data the user
+has gatherd.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SimInputs$selectInputs()}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{None}}{No arguments needed because passed in during class
+instantiation.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A completed 'DatInputs' object.
 }
 }
 \if{html}{\out{<hr>}}

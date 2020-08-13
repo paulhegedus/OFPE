@@ -99,10 +99,19 @@ The 'DatObject' class is used for the analysis/simulation and Rx building steps 
 datInputs <- DatInputs$new(dbCon)
 datInputs$selectInputs()
 ```
+The 'SimInputs' class is used for the analysis/simulation and Rx building steps of the OFPE data cycle. This object includes user selections such as the model to use for fitting crop response functions for analysis, the number of iterations to run the simulation, the optimization method, the year(s) to use as an estimated weather scenario in which to simulate management outcomes, the farmer controlled fertilzier rate, the maximum amount of the input to simulate management to, and the minimum amount of the input to simulate from. Inputs can be supplied directly to this class during instantiation, however this is NOT recommended except for advanced users. It is recommended that the user supplies the database connection and farmer name and uses the interactive selection methods to select user inputs. This class is passed to the 'SimClass' and model classes that executes the methods for analysis, simulation, and subsequent prescription generation.
 
-* data inputs
-* analysis inputs
-* simulation inputs
+```{r, eval = FALSE}
+simInputs <- SimInputs$new(dbCon, datInputs$farmername)
+simInputs$selectInputs()
+```
+
+The 'EconDat' class is used to store economic parameters and data used in the OFPE Monte Carlo simulation. This class includes selections for parameters such as the fixed costs associated with production, not including the input, the cost of applying variable rate or site-specific technology per acre, and the option to use default economic data or for the user to provide their own economic conditions to simulate or their own protein premium/dockage data to use to fit a model of protein premium/dockages that is used in the Monte Carlo simulation to estimate net-return. Inputs can be supplied directly to this class during instantiation, however this is NOT recommended except for advanced users. It is recommended that the user uses the interactive selection methods to select user inputs. This class is passed to the 'SimClass' executes the methods for the simulation and subsequent prescription generation.
+
+```{r, eval = FALSE}
+econDat <- EconDat$new()
+econDat$selectInputs()
+```
 
 
 ## Set Up Analysis

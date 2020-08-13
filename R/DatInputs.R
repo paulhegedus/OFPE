@@ -94,7 +94,6 @@ DatInputs <- R6::R6Class(
     #' the model fitting process less error prone.
     center = NULL,
 
-
     #' @param dbCon Database connection object connected to an OFPE formatted
     #' database, see DBCon class.
     #' @param farmername Name of the farmer that owns the selected field.
@@ -240,6 +239,18 @@ DatInputs <- R6::R6Class(
         stopifnot(is.logical(center))
         self$center <- center
       }
+
+      if (!is.null(self$yldyears) & !is.null(self$proyears)) {
+        private$years <- list(yldyears=self$yldyears,
+                           proyears=self$proyears)
+      } else {
+        if (!is.null(self$yldyears)) {
+          private$years <- list(yldyears=self$yldyears)
+        }
+        if (!is.null(self$proyears)) {
+          private$years <- list(proyears=self$proyears)
+        }
+      }
     },
     #' @description
     #' Interactive method for selecting inputs related to the data used in the
@@ -275,8 +286,9 @@ DatInputs <- R6::R6Class(
     #' @return A completed 'DatInputs' object.
     selectInputs = function() {
       private$.selectFarmer(self$dbCon$db)
-      private$.selectField(self$dbCon$db)
       private$.selectRespvar()
+      private$.selectField(self$dbCon$db)
+      private$.selectYears(self$dbCon$db)
       private$.selectExpvar()
       private$.selectAggLocs()
       private$.selectAggLOY()
@@ -298,33 +310,97 @@ DatInputs <- R6::R6Class(
 
   ),
   private = list(
+    years = NULL,
+
     .selectFarmer = function(db) {
       self$farmername <- as.character(select.list(
-        unique(dbGetQuery(db, "SELECT farmer FROM all_farms.farmers")$farmer),
-        multiple=FALSE,
-        title= "Select farm to analyze a field in."))
-    },
-    .selectField = function(db) {
-
-
+        unique(DBI::dbGetQuery(db, "SELECT farmer FROM all_farms.farmers")$farmer),
+        multiple = FALSE,
+        title = "Select farm to analyze a field in."))
     },
     .selectRespvar = function() {
-      as.character(select.list(
+      respVar <- as.character(select.list(
         c("Yield", "Protein"),
-        multiple=TRUE,
-        title= "Select response variable(s) to optimize on. In some cases protein data is not available. However, either yield or protein must be selected."
+        multiple = TRUE,
+        title = "Select response variable(s) to optimize on. In some cases protein data is not available. However, either yield or protein must be selected."
       ))
-      self$respvar <- ifelse(respVar=="Yield", "yld", "pro")
+      self$respvar <- ifelse(respVar == "Yield", "yld", "pro")
     },
     .selectExpvar = function() {
       expVar <- as.character(select.list(
-            c("As-Applied Nitrogen", "As-Applied Seed Rate"),
-            title= "Select experimental variable."))
-      self$expvar <- ifelse(expVar=="As-Applied Nitrogen", "aa_n", "aa_sr")
+        c("As-Applied Nitrogen", "As-Applied Seed Rate"),
+        title = "Select experimental variable."))
+      self$expvar <- ifelse(expVar == "As-Applied Nitrogen", "aa_n", "aa_sr")
     },
-    .selectYears = function() {
+    .selectField = function(db) {
+      flds <- rep(list(NA), length(self$respvar))
+      for (i in 1:length(flds)) {
+        tabExist <- as.logical(DBI::dbGetQuery(
+          db,
+          paste0("SELECT EXISTS (
+                 SELECT 1
+                 FROM information_schema.tables
+                 WHERE table_schema = '", self$farmername, "_a'
+                 AND table_name = '", self$respvar[i], "')"
+              )
+            )
+          )
+        if (tabExist) {
+          flds[[i]] <- DBI::dbGetQuery(
+              db,
+              paste0("SELECT DISTINCT field FROM ",
+                     self$farmername, "_a.", self$respvar[i], ";")
+          )$field
+        } else {
+          self$respvar[i] <- NA
+        }
+      }
+      flds <- unlist(flds) %>%
+        na.omit()
+      self$respvar <- self$respvar[!is.na(self$respvar)]
 
-
+      self$fieldname <-
+        as.character(select.list(
+            unique(flds),
+            multiple = TRUE,
+            title = "Select field(s) to analyze data for. Multiple can be selected if desired (i.e. sec1east and sec1west)."
+          )
+        )
+    },
+    .selectYears = function(db) {
+      for (i in 1:length(self$respvar)) {
+        years <-  rep(list(NA), length(self$fieldname)) %>%
+          `names<-`(self$fieldname)
+        for (j in 1:length(years)) {
+          years[[j]] <- as.character(select.list(unique(DBI::dbGetQuery(
+            db,
+            paste0("SELECT DISTINCT year
+                   FROM ", self$farmername, "_a.", self$respvar[i], " ", self$respvar[i], "
+                   WHERE ", self$respvar[i], ".field = '", self$fieldname[j], "'"))$year),
+            multiple = TRUE,
+            title = paste0("Select years from ",
+                           self$fieldname[j],
+                           " to get ", ifelse(self$respvar[i] == "yld", "Yield", "Protein"),
+                           " data for to include in analysis.")))
+        }
+        ## save choices in self file
+        if (self$respvar[i] == "yld") {
+          self$yldyears <- years
+        } else {
+          self$proyears <- years
+        }
+      }
+      if (!is.null(self$yldyears) & !is.null(self$proyears)) {
+        private$years <- list(yldyears=self$yldyears,
+                           proyears=self$proyears)
+      } else {
+        if (!is.null(self$yldyears)) {
+          private$years <- list(yldyears=self$yldyears)
+        }
+        if (!is.null(self$proyears)) {
+          private$years <- list(proyears=self$proyears)
+        }
+      }
     },
     .selectAggLocs = function() {
       gridOrObs <- as.character(select.list(
