@@ -34,6 +34,9 @@ AggInputs <- R6::R6Class(
     #' @field respvar Response variable to aggregate data for, select/input
     #' 'Yield', 'Protein', 'Satellite'. 'Satellite' data aggregates only
     #' remotely sensed data and does not include any on-farm collected data.
+    #' This option is important because the user needs to aggregate 'Satellite'
+    #' data for years that they would like to simulate management outcomes in
+    #' during the analysis and simulation step of the OFPE data cycle.
     respvar = NULL,
     #' @field expvar Experimental variable to aggregate data for. Select or supply
     #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
@@ -640,8 +643,11 @@ AggInputs <- R6::R6Class(
     #' Using this information the database is queried for years that data is
     #' available for this field. Also, if the user selected to only collect
     #' satellite data, the user can choose any year from 2000 to present to gather
-    #' data from. Also select the experimental variable to aggregate data for
-    #' (as-applied nitrogen or as-applied seed rate).
+    #' data from, however the user must have gathered data from that year in the
+    #' database. This 'Satellite' data is used in the analysis and simulation step
+    #' to simulate management outcomes under a selection of the years for which the
+    #' the user aggregated 'Satellite' data. Also select the experimental variable
+    #' to aggregate data for (as-applied nitrogen or as-applied seed rate).
     #'
     #' Select a data constraint for determining the time span for which to gather data.
     #' If 'Decision Point' is selected, then data from the current year is gathered up
