@@ -31,10 +31,11 @@ database, see DBCon class.}
 \item{\code{fieldname}}{Name of the field to aggregate data for. Selected from
 the 'all_farms.fields' table of an OFPE formatted database.}
 
-\item{\code{respvar}}{Response variable to aggregate data for, select/input
-'Yield' or 'Protein'. Multiple options allowed.}
+\item{\code{respvar}}{Response variable(s) to optimize experimental inputs based
+off of. The user can select 'Yield' and/or 'Protein' based on data
+availability.}
 
-\item{\code{expvar}}{Experimental variable to aggregate data for, select/input
+\item{\code{expvar}}{Experimental variable to optimize, select/input
 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
 input that was experimentally varied across the field as part of the
 on-farm experimentation.}
@@ -47,7 +48,7 @@ specified field names.}
 variables in the selected field. This must be a named list with the
 specified field names.}
 
-\item{\code{analysis_grid}}{Select whether to use gridded or observed data
+\item{\code{mod_grid}}{Select whether to use gridded or observed data
 locations for the analysis step. See the 'AggInputs' class for more
 information on the 'GRID' option. The user must have aggregated data
 with the specified GRID option prior to this step. (i.e. you will not
@@ -96,6 +97,33 @@ the other source will be used if the selected source is unavailable.}
 each explanatory variables mean or to use the raw observed explanatory varaible
 data. Centering is recommended as it puts variables on similar scales and makes
 the model fitting process less error prone.}
+
+\item{\code{split_pct}}{Select the percentage of data to use for the training dataset
+in the analysis step. The training dataset is used to fit the model to each
+of the crop responses. The difference will be split into a validation dataset
+that is used to evaluate the model performance on data it has not 'seen' before.}
+
+\item{\code{clean_rate}}{Select the maximum rate that could be realistically be applied
+by the applicating machine (sprayer or seeder). This is used for a rudimentary
+cleaning of the data that removes observations with as-applied rates above this
+user supplied threshold. Rates above this threshold should be able to be classified
+as machine measurement errors. For example, based on knowledge of the prescription/
+experiment applied and taking into account double applications on turns, a rate
+for as-applied nitrogen might be something like 300 - 400 lbs N/acre.}
+
+\item{\code{mod_dat}}{Based off of the user selections such as 'mod_grid', this is a named
+list for each response variable ('yld' and/or 'pro'). The data in each of
+these lists are processed and then split into training and validation datasets. This
+data is used for the model fitting and evaluations steps.}
+
+\item{\code{sim_dat}}{Based off of the user selections such as 'sim_grid', this is a named
+list for each response variable ('yld' and/or 'pro'). The data in each of
+these lists are processed and used in the Monte Carlo simulation.}
+
+\item{\code{num_means}}{Named vector of the means for each numerical covariate, including
+the experimental variable. This is used for converting centered data back to the
+original form. The centering process does not center three numerical variables; the
+x and y coordinates, and the response variable (yld/pro).}
 }
 \if{html}{\out{</div>}}
 }
@@ -104,6 +132,7 @@ the model fitting process less error prone.}
 \itemize{
 \item \href{#method-new}{\code{DatInputs$new()}}
 \item \href{#method-selectInputs}{\code{DatInputs$selectInputs()}}
+\item \href{#method-setupDat}{\code{DatInputs$setupDat()}}
 \item \href{#method-clone}{\code{DatInputs$clone()}}
 }
 }
@@ -120,13 +149,15 @@ the model fitting process less error prone.}
   expvar = NULL,
   yldyears = NULL,
   proyears = NULL,
-  analysis_grid = NULL,
+  mod_grid = NULL,
   sim_grid = NULL,
   dat_used = NULL,
   veg_index = NULL,
   prec_source = NULL,
   gdd_source = NULL,
-  center = NULL
+  center = NULL,
+  split_pct = NULL,
+  clean_rate = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -157,7 +188,7 @@ specified field names.}
 variables in the selected field. This must be a named list with the
 specified field names.}
 
-\item{\code{analysis_grid}}{Select whether to use gridded or observed data
+\item{\code{mod_grid}}{Select whether to use gridded or observed data
 locations for the analysis step. See the 'AggInputs' class for more
 information on the 'GRID' option. The user must have aggregated data
 with the specified GRID option prior to this step. (i.e. you will not
@@ -206,6 +237,19 @@ the other source will be used if the selected source is unavailable.}
 each explanatory variables mean or to use the raw observed explanatory varaible
 data. Centering is recommended as it puts variables on similar scales and makes
 the model fitting process less error prone.}
+
+\item{\code{split_pct}}{Select the percentage of data to use for the training dataset
+in the analysis step. The training dataset is used to fit the model to each
+of the crop responses. The difference will be split into a validation dataset
+that is used to evaluate the model performance on data it has not 'seen' before.}
+
+\item{\code{clean_rate}}{Select the maximum rate that could be realistically be applied
+by the applicating machine (sprayer or seeder). This is used for a rudimentary
+cleaning of the data that removes observations with as-applied rates above this
+user supplied threshold. Rates above this threshold should be able to be classified
+as machine measurement errors. For example, based on knowledge of the prescription/
+experiment applied and taking into account double applications on turns, a rate
+for as-applied nitrogen might be something like 300 - 400 lbs N/acre.}
 }
 \if{html}{\out{</div>}}
 }
@@ -244,7 +288,8 @@ The user also has the choice of which vegetation index data to use as
 covariates, as well as the preferred source for precipitation and
 growing degree day data. Finally, the user has the option of whether
 to center covariate data or to use the raw observed data for analysis
-and simulation.
+and simulation and the percent of data to use in the training data for
+model fitting. The rest of the data is witheld for validation.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DatInputs$selectInputs()}\if{html}{\out{</div>}}
 }
@@ -259,6 +304,48 @@ instantiation.}
 }
 \subsection{Returns}{
 A completed 'DatInputs' object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-setupDat"></a>}}
+\if{latex}{\out{\hypertarget{method-setupDat}{}}}
+\subsection{Method \code{setupDat()}}{
+This function calls the private methods for data gathering and
+processing. The data gather step takes the user selected inputs
+for the field, the response variables, and the data types ('mod_grid'
+and 'sim_grid') and exports the appropriate data into a a list,
+called 'mod_dat' and 'sim_dat', with lists, named  for each response variable
+('yld' and/or 'pro') with each data type data from all fields
+selected.
+
+The processing step goes through each data frame contained in the
+nested 'mod_dat' and 'sim_dat' lists and trims the data based on
+the user selections for the vegetation index and precipitation and
+growing degree day sources. If the user selected to center the
+experimental and covariate data, the values of each variable will
+be subtracted from the mean of that variable. In this case, a named
+vector of each variable and the mean will be created for reverting
+back to observed values.
+
+After this step, the data in 'mod_dat' is split into training and
+validation sets based on the percentage of data the user selected
+to include in the training dataset.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DatInputs$setupDat()}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{None}}{No arguments needed because passed in during class}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A named list with training and validation data, called
+'mod_dat', for each response variable ('yld' and/or 'pro'),
+and a named list ('yld' and/or 'pro') for the simulation and prescription
+building process, called 'sim_dat'.
 }
 }
 \if{html}{\out{<hr>}}

@@ -8,7 +8,7 @@
 [![Project Status: WIP – Initial development is in progress, but there
 has not yet been a stable, usable release suitable for the
 public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-[![Last-changedate](https://img.shields.io/badge/last%20change-2020--07--28-yellowgreen.svg)](/commits/master)
+[![Last-changedate](https://img.shields.io/badge/last%20change-2020--08--16-yellowgreen.svg)](/commits/master)
 [![R build
 status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
 [![Build
@@ -271,9 +271,6 @@ editing and using Javascript code. This data is downloaded to Google
 Drive, where the data can be batch uploaded to the database. See this
 [tutorial](https://paulhegedus.github.io/OFPE-Website/gd_setup.html) for
 setting up Google Drive to receive your data from Google Earth Engine.
-
-This [tutorial](https://paulhegedus.github.io/OFPE-Website/run_gee.html)
-is a copy? of the vignette.
 
 The process for importing Google Earth Engine data to the database and a
 more detailed description is outlined in the activity diagram on [this

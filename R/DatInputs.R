@@ -27,10 +27,11 @@ DatInputs <- R6::R6Class(
     #' @field fieldname Name of the field to aggregate data for. Selected from
     #' the 'all_farms.fields' table of an OFPE formatted database.
     fieldname = NULL,
-    #' @field respvar Response variable to aggregate data for, select/input
-    #' 'Yield' or 'Protein'. Multiple options allowed.
+    #' @field respvar Response variable(s) to optimize experimental inputs based
+    #' off of. The user can select 'Yield' and/or 'Protein' based on data
+    #' availability.
     respvar = NULL,
-    #' @field expvar Experimental variable to aggregate data for, select/input
+    #' @field expvar Experimental variable to optimize, select/input
     #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
     #' input that was experimentally varied across the field as part of the
     #' on-farm experimentation.
@@ -43,7 +44,7 @@ DatInputs <- R6::R6Class(
     #' variables in the selected field. This must be a named list with the
     #' specified field names.
     proyears = NULL,
-    #' @field analysis_grid Select whether to use gridded or observed data
+    #' @field mod_grid Select whether to use gridded or observed data
     #' locations for the analysis step. See the 'AggInputs' class for more
     #' information on the 'GRID' option. The user must have aggregated data
     #' with the specified GRID option prior to this step. (i.e. you will not
@@ -52,7 +53,7 @@ DatInputs <- R6::R6Class(
     #' same principle applies for the 'Observed' option. It is recommended that
     #' the analysis is performed with 'Observed' data, and for the simulation to
     #' be performed with 'Grid' data.
-    analysis_grid = NULL,
+    mod_grid = NULL,
     #' @field sim_grid Select whether to use gridded or observed data
     #' locations for the simulation and subsequent prescription building step.
     #' See the 'AggInputs' class for more information on the 'GRID' option.
@@ -93,6 +94,34 @@ DatInputs <- R6::R6Class(
     #' data. Centering is recommended as it puts variables on similar scales and makes
     #' the model fitting process less error prone.
     center = NULL,
+    #' @field split_pct Select the percentage of data to use for the training dataset
+    #' in the analysis step. The training dataset is used to fit the model to each
+    #' of the crop responses. The difference will be split into a validation dataset
+    #' that is used to evaluate the model performance on data it has not 'seen' before.
+    split_pct = NULL,
+    #' @field clean_rate Select the maximum rate that could be realistically be applied
+    #' by the applicating machine (sprayer or seeder). This is used for a rudimentary
+    #' cleaning of the data that removes observations with as-applied rates above this
+    #' user supplied threshold. Rates above this threshold should be able to be classified
+    #' as machine measurement errors. For example, based on knowledge of the prescription/
+    #' experiment applied and taking into account double applications on turns, a rate
+    #' for as-applied nitrogen might be something like 300 - 400 lbs N/acre.
+    clean_rate = NULL,
+
+    #' @field mod_dat Based off of the user selections such as 'mod_grid', this is a named
+    #' list for each response variable ('yld' and/or 'pro'). The data in each of
+    #' these lists are processed and then split into training and validation datasets. This
+    #' data is used for the model fitting and evaluations steps.
+    mod_dat = NULL,
+    #' @field sim_dat Based off of the user selections such as 'sim_grid', this is a named
+    #' list for each response variable ('yld' and/or 'pro'). The data in each of
+    #' these lists are processed and used in the Monte Carlo simulation.
+    sim_dat = NULL,
+    #' @field num_means Named vector of the means for each numerical covariate, including
+    #' the experimental variable. This is used for converting centered data back to the
+    #' original form. The centering process does not center three numerical variables; the
+    #' x and y coordinates, and the response variable (yld/pro).
+    num_means = NULL,
 
     #' @param dbCon Database connection object connected to an OFPE formatted
     #' database, see DBCon class.
@@ -111,7 +140,7 @@ DatInputs <- R6::R6Class(
     #' @param proyears The year(s) of interest for the protein response
     #' variables in the selected field. This must be a named list with the
     #' specified field names.
-    #' @param analysis_grid Select whether to use gridded or observed data
+    #' @param mod_grid Select whether to use gridded or observed data
     #' locations for the analysis step. See the 'AggInputs' class for more
     #' information on the 'GRID' option. The user must have aggregated data
     #' with the specified GRID option prior to this step. (i.e. you will not
@@ -154,6 +183,17 @@ DatInputs <- R6::R6Class(
     #' each explanatory variables mean or to use the raw observed explanatory varaible
     #' data. Centering is recommended as it puts variables on similar scales and makes
     #' the model fitting process less error prone.
+    #' @param split_pct Select the percentage of data to use for the training dataset
+    #' in the analysis step. The training dataset is used to fit the model to each
+    #' of the crop responses. The difference will be split into a validation dataset
+    #' that is used to evaluate the model performance on data it has not 'seen' before.
+    #' @param clean_rate Select the maximum rate that could be realistically be applied
+    #' by the applicating machine (sprayer or seeder). This is used for a rudimentary
+    #' cleaning of the data that removes observations with as-applied rates above this
+    #' user supplied threshold. Rates above this threshold should be able to be classified
+    #' as machine measurement errors. For example, based on knowledge of the prescription/
+    #' experiment applied and taking into account double applications on turns, a rate
+    #' for as-applied nitrogen might be something like 300 - 400 lbs N/acre.
     #' @return A new 'AggInputs' object.
     initialize = function(dbCon,
                           farmername = NULL,
@@ -162,13 +202,15 @@ DatInputs <- R6::R6Class(
                           expvar = NULL,
                           yldyears = NULL,
                           proyears = NULL,
-                          analysis_grid = NULL,
+                          mod_grid = NULL,
                           sim_grid = NULL,
                           dat_used = NULL,
                           veg_index = NULL,
                           prec_source = NULL,
                           gdd_source = NULL,
-                          center = NULL) {
+                          center = NULL,
+                          split_pct = NULL,
+                          clean_rate = NULL) {
       stopifnot(!is.null(dbCon))
       self$dbCon <- dbCon
       if (!is.null(farmername)) {
@@ -203,10 +245,10 @@ DatInputs <- R6::R6Class(
                   length(proyears) == length(fieldname))
         self$proyears <- proyears
       }
-      if (!is.null(analysis_grid)) {
-        stopifnot(is.character(analysis_grid),
-                  grepl("Grid|Observed", analysis_grid))
-        self$analysis_grid <- ifelse(analysis_grid == "Grid", "grid", "obs")
+      if (!is.null(mod_grid)) {
+        stopifnot(is.character(mod_grid),
+                  grepl("Grid|Observed", mod_grid))
+        self$mod_grid <- ifelse(mod_grid == "Grid", "grid", "obs")
       }
       if (!is.null(sim_grid)) {
         stopifnot(is.character(sim_grid),
@@ -239,7 +281,6 @@ DatInputs <- R6::R6Class(
         stopifnot(is.logical(center))
         self$center <- center
       }
-
       if (!is.null(self$yldyears) & !is.null(self$proyears)) {
         private$years <- list(yldyears=self$yldyears,
                            proyears=self$proyears)
@@ -250,6 +291,14 @@ DatInputs <- R6::R6Class(
         if (!is.null(self$proyears)) {
           private$years <- list(proyears=self$proyears)
         }
+      }
+      if (!is.null(split_pct)) {
+        stopifnot(is.numeric(split_pct))
+        self$split_pct <- split_pct
+      }
+      if (!is.null(clean_rate)) {
+        stopifnot(is.numeric(clean_rate))
+        self$clean_rate <- clean_rate
       }
     },
     #' @description
@@ -280,7 +329,8 @@ DatInputs <- R6::R6Class(
     #' covariates, as well as the preferred source for precipitation and
     #' growing degree day data. Finally, the user has the option of whether
     #' to center covariate data or to use the raw observed data for analysis
-    #' and simulation.
+    #' and simulation and the percent of data to use in the training data for
+    #' model fitting. The rest of the data is witheld for validation.
     #' @param None No arguments needed because passed in during class
     #' instantiation.
     #' @return A completed 'DatInputs' object.
@@ -296,18 +346,46 @@ DatInputs <- R6::R6Class(
       private$.selectPrecSource()
       private$.selectGddSource()
       private$.selectCenter()
+      private$.selectDatSplitPct()
+      private$.selectCleanRate()
+    },
+    #' @description
+    #' This function calls the private methods for data gathering and
+    #' processing. The data gather step takes the user selected inputs
+    #' for the field, the response variables, and the data types ('mod_grid'
+    #' and 'sim_grid') and exports the appropriate data into a a list,
+    #' called 'mod_dat' and 'sim_dat', with lists, named  for each response variable
+    #' ('yld' and/or 'pro') with each data type data from all fields
+    #' selected.
+    #'
+    #' The processing step goes through each data frame contained in the
+    #' nested 'mod_dat' and 'sim_dat' lists and trims the data based on
+    #' the user selections for the vegetation index and precipitation and
+    #' growing degree day sources. If the user selected to center the
+    #' experimental and covariate data, the values of each variable will
+    #' be subtracted from the mean of that variable. In this case, a named
+    #' vector of each variable and the mean will be created for reverting
+    #' back to observed values.
+    #'
+    #' After this step, the data in 'mod_dat' is split into training and
+    #' validation sets based on the percentage of data the user selected
+    #' to include in the training dataset.
+    #' @param None No arguments needed because passed in during class
+    #' @return A named list with training and validation data, called
+    #' 'mod_dat', for each response variable ('yld' and/or 'pro'),
+    #' and a named list ('yld' and/or 'pro') for the simulation and prescription
+    #' building process, called 'sim_dat'.
+    setupDat = function() {
+      self$mod_dat <- private$.fetchDat(self$mod_grid) %>%
+        lapply(private$.processDat) %>%
+        invisible()
+      self$sim_dat <- private$.fetchDat(self$sim_grid) %>%
+        lapply(private$.processDat) %>%
+        invisible()
+      private$.splitDat()
     }
-
     # more fields
-    # analysis dat (train & validation)
-    # simulation dat
-    # rx dat??
     # like year dat (if selected)
-
-    # has selectInputs() method
-    # has importDat() method
-    # has processDat(center = TRUE, veg_index = 'ndvi') method
-
   ),
   private = list(
     years = NULL,
@@ -383,7 +461,6 @@ DatInputs <- R6::R6Class(
                            " to get ", ifelse(self$respvar[i] == "yld", "Yield", "Protein"),
                            " data for to include in analysis.")))
         }
-        ## save choices in self file
         if (self$respvar[i] == "yld") {
           self$yldyears <- years
         } else {
@@ -407,7 +484,7 @@ DatInputs <- R6::R6Class(
           c("Grid", "Observed"),
           title = paste0("Select whether to use gridded ('Grid') or observed ('Observed') data locations for the analysis step.")
       ))
-      self$analysis_grid <- ifelse(gridOrObs == "Grid", "grid", "obs")
+      self$mod_grid <- ifelse(gridOrObs == "Grid", "grid", "obs")
       gridOrObs <- as.character(select.list(
         c("Grid", "Observed"),
         title = paste0("Select whether to use gridded ('Grid') or observed ('Observed') data locations for the simulation and/or Rx building step.")
@@ -450,9 +527,257 @@ DatInputs <- R6::R6Class(
         c(TRUE, FALSE),
         title = paste0("Select whether to center explanatory data (TRUE) or to use the measured explanatory data (FALSE).")
       ))
+    },
+    .selectDatSplitPct = function() {
+      self$split_pct <- as.numeric(readline(
+        "Provide the percentage of data to use as a training dataset for model fitting. The rest of the data will be witheld for model validation: "
+      ))
+    },
+    .selectCleanRate = function() {
+      self$clean_rate <- as.numeric(readline(
+        "Provide the threshold for as-applied rates above which are obvious machine measurment errors (e.g. 350 lbs/N/acre): "
+      ))
+    },
+
+    .fetchDat = function(GRID) {
+      dat <- as.list(self$respvar) %>%
+        `names<-`(self$respvar)
+      dat <- mapply(
+        private$.importDBdat,
+        dat,
+        private$years,
+        MoreArgs = list(GRID = GRID),
+        SIMPLIFY = FALSE
+      )
+      return(dat)
+    },
+    .importDBdat = function(respvar, years, GRID) {
+      dat <- rep(list(NA),
+                  length(years)) %>%
+        `names<-`(names(years))
+      #fieldname <- names(dat)
+      dat <- mapply(private$.gatherDBdat,
+                    years,
+                    respvar,
+                    self$fieldname,
+                    MoreArgs = list(GRID = GRID)) %>%
+        data.table::rbindlist()
+      return(dat)
+    },
+    .gatherDBdat = function(years, respvar, fieldname, GRID) {
+      dat <- as.list(years) %>%
+        `names<-`(years)
+      dat <- lapply(dat,
+                    private$.getDBdat,
+                    respvar,
+                    fieldname,
+                    GRID)
+      return(dat)
+    },
+    .getDBdat = function(year, respvar, fieldname, GRID) {
+      invisible(
+        DBI::dbSendQuery(
+          self$dbCon$db,
+          paste0(
+            "CREATE TABLE ", self$farmername,"_a.temp AS (SELECT *
+            FROM ", self$farmername, "_a.", respvar, " ", respvar,"
+            WHERE field = '", fieldname, "'
+            AND year = '", year, "'
+            AND grid = '", GRID, "'
+            AND datused = '", self$dat_used,"');
+
+            ALTER TABLE ",
+            self$farmername, "_a.temp
+            DROP COLUMN geometry;"
+          )
+        )
+      )
+      db_dat <- invisible(
+        DBI::dbGetQuery(
+          self$dbCon$db,
+          paste0("SELECT * FROM ", self$farmername, "_a.temp;")
+        )
+      )
+      invisible(
+        DBI::dbGetQuery(
+          self$dbCon$db,
+          paste0(
+            "DROP TABLE ", self$farmername, "_a.temp;"
+          )
+        )
+      )
+      return(db_dat)
+    },
+    .processDat = function(dat) {
+      dat <- private$.trimCols(
+        dat, c("grid", "size", "datused", "farmer", "prev_year")) %>%
+        private$.selectDat() %>%
+        private$.makeFactors() %>%
+        private$.cleanDat() %>%
+        private$.centerDat()
+      return(dat)
+    },
+    .trimCols = function(dat, trim_cols) {
+      return(dat[,!(names(dat) %in% trim_cols)])
+    },
+    .selectDat = function(dat) {
+      df <- matrix(NA, nrow = nrow(dat), ncol = 7) %>%
+        as.data.frame()
+      names(df) <- c("prec_cy","prec_py","gdd_cy","gdd_py",
+                     "veg_cy","veg_py","veg_2py")
+      prec_key <- ifelse(self$prec_source == "daymet", "d", "g")
+      alt_prec_key <- ifelse(self$prec_source == "daymet", "g", "d")
+      gdd_key <- ifelse(self$gdd_source == "daymet", "d", "g")
+      alt_gdd_key <- ifelse(self$gdd_source == "daymet", "g", "d")
+
+      df$prec_cy <- ifelse(!is.na(dat[, grep(paste0("prec_cy_", prec_key),
+                                             names(dat))]),
+                           dat[, grep(paste0("prec_cy_", prec_key),
+                                      names(dat))],
+                           dat[, grep(paste0("prec_cy_", alt_prec_key),
+                                      names(dat))])
+      df$prec_py <- ifelse(!is.na(dat[, grep(paste0("prec_py_", prec_key),
+                                             names(dat))]),
+                           dat[, grep(paste0("prec_py_", prec_key),
+                                      names(dat))],
+                           dat[, grep(paste0("prec_py_", alt_prec_key),
+                                      names(dat))])
+      df$gdd_cy <- ifelse(!is.na(dat[, grep(paste0("gdd_cy_", gdd_key),
+                                            names(dat))]),
+                          dat[, grep(paste0("gdd_cy_", gdd_key),
+                                     names(dat))],
+                          dat[, grep(paste0("gdd_cy_", alt_gdd_key),
+                                     names(dat))])
+      df$gdd_py <- ifelse(!is.na(dat[, grep(paste0("gdd_py_", gdd_key),
+                                            names(dat))]),
+                          dat[, grep(paste0("gdd_py_", gdd_key),
+                                     names(dat))],
+                          dat[, grep(paste0("gdd_py_", alt_gdd_key),
+                                     names(dat))])
+      df$veg_cy <- ifelse(!is.na(dat[, grep(paste0(self$veg_index, "_cy_s"),
+                                            names(dat))]),
+                          dat[, grep(paste0(self$veg_index, "_cy_s"),
+                                     names(dat))],
+                          dat[, grep(paste0(self$veg_index, "_cy_l"),
+                                     names(dat))])
+      df$veg_py <- ifelse(!is.na(dat[, grep(paste0(self$veg_index, "_py_s"),
+                                            names(dat))]),
+                          dat[, grep(paste0(self$veg_index, "_py_s"),
+                                     names(dat))],
+                          dat[, grep(paste0(self$veg_index, "_py_l"),
+                                     names(dat))])
+      df$veg_2py <- ifelse(!is.na(dat[, grep(paste0(self$veg_index, "_2py_s"),
+                                             names(dat))]),
+                           dat[, grep(paste0(self$veg_index, "_2py_s"),
+                                      names(dat))],
+                           dat[, grep(paste0(self$veg_index, "_2py_l"),
+                                      names(dat))])
+      dat <- private$.trimCols(
+        dat,
+        c("prec_cy_d", "prec_py_d", "gdd_cy_d", "gdd_py_d",
+          "prec_cy_g", "prec_py_g", "gdd_cy_g", "gdd_py_g",
+          "ndvi_cy_s", "ndvi_py_s", "ndvi_2py_s",
+          "ndvi_cy_l", "ndvi_py_l", "ndvi_2py_l",
+          "ndre_cy", "ndre_py", "ndre_2py",
+          "cire_cy", "cire_py", "cire_2py")
+      )
+      dat <- cbind(dat, df)
+      return(dat)
+    },
+    .makeFactors = function(dat) {
+      dat$field <- factor(dat$field)
+      dat$year <- factor(dat$year)
+      dat$musym <- factor(dat$musym)
+      return(dat)
+    },
+    .cleanDat = function(dat) {
+      if (any(grepl("aa_n|aa_sr|yld|pro", names(dat)))) {
+        col <- names(dat)[grep("aa_n|aa_sr", names(dat))]
+        for(i in 1:length(col)){
+          rows <- which(dat[names(dat) %in% col[i]] < self$clean_rate |
+                          is.na(dat[names(dat) %in% col[i]]))
+          dat <- dat[rows, ]
+        }
+        col <- names(dat)[grep("yld|pro", names(dat))]
+        for(i in 1:length(col)){
+          rows <- which(dat[names(dat) %in% col[i]] > 0 |
+                          is.na(dat[names(dat) %in% col[i]]))
+          dat <- dat[rows, ]
+        }
+      }
+      return(dat)
+    },
+    .centerDat = function(dat) {
+      num_names <- names(dat)[sapply(dat, is.numeric)]
+      num_names <- num_names[!grepl("^x$|^y$|^yld$|^pro$", num_names)]
+      self$num_means <- sapply(dat[num_names], mean, na.rm = TRUE)
+      if (self$center) {
+        for (i in 1:length(num_names)) {
+          dat[names(dat) %in% num_names[i]] <-
+            dat[names(dat) %in% num_names[i]] - self$num_means[i]
+        }
+      }
+      return(dat)
+    },
+    .splitDat = function() {
+      set.seed(6201994)
+      self$mod_dat <- lapply(self$mod_dat, private$.splitDatTrnVal) %>%
+        `names<-`(names(self$mod_dat))
+
+      trn_dat <- rep(list(NA), length(self$mod_dat)) %>%
+        `names<-`(names(self$mod_dat))
+      val_dat <- rep(list(NA), length(self$mod_dat)) %>%
+        `names<-`(names(self$mod_dat))
+
+      for(i in 1:length(self$mod_dat)){
+        trn_dat[[i]] <- self$mod_dat[[i]]$trn
+        val_dat[[i]] <- self$mod_dat[[i]]$val
+      }
+      self$mod_dat <- list(trn_dat = trn_dat, val_dat = val_dat)
+    },
+    .splitDatTrnVal = function(dat) {
+      if (all(is.na(dat$musym))) {
+        sub_list <- split(dat, list(dat$field, dat$year))
+      } else {
+        sub_list <- split(dat, list(dat$field, dat$year, dat$musym))
+      }
+      split_dat <- lapply(sub_list, private$.dualSplit, self$split_pct)
+      out_trn <- sapply(split_dat,'[',"trn") %>%
+        data.table::rbindlist()
+      out_val <- sapply(split_dat,'[',"val") %>%
+        data.table::rbindlist()
+      out_dat <- list(trn = out_trn, val = out_val)
+      return(out_dat)
+    },
+    .subDat = function(STRING, dat) {
+      YEAR <- substr(STRING,
+                     stringr::str_locate(STRING, "20")[1],
+                     stringr::str_locate(STRING, "20")[1] + 3)
+      FIELD <- gsub(paste0(".", YEAR), "", STRING)
+      dat <- subset(dat, dat$field == FIELD & dat$year == YEAR)
+      return(dat)
+    },
+    .dualSplit = function(dat, trnprop) {
+      trnprop <- trnprop * 0.01
+      valprop <- 1 - trnprop
+      sum_sam <- round(nrow(dat) * trnprop) +
+        round(nrow(dat) * valprop)
+      dif <- nrow(dat) - sum_sam
+      if (dif == 0) {
+        subL <- split(
+          dat,
+          sample(c(rep("trn", round(nrow(dat) * trnprop)),
+                   rep("val", round(nrow(dat) * valprop))))
+        )
+      } else {
+        subL <- split(
+          dat,
+          sample(c(rep("trn", round(nrow(dat) * trnprop) + dif),
+                   rep("val", round(nrow(dat) * valprop))))
+        )
+      }
+      return(subL)
     }
-
-
   )
 )
 

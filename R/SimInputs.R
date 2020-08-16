@@ -12,10 +12,9 @@
 #' user supplies the database connection and uses the interactive selection
 #' methods to select user inputs.
 #'
-#' This class is used for instantiating the selected model class and associated
+#' This class is used for instantiating the simulation class and associated
 #' outputter, activating and executing the 'LikeYear' class to identify the year
-#' from the past that is most likely to reflect the upcoming year. This class
-#' also is used to instantiate the simulation class.
+#' from the past that is most likely to reflect the upcoming year.
 #' @export
 SimInputs <- R6::R6Class(
   "SimInputs",
@@ -23,14 +22,6 @@ SimInputs <- R6::R6Class(
     #' @field dbCon Database connection object connected to an OFPE formatted
     #' database, see DBCon class.
     dbCon = NULL,
-    #' @field farmername Provide the name of the farmer who owns the field that is
-    #' the target of analysis/simulation/prescription generation.
-    farmername = NULL,
-    #' @field fxn Select the functional form of a model to use for analysis.
-    #' The user can select 'GAM' for a generalized additive model, 'Non-Linear
-    #' Logistic' for a logistic function, or... More model options can be added
-    #' here.
-    fxn = NULL,
     #' @field sPr Provide the number of iterations to run the simulation. Without
     #' user inputs the default will be 100.
     sPr = NULL,
@@ -69,15 +60,13 @@ SimInputs <- R6::R6Class(
     #' @field AAmin Select the minimum as-applied rate to simulate management
     #' outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).
     AAmin = NULL,
+    #' @field out_path Provide the path to the folder in which to store and
+    #' save outputs from the simulation including figures and tables on
+    #' management outcomes.
+    out_path = NULL,
 
     #' @param dbCon Database connection object connected to an OFPE formatted
     #' database, see DBCon class.
-    #' @param farmername Provide the name of the farmer who owns the field that is
-    #' the target of analysis/simulation/prescription generation.
-    #' @param fxn Select the functional form of a model to use for analysis.
-    #' The user can select 'GAM' for a generalized additive model, 'Non-Linear
-    #' Logistic' for a logistic function, or... More model options can be added
-    #' here.
     #' @param sPr Provide the number of iterations to run the simulation. Without
     #' user inputs the default will be 100.
     #' @param opt The user also has the option to select the optimization method.
@@ -110,26 +99,21 @@ SimInputs <- R6::R6Class(
     #' outcomues to (i.e. 200 lbs N or seed per acre).
     #' @param AAmin Select the minimum as-applied rate to simulate management
     #' outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).
+    #' @param out_path Provide the path to the folder in which to store and
+    #' save outputs from the simulation including figures and tables on
+    #' management outcomes.
     #' @return A new 'SimInputs' object.
     initialize = function(dbCon,
-                          farmername,
-                          fxn = NULL,
                           sPr = NULL,
                           opt = NULL,
                           sim_year = NULL,
                           fcr = NULL,
                           AArateCutoff = NULL,
-                          AAmin = NULL) {
-      stopifnot(!is.null(dbCon),
-                !is.null(farmername),
-                is.character(farmername))
+                          AAmin = NULL,
+                          out_path = NULL) {
+      stopifnot(!is.null(dbCon))
       self$dbCon <- dbCon
-      self$farmername <- farmername
 
-      if (!is.null(fxn)) {
-        stopifnot(is.character(fxn))
-        self$fxn <- fxn
-      }
       if (!is.null(sPr)) {
         stopifnot(is.numeric(sPr))
         self$sPr <- sPr
@@ -156,6 +140,10 @@ SimInputs <- R6::R6Class(
           stopifnot(self$AArateCutoff > AAmin)
         }
         self$AAmin <- AAmin
+      }
+      if (!is.null(out_path)) {
+        stopifnot(is.character(out_path))
+        self$out_path <- out_path
       }
     },
     #' @description
@@ -197,28 +185,22 @@ SimInputs <- R6::R6Class(
     #' generated. It also will identify the year most expected to follow
     #' a specified year based off of the trend in the historic data the user
     #' has gatherd.
-    #' @param None No arguments needed because passed in during class
-    #' instantiation.
+    #' @param farmername Provide the name of the farmer who owns the field that is
+    #' the target of analysis/simulation/prescription generation.
+    #' @param fieldname Provide the name of the field that is
+    #' the target of analysis/simulation/prescription generation.
     #' @return A completed 'DatInputs' object.
-    selectInputs = function() {
-      private$.selectFxn()
+    selectInputs = function(farmername, fieldname) {
       private$.selectIter()
       private$.selectOpt()
-      private$.selectSimYear(self$dbCon$db, self$farmername)
+      private$.selectSimYear(self$dbCon$db, farmername, fieldname)
       private$.selectFcr()
       private$.selectAArateCutoff()
       private$.selectAAmin()
+      private$.selectOutPath()
     }
   ),
   private = list(
-    .selectFxn = function() {
-      fxn <- as.character(select.list(
-        c("GAM", "Non-Linear Logistic"),
-        title = "Select the analysis type to perform."
-      ))
-      self$fxn <- ifelse(fxn == "GAM", "GAM",
-                         ifelse(fxn == "Non-Linear Logistic", "Logistic", NA ))
-    },
     .selectIter = function() {
       self$sPr <- as.integer(
         readline("Provide the number of iterations to run the simulation: ")
@@ -232,7 +214,7 @@ SimInputs <- R6::R6Class(
       self$opt <- ifelse(opt == "Maximum", "max",
                          ifelse(opt == "Derivative", "deriv", NA))
     },
-    .selectSimYear = function(db, farmername) {
+    .selectSimYear = function(db, farmername, fieldname) {
       sim_year <- as.character(select.list(
             c("Select Year", "Run 'LikeYear' Analysis"),
             title = "Select whether to choose a year(s) to simulate based off of 'Satellite' data aggrgated in the user's OFPE database. Otherwise, elect to run the 'LikeYear' analysis to identify and select from the wettest, driest, average, and predicted year to follow a user selected year. "
@@ -249,13 +231,28 @@ SimInputs <- R6::R6Class(
           )
         )
         if (sat_exist) {
-          self$sim_year <- as.numeric(select.list(
-            unique(DBI::dbGetQuery(
+          sim_years <- as.list(fieldname) %>%
+            `names<-`(fieldname)
+          for (i in 1:length(sim_years)) {
+            sim_years[[i]] <- unique(DBI::dbGetQuery(
               db,
               paste0("SELECT DISTINCT year
-                       FROM ", self$farmername, "_a.sat sat
-                       WHERE sat.field = '", self$fieldname, "'")
-            )$year),
+                       FROM ", farmername, "_a.sat sat
+                       WHERE sat.field = '", sim_years[[i]], "'")
+            )$year)
+          }
+          for (i in 1:length(sim_years)) {
+            for (j in 1:length(sim_years)) {
+              if (i != j) {
+                sim_years[[i]] <-
+                  sim_years[[i]][sim_years[[i]] %in% sim_years[[j]]]
+              }
+            }
+          }
+          sim_years <- do.call(c, sim_years) %>% unique
+
+          self$sim_year <- as.numeric(select.list(
+            sim_years,
             multiple = TRUE,
             title = paste0("Select year(s) to get simulate weather conditions for.")
           ))
@@ -290,6 +287,11 @@ SimInputs <- R6::R6Class(
         "Select the minimum as-applied rate to simulate management outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre): "
       ))
       stopifnot(self$AArateCutoff > self$AAmin)
+    },
+    .selectOutPath = function() {
+      self$out_path <- as.character(readline(
+        "Provide the path to a folder in which to save simulation outputs (i.e. '~/path/to/folder' or 'C:/path/to/folder'): "
+      ))
     }
   )
 )

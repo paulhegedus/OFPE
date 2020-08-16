@@ -16,24 +16,15 @@ this is NOT recommended except for advanced users. It is recommended that the
 user supplies the database connection and uses the interactive selection
 methods to select user inputs.
 
-This class is used for instantiating the selected model class and associated
+This class is used for instantiating the simulation class and associated
 outputter, activating and executing the 'LikeYear' class to identify the year
-from the past that is most likely to reflect the upcoming year. This class
-also is used to instantiate the simulation class.
+from the past that is most likely to reflect the upcoming year.
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
 \item{\code{dbCon}}{Database connection object connected to an OFPE formatted
 database, see DBCon class.}
-
-\item{\code{farmername}}{Provide the name of the farmer who owns the field that is
-the target of analysis/simulation/prescription generation.}
-
-\item{\code{fxn}}{Select the functional form of a model to use for analysis.
-The user can select 'GAM' for a generalized additive model, 'Non-Linear
-Logistic' for a logistic function, or... More model options can be added
-here.}
 
 \item{\code{sPr}}{Provide the number of iterations to run the simulation. Without
 user inputs the default will be 100.}
@@ -72,6 +63,10 @@ outcomues to (i.e. 200 lbs N or seed per acre).}
 
 \item{\code{AAmin}}{Select the minimum as-applied rate to simulate management
 outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
+
+\item{\code{out_path}}{Provide the path to the folder in which to store and
+save outputs from the simulation including figures and tables on
+management outcomes.}
 }
 \if{html}{\out{</div>}}
 }
@@ -90,14 +85,13 @@ outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{SimInputs$new(
   dbCon,
-  farmername,
-  fxn = NULL,
   sPr = NULL,
   opt = NULL,
   sim_year = NULL,
   fcr = NULL,
   AArateCutoff = NULL,
-  AAmin = NULL
+  AAmin = NULL,
+  out_path = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -106,14 +100,6 @@ outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
 \describe{
 \item{\code{dbCon}}{Database connection object connected to an OFPE formatted
 database, see DBCon class.}
-
-\item{\code{farmername}}{Provide the name of the farmer who owns the field that is
-the target of analysis/simulation/prescription generation.}
-
-\item{\code{fxn}}{Select the functional form of a model to use for analysis.
-The user can select 'GAM' for a generalized additive model, 'Non-Linear
-Logistic' for a logistic function, or... More model options can be added
-here.}
 
 \item{\code{sPr}}{Provide the number of iterations to run the simulation. Without
 user inputs the default will be 100.}
@@ -152,6 +138,10 @@ outcomues to (i.e. 200 lbs N or seed per acre).}
 
 \item{\code{AAmin}}{Select the minimum as-applied rate to simulate management
 outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
+
+\item{\code{out_path}}{Provide the path to the folder in which to store and
+save outputs from the simulation including figures and tables on
+management outcomes.}
 }
 \if{html}{\out{</div>}}
 }
@@ -202,14 +192,17 @@ generated. It also will identify the year most expected to follow
 a specified year based off of the trend in the historic data the user
 has gatherd.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SimInputs$selectInputs()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{SimInputs$selectInputs(farmername, fieldname)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{None}}{No arguments needed because passed in during class
-instantiation.}
+\item{\code{farmername}}{Provide the name of the farmer who owns the field that is
+the target of analysis/simulation/prescription generation.}
+
+\item{\code{fieldname}}{Provide the name of the field that is
+the target of analysis/simulation/prescription generation.}
 }
 \if{html}{\out{</div>}}
 }
