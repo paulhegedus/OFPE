@@ -35,6 +35,7 @@ ImportOF <- R6::R6Class(
     #' the OFPE database.
     #' @return A new 'ImportOF' object.
     initialize = function(dbCon, dat_path) {
+      OFPE::removeTempTables(dbCon$db) # removes temporary tables
       stopifnot(
         is.character(dat_path)
       )

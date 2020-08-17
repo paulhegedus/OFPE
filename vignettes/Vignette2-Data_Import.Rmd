@@ -92,7 +92,6 @@ dbCon <- DBCon$new(
   host = "localhost",
   port = "5432"
 )
-OFPE::removeTempTables(dbCon$db) # removes temporary tables
 ```
 
 ### Prepare Example Data

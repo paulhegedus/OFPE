@@ -186,7 +186,7 @@ aggYld16G <- list(dbCon = dbCon,
                                          orig_file = "FarmerB_N_2016.shp"),
                  py_exp_col = NULL,
                  cy_exp_conv = data.frame(FORMULA = NA,
-                                          conversion = NA,
+                                          conversion = 3.5,
                                           orig_file = "FarmerB_N_2016.shp"),
                  py_exp_conv = NULL)
 
@@ -266,7 +266,7 @@ aggPro16G <- list(dbCon = dbCon,
                                          orig_file = "FarmerB_N_2016.shp"),
                  py_exp_col = NULL,
                  cy_exp_conv = data.frame(FORMULA = NA,
-                                          conversion = NA,
+                                          conversion = 3.5,
                                           orig_file = "FarmerB_N_2016.shp"),
                  py_exp_conv = NULL)
 
@@ -346,7 +346,7 @@ aggYld16O <- list(dbCon = dbCon,
                                          orig_file = "FarmerB_N_2016.shp"),
                  py_exp_col = NULL,
                  cy_exp_conv = data.frame(FORMULA = NA,
-                                          conversion = NA,
+                                          conversion = 3.5,
                                           orig_file = "FarmerB_N_2016.shp"),
                  py_exp_conv = NULL)
 
@@ -426,7 +426,7 @@ aggPro16O <- list(dbCon = dbCon,
                                          orig_file = "FarmerB_N_2016.shp"),
                  py_exp_col = NULL,
                  cy_exp_conv = data.frame(FORMULA = NA,
-                                          conversion = NA,
+                                          conversion = 3.5,
                                           orig_file = "FarmerB_N_2016.shp"),
                  py_exp_conv = NULL)
 ```

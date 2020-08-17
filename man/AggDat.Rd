@@ -20,7 +20,7 @@ response variable data based on nearest neighbor or an average, depending on
 the selected location of aggregated data ('Grid' vs. 'Observed'). Experimental
 data is gathered from the year of interest and the year in which a crop was
 previously grown. These data are all cleaned in the same process. Across the
-whole field, data are removed when exceeding 4SD from the mean, and within
+whole field, data are removed when exceeding 5SD from the mean, and within
 each 10m grid cell, data are removed when exceeding 1SD from the cell mean.
 This occurs regardless of whether 'Grid' or 'Observed' is selected. Then,
 data from remotely sensed sources are gathered. The data selected is dependent
@@ -318,10 +318,21 @@ raw database schema before it is processed and added to the temporary
 table in the farmer's aggregated schema. Differs from the cleaning of
 response variable data because of the different structure of inputs
 required for the experimental data and because experimental data may
-include polygon data. The dot indicates that this function would be
-private if not for documentations sake.
+include polygon data. Implements a second cleaning process
+based on the grid cells where observations outside of one standard deviation
+of the mean in each grid cell are omitted. The dot indicates that this function
+would be private if not for documentations sake.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AggDat$.cleanExpData(exp_files, db, exp_col, farmername, year)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{AggDat$.cleanExpData(
+  exp_files,
+  db,
+  exp_col,
+  farmername,
+  year,
+  exp_conv,
+  expvar,
+  CY = TRUE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -337,6 +348,14 @@ to the measured experimental variable.}
 \item{\code{farmername}}{Name of the farmer that owns the field for aggregation.}
 
 \item{\code{year}}{The year of the data being aggregated.}
+
+\item{\code{exp_conv}}{The data.frame containaing the information for the product
+formula and any conversion to lbs per acre.}
+
+\item{\code{expvar}}{The experimental variable to aggregate.}
+
+\item{\code{CY}}{Logical, whether the data for aggregation is from the year of
+interest (aka the 'current year').}
 }
 \if{html}{\out{</div>}}
 }
@@ -351,36 +370,33 @@ Temporary table in the farmer's 'raw' schema.
 Method for aggregating the response variable data in the database. Uses
 the output of the .cleanExpData method to add the experimental variable data
 to the aggregated table in the database. Assumes current year is true, set
-to false to create "prev_EXPVAR" col. Implements a second cleaning process
-based on the grid cells where observations outside of one standard deviation
-of the mean in each grid cell are omitted. The dot indicates that this function
+to false to create "prev_EXPVAR" col. A set of points from the grid created
+across the fields that the aggregation data is based on is recreated
+and clipped to the bounding box of the experimental raw data. The raw experimental
+data is then extracted to the grid centroids where missing values are filled with
+NULL. This is a difference compared to the previous approach that did this after
+aggregation, where some missing values should be missing (field edges, carlinwest
+etc.) and fills in the gaps within observations (real zeroes where the machine
+stopped applicating) are filled with zeroes more reliably. This data is then
+used when aggregating experimental data. The The dot indicates that this function
 would be private if not for documentations sake.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AggDat$.aggExpData(
-  exp_files,
   db,
-  exp_col,
-  exp_conv,
   farmername,
   expvar,
   GRID,
   CY = TRUE,
-  size
+  fieldname,
+  size,
+  exp_files
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{exp_files}}{The experimental variable files for use in aggregating.}
-
 \item{\code{db}}{Connection to an OFPE database.}
-
-\item{\code{exp_col}}{The data.frame containaing the information on the columns
-corresponding to the experimental variable.}
-
-\item{\code{exp_conv}}{The data.frame containaing the information for the product
-formula and any conversion to lbs per acre.}
 
 \item{\code{farmername}}{Name of the farmer that owns the field for aggregation.}
 
@@ -392,7 +408,11 @@ the raw observed data locations.}
 \item{\code{CY}}{Logical, whether the data for aggregation is from the year of
 interest (aka the 'current year').}
 
+\item{\code{fieldname}}{Name of the field for aggregation.}
+
 \item{\code{size}}{Size of grid to make (meters), default = 10.}
+
+\item{\code{exp_files}}{The experimental variable files for aggregating.}
 }
 \if{html}{\out{</div>}}
 }
@@ -413,6 +433,7 @@ if not for documentations sake. Put the aggregated data into long lat
 for raster extraction. Clip the aggregated dataset to the field boundary
 for faster processing. If experimental rates are null convert to zero
 because the sprayer does not record rather than recording zeroes.
+Also, this function
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AggDat$.clipAggDat()}\if{html}{\out{</div>}}
 }

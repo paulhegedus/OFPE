@@ -701,6 +701,7 @@ AggInputs <- R6::R6Class(
     #' instantiation.
     #' @return A completed 'AggInputs' object.
     selectInputs = function() {
+      OFPE::removeTempTables(self$dbCon$db) # removes temporary tables
       private$.selectField(self$dbCon$db)
       OFPE::removeTempFarmerTables(self$dbCon$db, self$farmername)
 
@@ -842,7 +843,7 @@ AggInputs <- R6::R6Class(
       )
       self$GRID <- ifelse(gridOrObs == "Grid", "grid", "obs")
 
-      self$size <- readline(prompt = "Enter the size of grid to use for aggregation and/or cleaning: ")
+      self$size <- readline(prompt = "Enter the size of grid to use for aggregation and/or cleaning (meters): ")
     },
     .selectAggLOY = function() {
       ## Select constraints on data to gather

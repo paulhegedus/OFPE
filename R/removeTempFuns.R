@@ -136,6 +136,46 @@ removeTempFarmerTables <- function(db, farmername) {
       )
     )
   }
+  exp_grid_exist <- as.logical(
+    DBI::dbGetQuery(
+      db,
+      paste0("SELECT EXISTS (
+             SELECT 1
+             FROM information_schema.tables
+             WHERE table_schema = '",farmername,"_a'
+             AND table_name = 'exp_grid')")
+    )
+  )
+  if(exp_grid_exist){
+    invisible(
+      DBI::dbGetQuery(
+        db,
+        paste0("DROP TABLE ",
+               farmername,
+               "_a.exp_grid")
+      )
+    )
+  }
+  exp_box_exist <- as.logical(
+    DBI::dbGetQuery(
+      db,
+      paste0("SELECT EXISTS (
+             SELECT 1
+             FROM information_schema.tables
+             WHERE table_schema = '",farmername,"_a'
+             AND table_name = 'exp_box')")
+    )
+  )
+  if(exp_box_exist){
+    invisible(
+      DBI::dbGetQuery(
+        db,
+        paste0("DROP TABLE ",
+               farmername,
+               "_a.exp_box")
+      )
+    )
+  }
   return(invisible())
 }
 
