@@ -47,7 +47,7 @@ ManageFarms <- R6::R6Class(
       self$dbCon <- dbCon
       self$farm_info <- action_item$farms %>%
         lapply(function(x) lapply(x, tolower))
-      self$farm_path <- farm_path
+      self$farm_path <- action_item$farm_path
     },
     #' @description
     #' Prepares the farm data prior to uploading to the database. Imports

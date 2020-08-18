@@ -48,7 +48,7 @@ ManageFields <- R6::R6Class(
       self$dbCon <- dbCon
       self$field_info <- action_item$fields %>%
         lapply(function(x) lapply(x, tolower))
-      self$field_path <- field_path
+      self$field_path <- action_item$field_path
     },
     #' @description
     #' Prepares the field data prior to uploading to the database. Imports
