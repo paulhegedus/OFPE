@@ -79,6 +79,8 @@ ManageFarms <- R6::R6Class(
     #' @param farm_path Path to the location of farm boundary shapefiles.
     #' @return ESRI shapefile of farm boundary.
     .setupFarms = function(farm_info, farm_path = NULL) {
+      browser()
+
       farm <- sf::st_read(paste0(self$farm_path,
                                  farm_info$farm_shp_name,
                                  ".shp"),

@@ -51,15 +51,31 @@ ModClass <- R6::R6Class(
     fxn_path = NULL,
     #' @field out_path Provide the path to the folder in which to store and
     #' save outputs from the model fitting process, including diagnostic and
-    #' validation plots.
+    #' validation plots. Type NA to not create any folders. You will not be
+    #' able to save any outputs. (Note, even if a path is provided, the user
+    #' can pass FALSE as the sole argument to the 'setupOP' method to prevent
+    #' the creation of folders. This will automatically prevent any plots to
+    #' be saved.)
     out_path = NULL,
+    #' @field SAVE Logical, whether to save figures. Autofilled to FALSE if
+    #' a user selects NA in the 'out_path' or is NULL. Autofilled to TRUE
+    #' otherwise. This will be triggered to FALSE if the user passes FALSE
+    #' as the only argument to the 'setupOP' method. The user can also select
+    #' to save/not save individual figures.
+    SAVE = NULL,
+
+    #' @field mod_list List containing the initialized R6 class for the specified
+    #' models. All model classes follow the same interface with standardized
+    #' field and method names. This class is accessed in the analysis and
+    #' simulation steps.
+    mod_list = NULL,
 
     #' @param respvar Response variable(s) to optimize on, input
     #' 'Yield' or 'Protein'. Multiple options allowed. This can be passed in
-    #' from the 'DatInputs' class where the response variables for optimization
+    #' from the 'datClass' class where the response variables for optimization
     #' where selected. This argument must be passed in on class instantiation
     #' and is not available to select from the interactive method because it
-    #' has been selected in the 'DatInputs' class.
+    #' has been selected in the 'datClass' class.
     #' @param fxn Provide the functional form of a model to use for analysis.
     #' The user must provide the name of the file that contains the scripts
     #' for the model. Current models available include 'GAM' and
@@ -68,56 +84,162 @@ ModClass <- R6::R6Class(
     #' @param fxn_path Provide the path to the folder where a user created
     #' model class is stored. If using 'GAM' or 'NonLinear_Logistic' models
     #' this will be left NULL as these classes are stored in this package.
+    #' @param SAVE Logical, whether to save figures. Autofilled to FALSE if
+    #' a user selects NA in the 'out_path' or is NULL. Autofilled to TRUE
+    #' otherwise. This will be triggered to FALSE if the user passes FALSE
+    #' as the only argument to the 'setupOP' method. The user can also select
+    #' to save/not save individual figures.
     #' @param out_path Provide the path to the folder in which to store and
     #' save outputs from the model fitting process, including diagnostic and
-    #' validation plots.
+    #' validation plots. Type NA to not create any folders. You will not be
+    #' able to save any outputs. (Note, even if a path is provided, the user
+    #' can pass FALSE as the sole argument to the 'setupOP' method to prevent
+    #' the creation of folders. This will automatically prevent any plots to
+    #' be saved.)
     #' @return A instantiated 'ModClass' object.
     initialize = function(fxn = NULL,
                           fxn_path = NULL,
+                          SAVE = NULL,
                           out_path = NULL) {
       if (!is.null(fxn)) {
         stopifnot(is.list(fxn),
-                  any(names(fxn) == "yld|pro"))
+                  any(grepl("yld|pro", names(fxn))))
         self$fxn <- fxn
       }
       if (!is.null(fxn_path)) {
         stopifnot(is.list(fxn_path),
-                  any(names(fxn_path) == "yld|pro"))
+                  any(grepl("yld|pro", names(fxn_path))),
+                  length(fxn_path) == length(fxn))
         self$fxn_path <- fxn_path
+      }
+      if (!is.null(SAVE)) {
+        stopifnot(is.logical(SAVE))
+        self$SAVE <- SAVE
       }
       if (!is.null(out_path)) {
         stopifnot(is.character(out_path))
         self$out_path <- out_path
+
+        if (is.na(self$out_path) | is.null(self$out_path)) {
+          self$SAVE <- FALSE
+        }
       }
     },
     #' @description
     #' Interactive method for selecting inputs related to the models used to
     #' fit crop responses to experimental and covariate data. The user must
-    #' pass in the response variables selected in the 'DatInputs' class in
+    #' pass in the response variables selected in the 'datClass' class in
     #' order to select models the user wishes to use for each response
     #' variable. If the user is using a model that they have created and written,
     #' they must provide the path to the folder where the script of this model
     #' is stored. Finally, the user provides the path to a folder in which to
     #' store outputs from the model such as diagnostic and validation plots.
     #' @param respvar Response variable(s) to optimize experimental inputs based
-    #' off of. These are selected in the 'DatInputs' class and should be passed
+    #' off of. These are selected in the 'datClass' class and should be passed
     #' in from that class here.
     #' @return A completed 'ModClass' object.
     selectInputs = function(respvar) {
       private$.selectFxn(respvar)
-      private$.selectFxnPath(respvar)
       private$.selectOutPath()
-    }
+    },
+    #' @description
+    #' Method used to setup the output location for the figures that the model
+    #' produces. These include diagnostic and validation plots. Pass FALSE to
+    #' 'create' to skip any creation of folders. The folder created is named
+    #' 'Outputs'. This folder contains a folder called 'Diagnostics' for model
+    #' diagnostic plots and a folder called 'Validation' for plots of the
+    #' predicted vs. observed responses, and both predicted and observed responses
+    #' vs. the experimental variable.
+    #' @param create Logical, whether to create folders for output. If not,
+    #' no plots will be saved by default.
+    #' @return A folder created in the path for model output figures.
+    setupOP = function(create = TRUE) {
+      stopifnot(is.logical(create))
+      if (!create) {
+        self$SAVE <- FALSE
+      }
+      if (self$SAVE) {
+        cwd <- paste0(self$out_path, "/Outputs") # outputs working directory
+        if (create) {
+          if(!file.exists(cwd)){
+            dir.create(cwd)
+            dir.create(paste0(cwd,"/","Diagnostics"))
+            dir.create(paste0(cwd,"/","Validation"))
+          }else{
+            if(!file.exists(paste0(cwd,"/","Diagnostics"))){
+              dir.create(paste0(cwd,"/","Diagnostics"))
+            }
+            if(!file.exists(paste0(cwd,"/","Validation"))){
+              dir.create(paste0(cwd,"/","Validation"))
+            }
+          }
+        }
+      }
+    },
+    #' @description
+    #' Method used to setup the output location for the figures that the model
+    #' produces. These include diagnostic and validation plots. Pass FALSE to
+    #' 'create' to skip any creation of folders. The folder created is named
+    #' 'Outputs'
+    #' @param datClass datClass class object. Stores the data and inputs
+    #' necessary for initializing the model.
+    #' @param create Logical, whether to create folders for output. If not,
+    #' no plots will be saved by default.
+    #' @return A folder created in the path for model output figures.
+    setupMod = function(datClass) {
+      #browser()
+
+      self$mod_list <- as.list(self$fxn) %>%
+        `names<-`(names(self$fxn))
+      respvar <- as.list(datClass$respvar)
+      expvar <- as.list(datClass$expvar)
+      if (is.null(self$fxn_path)) {
+        self$mod_list <- mapply(private$.loadModules,
+                                self$mod_list,
+                                datClass$mod_dat,
+                                as.list(datClass$respvar),
+                                as.list(datClass$expvar),
+                                datClass$num_means)
+      } else {
+        self$mod_list <- mapply(private$.loadModules,
+                                self$mod_list,
+                                datClass$mod_dat,
+                                as.list(datClass$respvar),
+                                as.list(datClass$expvar),
+                                datClass$num_means,
+                                self$fxn_path)
+      }
+    }#,
+    # fitMod = function() {
+    #   browser()
+    #
+    #   lapply(self$mod_list, private$.fitMods)
+    # },
+    # savePlots = function(SAVE = NULL) {
+    #   browser()
+    #
+    #   if (is.null(SAVE)) {
+    #     SAVE <- self$SAVE
+    #   }
+    #   lapply(self$mod_list, private$.saveDiagnostics, SAVE)
+    #   lapply(self$mod_list, private$.saveValidation, SAVE)
+    # }
   ),
+
   private = list(
     .selectFxn = function(respvar) {
       self$fxn <- as.list(respvar) %>%
         `names<-`(respvar)
-      for (i in 1:length( self$fxn)) {
+      for (i in 1:length(self$fxn)) {
         self$fxn[[i]] <- as.character(readline(
-          paste0("Provide the name of the model to use for ",ifelse( self$fxn[[i]] == "yld", "yield", "protein")," responses (i.e. 'GAM' or 'NonLinear_Logistic'). Omit the file extension (.R).: ")
+          paste0("Provide the name of the model to use for ",ifelse(respvar[i] == "yld", "yield", "protein")," responses (i.e. 'GAM' or 'NonLinear_Logistic'). Omit the file extension (.R).: ")
         ))
       }
+
+
+
+      private$.selectFxnPath(respvar[i])
+
     },
     .selectFxnPath = function(respvar) {
       self$fxn_path <- as.list(respvar) %>%
@@ -127,14 +249,50 @@ ModClass <- R6::R6Class(
           self$fxn_path[[i]] <- as.character(readline(
             paste0("Provide the path to a folder where the desired model script for fitting ",ifelse(self$fxn_path[[i]] == "yld", "yield", "protein")," responses is stored (i.e. '~/path/to/folder' or 'C:/path/to/folder'): ")
           ))
+        } else {
+          self$fxn_path[[i]] <- NA
         }
+      }
+      if (all(is.na(self$fxn_path))) {
+        self$fxn_path <- NULL
       }
     },
     .selectOutPath = function() {
-      self$out_path <- as.character(readline(
-        "Provide the path to a folder in which to save simulation outputs (i.e. '~/path/to/folder' or 'C:/path/to/folder'): "
+      self$SAVE <- as.character(select.list(
+        c(TRUE, FALSE),
+        title = "Select whether to save output plots from the model fitting and simulation. "
       ))
-    }
+      self$out_path <- as.character(readline(
+        "Provide the path to a folder in which to save simulation outputs (i.e. '~/path/to/folder' or 'C:/path/to/folder'). Type NA to prevent any folders from being created.: "
+      ))
+      if (is.na(self$out_path) | is.null(self$out_path)) {
+        self$SAVE <- FALSE
+      }
+    },
+    .loadModules = function(fxn, dat, resp, exp, num_means, fxn_path = NULL) {
+      #browser()
+
+      if (!is.null(fxn_path)) {
+        source(paste0(fxn_path, fxn, ".R"))
+      }
+      init_text <- "$new(dat, resp, exp, num_means)"
+      return(eval(parse(text = paste0(fxn, init_text))))
+    }#,
+    # .fitMods = function(mod) {
+    #   browser()
+    #
+    #   mod$fitMod()
+    # },
+    # .saveDiagnostics = function(mod, SAVE) {
+    #   browser()
+    #
+    #   mod$saveDiagnostics(self$out_path, SAVE)
+    # },
+    # .saveValidation = function(mod, SAVE) {
+    #   browser()
+    #
+    #   mod$saveValidation(self$out_path, SAVE)
+    # }
   )
 )
 

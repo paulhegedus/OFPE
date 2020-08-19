@@ -1,10 +1,9 @@
-#' @title R6 Class for storing inputs to the 'DatObject' class
+#' @title R6 Class for storing inputs and data for analysis and simulations
 #'
-#' @description R6 class for for storing information needed for the
-#' 'DatObject' class which is used for the analysis/simulation and Rx
-#' building steps of the OFPE data cycle. This object inlcudes user
-#' selections such as the field and year of data to export from an
-#' OFPE database and the type of data (grid or observed) for analysis
+#' @description R6 Class for storing user specified inputs and processing data
+#' for the analysis/simulation and Rx building steps of the OFPE data cycle.
+#' This object inlcudes user selections such as the field and year of data
+#' to export from an OFPE database and the type of data (grid or observed) for analysis
 #' and simulation/prescription generation.
 #'
 #' Inputs can be supplied directly to this class during instantiation, however
@@ -12,12 +11,12 @@
 #' user supplies the database connection and uses the interactive selection
 #' methods to select user inputs.
 #'
-#' This class is passed to the 'DatObject' class that executes the methods
-#' for exporting data from the database and processing the data for analysis,
-#' simulation, and prescription building.
+#' This class stores inputs from the user and has the methods for for exporting
+#' data from the database and processing the data for analysis, simulation, and
+#' prescription building.
 #' @export
-DatInputs <- R6::R6Class(
-  "DatInputs",
+DatClass <- R6::R6Class(
+  "DatClass",
   public = list(
     #' @field dbCon Database connection object connected to an OFPE formatted
     #' database, see DBCon class.
@@ -117,11 +116,18 @@ DatInputs <- R6::R6Class(
     #' list for each response variable ('yld' and/or 'pro'). The data in each of
     #' these lists are processed and used in the Monte Carlo simulation.
     sim_dat = NULL,
-    #' @field num_means Named vector of the means for each numerical covariate, including
+    #' @field mod_num_means Named vector of the means for each numerical covariate, including
     #' the experimental variable. This is used for converting centered data back to the
     #' original form. The centering process does not center three numerical variables; the
-    #' x and y coordinates, and the response variable (yld/pro).
-    num_means = NULL,
+    #' x and y coordinates, and the response variable (yld/pro). This is for the data specified
+    #' from the simulation data inputs (grid specific).
+    mod_num_means = NULL,
+    #' @field sim_num_means Named vector of the means for each numerical covariate, including
+    #' the experimental variable. This is used for converting centered data back to the
+    #' original form. The centering process does not center three numerical variables; the
+    #' x and y coordinates, and the response variable (yld/pro). This is for the data specified
+    #' from the simulation data inputs (grid specific).
+    sim_num_means = NULL,
 
     #' @param dbCon Database connection object connected to an OFPE formatted
     #' database, see DBCon class.
@@ -333,7 +339,7 @@ DatInputs <- R6::R6Class(
     #' model fitting. The rest of the data is witheld for validation.
     #' @param None No arguments needed because passed in during class
     #' instantiation.
-    #' @return A completed 'DatInputs' object.
+    #' @return A 'DatClass' object with complete user selections.
     selectInputs = function() {
       private$.selectFarmer(self$dbCon$db)
       private$.selectRespvar()
@@ -382,6 +388,20 @@ DatInputs <- R6::R6Class(
       self$sim_dat <- private$.fetchDat(self$sim_grid) %>%
         lapply(private$.processDat) %>%
         invisible()
+      self$mod_num_means <- as.list(self$respvar) %>%
+        `names<-`(self$respvar)
+      self$mod_num_means <- lapply(self$mod_dat, private$.findMeans)
+      self$sim_num_means <- as.list(self$respvar) %>%
+        `names<-`(self$respvar)
+      self$sim_num_means <- lapply(self$sim_dat, private$.findMeans)
+      self$mod_dat <- mapply(private$.centerDat,
+                             self$mod_dat,
+                             self$mod_num_means,
+                             SIMPLIFY = FALSE)
+      self$sim_dat <- mapply(private$.centerDat,
+                             self$sim_dat,
+                             self$sim_num_means,
+                             SIMPLIFY = FALSE)
       private$.splitDat()
     }
     # more fields
@@ -523,7 +543,7 @@ DatInputs <- R6::R6Class(
       self$gdd_source <- ifelse(gdd_source == "Daymet", "daymet", "gridmet")
     },
     .selectCenter = function() {
-      self$center <- as.character(select.list(
+      self$center <- as.logical(select.list(
         c(TRUE, FALSE),
         title = paste0("Select whether to center explanatory data (TRUE) or to use the measured explanatory data (FALSE).")
       ))
@@ -613,8 +633,7 @@ DatInputs <- R6::R6Class(
         dat, c("grid", "size", "datused", "farmer", "prev_year")) %>%
         private$.selectDat() %>%
         private$.makeFactors() %>%
-        private$.cleanDat() %>%
-        private$.centerDat()
+        private$.cleanDat()
       return(dat)
     },
     .trimCols = function(dat, trim_cols) {
@@ -707,17 +726,21 @@ DatInputs <- R6::R6Class(
       }
       return(dat)
     },
-    .centerDat = function(dat) {
-      num_names <- names(dat)[sapply(dat, is.numeric)]
-      num_names <- num_names[!grepl("^x$|^y$|^yld$|^pro$", num_names)]
-      self$num_means <- sapply(dat[num_names], mean, na.rm = TRUE)
+    .centerDat = function(dat, num_means) {
+      num_names <- names(num_means)
       if (self$center) {
         for (i in 1:length(num_names)) {
           dat[names(dat) %in% num_names[i]] <-
-            dat[names(dat) %in% num_names[i]] - self$num_means[i]
+            dat[names(dat) %in% num_names[i]] - num_means[i]
         }
       }
       return(dat)
+    },
+    .findMeans = function(dat) {
+      num_names <- names(dat)[sapply(dat, is.numeric)]
+      num_names <- num_names[!grepl("^x$|^y$|^yld$|^pro$", num_names)]
+      num_means <- sapply(dat[num_names], mean, na.rm = TRUE)
+      return(num_means)
     },
     .splitDat = function() {
       set.seed(6201994)

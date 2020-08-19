@@ -1,6 +1,6 @@
-#' @title R6 Class for storing inputs for analysis, simulations, and prescriptions
+#' @title R6 Class for storing inputs and executing the simulations
 #'
-#' @description R6 class for for storing information needed mainly for the
+#' @description R6 class for for storing information needed for the
 #' simulation performed post-analysis and pre-prescription building. This
 #' class stores inputs such as the model used for analysis and the subsequent
 #' simulation, the number of iterations for the simulation, and the weather
@@ -12,12 +12,12 @@
 #' user supplies the database connection and uses the interactive selection
 #' methods to select user inputs.
 #'
-#' This class is used for instantiating the simulation class and associated
-#' outputter, activating and executing the 'LikeYear' class to identify the year
-#' from the past that is most likely to reflect the upcoming year.
+#' This class performs the Monte Carlo simulation to compare management outcomes.
+#' The inputs also determine whether to activate and execute methods of the 'LikeYear'
+#' class to identify the year from the past that is most likely to reflect the upcoming year.
 #' @export
-SimInputs <- R6::R6Class(
-  "SimInputs",
+SimClass <- R6::R6Class(
+  "SimClass",
   public = list(
     #' @field dbCon Database connection object connected to an OFPE formatted
     #' database, see DBCon class.
@@ -102,7 +102,7 @@ SimInputs <- R6::R6Class(
     #' @param out_path Provide the path to the folder in which to store and
     #' save outputs from the simulation including figures and tables on
     #' management outcomes.
-    #' @return A new 'SimInputs' object.
+    #' @return A new 'SimClass' object.
     initialize = function(dbCon,
                           sPr = NULL,
                           opt = NULL,
@@ -119,8 +119,11 @@ SimInputs <- R6::R6Class(
         self$sPr <- sPr
       }
       if (!is.null(opt)) {
-        stopifnot(is.character(opt))
-        self$opt <- opt
+        stopifnot(is.character(opt),
+                  any(grepl("Maximum|Derivative", opt)))
+        self$opt <- ifelse(opt == "Maximum", "max",
+                           ifelse(opt == "Derivative", "deriv", NA))
+
       }
       if (!is.null(sim_year)) {
         stopifnot(is.numeric(sim_year))
@@ -189,7 +192,7 @@ SimInputs <- R6::R6Class(
     #' the target of analysis/simulation/prescription generation.
     #' @param fieldname Provide the name of the field that is
     #' the target of analysis/simulation/prescription generation.
-    #' @return A completed 'DatInputs' object.
+    #' @return A 'SimClass' object with completed .
     selectInputs = function(farmername, fieldname) {
       private$.selectIter()
       private$.selectOpt()
@@ -198,6 +201,75 @@ SimInputs <- R6::R6Class(
       private$.selectAArateCutoff()
       private$.selectAAmin()
       private$.selectOutPath()
+    },
+    #' @description
+    #' Method used to setup the output location for the figures that the model
+    #' produces. These include diagnostic and validation plots. Pass FALSE to
+    #' 'create' to skip any creation of folders. The folder created is named
+    #' 'Outputs'. This folder contains a folder called
+    #' ....
+    #'
+    #' @param create Logical, whether to create folders for output. If not,
+    #' no plots will be saved by default.
+    #' @return A folder created in the path for model output figures.
+    setupOP = function(create = TRUE) {
+      stopifnot(is.logical(create))
+      if (!create) {
+        self$SAVE <- FALSE
+      }
+      if (self$SAVE) {
+        cwd <- paste0(self$out_path, "/Outputs") # outputs working directory
+        if (create) {
+          if(!file.exists(cwd)){
+            dir.create(cwd)
+            dir.create(paste0(cwd,"/","PredictedResponse"))
+            dir.create(paste0(cwd,"/","Maps"))
+            dir.create(paste0(cwd,"/","Exploratory"))
+            dir.create(paste0(cwd,"/","EXP"))
+            dir.create(paste0(cwd,"/","EXP/ffoptEXP"))
+            dir.create(paste0(cwd,"/","EXP/ssoptEXP"))
+            dir.create(paste0(cwd,"/","EXP/EXPapplied"))
+            dir.create(paste0(cwd,"/","NR"))
+            dir.create(paste0(cwd,"/","NR/NRbarPlots"))
+            dir.create(paste0(cwd,"/","NR/NRboxPlots"))
+            dir.create(paste0(cwd,"/","NR/NRprobabilities"))
+          }else{
+            if(!file.exists(paste0(cwd,"/","PredictedResponse"))){
+              dir.create(paste0(cwd,"/","PredictedResponse"))
+            }
+            if(!file.exists(paste0(cwd,"/","Maps"))){
+              dir.create(paste0(cwd,"/","Maps"))
+            }
+            if(!file.exists(paste0(cwd,"/","Exploratory"))){
+              dir.create(paste0(cwd,"/","Exploratory"))
+            }
+            if(!file.exists(paste0(cwd,"/","EXP"))){
+              dir.create(paste0(cwd,"/","EXP"))
+            }
+            if(!file.exists(paste0(cwd,"/","EXP/ffoptEXP"))){
+              dir.create(paste0(cwd,"/","EXP/ffoptEXP"))
+            }
+            if(!file.exists(paste0(cwd,"/","EXP/ssoptEXP"))){
+              dir.create(paste0(cwd,"/","EXP/ssoptEXP"))
+            }
+            if(!file.exists(paste0(cwd,"/","EXP/EXPapplied"))){
+              dir.create(paste0(cwd,"/","EXP/EXPapplied"))
+            }
+            if(!file.exists(paste0(cwd,"/","NR"))){
+              dir.create(paste0(cwd,"/","NR"))
+            }
+            if(!file.exists(paste0(cwd,"/","NR/NRbarPlots"))){
+              dir.create(paste0(cwd,"/","NR/NRbarPlots"))
+            }
+            if(!file.exists(paste0(cwd,"/","NR/NRboxPlots"))){
+              dir.create(paste0(cwd,"/","NR/NRboxPlots"))
+            }
+            if(!file.exists(paste0(cwd,"/","NR/NRprobabilities"))){
+              dir.create(paste0(cwd,"/","NR/NRprobabilities"))
+            }
+          }
+        }
+      }
     }
   ),
   private = list(

@@ -55,7 +55,22 @@ the model to use for protein responses.}
 
 \item{\code{out_path}}{Provide the path to the folder in which to store and
 save outputs from the model fitting process, including diagnostic and
-validation plots.}
+validation plots. Type NA to not create any folders. You will not be
+able to save any outputs. (Note, even if a path is provided, the user
+can pass FALSE as the sole argument to the 'setupOP' method to prevent
+the creation of folders. This will automatically prevent any plots to
+be saved.)}
+
+\item{\code{SAVE}}{Logical, whether to save figures. Autofilled to FALSE if
+a user selects NA in the 'out_path' or is NULL. Autofilled to TRUE
+otherwise. This will be triggered to FALSE if the user passes FALSE
+as the only argument to the 'setupOP' method. The user can also select
+to save/not save individual figures.}
+
+\item{\code{mod_list}}{List containing the initialized R6 class for the specified
+models. All model classes follow the same interface with standardized
+field and method names. This class is accessed in the analysis and
+simulation steps.}
 }
 \if{html}{\out{</div>}}
 }
@@ -64,6 +79,8 @@ validation plots.}
 \itemize{
 \item \href{#method-new}{\code{ModClass$new()}}
 \item \href{#method-selectInputs}{\code{ModClass$selectInputs()}}
+\item \href{#method-setupOP}{\code{ModClass$setupOP()}}
+\item \href{#method-setupMod}{\code{ModClass$setupMod()}}
 \item \href{#method-clone}{\code{ModClass$clone()}}
 }
 }
@@ -72,7 +89,7 @@ validation plots.}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ModClass$new(fxn = NULL, fxn_path = NULL, out_path = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ModClass$new(fxn = NULL, fxn_path = NULL, SAVE = NULL, out_path = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -88,16 +105,26 @@ models and supply the file name for these.}
 model class is stored. If using 'GAM' or 'NonLinear_Logistic' models
 this will be left NULL as these classes are stored in this package.}
 
+\item{\code{SAVE}}{Logical, whether to save figures. Autofilled to FALSE if
+a user selects NA in the 'out_path' or is NULL. Autofilled to TRUE
+otherwise. This will be triggered to FALSE if the user passes FALSE
+as the only argument to the 'setupOP' method. The user can also select
+to save/not save individual figures.}
+
 \item{\code{out_path}}{Provide the path to the folder in which to store and
 save outputs from the model fitting process, including diagnostic and
-validation plots.}
+validation plots. Type NA to not create any folders. You will not be
+able to save any outputs. (Note, even if a path is provided, the user
+can pass FALSE as the sole argument to the 'setupOP' method to prevent
+the creation of folders. This will automatically prevent any plots to
+be saved.)}
 
 \item{\code{respvar}}{Response variable(s) to optimize on, input
 'Yield' or 'Protein'. Multiple options allowed. This can be passed in
-from the 'DatInputs' class where the response variables for optimization
+from the 'datClass' class where the response variables for optimization
 where selected. This argument must be passed in on class instantiation
 and is not available to select from the interactive method because it
-has been selected in the 'DatInputs' class.}
+has been selected in the 'datClass' class.}
 }
 \if{html}{\out{</div>}}
 }
@@ -111,7 +138,7 @@ A instantiated 'ModClass' object.
 \subsection{Method \code{selectInputs()}}{
 Interactive method for selecting inputs related to the models used to
 fit crop responses to experimental and covariate data. The user must
-pass in the response variables selected in the 'DatInputs' class in
+pass in the response variables selected in the 'datClass' class in
 order to select models the user wishes to use for each response
 variable. If the user is using a model that they have created and written,
 they must provide the path to the folder where the script of this model
@@ -125,13 +152,67 @@ store outputs from the model such as diagnostic and validation plots.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{respvar}}{Response variable(s) to optimize experimental inputs based
-off of. These are selected in the 'DatInputs' class and should be passed
+off of. These are selected in the 'datClass' class and should be passed
 in from that class here.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 A completed 'ModClass' object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-setupOP"></a>}}
+\if{latex}{\out{\hypertarget{method-setupOP}{}}}
+\subsection{Method \code{setupOP()}}{
+Method used to setup the output location for the figures that the model
+produces. These include diagnostic and validation plots. Pass FALSE to
+'create' to skip any creation of folders. The folder created is named
+'Outputs'. This folder contains a folder called 'Diagnostics' for model
+diagnostic plots and a folder called 'Validation' for plots of the
+predicted vs. observed responses, and both predicted and observed responses
+vs. the experimental variable.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ModClass$setupOP(create = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{create}}{Logical, whether to create folders for output. If not,
+no plots will be saved by default.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A folder created in the path for model output figures.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-setupMod"></a>}}
+\if{latex}{\out{\hypertarget{method-setupMod}{}}}
+\subsection{Method \code{setupMod()}}{
+Method used to setup the output location for the figures that the model
+produces. These include diagnostic and validation plots. Pass FALSE to
+'create' to skip any creation of folders. The folder created is named
+'Outputs'
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ModClass$setupMod(datClass)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{datClass}}{datClass class object. Stores the data and inputs
+necessary for initializing the model.}
+
+\item{\code{create}}{Logical, whether to create folders for output. If not,
+no plots will be saved by default.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A folder created in the path for model output figures.
 }
 }
 \if{html}{\out{<hr>}}
