@@ -16,8 +16,9 @@ select a model provided in this package.
 
 The user is required to provide the exact name of the model that they want to use.
 This exact name corresponds to the file containing the scripts and algorithms used
-to execute that model. If the user writes their own model methods, they must use an
-R6 class. Also, if a user writes their own model class please contact the developer
+to execute that model. If the user writes their own model class, they must use a
+R6 class. It must follow the interface design of the 'GAM' and 'NonLinear_Logistic'
+classes. Also, if a user writes their own model class please contact the developer
 for testing and inclusion in the OFPE package.
 
 Each model class also requires the user to specify a path to a folder in which to
@@ -81,6 +82,8 @@ simulation steps.}
 \item \href{#method-selectInputs}{\code{ModClass$selectInputs()}}
 \item \href{#method-setupOP}{\code{ModClass$setupOP()}}
 \item \href{#method-setupMod}{\code{ModClass$setupMod()}}
+\item \href{#method-fitModels}{\code{ModClass$fitModels()}}
+\item \href{#method-savePlots}{\code{ModClass$savePlots()}}
 \item \href{#method-clone}{\code{ModClass$clone()}}
 }
 }
@@ -192,10 +195,9 @@ A folder created in the path for model output figures.
 \if{html}{\out{<a id="method-setupMod"></a>}}
 \if{latex}{\out{\hypertarget{method-setupMod}{}}}
 \subsection{Method \code{setupMod()}}{
-Method used to setup the output location for the figures that the model
-produces. These include diagnostic and validation plots. Pass FALSE to
-'create' to skip any creation of folders. The folder created is named
-'Outputs'
+Method used to setup the GAM. This initializes the specified model for each
+response variable. The initialization of each model creates a table of the
+parameters and associated information related to the specific model.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ModClass$setupMod(datClass)}\if{html}{\out{</div>}}
 }
@@ -213,6 +215,54 @@ no plots will be saved by default.}
 }
 \subsection{Returns}{
 A folder created in the path for model output figures.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-fitModels"></a>}}
+\if{latex}{\out{\hypertarget{method-fitModels}{}}}
+\subsection{Method \code{fitModels()}}{
+Method for calling the specific model class' method for executing the model
+fitting function. This can differ between model types and is thus model
+specific.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ModClass$fitModels()}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{None}}{All parametes supplied upon initialization.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Diagnostic and validation plots in the 'Outputs' folder.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-savePlots"></a>}}
+\if{latex}{\out{\hypertarget{method-savePlots}{}}}
+\subsection{Method \code{savePlots()}}{
+Method for saving diagnostic and validation plots. The diagnostic plots
+are methods of the specific model class used, while the validation plots
+of the predicted vs. observed responses, and both predicted and observed
+responses vs. the experimental variable are generated as methods of this
+class. These only save plots if the user has supplied a folder path to save the
+plots to, and if the user does not select SAVE == FALSE.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ModClass$savePlots(SAVE = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{SAVE}}{Whether to save diagnostic plots. If NULL uses the user selected
+choice.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Diagnostic and validation plots in the 'Outputs' folder.
 }
 }
 \if{html}{\out{<hr>}}

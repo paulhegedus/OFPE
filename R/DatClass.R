@@ -120,7 +120,7 @@ DatClass <- R6::R6Class(
     #' the experimental variable. This is used for converting centered data back to the
     #' original form. The centering process does not center three numerical variables; the
     #' x and y coordinates, and the response variable (yld/pro). This is for the data specified
-    #' from the simulation data inputs (grid specific).
+    #' from the analysis data inputs (grid specific).
     mod_num_means = NULL,
     #' @field sim_num_means Named vector of the means for each numerical covariate, including
     #' the experimental variable. This is used for converting centered data back to the
@@ -595,6 +595,7 @@ DatClass <- R6::R6Class(
       return(dat)
     },
     .getDBdat = function(year, respvar, fieldname, GRID) {
+      OFPE::removeTempFarmerTables(self$dbCon$db, self$farmername)
       invisible(
         DBI::dbSendQuery(
           self$dbCon$db,
@@ -739,24 +740,27 @@ DatClass <- R6::R6Class(
     .findMeans = function(dat) {
       num_names <- names(dat)[sapply(dat, is.numeric)]
       num_names <- num_names[!grepl("^x$|^y$|^yld$|^pro$", num_names)]
-      num_means <- sapply(dat[num_names], mean, na.rm = TRUE)
+      if (self$center) {
+        num_means <- sapply(dat[num_names], mean, na.rm = TRUE)
+      } else {
+        num_means <- rep(0, length(num_names)) %>% `names<-`(num_names)
+      }
       return(num_means)
     },
     .splitDat = function() {
       set.seed(6201994)
       self$mod_dat <- lapply(self$mod_dat, private$.splitDatTrnVal) %>%
         `names<-`(names(self$mod_dat))
-
-      trn_dat <- rep(list(NA), length(self$mod_dat)) %>%
-        `names<-`(names(self$mod_dat))
-      val_dat <- rep(list(NA), length(self$mod_dat)) %>%
-        `names<-`(names(self$mod_dat))
-
-      for(i in 1:length(self$mod_dat)){
-        trn_dat[[i]] <- self$mod_dat[[i]]$trn
-        val_dat[[i]] <- self$mod_dat[[i]]$val
-      }
-      self$mod_dat <- list(trn_dat = trn_dat, val_dat = val_dat)
+      # trn_dat <- rep(list(NA), length(self$mod_dat)) %>%
+      #   `names<-`(names(self$mod_dat))
+      # val_dat <- rep(list(NA), length(self$mod_dat)) %>%
+      #   `names<-`(names(self$mod_dat))
+      #
+      # for(i in 1:length(self$mod_dat)){
+      #   trn_dat[[i]] <- self$mod_dat[[i]]$trn
+      #   val_dat[[i]] <- self$mod_dat[[i]]$val
+      # }
+      # self$mod_dat <- list(trn_dat = trn_dat, val_dat = val_dat)
     },
     .splitDatTrnVal = function(dat) {
       if (all(is.na(dat$musym))) {

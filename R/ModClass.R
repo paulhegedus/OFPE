@@ -12,8 +12,9 @@
 #'
 #' The user is required to provide the exact name of the model that they want to use.
 #' This exact name corresponds to the file containing the scripts and algorithms used
-#' to execute that model. If the user writes their own model methods, they must use an
-#' R6 class. Also, if a user writes their own model class please contact the developer
+#' to execute that model. If the user writes their own model class, they must use a
+#' R6 class. It must follow the interface design of the 'GAM' and 'NonLinear_Logistic'
+#' classes. Also, if a user writes their own model class please contact the developer
 #' for testing and inclusion in the OFPE package.
 #'
 #' Each model class also requires the user to specify a path to a folder in which to
@@ -177,18 +178,15 @@ ModClass <- R6::R6Class(
       }
     },
     #' @description
-    #' Method used to setup the output location for the figures that the model
-    #' produces. These include diagnostic and validation plots. Pass FALSE to
-    #' 'create' to skip any creation of folders. The folder created is named
-    #' 'Outputs'
+    #' Method used to setup the GAM. This initializes the specified model for each
+    #' response variable. The initialization of each model creates a table of the
+    #' parameters and associated information related to the specific model.
     #' @param datClass datClass class object. Stores the data and inputs
     #' necessary for initializing the model.
     #' @param create Logical, whether to create folders for output. If not,
     #' no plots will be saved by default.
     #' @return A folder created in the path for model output figures.
     setupMod = function(datClass) {
-      #browser()
-
       self$mod_list <- as.list(self$fxn) %>%
         `names<-`(names(self$fxn))
       respvar <- as.list(datClass$respvar)
@@ -199,33 +197,44 @@ ModClass <- R6::R6Class(
                                 datClass$mod_dat,
                                 as.list(datClass$respvar),
                                 as.list(datClass$expvar),
-                                datClass$num_means)
+                                datClass$mod_num_means)
       } else {
         self$mod_list <- mapply(private$.loadModules,
                                 self$mod_list,
                                 datClass$mod_dat,
                                 as.list(datClass$respvar),
                                 as.list(datClass$expvar),
-                                datClass$num_means,
+                                datClass$mod_num_means,
                                 self$fxn_path)
       }
-    }#,
-    # fitMod = function() {
-    #   browser()
-    #
-    #   lapply(self$mod_list, private$.fitMods)
-    # },
-    # savePlots = function(SAVE = NULL) {
-    #   browser()
-    #
-    #   if (is.null(SAVE)) {
-    #     SAVE <- self$SAVE
-    #   }
-    #   lapply(self$mod_list, private$.saveDiagnostics, SAVE)
-    #   lapply(self$mod_list, private$.saveValidation, SAVE)
-    # }
+    },
+    #' @description
+    #' Method for calling the specific model class' method for executing the model
+    #' fitting function. This can differ between model types and is thus model
+    #' specific.
+    #' @param None All parametes supplied upon initialization.
+    #' @return Diagnostic and validation plots in the 'Outputs' folder.
+    fitModels = function() {
+      lapply(self$mod_list, function(mod) mod$fitMod())
+    },
+    #' @description
+    #' Method for saving diagnostic and validation plots. The diagnostic plots
+    #' are methods of the specific model class used, while the validation plots
+    #' of the predicted vs. observed responses, and both predicted and observed
+    #' responses vs. the experimental variable are generated as methods of this
+    #' class. These only save plots if the user has supplied a folder path to save the
+    #' plots to, and if the user does not select SAVE == FALSE.
+    #' @param SAVE Whether to save diagnostic plots. If NULL uses the user selected
+    #' choice.
+    #' @return Diagnostic and validation plots in the 'Outputs' folder.
+    savePlots = function(SAVE = NULL) {
+      if (is.null(SAVE)) {
+        SAVE <- self$SAVE
+      }
+      lapply(self$mod_list, private$.saveDiagnostics, SAVE)
+      lapply(self$mod_list, private$.saveValidation, SAVE)
+    }
   ),
-
   private = list(
     .selectFxn = function(respvar) {
       self$fxn <- as.list(respvar) %>%
@@ -235,11 +244,6 @@ ModClass <- R6::R6Class(
           paste0("Provide the name of the model to use for ",ifelse(respvar[i] == "yld", "yield", "protein")," responses (i.e. 'GAM' or 'NonLinear_Logistic'). Omit the file extension (.R).: ")
         ))
       }
-
-
-
-      private$.selectFxnPath(respvar[i])
-
     },
     .selectFxnPath = function(respvar) {
       self$fxn_path <- as.list(respvar) %>%
@@ -269,30 +273,94 @@ ModClass <- R6::R6Class(
         self$SAVE <- FALSE
       }
     },
-    .loadModules = function(fxn, dat, resp, exp, num_means, fxn_path = NULL) {
-      #browser()
-
+    .loadModules = function(fxn, dat, respvar, expvar, num_means, fxn_path = NULL) {
       if (!is.null(fxn_path)) {
         source(paste0(fxn_path, fxn, ".R"))
       }
-      init_text <- "$new(dat, resp, exp, num_means)"
+      init_text <- "$new(dat, respvar, expvar, num_means)"
       return(eval(parse(text = paste0(fxn, init_text))))
-    }#,
-    # .fitMods = function(mod) {
-    #   browser()
-    #
-    #   mod$fitMod()
-    # },
-    # .saveDiagnostics = function(mod, SAVE) {
-    #   browser()
-    #
-    #   mod$saveDiagnostics(self$out_path, SAVE)
-    # },
-    # .saveValidation = function(mod, SAVE) {
-    #   browser()
-    #
-    #   mod$saveValidation(self$out_path, SAVE)
-    # }
+    },
+    .saveDiagnostics = function(mod, SAVE) {
+      mod$saveDiagnostics(self$out_path, SAVE)
+    },
+    .saveValidation = function(mod, SAVE) {
+      if (SAVE) {
+        private$.plotObsPredRespVsExp(mod, self$out_path, SAVE)
+        private$.plotObsVsPred(mod, self$out_path, SAVE)
+      }
+    },
+    .plotObsPredRespVsExp = function(mod, out_path, SAVE) {
+      set.seed(13113)
+      if (mod$respvar == "yld") {
+        cols <- c("black", "red")
+      } else {
+        cols <- c("black", "cyan")
+      }
+      shps <- as.integer(runif(length(unique(mod$dat$val$year.field)), 1, 10))
+      yMIN <- DescTools::RoundTo(min(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]], na.rm = T), 5, floor)
+      yMAX <- DescTools::RoundTo(max(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]], na.rm = T), 5, ceiling)
+      ySTEP <- (yMAX -  yMIN) / 10
+      xMIN <- DescTools::RoundTo(min(mod$dat$val[which(names(mod$dat$val) %in% mod$expvar)][[1]], na.rm = T), 5, floor)
+      xMAX <- DescTools::RoundTo(max(mod$dat$val[which(names(mod$dat$val) %in% mod$expvar)][[1]], na.rm = T), 5, ceiling)
+      xSTEP <- (xMAX - xMIN) / 10
+      p <- ggplot() +
+        geom_point(data = mod$dat$val,
+                   aes(x = get(mod$expvar), y = get(mod$respvar), col = cols[1], shape = year.field)) +
+        labs(y = ifelse(mod$respvar == "yld", "Yield (bu/ac)", "Grain Protein Content (%)"),
+             x=paste0(ifelse(mod$expvar == "aa_n", "Nitrogen", "Seed"), " (lbs/ac)")) +
+        ggtitle(paste0(mod$fieldname," ", mod$mod_type ," Analysis"),
+                subtitle = paste0("AIC = ", round(AIC(mod$mod), 4))) +
+        geom_point(data = mod$dat$val,
+                   aes(x = get(mod$expvar), y = pred,
+                       col = cols[2],
+                       shape = year.field)) +
+        scale_color_manual(name = "", values = cols, labels = c("Observed", "Predicted")) +
+        scale_shape_manual(name = "", values = shps) +
+        scale_y_continuous(limits = c(yMIN, yMAX), breaks = seq(yMIN, yMAX, ySTEP)) +
+        scale_x_continuous(limits = c(xMIN, xMAX), breaks = seq(xMIN, xMAX, xSTEP)) +
+        theme_bw()
+      if (SAVE) {
+        ggsave(paste0(out_path, "/Outputs/Validation/",
+                      mod$fieldname, "_", mod$mod_type, "_pred&Obs_", mod$respvar, "_vs_",
+                      ifelse(mod$expvar == "aa_n", "N", "SR"), ".png"),
+               plot = p, device = "png", scale = 1, width = 7.5, height = 5, units = "in")
+      }
+      return(p)
+    },
+    .plotObsVsPred = function(mod, out_path, SAVE) {
+      set.seed(13113)
+      shps <- as.integer(runif(length(unique(mod$dat$val$year.field)), 1, 10))
+
+      MAX <- ifelse(max(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]], na.rm = T) > max(mod$dat$val$pred, na.rm = T),
+                    DescTools::RoundTo(max(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]], na.rm = T), 5, ceiling),
+                    DescTools::RoundTo(max(mod$dat$val$pred, na.rm = T), 5, ceiling))
+      MIN <- ifelse(min(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]], na.rm = T) < min(mod$dat$val$pred, na.rm = T),
+                    DescTools::RoundTo(min(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]], na.rm = T), 5, floor),
+                    DescTools::RoundTo(min(mod$dat$val$pred, na.rm = T), 5, floor))
+      p <- ggplot(data = mod$dat$val) +
+        geom_point(aes(x = get(mod$respvar), y = mod$dat$val$pred, shape = year.field)) +
+        geom_abline(intercept = 0, slope = 1, color = ifelse(mod$respvar == "yld", "red", "cyan")) +
+        labs(x = paste0("Observed ", ifelse(mod$respvar == "yld", "Yield", "Protein")),
+             y = paste0("Predicted ", ifelse(mod$respvar == "yld", "Yield", "Protein"))) +
+        scale_shape_manual(name = "", values = shps) +
+        scale_y_continuous(limits = c(MIN, MAX), breaks = seq(MIN, MAX, (MAX - MIN) / 10)) +
+        scale_x_continuous(limits = c(MIN, MAX), breaks = seq(MIN, MAX, (MAX - MIN) / 10)) +
+        theme_bw() +
+        ggtitle(paste0("Predicted vs. Observed ", ifelse(mod$respvar=="yld", "Yield", "Protein")),
+                subtitle = paste0("Line = 1:1, RMSE = ",
+                                  suppressWarnings(round(Metrics::rmse(
+                                    na.omit(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]]),
+                                    na.omit(mod$dat$val$pred)),
+                                    4
+                                  ))))
+      if(SAVE){
+        ggsave(paste0(out_path, "/Outputs/Validation/",
+                      mod$fieldname, "_", mod$mod_type, "_predVSobs_", mod$respvar, ".png"),
+               plot = p, device = "png", scale = 1, width = 7.5, height = 5, units = "in"
+        )
+      }
+      return(p)
+    }
   )
 )
 

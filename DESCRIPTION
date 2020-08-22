@@ -31,7 +31,8 @@ Authors@R: c(
     )
 Depends: 
     R (>= 3.0.0),
-    magrittr
+    magrittr,
+    ggplot2
 Suggests: 
     knitr,
     rmarkdown,
@@ -46,4 +47,5 @@ Imports:
     DBI,
     R6,
     sf,
-    rpostgis
+    rpostgis,
+    data.table

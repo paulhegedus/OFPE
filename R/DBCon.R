@@ -51,6 +51,7 @@ DBCon <- R6::R6Class(
     #' @param None No parameters necessary. Simply call the method.
     #' @return A closed database connection.
     disconnect = function() {
+      OFPE::removeTempTables(self$db) # removes temporary tables
       DBI::dbDisconnect(self$db)
     }
   )

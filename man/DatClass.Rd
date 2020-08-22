@@ -123,7 +123,7 @@ these lists are processed and used in the Monte Carlo simulation.}
 the experimental variable. This is used for converting centered data back to the
 original form. The centering process does not center three numerical variables; the
 x and y coordinates, and the response variable (yld/pro). This is for the data specified
-from the simulation data inputs (grid specific).}
+from the analysis data inputs (grid specific).}
 
 \item{\code{sim_num_means}}{Named vector of the means for each numerical covariate, including
 the experimental variable. This is used for converting centered data back to the
