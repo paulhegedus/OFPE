@@ -69,6 +69,8 @@ library(OFPE)
 ### Connect to Database
 First, a connection is formed to the database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette, and the rest of the vignettes are working with an example database named 'OFPE' (as named in the tutorial above and exemplified in Vignettes 1, 2, and 3). This class defaults to a PostgreSQL database.
 
+The user must also provide their Google key and register it to be able to plot maps of their data. See https://github.com/dkahle/ggmap for instructions on acquiring and registering a Google API key.
+
 ```{r, eval = FALSE}
 dbCon <- DBCon$new(
   user = "postgres",
@@ -77,6 +79,7 @@ dbCon <- DBCon$new(
   host = "localhost",
   port = "5432"
 )
+ggmap::register_google(key = "your_google_key")
 ```
 
 ```{r, echo = FALSE, eval = FALSE}
@@ -87,6 +90,7 @@ dbCon <- DBCon$new(
   host = "localhost",
   port = "5432"
 )
+ggmap::register_google(key = "AIzaSyAAmhnIJbTYa0G69NUCyMxePGjVV6FzciU")
 OFPE::removeTempTables(dbCon$db) # removes temporary tables. good practice
 ```
 
@@ -99,21 +103,21 @@ The 'DatObject' class is used for the analysis/simulation and Rx building steps 
 #datClass <- DatClass$new(dbCon)
 #datClass$selectInputs()
 datClass <- DatClass$new(dbCon,
-                           farmername = "farmerb",
-                           fieldname = "sec35middle",
-                           respvar = c("Yield", "Protein"),
-                           expvar = "As-Applied Nitrogen",
-                           yldyears = list(sec35middle = c("2016", "2018")),
-                           proyears = list(sec35middle = c("2016", "2018")),
-                           mod_grid = "Observed",
-                           sim_grid = "Grid",
-                           dat_used = "Decision Point",
-                           veg_index = "NDVI",
-                           prec_source = "Daymet",
-                           gdd_source = "Daymet",
-                           center = TRUE,
-                           split_pct = 60,
-                           clean_rate = 300)
+                         farmername = "farmerb",
+                         fieldname = "sec35middle",
+                         respvar = c("Yield", "Protein"),
+                         expvar = "As-Applied Nitrogen",
+                         sys_type = "Conventional",
+                         yldyears = list(sec35middle = c("2016", "2018")),
+                         proyears = list(sec35middle = c("2016", "2018")),
+                         mod_grid = "Observed",
+                         dat_used = "Decision Point",
+                         veg_index = "NDVI",
+                         prec_source = "Daymet",
+                         gdd_source = "Daymet",
+                         center = TRUE,
+                         split_pct = 60,
+                         clean_rate = 300)
 ```
 
 The 'SimClass' class is used for the analysis/simulation and Rx building steps of the OFPE data cycle. This object includes user selections such as the model to use for fitting crop response functions for analysis, the number of iterations to run the simulation, the optimization method, the year(s) to use as an estimated weather scenario in which to simulate management outcomes, the farmer controlled fertilzier rate, the maximum amount of the input to simulate management to, and the minimum amount of the input to simulate from. Inputs can be supplied directly to this class during instantiation, however this is NOT recommended except for advanced users. It is recommended that the user supplies the database connection and farmer name and uses the interactive selection methods to select user inputs. This class is passed to the 'SimClass' and model classes that executes the methods for analysis, simulation, and subsequent prescription generation.
@@ -122,14 +126,14 @@ The 'SimClass' class is used for the analysis/simulation and Rx building steps o
 # simClass <- SimClass$new(dbCon)
 # simClass$selectInputs(datClass$farmername, datClass$fieldname)
 simClass <- SimClass$new(dbCon,
-                           sPr = 10,
-                           opt = "Maximum",
-                           sim_year = c(2016, 2015, 2017),
-                           fcr = 70,
-                           AArateCutoff = 200,
-                           AAmin = 0,
-                           out_path = "~/Desktop/")
-
+                         sPr = 3,
+                         opt = "Derivative",
+                         sim_year = c(2016, 2017),
+                         fs = 70,
+                         AArateCutoff = 150,
+                         AAmin = 0,
+                         SAVE = TRUE,
+                         out_path = "~/Desktop/")
 ```
 
 The 'ModClass' is an R6 object that holds the inputs necessary for loading the selected model to use for the response variables selected in the 'DatClass' class. Inputs can be supplied directly to this class during instantiation, however this is NOT recommended except for advanced users. It is recommended that the user uses the interactive selection methods to select user inputs. The user will be asked to provide the name of the function they would like to use to fit a crop response model to the experimental and covariate data for each response variable, allowing different models to be used for yield and/or protein. Advanced users can write their own model R6 class and will be required to provide the path to the folder that they have stored the script for the R6 model class.  If a user writes their own model class please contact the developer for testing and inclusion in the OFPE package. If the user chooses to use either a 'GAM' or 'NonLinear_Logistic' model, they will not have to provide a path to these scripts because they are built into this package. The user will have to provide the path to store model outputs such as diagnostic and validation plots.
@@ -163,9 +167,9 @@ Based on the user inputs above in the 'DatClass' class, gather and process data 
 datClass$setupDat() %>% invisible()
 ```
 
-Then call the method to create the folder for outputs. This will not be executed if the user specified otherwise. Then, setup the model class by passing in the data. This is the process used to setup the GAM. This initializes the specified model for each response variable. The initialization of each model creates a table of the parameters and associated information related to the specific model.
+Then call the method to create the folder for outputs. This will not be executed if the user specified otherwise or the user passes in FALSE as an argument to the setupOP method, this will then disable all subsequent plotting from the analysis step. Then, setup the model class by passing in the data. This is the process used to setup the GAM. This initializes the specified model for each response variable. The initialization of each model creates a table of the parameters and associated information related to the specific model.
 ```{r, eval = FALSE}
-modClass$setupOP() 
+modClass$setupOP()
 modClass$setupMod(datClass)
 ```
 
@@ -173,31 +177,34 @@ modClass$setupMod(datClass)
 The 'fitModels' method of the modClass object calls the specific model class' method for executing the model fitting function. This can differ between model types and is thus model specific. The model is fit with the training data and then the fitted model is used to predict values in a validation dataset. These are used to asses the model ability to predict new values. The 'savePlots' method calls the model specific execution of it's 'saveDiagnostics' method to produce and save diagnostic plots of the model, and then executes a 'plotValidtion' method to compare the observed vs. predicted values and show a scatterplot of the observed and predicted values vs. the experimental variable.
 
 ```{r, eval = FALSE}
-#pc <- proc.time() # 5 minutes for gam
-modClass$fitModels() %>% invisible() # 0.5 second for nonlinear yield, gam protein
-#(proc.time() - pc) / 60
+modClass$fitModels() %>% invisible() # 0.5min for nonlinear yield & gam protein, ~10min GAM, >0.5min for nonlinear
 modClass$savePlots() %>% invisible()
 ```
 
 ## Set Up Simulation
-At this point, the user can either go back and reselect inputs in order to analyze the data in a different way, or can proceed to the simulation.
+At this point, the user can either go back and reselect inputs in order to analyze the data in a different way, or can proceed to the simulation. The 'setupOP' method creates the output folders for the simulation. If the user
 
-* set up simulation data (set weather scenario)
-* plot estimated yld/pro under new weather scenario
-* predict yld/pro for each as-applied rate
+The first step is to setup the simulation. The user supplies the DatClass, ModClass, and EconDat R6 classes the user initialized and/or used in prior steps. These are passed into the SimClass 'SetupSim' method, where the data from the user specified simulation years are gathered and processed to the user specifications (i.e. prec and gdd sources, center) in the DatClass, and the ModClass is used to predict crop responses at each location of all the simulation data for every as-applied rate in the range specified by the user. This process will take some time depending on the range of experimental values to simulate over, especially for GAM's.
+
+```{r, eval = FALSE}
+simClass$setupSim(datClass, modClass, econDat) %>% invisible()
+```
+
+## Simulation
+After the SimClass has been initialized and setup with DatClass, ModClass, and EconDat objects, the user can execute the Monte Carlo simulation for comparing management scenarios under a range of economic conditions for each of the simulation years specified. If the user has not selected otherwise, outputs from the simulations will be generated and saved to the 'Outputs' folder in the user specified path when the SimOP class is used to make outputs. 
+
+```{r, eval = FALSE}
+simClass$executeSim()
+simOP <- SimOP$new(simClass, create = TRUE)
+simOP$savePlots() %>% invisible()
+```
+
+# Conclusion
+At this point, the user can either go back and reselect inputs and test out different scenarios, or proceed on to the generation of a prescription. This can be done by initializing an RxClass object with a SimClass and other user specifications. See Vignette 5. If the user specified to save outputs, the user can find analysis and simulation results in a folder called 'Outputs' in the specified file path. 
 
 ```{r, eval = FALSE}
 dbCon$disconnect()
 ```
-
-## Simulation
-* run simulation
-* plot simulation inputs
-
-
-# Conclusion
-At this point, the user can either go back and reselect inputs and test out different scenarios, or proceed on to the generation of a prescription.
-
 
 
 

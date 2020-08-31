@@ -248,7 +248,10 @@ are methods of the specific model class used, while the validation plots
 of the predicted vs. observed responses, and both predicted and observed
 responses vs. the experimental variable are generated as methods of this
 class. These only save plots if the user has supplied a folder path to save the
-plots to, and if the user does not select SAVE == FALSE.
+plots to, and if the user does not select SAVE == FALSE. If the user passes in
+an argument to SAVE, this replaces any previously selected SAVE option (e.g.
+if SAVE was set to TRUE in the class initialization and the user passes FALSE
+as an argument here, the class' selection for SAVE is set to FALSE from TRUE).
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ModClass$savePlots(SAVE = NULL)}\if{html}{\out{</div>}}
 }
@@ -257,7 +260,8 @@ plots to, and if the user does not select SAVE == FALSE.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{SAVE}}{Whether to save diagnostic plots. If NULL uses the user selected
-choice.}
+choice. If not NULL and is logical, argument replaces previously set SAVE
+options for the entire class.}
 }
 \if{html}{\out{</div>}}
 }

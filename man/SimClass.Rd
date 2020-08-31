@@ -2,7 +2,7 @@
 % Please edit documentation in R/SimClass.R
 \name{SimClass}
 \alias{SimClass}
-\title{R6 Class for storing inputs and executing the simulations}
+\title{R6 Class for storing inputs and executing the OFPE simulation}
 \description{
 R6 class for for storing information needed for the
 simulation performed post-analysis and pre-prescription building. This
@@ -45,7 +45,7 @@ optimum at that point because \$100 < \$101, whereas the 'Derivative' approach
 would select 20 lbs N/acre the optimum because the $1 increase between 20 and
 21 lbs N/acre is less than the \$1.50 cost for the 1 unit increase in N.}
 
-\item{\code{sim_year}}{Select the year(s) for which to simulate net-return outcomes for.
+\item{\code{sim_years}}{Select the year(s) for which to simulate net-return outcomes for.
 Multiple years can be selected and will be simulated in sequence or one year can
 be selected. The user can only select from years that they have aggregated with
 the 'Satellite' option in the aggregation step of the OFPE data cycle. However,
@@ -55,8 +55,9 @@ aggregated in the database and identifying the wettest, driest, average,
 and the predicted year from the past that will most resemble an upcoming
 year. See the 'LikeYear' class for more information on this option.}
 
-\item{\code{fcr}}{Input the uniform as-applied rate the farmer would have applied
-to the field if an experiment was not conducted (i.e. 70 lbs N or SR/acre).}
+\item{\code{fs}}{Input the uniform as-applied rate the farmer would have applied
+to the field if an experiment was not conducted (i.e. 70 lbs N or SR/acre).
+fs = Farmer Selected.}
 
 \item{\code{AArateCutoff}}{Select the maximum as-applied rate to simulate management
 outcomues to (i.e. 200 lbs N or seed per acre).}
@@ -64,9 +65,48 @@ outcomues to (i.e. 200 lbs N or seed per acre).}
 \item{\code{AAmin}}{Select the minimum as-applied rate to simulate management
 outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
 
+\item{\code{SAVE}}{Logical, whether to save figures. Autofilled to FALSE if
+a user selects NA in the 'out_path' or is NULL. Autofilled to TRUE
+otherwise. This will be triggered to FALSE if the user passes FALSE
+as the only argument to the 'setupOP' method. The user can also select
+to save/not save individual figures.}
+
 \item{\code{out_path}}{Provide the path to the folder in which to store and
 save outputs from the simulation including figures and tables on
-management outcomes.}
+management outcomes. Type NA to not create any folders. You will not be
+able to save any outputs. (Note, even if a path is provided, the user
+can pass FALSE as the sole argument to the 'setupOP' method to prevent
+the creation of folders. This will automatically prevent any plots to
+be saved.)}
+
+\item{\code{datClass}}{DatClass R6 object that has been initialized. This
+object executes the gathering and processing of data for the simulation.}
+
+\item{\code{modClass}}{ModClass R6 object that has been initialized and with
+fitted models. The fitted models in this object are used to predict
+crop responses at each location in the simulation data for all
+experimental rates in the user specified range.}
+
+\item{\code{econDat}}{EconDat R6 object that has been initialized and setup
+with all economic parameters and data used in the Monte Carlo simulation.}
+
+\item{\code{sim_list}}{A list for each user selected simulation year containing
+n lists of that year's satellite data for n experimental rates. This
+can be thought of as an array with the x dimension representing each
+centroid location of the simulation year 'sat' data, and the y dimension
+as each covariate value. The z dimension replicates the x and y dimensions
+for each experimental rate from 'AAmin' to 'AArateCutoff'. Predicted
+yield and/or protein and net-returns are estimated for every data point
+in the array (list of lists), and are used to estimate net-returns for
+every data point, which are used to identify the optimum experimental
+rate at each point to generate a site-specific optimum rate map and
+for identifying the full field optimum rate.}
+
+\item{\code{fieldsize}}{The fieldsize, in acres, of the selected fields,
+gathered from the OFPE database.}
+
+\item{\code{sim_out}}{A list named for each user selected simulation year,
+each containing a named list containing ... TODO ...}
 }
 \if{html}{\out{</div>}}
 }
@@ -75,7 +115,8 @@ management outcomes.}
 \itemize{
 \item \href{#method-new}{\code{SimClass$new()}}
 \item \href{#method-selectInputs}{\code{SimClass$selectInputs()}}
-\item \href{#method-setupOP}{\code{SimClass$setupOP()}}
+\item \href{#method-setupSim}{\code{SimClass$setupSim()}}
+\item \href{#method-executeSim}{\code{SimClass$executeSim()}}
 \item \href{#method-clone}{\code{SimClass$clone()}}
 }
 }
@@ -88,10 +129,11 @@ management outcomes.}
   dbCon,
   sPr = NULL,
   opt = NULL,
-  sim_year = NULL,
-  fcr = NULL,
+  sim_years = NULL,
+  fs = NULL,
   AArateCutoff = NULL,
   AAmin = NULL,
+  SAVE = NULL,
   out_path = NULL
 )}\if{html}{\out{</div>}}
 }
@@ -121,7 +163,7 @@ optimum at that point because \$100 < \$101, whereas the 'Derivative' approach
 would select 20 lbs N/acre the optimum because the $1 increase between 20 and
 21 lbs N/acre is less than the \$1.50 cost for the 1 unit increase in N.}
 
-\item{\code{sim_year}}{Select the year(s) for which to simulate net-return outcomes for.
+\item{\code{sim_years}}{Select the year(s) for which to simulate net-return outcomes for.
 Multiple years can be selected and will be simulated in sequence or one year can
 be selected. The user can only select from years that they have aggregated with
 the 'Satellite' option in the aggregation step of the OFPE data cycle. However,
@@ -131,8 +173,9 @@ aggregated in the database and identifying the wettest, driest, average,
 and the predicted year from the past that will most resemble an upcoming
 year. See the 'LikeYear' class for more information on this option.}
 
-\item{\code{fcr}}{Input the uniform as-applied rate the farmer would have applied
-to the field if an experiment was not conducted (i.e. 70 lbs N or SR/acre).}
+\item{\code{fs}}{Input the uniform as-applied rate the farmer would have applied
+to the field if an experiment was not conducted (i.e. 70 lbs N or SR/acre).
+fs = Farmer Selected.}
 
 \item{\code{AArateCutoff}}{Select the maximum as-applied rate to simulate management
 outcomues to (i.e. 200 lbs N or seed per acre).}
@@ -140,9 +183,19 @@ outcomues to (i.e. 200 lbs N or seed per acre).}
 \item{\code{AAmin}}{Select the minimum as-applied rate to simulate management
 outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
 
+\item{\code{SAVE}}{Logical, whether to save figures. Autofilled to FALSE if
+a user selects NA in the 'out_path' or is NULL. Autofilled to TRUE
+otherwise. This will be triggered to FALSE if the user passes FALSE
+as the only argument to the 'setupOP' method. The user can also select
+to save/not save individual figures.}
+
 \item{\code{out_path}}{Provide the path to the folder in which to store and
 save outputs from the simulation including figures and tables on
-management outcomes.}
+management outcomes. Type NA to not create any folders. You will not be
+able to save any outputs. (Note, even if a path is provided, the user
+can pass FALSE as the sole argument to the 'setupOP' method to prevent
+the creation of folders. This will automatically prevent any plots to
+be saved.)}
 }
 \if{html}{\out{</div>}}
 }
@@ -212,28 +265,103 @@ A 'SimClass' object with completed .
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-setupOP"></a>}}
-\if{latex}{\out{\hypertarget{method-setupOP}{}}}
-\subsection{Method \code{setupOP()}}{
-Method used to setup the output location for the figures that the model
-produces. These include diagnostic and validation plots. Pass FALSE to
-'create' to skip any creation of folders. The folder created is named
-'Outputs'. This folder contains a folder called
-....
+\if{html}{\out{<a id="method-setupSim"></a>}}
+\if{latex}{\out{\hypertarget{method-setupSim}{}}}
+\subsection{Method \code{setupSim()}}{
+Method used to prepare the class for the simulation. This method takes
+a DatClass, ModClass, and EconDat R6 classes that the user has initialized
+and/or executed the mehtods for. The DatClass object is used to execute
+a method with the user selected simulation year(s) to gather this data
+from the database and process in the same way data was processed for
+the model fitting. The ModClass' fitted models are used in the simulation
+to predict crop responses at each location of the simulation data for the
+user specified range of experimental rates. The EconDat object contains
+the economic parameters and data used in the Monte Carlo simulation to
+compare management outcomes for each simulation year under a range of
+economic conditions.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SimClass$setupOP(create = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{SimClass$setupSim(datClass, modClass, econDat)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{create}}{Logical, whether to create folders for output. If not,
-no plots will be saved by default.}
+\item{\code{datClass}}{DatClass R6 object that has been initialized. This
+object executes the gathering and processing of data for the simulation.}
+
+\item{\code{modClass}}{ModClass R6 object that has been initialized and with
+fitted models. The fitted models in this object are used to predict
+crop responses at each location in the simulation data for all
+experimental rates in the user specified range.}
+
+\item{\code{econDat}}{EconDat R6 object that has been initialized and setup
+with all economic parameters and data used in the Monte Carlo simulation.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A folder created in the path for model output figures.
+Processed simulation data in the DatClass.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-executeSim"></a>}}
+\if{latex}{\out{\hypertarget{method-executeSim}{}}}
+\subsection{Method \code{executeSim()}}{
+Method for executing the Monte Carlo simulation to compare management
+scenarios for each year the user selected to simulate in. The method
+begins by creating a list of lists (essentially an array) for each
+simulated year's data for the length of the range of experimental
+rates to simulate. A column for the experimental rate and for the
+net-returns from each of the management scenarios is added to
+each data table.
+
+Then, the fitted models are used to predict the crop responses
+for every location in the simulated data for every experimental
+rate. This is repeated for every simulation year.
+
+The simulation is executed for each year to create a list of outputs
+for each user selected simulation year. For the length of the number
+of iterations specified by the user, an economic scenario is selected
+from the user provided/default economic conditions to select a cost
+of the experimental variable and the price received for conventionally
+or organically grown crops. Net-return for every point under every
+experimental rate is calculated. These net-returns are used to
+calculate the total net-return under each management scenario.
+
+The management scenarios reported include; NRmin: if the minimum rate ('AAmin')
+were applied to the entire field (e.g. 0 lbs N/ac), NRfs: if the rate the farmer
+would have applied without experimentation was applied (i.e. business as
+usual), NRact: the 'actual' net-return in the simulated year if the experiment
+in the most recent of the user selected years for analysis was applied (e.g. if
+you fit models on observed data from 2016 and 2018, NRact is calculated based on
+the as-applied values in 2018), NRssopt: the site-specific profit maximizing
+experimental rate, NRffopt: the full-field profit maximizing experimental rate
+which is only identifiable with site-specific experimentation but still represents
+a uniform application across the field, and finally NRopp: the net-return if the
+crop was grown in the opposite system type of the user selected system type (e.g.
+if conventionally grown wheat, this is the net-return for organically grown wheat).
+If the system type is conventional, NRopp is from the application of 'AAmin' (e.g. 0
+lbs N/ac) otherwise if the system is organic, NRopp is from the application of the
+farmer selected rate with the conventional price.
+
+NOTE: Depending on the size/number of the fields, the number of iterations to run
+the simulation, and the number of selected simulation years, this may take some time
+(i.e. 15 minutes - hours)...
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SimClass$executeSim()}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{None}}{All required arguments supplied upon the initialization
+and setup methods.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A list of lists ('sim_out') with output from the simulation for each selected
+simulation year.
 }
 }
 \if{html}{\out{<hr>}}

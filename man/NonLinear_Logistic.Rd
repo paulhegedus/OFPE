@@ -40,11 +40,11 @@ datasets with the response, experimental, and remotely sensed variables.}
 
 \item{\code{expvar}}{Character, the experimental variable of interest.}
 
-\item{\code{num_means}}{Named vector of the means for each numerical covariate, including
-the experimental variable. This is used for converting centered data back to the
-original form. The centering process does not center three numerical variables; the
-x and y coordinates, and the response variable (yld/pro). This is for the data specified
-from the analysis data inputs (grid specific).}
+\item{\code{num_means}}{List for each year in the data with a named vector of the means
+for each numerical covariate, including the experimental variable. This is used for
+converting centered data back to the original form. The centering process does not
+center three numerical variables; the x and y coordinates, and the response variable
+(yld/pro). This is for the data specified from the analysis data inputs (grid specific).}
 
 \item{\code{mod}}{Fitted GAM.}
 
@@ -67,6 +67,7 @@ is used for plottting.}
 \itemize{
 \item \href{#method-new}{\code{NonLinear_Logistic$new()}}
 \item \href{#method-fitMod}{\code{NonLinear_Logistic$fitMod()}}
+\item \href{#method-predResps}{\code{NonLinear_Logistic$predResps()}}
 \item \href{#method-saveDiagnostics}{\code{NonLinear_Logistic$saveDiagnostics()}}
 \item \href{#method-clone}{\code{NonLinear_Logistic$clone()}}
 }
@@ -94,11 +95,11 @@ datasets with the response, experimental, and remotely sensed variables.}
 
 \item{\code{expvar}}{Character, the experimental variable of interest.}
 
-\item{\code{num_means}}{Named vector of the means for each numerical covariate, including
-the experimental variable. This is used for converting centered data back to the
-original form. The centering process does not center three numerical variables; the
-x and y coordinates, and the response variable (yld/pro). This is for the data specified
-from the analysis data inputs (grid specific).}
+\item{\code{num_means}}{List for each year in the data with a named vector of the means
+for each numerical covariate, including the experimental variable. This is used for
+converting centered data back to the original form. The centering process does not
+center three numerical variables; the x and y coordinates, and the response variable
+(yld/pro). This is for the data specified from the analysis data inputs (grid specific).}
 }
 \if{html}{\out{</div>}}
 }
@@ -151,6 +152,29 @@ dataset.
 }
 \subsection{Returns}{
 A fitted logistic model.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-predResps"></a>}}
+\if{latex}{\out{\hypertarget{method-predResps}{}}}
+\subsection{Method \code{predResps()}}{
+Method for predicting response variables using data and a model.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{NonLinear_Logistic$predResps(dat, mod)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{dat}}{Data for predicting response variables for.}
+
+\item{\code{mod}}{The fitted model to use for predicting the response
+variable for each observation in 'dat'.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Vector of predicted values for each location in 'dat'.
 }
 }
 \if{html}{\out{<hr>}}

@@ -31,12 +31,12 @@ Authors@R: c(
     )
 Depends: 
     R (>= 3.0.0),
-    magrittr,
-    ggplot2
+    magrittr
 Suggests: 
     knitr,
     rmarkdown,
-    RPostgreSQL
+    devtools,
+    testthat
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -48,4 +48,29 @@ Imports:
     R6,
     sf,
     rpostgis,
-    data.table
+    data.table,
+    Rcpp,
+    ggplot2,
+    RPostgreSQL,
+    gridExtra,
+    DescTools,
+    Metrics,
+    grDevices,
+    colorRamps,
+    legendMap,
+    ggmap,
+    maps,
+    maptools,
+    grid,
+    methods,
+    raster,
+    sp
+LinkingTo: 
+    Rcpp, 
+    RcppArmadillo
+Remotes:
+    github::dkahle/ggmap
+
+    
+
+    

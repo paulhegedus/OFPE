@@ -93,14 +93,20 @@ findBadParms <- function(parm_df, dat) {
 valPrep <- function(dat, respvar, expvar, num_means) {
   stopifnot(data.table::is.data.table(dat),
             any(grepl("pred", names(dat))))
-
   dat$field <- as.character(dat$field)
-
   dat$year.field <- paste0(dat$year,  " ", dat$field)
-  cent_correct <- num_means[which(names(num_means) == expvar)] %>%
-    as.numeric()
-  dat[which(names(dat) == expvar)] <-
-    dat[which(names(dat) == expvar)] + cent_correct
+
+  ## Not needed b/c exp data not centered
+  # cent_correct <- lapply(num_means,
+  #                        function(x) x[which(names(x) == expvar)] %>%
+  #                          as.numeric()) %>%
+  #   unlist()
+  # dat_list <- split(dat, dat$year)
+  # for (i in 1:length(dat_list)) {
+  #   dat_list[[i]][which(names(dat_list[[i]]) == expvar)] <-
+  #     dat_list[[i]][which(names(dat_list[[i]]) == expvar)] + cent_correct[i]
+  # }
+  # dat <- data.table::rbindlist(dat_list)
   dat <-
     dat[-which(is.na(dat[which(names(dat) %in% respvar)][[1]]) | is.na(dat$pred)), ]
   return(dat)
@@ -117,7 +123,7 @@ uniqueFieldname <- function(dat) {
             any(grepl("field", names(dat))))
   fieldname <- ifelse(length(unique(dat$field)) > 1,
                            paste(unique(dat$field),  collapse = " & "),
-                           dat$field[1])
+                           dat$field[1] %>% as.character())
   return(fieldname)
 }
 

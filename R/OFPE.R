@@ -11,6 +11,11 @@
 #' @importFrom magrittr %>%
 #' @importFrom R6 R6Class
 #' @importFrom stats sd
+#' @useDynLib OFPE, .registration = TRUE
+#' @importFrom Rcpp sourceCpp
+#' @importFrom maptools gcDestination
+#' @importFrom grDevices topo.colors
+#' @importFrom methods as
 #'
 #' @seealso \url{https://sites.google.com/site/ofpeframework/}
 #' @seealso \url{https://paulhegedus.github.io/OFPE-Website/}

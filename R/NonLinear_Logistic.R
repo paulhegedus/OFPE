@@ -36,11 +36,11 @@ NonLinear_Logistic <- R6::R6Class(
     respvar = NULL,
     #' @field expvar Character, the experimental variable of interest.
     expvar = NULL,
-    #' @field num_means Named vector of the means for each numerical covariate, including
-    #' the experimental variable. This is used for converting centered data back to the
-    #' original form. The centering process does not center three numerical variables; the
-    #' x and y coordinates, and the response variable (yld/pro). This is for the data specified
-    #' from the analysis data inputs (grid specific).
+    #' @field num_means List for each year in the data with a named vector of the means
+    #' for each numerical covariate, including the experimental variable. This is used for
+    #' converting centered data back to the original form. The centering process does not
+    #' center three numerical variables; the x and y coordinates, and the response variable
+    #' (yld/pro). This is for the data specified from the analysis data inputs (grid specific).
     num_means = NULL,
 
     #' @field mod Fitted GAM.
@@ -68,22 +68,23 @@ NonLinear_Logistic <- R6::R6Class(
     #' datasets with the response, experimental, and remotely sensed variables.
     #' @param respvar Character, the response variable of interest.
     #' @param expvar Character, the experimental variable of interest.
-    #' @param num_means Named vector of the means for each numerical covariate, including
-    #' the experimental variable. This is used for converting centered data back to the
-    #' original form. The centering process does not center three numerical variables; the
-    #' x and y coordinates, and the response variable (yld/pro). This is for the data specified
-    #' from the analysis data inputs (grid specific).
+    #' @param num_means List for each year in the data with a named vector of the means
+    #' for each numerical covariate, including the experimental variable. This is used for
+    #' converting centered data back to the original form. The centering process does not
+    #' center three numerical variables; the x and y coordinates, and the response variable
+    #' (yld/pro). This is for the data specified from the analysis data inputs (grid specific).
     #' @return A instantiated 'NonLinear_Logistic' object.
     initialize = function(dat, respvar, expvar, num_means) {
       stopifnot(any(grepl("trn", names(dat)), grepl("val", names(dat))),
                 is.character(respvar),
                 is.character(expvar),
-                is.numeric(num_means)
+                is.list(num_means)
       )
+      num_names <- do.call(rbind, num_means) %>% as.data.frame() %>% names()
       for (i in 1:length(dat)) {
         stopifnot(any(grepl(paste0("^", respvar, "$"), names(dat[[i]]))),
                   any(grepl(paste0("^", expvar, "$"), names(dat[[i]]))),
-                  all(names(num_means) %in% names(dat[[i]])))
+                  all(names(num_names) %in% names(dat[[i]])))
       }
       self$dat <- dat
       self$respvar <- respvar
@@ -91,7 +92,7 @@ NonLinear_Logistic <- R6::R6Class(
       self$num_means <- num_means
 
       self$parm_df <- data.frame(
-        parms = c(expvar, names(self$num_means)[-which(names(num_means) %in% expvar)]),
+        parms = c(expvar, num_names[-which(num_names %in% expvar)]),
         fxn_comp = NA,
         coef_id = NA,
         bad_parms = FALSE,
@@ -157,21 +158,28 @@ NonLinear_Logistic <- R6::R6Class(
       # adjust coefficients to realistic values to setup the logistic curve using the
       # summary of the response variable
       private$.makeInitCoefEsts()
-
       # fit alpha coefficients with only 0 rate data, store alpha coefs to use
       private$.lockAlpha()
-
       ## fit final model with beta, delta, gamma after alpha locked
       # save formula, return model
       private$.fitFinalMod()
-
-      self$dat$val$pred <- predict(self$mod, self$dat$val) %>% as.numeric()
+      self$dat$val$pred <- self$predResps(self$dat$val, self$mod)
       self$dat$val <- OFPE::valPrep(self$dat$val,
                                     self$respvar,
                                     self$expvar,
                                     self$num_means)
       self$fieldname <- OFPE::uniqueFieldname(self$dat$val)
       return(self$mod)
+    },
+    #' @description
+    #' Method for predicting response variables using data and a model.
+    #' @param dat Data for predicting response variables for.
+    #' @param mod The fitted model to use for predicting the response
+    #' variable for each observation in 'dat'.
+    #' @return Vector of predicted values for each location in 'dat'.
+    predResps = function(dat, mod) {
+      pred <- predict(mod, dat) %>% as.numeric()
+      return(pred)
     },
     #' @description
     #' Method for saving diagnostic plots of the fitted model. These include residual

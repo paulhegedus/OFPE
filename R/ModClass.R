@@ -223,16 +223,23 @@ ModClass <- R6::R6Class(
     #' of the predicted vs. observed responses, and both predicted and observed
     #' responses vs. the experimental variable are generated as methods of this
     #' class. These only save plots if the user has supplied a folder path to save the
-    #' plots to, and if the user does not select SAVE == FALSE.
+    #' plots to, and if the user does not select SAVE == FALSE. If the user passes in
+    #' an argument to SAVE, this replaces any previously selected SAVE option (e.g.
+    #' if SAVE was set to TRUE in the class initialization and the user passes FALSE
+    #' as an argument here, the class' selection for SAVE is set to FALSE from TRUE).
     #' @param SAVE Whether to save diagnostic plots. If NULL uses the user selected
-    #' choice.
+    #' choice. If not NULL and is logical, argument replaces previously set SAVE
+    #' options for the entire class.
     #' @return Diagnostic and validation plots in the 'Outputs' folder.
     savePlots = function(SAVE = NULL) {
       if (is.null(SAVE)) {
         SAVE <- self$SAVE
+      } else {
+        stopifnot(is.logical(SAVE))
+        self$SAVE <- SAVE
       }
-      lapply(self$mod_list, private$.saveDiagnostics, SAVE)
-      lapply(self$mod_list, private$.saveValidation, SAVE)
+      lapply(self$mod_list, private$.saveDiagnostics, SAVE) %>% invisible()
+      lapply(self$mod_list, private$.saveValidation, SAVE) %>% invisible()
     }
   ),
   private = list(
@@ -264,10 +271,10 @@ ModClass <- R6::R6Class(
     .selectOutPath = function() {
       self$SAVE <- as.character(select.list(
         c(TRUE, FALSE),
-        title = "Select whether to save output plots from the model fitting and simulation. "
+        title = "Select whether to save output plots from the model fitting and analysis "
       ))
       self$out_path <- as.character(readline(
-        "Provide the path to a folder in which to save simulation outputs (i.e. '~/path/to/folder' or 'C:/path/to/folder'). Type NA to prevent any folders from being created.: "
+        "Provide the path to a folder in which to save analysis and model fitting outputs (i.e. '~/path/to/folder' or 'C:/path/to/folder'). Type NA to prevent any folders from being created.: "
       ))
       if (is.na(self$out_path) | is.null(self$out_path)) {
         self$SAVE <- FALSE
@@ -303,24 +310,24 @@ ModClass <- R6::R6Class(
       xMIN <- DescTools::RoundTo(min(mod$dat$val[which(names(mod$dat$val) %in% mod$expvar)][[1]], na.rm = T), 5, floor)
       xMAX <- DescTools::RoundTo(max(mod$dat$val[which(names(mod$dat$val) %in% mod$expvar)][[1]], na.rm = T), 5, ceiling)
       xSTEP <- (xMAX - xMIN) / 10
-      p <- ggplot() +
-        geom_point(data = mod$dat$val,
+      p <- ggplot2::ggplot() +
+        ggplot2::geom_point(data = mod$dat$val,
                    aes(x = get(mod$expvar), y = get(mod$respvar), col = cols[1], shape = year.field)) +
-        labs(y = ifelse(mod$respvar == "yld", "Yield (bu/ac)", "Grain Protein Content (%)"),
+        ggplot2::labs(y = ifelse(mod$respvar == "yld", "Yield (bu/ac)", "Grain Protein Content (%)"),
              x=paste0(ifelse(mod$expvar == "aa_n", "Nitrogen", "Seed"), " (lbs/ac)")) +
-        ggtitle(paste0(mod$fieldname," ", mod$mod_type ," Analysis"),
+        ggplot2::ggtitle(paste0(mod$fieldname," ", mod$mod_type ," Analysis"),
                 subtitle = paste0("AIC = ", round(AIC(mod$mod), 4))) +
-        geom_point(data = mod$dat$val,
+        ggplot2::geom_point(data = mod$dat$val,
                    aes(x = get(mod$expvar), y = pred,
                        col = cols[2],
                        shape = year.field)) +
-        scale_color_manual(name = "", values = cols, labels = c("Observed", "Predicted")) +
-        scale_shape_manual(name = "", values = shps) +
-        scale_y_continuous(limits = c(yMIN, yMAX), breaks = seq(yMIN, yMAX, ySTEP)) +
-        scale_x_continuous(limits = c(xMIN, xMAX), breaks = seq(xMIN, xMAX, xSTEP)) +
-        theme_bw()
+        ggplot2::scale_color_manual(name = "", values = cols, labels = c("Observed", "Predicted")) +
+        ggplot2::scale_shape_manual(name = "", values = shps) +
+        ggplot2::scale_y_continuous(limits = c(yMIN, yMAX), breaks = seq(yMIN, yMAX, ySTEP)) +
+        ggplot2::scale_x_continuous(limits = c(xMIN, xMAX), breaks = seq(xMIN, xMAX, xSTEP)) +
+        ggplot2::theme_bw()
       if (SAVE) {
-        ggsave(paste0(out_path, "/Outputs/Validation/",
+        ggplot2::ggsave(paste0(out_path, "/Outputs/Validation/",
                       mod$fieldname, "_", mod$mod_type, "_pred&Obs_", mod$respvar, "_vs_",
                       ifelse(mod$expvar == "aa_n", "N", "SR"), ".png"),
                plot = p, device = "png", scale = 1, width = 7.5, height = 5, units = "in")
@@ -337,24 +344,24 @@ ModClass <- R6::R6Class(
       MIN <- ifelse(min(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]], na.rm = T) < min(mod$dat$val$pred, na.rm = T),
                     DescTools::RoundTo(min(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]], na.rm = T), 5, floor),
                     DescTools::RoundTo(min(mod$dat$val$pred, na.rm = T), 5, floor))
-      p <- ggplot(data = mod$dat$val) +
-        geom_point(aes(x = get(mod$respvar), y = mod$dat$val$pred, shape = year.field)) +
-        geom_abline(intercept = 0, slope = 1, color = ifelse(mod$respvar == "yld", "red", "cyan")) +
-        labs(x = paste0("Observed ", ifelse(mod$respvar == "yld", "Yield", "Protein")),
+      p <- ggplot2::ggplot(data = mod$dat$val) +
+        ggplot2::geom_point(aes(x = get(mod$respvar), y = mod$dat$val$pred, shape = year.field)) +
+        ggplot2::geom_abline(intercept = 0, slope = 1, color = ifelse(mod$respvar == "yld", "red", "cyan")) +
+        ggplot2::labs(x = paste0("Observed ", ifelse(mod$respvar == "yld", "Yield", "Protein")),
              y = paste0("Predicted ", ifelse(mod$respvar == "yld", "Yield", "Protein"))) +
-        scale_shape_manual(name = "", values = shps) +
-        scale_y_continuous(limits = c(MIN, MAX), breaks = seq(MIN, MAX, (MAX - MIN) / 10)) +
-        scale_x_continuous(limits = c(MIN, MAX), breaks = seq(MIN, MAX, (MAX - MIN) / 10)) +
-        theme_bw() +
-        ggtitle(paste0("Predicted vs. Observed ", ifelse(mod$respvar=="yld", "Yield", "Protein")),
+        ggplot2::scale_shape_manual(name = "", values = shps) +
+        ggplot2::scale_y_continuous(limits = c(MIN, MAX), breaks = seq(MIN, MAX, (MAX - MIN) / 10)) +
+        ggplot2::scale_x_continuous(limits = c(MIN, MAX), breaks = seq(MIN, MAX, (MAX - MIN) / 10)) +
+        ggplot2::theme_bw() +
+        ggplot2::ggtitle(paste0("Predicted vs. Observed ", ifelse(mod$respvar=="yld", "Yield", "Protein")),
                 subtitle = paste0("Line = 1:1, RMSE = ",
                                   suppressWarnings(round(Metrics::rmse(
                                     na.omit(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]]),
                                     na.omit(mod$dat$val$pred)),
                                     4
                                   ))))
-      if(SAVE){
-        ggsave(paste0(out_path, "/Outputs/Validation/",
+      if (SAVE) {
+        ggplot2::ggsave(paste0(out_path, "/Outputs/Validation/",
                       mod$fieldname, "_", mod$mod_type, "_predVSobs_", mod$respvar, ".png"),
                plot = p, device = "png", scale = 1, width = 7.5, height = 5, units = "in"
         )

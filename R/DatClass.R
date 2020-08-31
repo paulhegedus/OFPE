@@ -28,13 +28,25 @@ DatClass <- R6::R6Class(
     fieldname = NULL,
     #' @field respvar Response variable(s) to optimize experimental inputs based
     #' off of. The user can select 'Yield' and/or 'Protein' based on data
-    #' availability.
+    #' availability. User must select at least 'Yield'.
     respvar = NULL,
     #' @field expvar Experimental variable to optimize, select/input
     #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
     #' input that was experimentally varied across the field as part of the
     #' on-farm experimentation.
     expvar = NULL,
+    #' @field sys_type Provide the type of system used in the experiment.
+    #' This determines the price used for calculating net-return and for
+    #' the net-return of the opposite type. Select from "Conventional" and
+    #' "Organic". The net-returns will be calculated with the corresponding
+    #' economic data based on this choice, and the 'NRopp' management
+    #' scenario (see SimClass$executeSim) will be based on the opposite
+    #' (e.g. if you are growing conventional wheat, the management outcome
+    #' 'NRopp' shows the net-return calculated from organically grown wheat).
+    #' In the example, organic prices are calculated from 0 N fertilizer rates,
+    #' however with seeding rates it is purely the difference in the price received
+    #' used to calcualte net-return.
+    sys_type = NULL,
     #' @field yldyears The year(s) of interest for the yield response
     #' variables in the selected field. This must be a named list with the
     #' specified field names.
@@ -113,33 +125,53 @@ DatClass <- R6::R6Class(
     #' data is used for the model fitting and evaluations steps.
     mod_dat = NULL,
     #' @field sim_dat Based off of the user selections such as 'sim_grid', this is a named
-    #' list for each response variable ('yld' and/or 'pro'). The data in each of
+    #' list for each year specified in the SimClass 'sim_years' field. The data in each of
     #' these lists are processed and used in the Monte Carlo simulation.
     sim_dat = NULL,
     #' @field mod_num_means Named vector of the means for each numerical covariate, including
     #' the experimental variable. This is used for converting centered data back to the
-    #' original form. The centering process does not center three numerical variables; the
-    #' x and y coordinates, and the response variable (yld/pro). This is for the data specified
-    #' from the analysis data inputs (grid specific).
+    #' original form. The centering process does not center four numerical variables; the
+    #' x and y coordinates, the response variable (yld/pro), and the experimental variable.
+    #' This is for the data specified from the analysis data inputs (grid specific).
     mod_num_means = NULL,
     #' @field sim_num_means Named vector of the means for each numerical covariate, including
     #' the experimental variable. This is used for converting centered data back to the
     #' original form. The centering process does not center three numerical variables; the
-    #' x and y coordinates, and the response variable (yld/pro). This is for the data specified
-    #' from the simulation data inputs (grid specific).
+    #' x and y coordinates, the response variable (yld/pro) and the experimental variable.
+    #' This is for the data specified from the analysis data inputs (grid specific).
     sim_num_means = NULL,
+    #' @field opp_sys_type Opposite of the user selected system type ('sys_type'). This is
+    #' used to select the correct price received to calculate 'NRopp' in the Monte Carlo
+    #' simulation.
+    opp_sys_type = NULL,
+    #' @field fieldname_codes Data.frame with a column for the names of the fields selected
+    #' by the user and a corresponding code. This is used in the simulation data when being
+    #' passed to C++ functions as purely numeric matrices.
+    fieldname_codes = NULL,
 
     #' @param dbCon Database connection object connected to an OFPE formatted
     #' database, see DBCon class.
     #' @param farmername Name of the farmer that owns the selected field.
     #' @param fieldname Name of the field to aggregate data for. Selected from
     #' the 'all_farms.fields' table of an OFPE formatted database.
-    #' @param respvar Response variable to aggregate data for, select/input
-    #' 'Yield' or 'Protein'. Multiple options allowed.
-    #' @param expvar Experimental variable to aggregate data for, select/input
+    #' @param respvar Response variable(s) to optimize experimental inputs based
+    #' off of. The user can select 'Yield' and/or 'Protein' based on data
+    #' availability. User must select at least 'Yield'.
+    #' @param expvar Experimental variable to optimize, select/input
     #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
     #' input that was experimentally varied across the field as part of the
     #' on-farm experimentation.
+    #' @param sys_type Provide the type of system used in the experiment.
+    #' This determines the price used for calculating net-return and for
+    #' the net-return of the opposite type. Select from "Conventional" and
+    #' "Organic". The net-returns will be calculated with the corresponding
+    #' economic data based on this choice, and the 'NRopp' management
+    #' scenario (see SimClass$executeSim) will be based on the opposite
+    #' (e.g. if you are growing conventional wheat, the management outcome
+    #' 'NRopp' shows the net-return calculated from organically grown wheat).
+    #' In the example, organic prices are calculated from 0 N fertilizer rates,
+    #' however with seeding rates it is purely the difference in the price received
+    #' used to calcualte net-return.
     #' @param yldyears The year(s) of interest for the yield response
     #' variables in the selected field. This must be a named list with the
     #' specified field names.
@@ -155,15 +187,6 @@ DatClass <- R6::R6Class(
     #' same principle applies for the 'Observed' option. It is recommended that
     #' the analysis is performed with 'Observed' data, and for the simulation to
     #' be performed with 'Grid' data.
-    #' @param sim_grid Select whether to use gridded or observed data
-    #' locations for the simulation and subsequent prescription building step.
-    #' See the 'AggInputs' class for more information on the 'GRID' option.
-    #' The user must have aggregated data with the specified GRID option prior
-    #' to this step. (i.e. you will not have access to data aggregated with the
-    #' 'Grid' option if you have not executed the process of aggregation with
-    #' the 'Grid' option selected. The same principle applies for the 'Observed'
-    #' option. It is recommended that the analysis is performed with 'Observed'
-    #' data, and for the simulation tobe performed with 'Grid' data.
     #' @param dat_used Option for the length of year to use data in the analysis,
     #' simulation, and prescription building steps. See the 'AggInputs' class
     #' documentation for more information on the 'dat_used' selection.
@@ -206,10 +229,10 @@ DatClass <- R6::R6Class(
                           fieldname = NULL,
                           respvar = NULL,
                           expvar = NULL,
+                          sys_type = NULL,
                           yldyears = NULL,
                           proyears = NULL,
                           mod_grid = NULL,
-                          sim_grid = NULL,
                           dat_used = NULL,
                           veg_index = NULL,
                           prec_source = NULL,
@@ -231,11 +254,18 @@ DatClass <- R6::R6Class(
         stopifnot(is.character(respvar),
                   any(grepl("Yield|Protein", respvar)))
         self$respvar <- ifelse(respvar == "Yield", "yld", "pro")
+        stopifnot(any(grepl("yld", self$respvar)))
       }
       if (!is.null(expvar)) {
         stopifnot(is.character(expvar),
                   any(grepl("As-Applied Nitrogen|As-Applied Seed Rate", expvar)))
         self$expvar <- ifelse(expvar == "As-Applied Nitrogen", "aa_n", "aa_sr")
+      }
+      if (!is.null(sys_type)) {
+        stopifnot(is.character(sys_type),
+                  any(grepl("Conventional|Organic", sys_type)))
+        self$sys_type <- ifelse(sys_type == "Conventional", "conv", "org")
+        self$opp_sys_type <- ifelse(self$sys_type == "conv", "org", "conv")
       }
       if (!is.null(yldyears)) {
         stopifnot(is.list(yldyears),
@@ -255,11 +285,6 @@ DatClass <- R6::R6Class(
         stopifnot(is.character(mod_grid),
                   grepl("Grid|Observed", mod_grid))
         self$mod_grid <- ifelse(mod_grid == "Grid", "grid", "obs")
-      }
-      if (!is.null(sim_grid)) {
-        stopifnot(is.character(sim_grid),
-                  grepl("Grid|Observed", sim_grid))
-        self$sim_grid <- ifelse(sim_grid == "Grid", "grid", "obs")
       }
       if (!is.null(dat_used)) {
         stopifnot(is.character(dat_used))
@@ -346,6 +371,7 @@ DatClass <- R6::R6Class(
       private$.selectField(self$dbCon$db)
       private$.selectYears(self$dbCon$db)
       private$.selectExpvar()
+      private$.selectSystemType()
       private$.selectAggLocs()
       private$.selectAggLOY()
       private$.selectVegIndex()
@@ -358,18 +384,17 @@ DatClass <- R6::R6Class(
     #' @description
     #' This function calls the private methods for data gathering and
     #' processing. The data gather step takes the user selected inputs
-    #' for the field, the response variables, and the data types ('mod_grid'
-    #' and 'sim_grid') and exports the appropriate data into a a list,
-    #' called 'mod_dat' and 'sim_dat', with lists, named  for each response variable
-    #' ('yld' and/or 'pro') with each data type data from all fields
-    #' selected.
+    #' for the field, the response variables, and the data types ('mod_grid')
+    #' and exports the appropriate data into a a list, called 'mod_dat' with
+    #' lists, named  for each response variable ('yld' and/or
+    #' 'pro') with each data type data from all fields selected.
     #'
     #' The processing step goes through each data frame contained in the
-    #' nested 'mod_dat' and 'sim_dat' lists and trims the data based on
+    #' nested 'mod_dat' list and trims the data based on
     #' the user selections for the vegetation index and precipitation and
     #' growing degree day sources. If the user selected to center the
-    #' experimental and covariate data, the values of each variable will
-    #' be subtracted from the mean of that variable. In this case, a named
+    #' covariate data, the values of each variable will be subtracted from
+    #' the mean of that variable. In this case, a named
     #' vector of each variable and the mean will be created for reverting
     #' back to observed values.
     #'
@@ -378,32 +403,51 @@ DatClass <- R6::R6Class(
     #' to include in the training dataset.
     #' @param None No arguments needed because passed in during class
     #' @return A named list with training and validation data, called
-    #' 'mod_dat', for each response variable ('yld' and/or 'pro'),
-    #' and a named list ('yld' and/or 'pro') for the simulation and prescription
-    #' building process, called 'sim_dat'.
+    #' 'mod_dat', for each response variable ('yld' and/or 'pro').
     setupDat = function() {
-      self$mod_dat <- private$.fetchDat(self$mod_grid) %>%
-        lapply(private$.processDat) %>%
-        invisible()
-      self$sim_dat <- private$.fetchDat(self$sim_grid) %>%
+      self$mod_dat <- private$.fetchDat(self$mod_grid, self$respvar) %>%
         lapply(private$.processDat) %>%
         invisible()
       self$mod_num_means <- as.list(self$respvar) %>%
         `names<-`(self$respvar)
       self$mod_num_means <- lapply(self$mod_dat, private$.findMeans)
-      self$sim_num_means <- as.list(self$respvar) %>%
-        `names<-`(self$respvar)
-      self$sim_num_means <- lapply(self$sim_dat, private$.findMeans)
       self$mod_dat <- mapply(private$.centerDat,
                              self$mod_dat,
                              self$mod_num_means,
                              SIMPLIFY = FALSE)
+      private$.splitDat()
+    },
+    #' @description
+    #' This function calls the private methods for data gathering and
+    #' processing. The gathering process takes the vector of simulation
+    #' years and gathers the appropriate 'sat' data from the OFPE database
+    #' and then processes the data using the same parameters as for the
+    #' data used in the model fitting process.
+    #' @param sim_years Vector of years available in the database
+    #' to gather to simulate management outcomes in.
+    #' @return A data.table with the user specified data for the simulation.
+    getSimDat = function(sim_years) {
+      self$sim_dat <- as.list(sim_years) %>%
+        `names<-`(sim_years)
+      self$sim_dat <- lapply(self$sim_dat,
+                             private$.gatherSatDat,
+                             'sat',
+                             self$fieldname,
+                             'grid')
+      self$sim_dat <- lapply(self$sim_dat,
+                             private$.processDat) %>%
+        lapply(data.table::as.data.table) %>%
+        invisible()
+      self$sim_num_means <- as.list(self$respvar) %>%
+        `names<-`(self$respvar)
+      self$sim_num_means <- lapply(self$sim_dat, private$.findMeans)
       self$sim_dat <- mapply(private$.centerDat,
                              self$sim_dat,
                              self$sim_num_means,
-                             SIMPLIFY = FALSE)
-      private$.splitDat()
+                             SIMPLIFY = FALSE) %>%
+        lapply(private$.makeAllSimColsNumeric)
     }
+    # TODO
     # more fields
     # like year dat (if selected)
   ),
@@ -423,12 +467,20 @@ DatClass <- R6::R6Class(
         title = "Select response variable(s) to optimize on. In some cases protein data is not available. However, either yield or protein must be selected."
       ))
       self$respvar <- ifelse(respVar == "Yield", "yld", "pro")
+      stopifnot(any(grepl("yld", self$respvar)))
     },
     .selectExpvar = function() {
       expVar <- as.character(select.list(
         c("As-Applied Nitrogen", "As-Applied Seed Rate"),
         title = "Select experimental variable."))
       self$expvar <- ifelse(expVar == "As-Applied Nitrogen", "aa_n", "aa_sr")
+    },
+    .selectSystemType = function() {
+      sys_type <- as.character(select.list(
+        c("Conventional", "Organic"),
+        title = "Select your system type."))
+      self$sys_type <- ifelse(sys_type == "Conventional", "conv", "org")
+      self$opp_sys_type <- ifelse(self$sys_type == "conv", "org", "conv")
     },
     .selectField = function(db) {
       flds <- rep(list(NA), length(self$respvar))
@@ -505,11 +557,6 @@ DatClass <- R6::R6Class(
           title = paste0("Select whether to use gridded ('Grid') or observed ('Observed') data locations for the analysis step.")
       ))
       self$mod_grid <- ifelse(gridOrObs == "Grid", "grid", "obs")
-      gridOrObs <- as.character(select.list(
-        c("Grid", "Observed"),
-        title = paste0("Select whether to use gridded ('Grid') or observed ('Observed') data locations for the simulation and/or Rx building step.")
-      ))
-      self$sim_grid <- ifelse(gridOrObs == "Grid", "grid", "obs")
     },
     .selectAggLOY = function() {
       data_used <- as.character(select.list(
@@ -559,9 +606,9 @@ DatClass <- R6::R6Class(
       ))
     },
 
-    .fetchDat = function(GRID) {
-      dat <- as.list(self$respvar) %>%
-        `names<-`(self$respvar)
+    .fetchDat = function(GRID, respvar) {
+      dat <- as.list(respvar) %>%
+        `names<-`(respvar)
       dat <- mapply(
         private$.importDBdat,
         dat,
@@ -728,22 +775,38 @@ DatClass <- R6::R6Class(
       return(dat)
     },
     .centerDat = function(dat, num_means) {
+      dat_list <- split(dat, dat$year)
+      dat_list <- mapply(private$.centerFun,
+                         dat_list,
+                         num_means,
+                         SIMPLIFY = FALSE)
+      dat <- data.table::rbindlist(dat_list)
+      return(dat)
+    },
+    .centerFun = function(subdat, num_means) {
       num_names <- names(num_means)
       if (self$center) {
         for (i in 1:length(num_names)) {
-          dat[names(dat) %in% num_names[i]] <-
-            dat[names(dat) %in% num_names[i]] - num_means[i]
+          subdat[names(subdat) %in% num_names[i]] <-
+            subdat[names(subdat) %in% num_names[i]] - num_means[i]
         }
       }
-      return(dat)
+      return(subdat)
     },
     .findMeans = function(dat) {
       num_names <- names(dat)[sapply(dat, is.numeric)]
-      num_names <- num_names[!grepl("^x$|^y$|^yld$|^pro$", num_names)]
-      if (self$center) {
-        num_means <- sapply(dat[num_names], mean, na.rm = TRUE)
-      } else {
-        num_means <- rep(0, length(num_names)) %>% `names<-`(num_names)
+      num_names <- num_names[!grepl(paste0("^x$|^y$|^yld$|^pro$"), num_names)]
+      num_means <- rep(as.list(NA), length(unique(dat$year))) %>%
+        `names<-`(unique(dat$year))
+      means <- by(dat[num_names], dat$year, sapply, mean, na.rm = TRUE)
+      for (i in 1:length(unique(dat$year))) {
+        means[[i]][grep(paste0("^", self$expvar, "$"), names(means[[i]]))] <- 0 # don't center exp var
+        if (self$center) {
+          num_means[[i]] <- means[[i]]
+        } else {
+          num_means[[i]] <- rep(0, length(num_names)) %>%
+            `names<-`(num_names)
+        }
       }
       return(num_means)
     },
@@ -751,16 +814,6 @@ DatClass <- R6::R6Class(
       set.seed(6201994)
       self$mod_dat <- lapply(self$mod_dat, private$.splitDatTrnVal) %>%
         `names<-`(names(self$mod_dat))
-      # trn_dat <- rep(list(NA), length(self$mod_dat)) %>%
-      #   `names<-`(names(self$mod_dat))
-      # val_dat <- rep(list(NA), length(self$mod_dat)) %>%
-      #   `names<-`(names(self$mod_dat))
-      #
-      # for(i in 1:length(self$mod_dat)){
-      #   trn_dat[[i]] <- self$mod_dat[[i]]$trn
-      #   val_dat[[i]] <- self$mod_dat[[i]]$val
-      # }
-      # self$mod_dat <- list(trn_dat = trn_dat, val_dat = val_dat)
     },
     .splitDatTrnVal = function(dat) {
       if (all(is.na(dat$musym))) {
@@ -804,6 +857,31 @@ DatClass <- R6::R6Class(
         )
       }
       return(subL)
+    },
+    .gatherSatDat = function(year, respvar, fieldname, GRID) {
+      dat_list <- as.list(fieldname) %>%
+        `names<-`(fieldname)
+      for (i in 1:length(dat_list)) {
+        dat_list[[i]] <- private$.getDBdat(year, respvar, fieldname[i], GRID)
+      }
+      dat <- data.table::rbindlist(dat_list)
+      return(dat)
+    },
+    .makeAllSimColsNumeric = function(dat) {
+      stopifnot(!is.null(dat$field),
+                !is.null(dat$cell_id))
+      cell_id_split <- stringr::str_split(dat$cell_id, "_", simplify = FALSE) %>%
+        lapply(as.numeric)
+      cell_id_split <- do.call(rbind, cell_id_split) %>%
+        data.table::as.data.table() %>%
+        `names<-`(c("row", "col"))
+      dat <- cbind(cell_id_split, dat)
+      dat$cell_id <- NULL
+      self$fieldname_codes <-
+        data.frame(field = unique(dat$field),
+                   field_code = seq(1, length(unique(dat$field))))
+      dat$field <- match(dat$field, self$fieldname_codes$field)
+      return(dat)
     }
   )
 )
