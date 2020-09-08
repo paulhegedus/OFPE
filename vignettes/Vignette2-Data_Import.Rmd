@@ -92,6 +92,7 @@ dbCon <- DBCon$new(
   host = "localhost",
   port = "5432"
 )
+OFPE::removeTempTables(dbCon$db)
 ```
 
 ### Prepare Example Data
@@ -199,7 +200,7 @@ importGEE <- ImportGEE$new(dbCon, dat_path, FALSE)
 ```
 
 ```{r, eval = FALSE, echo = FALSE}
-dat_path <- "GEE_Surfaces_4package"
+dat_path <- "GEE_Surfaces"
 importGEE <- ImportGEE$new(dbCon, dat_path, TRUE)
 ```
 
