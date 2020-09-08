@@ -48,7 +48,7 @@ falls within.}
 \itemize{
 \item \href{#method-new}{\code{AggDat$new()}}
 \item \href{#method-aggregateData}{\code{AggDat$aggregateData()}}
-\item \href{#method-.make10mGrid}{\code{AggDat$.make10mGrid()}}
+\item \href{#method-.makeXmGrid}{\code{AggDat$.makeXmGrid()}}
 \item \href{#method-.createAggTable}{\code{AggDat$.createAggTable()}}
 \item \href{#method-.cleanRespData}{\code{AggDat$.cleanRespData()}}
 \item \href{#method-.aggRespData}{\code{AggDat$.aggRespData()}}
@@ -110,9 +110,9 @@ Aggregated data in the 'farmername_a' schema
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.make10mGrid"></a>}}
-\if{latex}{\out{\hypertarget{method-.make10mGrid}{}}}
-\subsection{Method \code{.make10mGrid()}}{
+\if{html}{\out{<a id="method-.makeXmGrid"></a>}}
+\if{latex}{\out{\hypertarget{method-.makeXmGrid}{}}}
+\subsection{Method \code{.makeXmGrid()}}{
 Makes a grid across a field of a specified size. If the grid
 option was selected observations will be aggregated onto
 the centroids of 10m grid cells generated from the bounding box of
@@ -131,7 +131,7 @@ however data is not aggregated to the grid cell centroid locations. The
 dot indicates that this function would be private if not for
 documentations sake.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AggDat$.make10mGrid(db, boundary_import, fieldname, size = 10, farmername)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{AggDat$.makeXmGrid(db, boundary_import, fieldname, size = 10, farmername)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

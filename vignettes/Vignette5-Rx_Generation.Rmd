@@ -1,0 +1,195 @@
+---
+title: "Vignette5-Rx_Generation"
+author: "Paul Hegedus"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette5-Rx_Generation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+# Introduction
+This tutorial covers the prescription generation step of the OFPE data cycle. This step must utilize data that has been aggregated together in the process outlined in Vignette 3, unless a random experiment is desired. This step utilizes the model fitting and simulation steps in Vignette 4, which are used to create a variable rate experimental prescription. If a random experiment is desired (i.e. for the first year), the user can pass in or access data from the database to stratify on, or to create a random experiment with no stratification. We refer to a new experiment with no stratification as random placement of experimental rates across the field, a new experiment with stratification as the placement of experimental rates across the field randomly stratified on one or more other variables, and an experimental prescription or prescription as randomly placed experimental rates, stratified on the user specified management option.
+
+While the RxClass is flexible and may or may not depend on initialized and/or executed ModClass and SimClass objects, the RxClass requires some additional user inputs beyond those from the ModClass and SimClass objects. These include the number of experimental rates and optimum rates (equipment restrictions), the proportions of each rate to be applied across the field (can decrease low rates, etc.), and the range of rates to apply. The user will also require the background rate for application between the experiments and field edge. These inputs are required for any experimental prescription or new experiment. See the 'Workflow' section below for more detail on each of the experiment and prescription generation options.
+
+The activity workflow for generating a prescription based on a user specified form of management is described on [this page](https://paulhegedus.github.io/OFPE-Website/rx_gen.html), where a component diagram can also be found.
+
+# Resources
+The resources below are strongly recommended as supplemental information regarding the use and intent of this vignette and associated functions.
+
+  * [OFPE Project Website](https://sites.google.com/site/ofpeframework/): Project information and products from the MSU OFPE project.
+  * [OFPE Technical Website](https://paulhegedus.github.io/OFPE-Website/index.html): Website with more detailed descriptions of the OFPE data cycle and workflow, as well as tutorials for external data processes that cannot be performed in R.
+  * [OFPE Overview](https://paulhegedus.github.io/OFPE-Website/ofpe_overview.html): Page of the OFPE Technical Website describing an overview of the OFPE data cycle and workflow.
+  * [OFPE Rx Generation](https://paulhegedus.github.io/OFPE-Website/rx_gen.html): Detailed description of the OFPE experiment or prescription generation process.
+
+Again, it is assumed that the user has completed Vignette 1, 2, 3, and 4 and understands the database creation, management, import, aggregation, and analysis/simulation methods described at this [site](https://paulhegedus.github.io/OFPE-Website/index.html).
+
+# Workflow
+This script requires that the user has aggregated the field yield and protein data and saved in the database. If not, this script will not run. Importing a .csv is not allowed. This script only runs with cleaned and aggregated data that is available in the '*farmername*_a' schemas of an OFPE database. 
+
+When the user creates and experimental prescription with no stratification, the base rate surrounding experimental treatments is a farmer selected rate (common for all prescriptions). This is not the same as the farmer selected rate used in the SimClass R6 object because a farmer may want to increase or decrease the rate applied around an experiment from what they would have applied without an experiment in the field. Based on the user specified range and number of possible experimental rates, and the length and width of treatment areas, rates are randomly placed across the field. The user simply requires the specification of a field or field boundary (can be provided), and the specifications described above.
+
+If the user selects to create a new experiment with stratification, they will be required to specify data from the database that they would like to use to stratify on (e.g. previous yield, as-applied inputs, protein), or provide shapefiles of the data they want to stratify on. Additionally, the same specifications as for a new experiment with no stratification. The experimental rates are then placed randomly, stratified on the user selected data. The user simply requires the specification of a field or field boundary (can be provided), and the specifications or data described above.
+
+For an experimental prescription, the user specifies the economic and weather conditions they think the growing year the prescription is for will be like. All parameters specified by the user in the ModClass and SimClass R6 objects pertain to this step, so the user can initialize the RxGen R6 class with full executed ModClass and SimClass objects or simply initialized objects if the user is moving directly to this step. If the latter case, the user will initialize the ModClass and SimClass R6 objects, and the methods to fit the models and simulate the specific economic and weather conditions specified by the user will be executed in the RxClass. Note that having initialized ModClass and SimClass objects implies initialized and setup DatClass and EconDat objects. The RxClass can take one or multiple years for which the farmer expects the weather to be like. In the case of multiple years, all data is used and site-specific optimum rates are averaged across the years. If the user selects years to base the prescription on that have not been simulated by the SimClass, these years will be simulated and appended to the previously simulated years. This increases the efficiency of the class by not rerunning simulations. If the user selects one year and it is present in previously simulated years in the SimClass, no further simulations are needed and that specific year's output data from the SimClass is used to generate the prescription, otherwise the simulation is executed for that year.
+
+All cases will be shown below. Prescriptions are saved to the OFPE database in the '*farmername*_a' schemas and saved to the 'Outputs' folder if desired by the user. These shapefiles should be ready for use directly in the farmer's equipment. All shapefiles are exported as longitude and latitude using the WGS84 datum.
+
+## Set-Up
+The user must have access to an OFPE formatted database for using the vignette below. If using your own data and database, modify the pertinent information to your paths and file/folder/database names. This vignette does not use the OFPEDATA package directly, however references data from the package that was imported to the example database in Vignettes 1 and 2 and aggregated in Vignette 3. The prescription generation extends the analysis and simulations step described in Vignette 4 by generating an experimental varaiable rate map for the user predicted weather and economic conditions. 
+
+### Load Packages
+```{r setup, message = FALSE, eval = FALSE}
+#devtools::install_github("paulhegedus/OFPE")
+library(magrittr)
+library(OFPE)
+```
+
+### Connect to Database
+First, a connection is formed to the database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette, and the rest of the vignettes are working with an example database named 'OFPE' (as named in the tutorial above and exemplified in Vignettes 1, 2, and 3). This class defaults to a PostgreSQL database.
+
+The user must also provide their Google key and register it to be able to plot maps of their data. See https://github.com/dkahle/ggmap for instructions on acquiring and registering a Google API key.
+
+```{r, eval = FALSE}
+dbCon <- DBCon$new(
+  user = "postgres",
+  password = "<your_password>",
+  dbname = "<your_db_name>", 
+  host = "localhost",
+  port = "5432"
+)
+ggmap::register_google(key = "your_google_key")
+```
+
+```{r, echo = FALSE, eval = FALSE}
+dbCon <- DBCon$new(
+  user = "postgres",
+  password = "Paul210220",
+  dbname = "OFPE", 
+  host = "localhost",
+  port = "5432"
+)
+ggmap::register_google(key = "AIzaSyBAjt-y1aPdya1pev1ejqhQcafMGj4oZKw")
+OFPE::removeTempTables(dbCon$db) # removes temporary tables. good practice
+```
+
+## General - TEMP?
+```{r, eval = FALSE}
+# rxClass <- RxClass$new(dbCon)
+# rxClass$selectInputs()
+
+rxClass$executeOutGen()
+rxClass$saveOutputs()
+```
+
+
+## New Experiment - No Stratification
+This section describes the creation of a new experiment for a field without any stratification on previous data. The user simply supplies the rates and proportions of each to be applied, and an experimental rate map is generated for the user. In this section the user may not require the database connection if they are uploading their own field boundary.
+
+It is recommended that the user sets up this scenario by initializing the class with a database connection and then using the interactive method to select inputs. The arguments used in this scenario are the generator type, the treatment length and width, the orientation of the applications relative to N, the field proportion to use for experimentation, the conversion rate from lbs of the experimental input to lbs of the applied input (i.e. lbs N to gal urea), the base rate the farmer wants to apply surrounding the experiment, the year the experiment is generated for, an output path to save the experiment and figures, logical statements on whether to save to the output folder or the database, the fieldname(s) that an experiment is being generated for, the farmer name of the manager of the field, the length of experimental rates to apply (does not include the base rate), the experimental rates, and the proportion to apply each rate. 
+
+```{r, eval = FALSE}
+rxClass <- RxClass$new(dbCon,
+                       gen_type = "NewExp_noStrat",
+                       trt_length = 400,
+                       boom_width = 100,
+                       orientation = 0,
+                       fld_prop = 0.9,
+                       conv = 3.55,
+                       base_rate = 70,
+                       rx_years = NULL,
+                       rx_for_year = 2021,
+                       out_path = "~/Desktop/",
+                       SAVE = TRUE,
+                       to_DB = TRUE,
+                       fieldname = "sec35middle",
+                       farmername = "farmerb",
+                       exp_rate_length = 7,
+                       exp_rates = c(0, 25, 50, 75, 100, 125, 150),
+                       #exp_rates_prop = rep(0.1428571, 7),
+                       exp_rates_prop = c(0.001, 0.124, 0.25, 0.25, 0.25, 0.124, 0.001),
+                       strat_dat = NULL,
+                       strat_dat_year = NULL,
+                       simClass = NULL,
+                       exp_rate_gen = NULL,
+                       opt_rate_length = NULL,
+                       mgmt_scen = NULL,
+                       expvar = "As-Applied Nitrogen")
+rxClass$setupOP()
+rxClass$setupGen()
+```
+* initialize Rx class - user uploaded field boundary or select from database
+* randomly apply experimental rates, fill background rate
+* export
+
+## New Experiment - With Stratification
+This section describes the creation of a new experiment for a field with stratification on previous data. The user supplies the same specifications as for the new experiment without stratification, but also specifies data in the database or a path to shapefiles that can be used to stratify rates on. The stratification data will be binned and experimental rates will be placed on unique combinations of the stratification data. 
+
+It is recommended that the user sets up this scenario by initializing the class with a database connection and then using the interactive method to select inputs. The arguments used in this scenario are the generator type, the treatment length and width, the orientation of the applications relative to N, the field proportion to use for experimentation, the conversion rate from lbs of the experimental input to lbs of the applied input (i.e. lbs N to gal urea), the base rate the farmer wants to apply surrounding the experiment, the year the experiment is generated for, an output path to save the experiment and figures, logical statements on whether to save to the output folder or the database, the fieldname(s) that an experiment is being generated for, the farmer name of the manager of the field, the length of experimental rates to apply (does not include the base rate), the experimental rates, and the proportion to apply each rate. When stratifying on other variables, the user can pass in a list for each field with a vector of character codes for variables to stratify on. A vector of years to gather data of the specified type is also required in the same format as and corresponding to the stratifcation variables.
+
+```{r, eval = FALSE}
+rxClass <- RxClass$new(dbCon,
+                       gen_type = "NewExp_wStrat",
+                       trt_length = 400,
+                       boom_width = 100,
+                       orientation = 0,
+                       fld_prop = 1,
+                       conv = 3.55,
+                       base_rate = 70,
+                       rx_years = NULL,
+                       rx_for_year = 2021,
+                       out_path = "~/Desktop/",
+                       SAVE = TRUE,
+                       to_DB = TRUE,
+                       fieldname = "sec35middle",
+                       farmername = "farmerb",
+                       exp_rate_length = 7,
+                       exp_rates = c(0, 25, 50, 75, 100, 125, 150),
+                       exp_rates_prop = rep(0.1428571, 7),
+                       strat_dat = list(c("yld", "pro", "aa_n")),
+                       strat_dat_year = list(c("2018", "2018", "2018")),
+                       simClass = NULL,
+                       exp_rate_gen = NULL,
+                       opt_rate_length = NULL,
+                       mgmt_scen = NULL)
+rxClass$setupOP()
+rxClass$setupGen()
+```
+
+* initialize Rx class - user uploaded field boundary or select from database
+* get stratification data
+* bin stratification data
+* agg to grid, find unique comb.
+* randomly apply experimental rates to each unique comb.
+* export
+
+## Experimental Prescription
+This section describes the creation of an experimental prescription. This process extends from the analysis and simuation step that identifies the optimum as-applied rates for each of the management scenarios. The user will select their preferred management scenario and then experimental rates are randomly placed, stratified on the optimized rate map. This creates a map with the optimum rates as the "background" to experimental rates. This allows the generation of more data to use for fitting the crop response models that are used for generating the optimized maps. However, the option is available for the user to decide to stop experimentation and create prescriptions (see section below).
+
+* initialize Rx class - user passes in initialized and/or executed modClass and simClass objects
+* if not executed for prescription year, run simulation (if models not fit, do that too)
+* reduce to the number of optimum rates specified by the user (... how to do this ...)
+* randomly apply experimental rates
+* export
+
+## Prescription
+This section describes the creation of a input prescription based on a user specified management scenario. This process also extends from the analysis and simulation step and requires user to specify the management scenario on which to create the prescription. Based on the user selections, the optimized rates from the outcome of the simulation for the user specified economic and weather conditions is used to generate the map for the user. Before export, treatment blocks of a farmer selected rate indicating what their "business as usual" rate would have been, are randomly placed in each of the experimental rates. This provides a check for the optimized rates against what the farmer would have applied, to evaluate the efficacy of the optimized rates. If not outperforming the farmer selected rates, resuming experimentation is recommended to further tune the crop responses models and provide stronger predictions for generating optimized rates.
+
+* initialize Rx class - user passes in initialized and/or executed modClass and simClass objects
+* if not executed for prescription year, run simulation (if models not fit, do that too)
+* reduce to the number of optimum rates specified by the user (... how to do this ...)
+* randomly apply farmer selected rates
+* export
+
+
+# Conclusion
+At this point, the user will have have generated a prescription or experiment for their specified field. If the user allowed, this will have been exported to the 'Outputs' folder along with some complementary figures, and/or will be saved in the database in the '*farmername*_a' schemas in a table called 'rx'. 
+
+```{r, eval = FALSE}
+dbCon$disconnect()
+```
+
+
+
+

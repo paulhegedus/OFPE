@@ -8,7 +8,7 @@
 [![Project Status: WIP – Initial development is in progress, but there
 has not yet been a stable, usable release suitable for the
 public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-[![Last-changedate](https://img.shields.io/badge/last%20change-2020--08--16-yellowgreen.svg)](/commits/master)
+[![Last-changedate](https://img.shields.io/badge/last%20change-2020--09--08-yellowgreen.svg)](/commits/master)
 [![R build
 status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
 [![Build
@@ -116,6 +116,17 @@ The OFPE package is not intended for use outside of Montana or for crops
 other than dryland winter wheat. We are not liable for any damages,
 actions, or outcomes of any decision made while using this this package
 or influenced by any associated intellectual property.
+
+## Style Guide
+
+The package follows [Google’s R Style
+Guide](https://google.github.io/styleguide/Rguide.html) which follows
+the [Tidyverse Style Guide](https://style.tidyverse.org). However, there
+are a couple distinctions from Google’s style guide. Rather than naming
+functions with ‘BigCamelCase’, they are named with ‘smallCamelCase’ in
+this package, while R6 classes are named with BigCamelCase and assigned
+to ‘smallCamelCase’ objects. Anything besides a class object or function
+is in ‘snake\_case.’
 
 ## Requirements
 

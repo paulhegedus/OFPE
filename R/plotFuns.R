@@ -29,6 +29,8 @@ plotMaps <- function(df,
                      var_main_label,
                      fieldname,
                      farmername) {
+  browser()
+
   stopifnot(
     length(var_col_name) == length(var_label),
     length(var_col_name) == length(var_main_label),
@@ -106,8 +108,8 @@ plotMaps <- function(df,
                     x = "",
                     y = "") +
       ggplot2::theme_bw() +
-      ggplot2::theme(axis.text.x = element_blank(),
-                     axis.text.y = element_blank()) +
+      ggplot2::theme(axis.text.x = ggplot2::element_blank(),
+                     axis.text.y = ggplot2::element_blank()) +
       OFPE::scale_bar(lon = e@xmin-0.0005,
                       lat = e@ymin-0.0005,
                       distance_lon = 0.2,

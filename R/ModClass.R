@@ -178,14 +178,12 @@ ModClass <- R6::R6Class(
       }
     },
     #' @description
-    #' Method used to setup the GAM. This initializes the specified model for each
+    #' Method used to setup the model. This initializes the specified model for each
     #' response variable. The initialization of each model creates a table of the
     #' parameters and associated information related to the specific model.
     #' @param datClass datClass class object. Stores the data and inputs
     #' necessary for initializing the model.
-    #' @param create Logical, whether to create folders for output. If not,
-    #' no plots will be saved by default.
-    #' @return A folder created in the path for model output figures.
+    #' @return An instantiated model for each response variable.
     setupMod = function(datClass) {
       self$mod_list <- as.list(self$fxn) %>%
         `names<-`(names(self$fxn))
@@ -213,7 +211,7 @@ ModClass <- R6::R6Class(
     #' fitting function. This can differ between model types and is thus model
     #' specific.
     #' @param None All parametes supplied upon initialization.
-    #' @return Diagnostic and validation plots in the 'Outputs' folder.
+    #' @return Fitted models.
     fitModels = function() {
       lapply(self$mod_list, function(mod) mod$fitMod())
     },

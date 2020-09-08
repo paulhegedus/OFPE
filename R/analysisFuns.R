@@ -114,16 +114,24 @@ valPrep <- function(dat, respvar, expvar, num_means) {
 #' @title Identify a unique fieldname from data.
 #' @description Returns a character with the fieldname(s) present in the data. Unique name
 #' for the field(s) analyzed. If multiple fields are used they are separated by an ampersand,
-#' otherwise the singular field name is used. This is used for plotting.
-#' @param dat Data.table with the data to to produce a unique fieldname from.
+#' otherwise the singular field name is used. This is used for plotting. Can pass in a data.frame
+#' with a column named 'field', or a vector of fieldnames.
+#' @param dat data.frame with a column called 'field' to produce a unique fieldname from, or
+#' a vector of fieldnames.
 #' @return Character with unique field name.
 #' @export
 uniqueFieldname <- function(dat) {
-  stopifnot(data.table::is.data.table(dat) | is.data.frame(dat),
-            any(grepl("field", names(dat))))
-  fieldname <- ifelse(length(unique(dat$field)) > 1,
-                           paste(unique(dat$field),  collapse = " & "),
-                           dat$field[1] %>% as.character())
+  stopifnot(data.table::is.data.table(dat) | is.data.frame(dat) | is.character(dat))
+  if (data.table::is.data.table(dat) | is.data.frame(dat)) {
+    stopifnot(any(grepl("field", names(dat))))
+    fieldname <- ifelse(length(unique(dat$field)) > 1,
+                        paste(unique(dat$field),  collapse = " & "),
+                        dat$field[1] %>% as.character())
+  } else {
+    fieldname <- ifelse(length(dat) > 1,
+                        paste(unique(dat),  collapse = " & "),
+                        dat %>% as.character())[1]
+  }
   return(fieldname)
 }
 

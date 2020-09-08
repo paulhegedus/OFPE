@@ -45,6 +45,23 @@ removeTempTables <- function(db) {
       )
     )
   }
+  rxgrid_temp_exist <- as.logical(
+    DBI::dbGetQuery(
+      db,
+      paste0("SELECT EXISTS (SELECT 1 FROM
+             information_schema.tables
+             WHERE table_schema = 'all_farms'
+             AND table_name = 'rxgridtemp')")
+    )
+  )
+  if(rxgrid_temp_exist){
+    invisible(
+      DBI::dbGetQuery(
+        db,
+        paste0("DROP TABLE all_farms.rxgridtemp")
+      )
+    )
+  }
   ## remove any temporary geetemp
   gee_temp_exist <- as.logical(
     DBI::dbGetQuery(

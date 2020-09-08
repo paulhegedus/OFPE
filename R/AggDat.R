@@ -107,7 +107,7 @@ AggDat <- R6::R6Class(
     #' @return Aggregated data in the 'farmername_a' schema
     aggregateData = function() {
       # make 10m grid
-      self$.make10mGrid(
+      self$.makeXmGrid(
         self$aggInputs$dbCon$db,
         self$aggInputs$boundary_import,
         self$aggInputs$fieldname,
@@ -337,8 +337,8 @@ AggDat <- R6::R6Class(
     #' @param size Size of grid to make (meters), default = 10.
     #' @param farmername Name of farmer that owns the field.
     #' @return None.
-    .make10mGrid = function(db, boundary_import, fieldname, size = 10, farmername) {
-      utmEpsg <- OFPE::findUTMzone(farmername = farmername)
+    .makeXmGrid = function(db, boundary_import, fieldname, size = 10, farmername) {
+      utm_epsg <- OFPE::findUTMzone(farmername = farmername)
       grids_exist <- FALSE
       field_exist <- FALSE
       # check if grids exist
@@ -385,7 +385,7 @@ AggDat <- R6::R6Class(
           db,
           query = paste0("SELECT * FROM all_farms.temp"),
           geometry_column = "geometry") %>%
-          sf::st_transform(paste0("epsg:", utmEpsg)) %>%
+          sf::st_transform(paste0("epsg:", utm_epsg)) %>%
           as("Spatial") %>%
           sp::bbox()
         NCOL <- ceiling((BBOX["x", "max"] - BBOX["x", "min"]) / size)
@@ -405,7 +405,7 @@ AggDat <- R6::R6Class(
                cell_id = row::text ||'_'|| col::text,
                field = '", fieldname, "',
                size = ", size, ";
-               UPDATE all_farms.gridtemp SET geom = ST_SetSRID (geom, ", utmEpsg, ");
+               UPDATE all_farms.gridtemp SET geom = ST_SetSRID (geom, ", utm_epsg, ");
                ALTER TABLE all_farms.gridtemp
                ADD COLUMN x double precision,
                ADD COLUMN y double precision;
@@ -482,7 +482,7 @@ AggDat <- R6::R6Class(
                                GRID,
                                dat_used,
                                size) {
-      utmEpsg <- OFPE::findUTMzone(farmername = farmername)
+      utm_epsg <- OFPE::findUTMzone(farmername = farmername)
 
       if (GRID == "grid") {
         invisible(
@@ -508,7 +508,7 @@ AggDat <- R6::R6Class(
                     year = '", CY, "',
                     prev_year = '", PY, "';
                     ALTER TABLE ", farmername, "_a.temp
-                    ALTER COLUMN geom TYPE geometry(Point, ", utmEpsg, ")
+                    ALTER COLUMN geom TYPE geometry(Point, ", utm_epsg, ")
                     USING ST_Centroid(geom);
                     ALTER TABLE ", farmername, "_a.temp
                     RENAME COLUMN geom TO geometry;")
@@ -758,7 +758,7 @@ AggDat <- R6::R6Class(
                             PY = NULL,
                             dat_used,
                             size) {
-      utmEpsg <- OFPE::findUTMzone(farmername = farmername)
+      utm_epsg <- OFPE::findUTMzone(farmername = farmername)
       # Get the cell_id for each point in the temporary table
       invisible(
         DBI::dbSendQuery(
@@ -766,8 +766,8 @@ AggDat <- R6::R6Class(
           paste0("ALTER TABLE ", farmername, "_r.temp
                   ADD COLUMN cell_id VARCHAR;
                   ALTER TABLE ", farmername, "_r.temp
-                  ALTER COLUMN geometry TYPE geometry(POINT, ", utmEpsg, ")
-                  USING ST_Transform(geometry, ", utmEpsg, ");
+                  ALTER COLUMN geometry TYPE geometry(POINT, ", utm_epsg, ")
+                  USING ST_Transform(geometry, ", utm_epsg, ");
                   UPDATE ", farmername, "_r.temp temp
                   SET cell_id = gridtemp.cell_id
                   FROM all_farms.gridtemp
@@ -874,10 +874,10 @@ AggDat <- R6::R6Class(
                       FROM ", farmername, "_r.temp;
 
                       UPDATE ", farmername, "_a.temp SET
-                      geometry = ST_MakePoint(x, y, ", utmEpsg, ");
+                      geometry = ST_MakePoint(x, y, ", utm_epsg, ");
 
                       UPDATE ", farmername, "_a.temp SET
-                      geometry = ST_SetSRID (geometry, ", utmEpsg, "),
+                      geometry = ST_SetSRID (geometry, ", utm_epsg, "),
                       field = '", fieldname, "',
                       grid = '", GRID, "',
                       datused = '", dat_used, "',
@@ -1195,7 +1195,7 @@ AggDat <- R6::R6Class(
       )
 
 
-      utmEpsg <- OFPE::findUTMzone(farmername = farmername)
+      utm_epsg <- OFPE::findUTMzone(farmername = farmername)
       for (i in 1:nrow(exp_files)) {
         if (!is.na(exp_conv[i, "conversion"])) {
           invisible(
@@ -1218,8 +1218,8 @@ AggDat <- R6::R6Class(
             paste0("ALTER TABLE ", farmername, "_r.temp
                     ADD COLUMN cell_id VARCHAR;
                     ALTER TABLE ", farmername, "_r.temp
-                    ALTER COLUMN geometry TYPE geometry(POINT, ", utmEpsg, ")
-                    USING ST_Transform(geometry, ", utmEpsg, ");
+                    ALTER COLUMN geometry TYPE geometry(POINT, ", utm_epsg, ")
+                    USING ST_Transform(geometry, ", utm_epsg, ");
                     UPDATE ", farmername, "_r.temp temp
                     SET cell_id = gridtemp.cell_id
                     FROM all_farms.gridtemp
@@ -1286,8 +1286,8 @@ AggDat <- R6::R6Class(
             paste0("ALTER TABLE ", farmername, "_r.temp
                     ALTER COLUMN geometry TYPE geometry(",
                     as.character(is_poly),
-                    ", ", utmEpsg, ")
-                    USING ST_Transform(geometry, ", utmEpsg, ");")
+                    ", ", utm_epsg, ")
+                    USING ST_Transform(geometry, ", utm_epsg, ");")
           )
         )
       }
@@ -1330,7 +1330,7 @@ AggDat <- R6::R6Class(
                            size,
                            exp_files) {
       newcol <- ifelse(CY, expvar, paste0("prev_", expvar))
-      utmEpsg <- OFPE::findUTMzone(farmername = farmername)
+      utm_epsg <- OFPE::findUTMzone(farmername = farmername)
       is_poly <- ifelse(any(grepl("poly", exp_files$table)),
                         "MULTIPOLYGON",
                         "POINT")
@@ -1351,7 +1351,7 @@ AggDat <- R6::R6Class(
                     grid = '", GRID, "',
                     farmer = '", farmername, "';
                     ALTER TABLE ", farmername, "_a.exp_grid
-                    ALTER COLUMN geom TYPE geometry(Point, ", utmEpsg, ")
+                    ALTER COLUMN geom TYPE geometry(Point, ", utm_epsg, ")
                     USING ST_Centroid(geom);
                     ALTER TABLE ", farmername, "_a.exp_grid
                     RENAME COLUMN geom TO geometry;")
@@ -1372,7 +1372,7 @@ AggDat <- R6::R6Class(
         DBI::dbSendQuery(
           db,
           paste0("CREATE TABLE ", farmername,"_a.exp_box AS
-          (SELECT ST_SetSRID(ST_Extent(temp.geometry), ", utmEpsg,") AS
+          (SELECT ST_SetSRID(ST_Extent(temp.geometry), ", utm_epsg,") AS
           geometry FROM farmerb_r.temp temp);")
         )
       )
@@ -1405,8 +1405,8 @@ AggDat <- R6::R6Class(
                     ADD COLUMN exp REAL;
                     ALTER TABLE ", farmername, "_r.temp
                     ALTER COLUMN geometry TYPE geometry(",
-                    as.character(is_poly), ", ", utmEpsg, ")
-                    USING ST_Transform(geometry, ", utmEpsg, ");
+                    as.character(is_poly), ", ", utm_epsg, ")
+                    USING ST_Transform(geometry, ", utm_epsg, ");
                     UPDATE ", farmername, "_a.exp_grid aggexp_grid
                     SET exp = temp.exp
                     FROM ", farmername, "_r.temp temp
@@ -1583,8 +1583,8 @@ AggDat <- R6::R6Class(
       #                       FROM ", self$aggInputs$farmername, "_a.temp"
       #                     ))  %>%
       #   sf::st_crs()
-      # utmEpsg <- stringr::str_sub(epsg$input, 6, nchar(epsg$input))
-      utmEpsg <- OFPE::findUTMzone(farmername = self$aggInputs$farmername)
+      # utm_epsg <- stringr::str_sub(epsg$input, 6, nchar(epsg$input))
+      utm_epsg <- OFPE::findUTMzone(farmername = self$aggInputs$farmername)
 
       ## clip the aggregated data to the field boundary
       invisible(
@@ -1592,7 +1592,7 @@ AggDat <- R6::R6Class(
           self$aggInputs$dbCon$db,
           paste0("ALTER TABLE ", self$aggInputs$farmername, "_a.temp
                  ALTER COLUMN geometry
-                 TYPE geometry(POINT, ", utmEpsg, ")
+                 TYPE geometry(POINT, ", utm_epsg, ")
                  USING ST_Force2D(geometry);
                  ALTER TABLE ", self$aggInputs$farmername, "_a.temp
                  ALTER COLUMN geometry TYPE geometry(POINT, 4326)

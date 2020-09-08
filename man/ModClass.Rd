@@ -195,7 +195,7 @@ A folder created in the path for model output figures.
 \if{html}{\out{<a id="method-setupMod"></a>}}
 \if{latex}{\out{\hypertarget{method-setupMod}{}}}
 \subsection{Method \code{setupMod()}}{
-Method used to setup the GAM. This initializes the specified model for each
+Method used to setup the model. This initializes the specified model for each
 response variable. The initialization of each model creates a table of the
 parameters and associated information related to the specific model.
 \subsection{Usage}{
@@ -207,14 +207,11 @@ parameters and associated information related to the specific model.
 \describe{
 \item{\code{datClass}}{datClass class object. Stores the data and inputs
 necessary for initializing the model.}
-
-\item{\code{create}}{Logical, whether to create folders for output. If not,
-no plots will be saved by default.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A folder created in the path for model output figures.
+An instantiated model for each response variable.
 }
 }
 \if{html}{\out{<hr>}}
@@ -236,7 +233,7 @@ specific.
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Diagnostic and validation plots in the 'Outputs' folder.
+Fitted models.
 }
 }
 \if{html}{\out{<hr>}}

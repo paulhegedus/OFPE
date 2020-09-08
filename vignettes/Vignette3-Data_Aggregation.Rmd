@@ -29,7 +29,7 @@ The resources below are strongly recommended as supplemental information regardi
   * [OFPE Project Website](https://sites.google.com/site/ofpeframework/): Project information and products from the MSU OFPE project.
   * [OFPE Technical Website](https://paulhegedus.github.io/OFPE-Website/index.html): Website with more detailed descriptions of the OFPE data cycle and workflow, as well as tutorials for external data processes that cannot be performed in R.
   * [OFPE Overview](https://paulhegedus.github.io/OFPE-Website/ofpe_overview.html): Page of the OFPE Technical Website describing an overview of the OFPE data cycle and workflow.
-  * [OFPE Data Import](https://paulhegedus.github.io/OFPE-Website/dat_import.html): Detailed description of the OFPE on-farm data import process.
+  * [OFPE Data Aggregation](https://paulhegedus.github.io/OFPE-Website/data_agg.html): Detailed description of the OFPE on-farm data import process.
 
 Again, it is assumed that the user has completed Vignette 1 and 2 and understands the database creation, management, and import methods described at this [site](https://paulhegedus.github.io/OFPE-Website/index.html).
 

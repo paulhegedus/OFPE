@@ -208,8 +208,6 @@ SimClass <- R6::R6Class(
           self$SAVE <- FALSE
         }
       }
-      # TODO
-      # do c++ functions need to be sourced here??
     },
     #' @description
     #' Interactive method for selecting inputs related to the analysis and the

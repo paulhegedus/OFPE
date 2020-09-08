@@ -194,12 +194,12 @@ scale_bar <- function(lon,
                                           dist_unit = dist_unit)
   # First rectangle
   rectangle1 <- ggplot2::geom_polygon(data = the_scale_bar$rectangle,
-                                      aes(x = lon, y = lat),
+                                      ggplot2::aes(x = lon, y = lat),
                                       fill = rec_fill,
                                       colour = rec_colour)
   # Second rectangle
   rectangle2 <- ggplot2::geom_polygon(data = the_scale_bar$rectangle2,
-                                      aes(x = lon, y = lat),
+                                      ggplot2::aes(x = lon, y = lat),
                                       fill = rec2_fill,
                                       colour = rec2_colour)
   # Legend
@@ -218,7 +218,7 @@ scale_bar <- function(lon,
                                                    distance = arrow_distance,
                                                    dist_unit = dist_unit)
     arrow <- list(ggplot2::geom_segment(data = coords_arrow$res,
-                                        aes(x = x, y = y, xend = xend, yend = yend)),
+                                        ggplot2::aes(x = x, y = y, xend = xend, yend = yend)),
                   ggplot2::annotate("text",
                                     label = "N",
                                     x = coords_arrow$coords_n[1, "x"],
