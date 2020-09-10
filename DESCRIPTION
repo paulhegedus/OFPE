@@ -63,7 +63,8 @@ Imports:
     grid,
     methods,
     raster,
-    sp
+    sp,
+    splitstackshape
 LinkingTo: 
     Rcpp, 
     RcppArmadillo

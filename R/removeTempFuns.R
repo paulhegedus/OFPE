@@ -119,6 +119,26 @@ removeTempFarmerTables <- function(db, farmername) {
       paste0("SELECT EXISTS (
              SELECT 1
              FROM information_schema.tables
+             WHERE table_schema = '",farmername,"_a'
+             AND table_name = 'temp2')")
+    )
+  )
+  if(temp_exist){
+    invisible(
+      DBI::dbGetQuery(
+        db,
+        paste0("DROP TABLE ",
+               farmername,
+               "_a.temp2")
+      )
+    )
+  }
+  temp_exist <- as.logical(
+    DBI::dbGetQuery(
+      db,
+      paste0("SELECT EXISTS (
+             SELECT 1
+             FROM information_schema.tables
              WHERE table_schema = '",farmername,"_r'
              AND table_name = 'temp')")
     )

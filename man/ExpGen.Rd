@@ -29,6 +29,11 @@ database, see DBCon class.}
 \item{\code{fld_prop}}{The proportion of the field to apply experimental
 or optimum check rates to.}
 
+\item{\code{expvar}}{Experimental variable to optimize, select/input
+'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
+input that is experimentally varied across the field as part of the
+on-farm experimentation.}
+
 \item{\code{conv}}{The conversion factor between lbs of the input to the
 units of the as-applied input (i.e. lbs N/ac to unit input/ac)}
 
@@ -85,7 +90,7 @@ used in the OFPE workflow sucha as 'yld', 'pro', 'aa_n', 'aa_sr', etc.}
 \item{\code{strat_dat_year}}{Follows the same structure of 'strat_dat', however contains
 the years to use for stratification of each of the data types for each of the fields.}
 
-\item{\code{unq_fieldname}}{Unique fieldname for the field(s) used for the experiment. This
+\item{\code{unique_fieldname}}{Unique fieldname for the field(s) used for the experiment. This
 concatenates multiple fields with an ampersand. Used for labelling.}
 
 \item{\code{rx_dt}}{Data frame that contains the coordinates of locations to apply
@@ -95,6 +100,35 @@ made to aggregate data for the field.}
 \item{\code{RX}}{Table containing the geographic locations of the experiment. Also
 contains the rates in the experimental and as-applied units. This can be
 saved as a shapefile and given to the equipment applying the input.}
+
+\item{\code{out_name}}{Created parameter including the unique fieldname and year the
+experiment is being generated for.}
+
+\item{\code{out_map_name}}{Created parameter with the file name for the map of the
+prescription. Used for saving the map to the 'Outputs' folder.}
+
+\item{\code{cell_out_map_name}}{Created parameter with the file name for the map of the
+rate type applied to each cell. Used for saving the map to the 'Outputs' folder.}
+
+\item{\code{var}}{The label of the variable to map. Used in figure labelling for plotting
+in RxClass.}
+
+\item{\code{var_col_name}}{The name of the column of the variable in the
+supplied data ('dat'). Used in figure labelling for plotting
+in RxClass.}
+
+\item{\code{var_label}}{The label to be applied to the legend of the map
+corresponding to the variable mapped. Used in figure labelling for plotting
+in RxClass.}
+
+\item{\code{var_main_label}}{The main label to apply to the map. Used in figure
+labelling for plotting in RxClass.}
+
+\item{\code{mgmt_scen}}{For this class, the management scenario is always an experiment
+so this parameter is set to 'exp'.}
+
+\item{\code{size}}{The size of the treatment zones, which is the treatment length x
+the boom width x 2.}
 }
 \if{html}{\out{</div>}}
 }
@@ -120,6 +154,7 @@ inputs are in the correct format and present.
   boom_width,
   orientation,
   fld_prop,
+  expvar,
   conv,
   base_rate,
   rx_for_year,
@@ -149,6 +184,11 @@ database, see DBCon class.}
 
 \item{\code{fld_prop}}{The proportion of the field to apply experimental
 or optimum check rates to.}
+
+\item{\code{expvar}}{Experimental variable to optimize, select/input
+'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
+input that is experimentally varied across the field as part of the
+on-farm experimentation.}
 
 \item{\code{conv}}{The conversion factor between lbs of the input to the
 units of the as-applied input (i.e. lbs N/ac to unit input/ac)}
@@ -209,7 +249,7 @@ the years to use for stratification of each of the data types for each of the fi
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-
+An initialized ExpGen R6 class object.
 }
 }
 \if{html}{\out{<hr>}}

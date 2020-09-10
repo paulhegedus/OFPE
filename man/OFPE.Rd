@@ -13,6 +13,17 @@ remotely sensed data, aggregating data from disparate sources, data
 analysis and optimization of inputs, simulationg of management outcomes,
 and generation of prescriptive application maps for optimized inputs.
 }
+\details{
+This package relies on a PostgreSQL database named 'OFPE'. The user is
+assumed to have downloaded PostgreSQL and PostGIS. This process is
+outlined on the OFPE Website \url{https://paulhegedus.github.io/OFPE-Website/}.
+
+The package follows Google's R Style Guide which follows the Tidyverse Style Guide.
+However, there are a couple distinctions from Google's style guide. Rather
+than naming functions with BigCamelCase, they are named with smallCamelCase,
+while R6 classes are named with BigCamelCase and assigned to smallCamelCase
+objects. Anything besides a class object or function is in snake_case.
+}
 \section{General Functions}{
 
 DBCon
@@ -65,4 +76,8 @@ The OFPE prescription creation functions and R6 class generators...
 \url{https://paulhegedus.github.io/OFPE-Website/}
 
 \url{https://github.com/paulhegedus/OFPEDATA.git}
+
+\url{https://google.github.io/styleguide/Rguide.html}
+
+\url{https://style.tidyverse.org}
 }

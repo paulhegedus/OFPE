@@ -29,8 +29,6 @@ plotMaps <- function(df,
                      var_main_label,
                      fieldname,
                      farmername) {
-  browser()
-
   stopifnot(
     length(var_col_name) == length(var_label),
     length(var_col_name) == length(var_main_label),
@@ -87,7 +85,7 @@ plotMaps <- function(df,
     }
     var_map <-
       ggmap::ggmap(map, extent  =  "panel") +
-      ggplot2::geom_tile(data = rDf, aes(x = x, y = y, fill = rDf[, 1])) +
+      ggplot2::geom_tile(data = rDf, ggplot2::aes(x = x, y = y, fill = rDf[, 1])) +
       ggplot2::scale_fill_gradientn(
         limits = c(floor(min(rDf[, 1], na.m = TRUE)),
                    ceiling(max(rDf[, 1], na.rm = TRUE))),

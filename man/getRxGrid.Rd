@@ -11,7 +11,8 @@ getRxGrid(
   fieldname,
   trt_length,
   boom_width,
-  unq_fieldname
+  unique_fieldname,
+  mgmt_scen = "base"
 )
 }
 \arguments{
@@ -33,8 +34,19 @@ available fields in the database for experimentation.}
 
 \item{boom_width}{The width of the sprayer boom or spreader.}
 
-\item{unq_fieldname}{Unique fieldname for the field(s) used for the experiment. This
+\item{unique_fieldname}{Unique fieldname for the field(s) used for the experiment. This
 concatenates multiple fields with an ampersand. Used for labelling.}
+
+\item{mgmt_scen}{If the user is creating a prescription or experimental
+prescription, they must provide the management scenario to use for their
+prescription. The user can choose from the management options listed in
+the SimClass. The options are 'SSOPT': site-specific optimized rates,
+'FFOPT': full-field optimum uniform rate, 'FS': farmer selected uniform
+rate, 'Min': applying the least intensive input rates (i.e. 0 lbs N/ac, or
+25 lbs seed/ac), 'Opp' is omitted because this strategy is the least intensive
+input rate in conventional system types, and the farmer selected rate for
+organic systems, both of which are already provided. Default to 'base' for new
+experiments, override if making a prescription.}
 }
 \value{
 NULL, grid data stored in database in 'rxgrids' and 'rxgridtemp'.

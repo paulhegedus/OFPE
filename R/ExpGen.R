@@ -25,6 +25,11 @@ ExpGen <- R6::R6Class(
     #' @field fld_prop The proportion of the field to apply experimental
     #' or optimum check rates to.
     fld_prop = NULL,
+    #' @field expvar Experimental variable to optimize, select/input
+    #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
+    #' input that is experimentally varied across the field as part of the
+    #' on-farm experimentation.
+    expvar = NULL,
     #' @field conv The conversion factor between lbs of the input to the
     #' units of the as-applied input (i.e. lbs N/ac to unit input/ac)
     conv = NULL,
@@ -82,9 +87,9 @@ ExpGen <- R6::R6Class(
     #' the years to use for stratification of each of the data types for each of the fields.
     strat_dat_year = NULL,
 
-    #' @field unq_fieldname Unique fieldname for the field(s) used for the experiment. This
+    #' @field unique_fieldname Unique fieldname for the field(s) used for the experiment. This
     #' concatenates multiple fields with an ampersand. Used for labelling.
-    unq_fieldname = NULL,
+    unique_fieldname = NULL,
     #' @field rx_dt Data frame that contains the coordinates of locations to apply
     #' experimental inputs. For an experiment, these are the centroids of the grid
     #' made to aggregate data for the field.
@@ -93,6 +98,35 @@ ExpGen <- R6::R6Class(
     #' contains the rates in the experimental and as-applied units. This can be
     #' saved as a shapefile and given to the equipment applying the input.
     RX = NULL,
+    #' @field out_name Created parameter including the unique fieldname and year the
+    #' experiment is being generated for.
+    out_name = NULL,
+    #' @field out_map_name Created parameter with the file name for the map of the
+    #' prescription. Used for saving the map to the 'Outputs' folder.
+    out_map_name = NULL,
+    #' @field cell_out_map_name Created parameter with the file name for the map of the
+    #' rate type applied to each cell. Used for saving the map to the 'Outputs' folder.
+    cell_out_map_name = NULL,
+    #' @field var The label of the variable to map. Used in figure labelling for plotting
+    #' in RxClass.
+    var = NULL,
+    #' @field var_col_name The name of the column of the variable in the
+    #' supplied data ('dat'). Used in figure labelling for plotting
+    #' in RxClass.
+    var_col_name = NULL,
+    #' @field var_label The label to be applied to the legend of the map
+    #' corresponding to the variable mapped. Used in figure labelling for plotting
+    #' in RxClass.
+    var_label = NULL,
+    #' @field var_main_label The main label to apply to the map. Used in figure
+    #' labelling for plotting in RxClass.
+    var_main_label = NULL,
+    #' @field mgmt_scen For this class, the management scenario is always an experiment
+    #' so this parameter is set to 'exp'.
+    mgmt_scen = "exp",
+    #' @field size The size of the treatment zones, which is the treatment length x
+    #' the boom width x 2.
+    size = NULL,
 
     #' @description It is recommended to initialize this class through the RxClass,
     #' because it is integrated into the OFPE workflow. This also ensures all of the
@@ -104,6 +138,10 @@ ExpGen <- R6::R6Class(
     #' @param orientation TODO...
     #' @param fld_prop The proportion of the field to apply experimental
     #' or optimum check rates to.
+    #' @param expvar Experimental variable to optimize, select/input
+    #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
+    #' input that is experimentally varied across the field as part of the
+    #' on-farm experimentation.
     #' @param conv The conversion factor between lbs of the input to the
     #' units of the as-applied input (i.e. lbs N/ac to unit input/ac)
     #' @param base_rate The rate to apply between the experimental rates
@@ -148,12 +186,13 @@ ExpGen <- R6::R6Class(
     #' used in the OFPE workflow sucha as 'yld', 'pro', 'aa_n', 'aa_sr', etc.
     #' @param strat_dat_year Follows the same structure of 'strat_dat', however contains
     #' the years to use for stratification of each of the data types for each of the fields.
-    #' @return
+    #' @return An initialized ExpGen R6 class object.
     initialize = function(dbCon,
                           trt_length,
                           boom_width,
                           orientation,
                           fld_prop,
+                          expvar,
                           conv,
                           base_rate,
                           rx_for_year,
@@ -198,7 +237,9 @@ ExpGen <- R6::R6Class(
                 is.numeric(exp_rate_length),
                 is.numeric(exp_rates),
                 is.numeric(exp_rates_prop),
-                sum(exp_rates_prop) >= 0.99)
+                sum(exp_rates_prop) >= 0.99,
+                is.character(expvar),
+                any(grepl("aa_n|aa_sr", expvar)))
       self$dbCon <- dbCon
       self$trt_length <- round(trt_length, 0)
       self$boom_width <- round(boom_width, 0)
@@ -209,6 +250,7 @@ ExpGen <- R6::R6Class(
       self$rx_for_year <- rx_for_year
       self$SAVE <- SAVE
       self$out_path <- out_path
+      self$expvar <- expvar
       if (is.na(self$out_path) | is.null(self$out_path)) {
         self$SAVE <- FALSE
       }
@@ -231,15 +273,14 @@ ExpGen <- R6::R6Class(
                   length(strat_dat_year == length(strat_dat)))
         self$strat_dat_year <- strat_dat_year
       }
-      self$unq_fieldname <- OFPE::uniqueFieldname(self$fieldname)
+      self$unique_fieldname<- OFPE::uniqueFieldname(self$fieldname)
       self$rx_dt <- private$.makeExpDt(self$fieldname,
                                         self$dbCon$db,
                                         self$base_rate,
-                                        self$unq_fieldname,
+                                        self$unique_fieldname,
                                         self$farmername)
       if (!is.null(strat_dat)) {
         browser()
-
         # TODO
         # if strat dat need to get and data
         # need to bin it up
@@ -260,48 +301,35 @@ ExpGen <- R6::R6Class(
                                 self$fieldname,
                                 self$trt_length,
                                 self$boom_width,
-                                self$unq_fieldname)
-      buff_bound <- sf::st_buffer(
-        private$.getFldBound(self$fieldname, self$dbCon$db, self$farmername),
-        -10
-      )
-      rx_sdt <- suppressWarnings(sf::st_intersection(rx_sdt, buff_bound))
-      rx_sdt[, c("wfid", "fieldidx", "farmidx",
-                 "farmeridx", "fieldname", "area")] <- NULL
-      rx_sdt <- private$.applyExpRates(rx_sdt,
-                                       self$exp_rates,
-                                       self$exp_rates_prop,
-                                       self$fld_prop,
-                                       self$exp_rate_length,
-                                       ifelse(!is.null(self$strat_dat),
-                                              strat_dat,
-                                              NA))
-      fld_bound <- private$.makeBaseRate(self$dbCon$db,
+                                self$unique_fieldname,
+                                "base") %>%
+        ## TODO - orientation
+        OFPE::trimGrid(self$fieldname,
+                       self$dbCon$db,
+                       self$farmername) %>%
+        OFPE::applyExpRates(self$exp_rates,
+                            self$exp_rates_prop,
+                            self$fld_prop,
+                            self$exp_rate_length,
+                            ifelse(!is.null(self$strat_dat),
+                                   strat_dat,
+                                   NA))
+      fld_bound <- OFPE::makeBaseRate(self$dbCon$db,
                                          self$fieldname,
-                                         self$unq_fieldname,
+                                         self$unique_fieldname,
                                          self$base_rate,
                                          self$boom_width,
                                          self$trt_length,
-                                         self$farmername)
-      clip_field <- suppressWarnings(as(fld_bound, "Spatial") -
-                                       as(rx_sdt, "Spatial"))
-      fld_bound <-  as(clip_field, "sf")
-      names(rx_sdt)[grep("geom", names(rx_sdt))] <- "geometry"
-      attr(rx_sdt, "sf_column") <- "geometry"
-      self$RX <- rbind(rx_sdt, fld_bound)
-      self$RX$rxyear <- self$rx_for_year
-      self$RX$applrate <- self$RX$exprate * self$conv
-
-      browser()
-      ## TODO
-      # check farmer specific restriction - rate lengths, min rates
-
+                                         self$farmername,
+                                      "exp")
+      self$RX <- OFPE::makeRx(rx_sdt, fld_bound, self$rx_for_year, self$conv)
+      private$.makeOutLabels()
     }
   ),
   private = list(
-    .makeExpDt = function(fieldname, db, base_rate, unq_fieldname, farmername) {
+    .makeExpDt = function(fieldname, db, base_rate, unique_fieldname, farmername) {
       utm_epsg <- OFPE::findUTMzone(farmername = farmername)
-      fld_bound <- private$.getFldBound(fieldname, db, farmername)
+      fld_bound <- OFPE::getFldBound(fieldname, db, farmername)
       xy <- rep(list(NA), length(fieldname))
       for(i in 1:length(xy)) {
         xy[[i]] <- DBI::dbGetQuery(db,
@@ -319,124 +347,38 @@ ExpGen <- R6::R6Class(
       }
       xy <- suppressWarnings(sf::st_intersection(xy, fld_bound))
       xy <- as.data.frame(xy)[, 1:2]
-      rx_dt <- matrix(nrow = nrow(xy), ncol=16) %>%
+      rx_dt <- matrix(nrow = nrow(xy), ncol = 24) %>%
         data.table::as.data.table()
-      # TODO - check names below match NRopt
-      names(rx_dt) <- c("x", "y", "base_p", "exp_cost", "exp_rate_opt", "nr_opt",
-                         "nr_min", "nr_opp", "nr_fs", "yld_opt", "yld_min",
-                         "yld_fcr", "pro_opt", "pro_min", "pro_fcr", "sim")
+      names(rx_dt) <- c("x", "y", "BaseP", "EXP.cost", "row", "col",
+                        "field", "EXP.rate.ssopt", "NR.ssopt", "NR.min", "NR.opp",
+                        "NR.fs", "yld.opt", "yld.min", "yld.fs", "pro.opt", "pro.min",
+                        "pro.fs", "NR.ffopt", "EXP.rate.ffopt", "NR.act", "sim",
+                        "base_rate", "bins")
       rx_dt[, 1:2] <- xy
-      rx_dt$exp_rate_opt <- as.numeric(rx_dt$exp_rate_opt)
-      rx_dt$exp_rate_opt <- base_rate
+      rx_dt$base_rate <- as.numeric(rx_dt$base_rate)
+      rx_dt$base_rate <- base_rate
       rx_dt$cell_type <- "base"
+      rx_dt$mgmt_scen <- "exp"
       return(rx_dt)
     },
-    .getFldBound = function(fieldname, db, farmername) {
-      utm_epsg <- OFPE::findUTMzone(farmername = farmername)
-      fld_bound_list <- as.list(fieldname)
-      for (i in 1:length(fieldname)) {
-        fld_bound_list[[i]] <- sf::st_read(
-          db,
-          query = paste0("SELECT *
-                       FROM all_farms.fields
-                       WHERE fieldname = '", fieldname[i], "'"),
-          geometry_column = "geom") %>%
-          sf::st_transform(paste0("epsg:", utm_epsg)) %>%
-          sf::st_cast("MULTIPOLYGON")
-      }
-      fld_bounds <- do.call(rbind, fld_bound_list)
-      return(fld_bounds)
-    },
-    .applyExpRates = function(rx_sdt,
-                              exp_rates,
-                              exp_rates_prop,
-                              fld_prop,
-                              exp_rate_length,
-                              strat_dat = NULL) {
-      exp_cells <- DescTools::RoundTo(nrow(rx_sdt) * fld_prop, 1, floor)
-      exp_cells <- sample(row.names(rx_sdt), exp_cells)
-      exp_reps <- private$.getExpReps(length(exp_cells), exp_rates_prop)
-      exp_rate_rep <- rep(exp_rates, exp_reps) %>% sample()
-
-      if (!is.na(strat_dat)) {
-        browser()
-        ## TODO - stratify here
-      }
-
-      rx_sdt[exp_cells, "exprate"] <- exp_rate_rep
-      rx_sdt[exp_cells, "cell_type"] <- "exp"
-      return(rx_sdt)
-    },
-    .getExpReps = function(exp_cells_length, exp_rates_prop) {
-      exp_reps <- ceiling(exp_cells_length * exp_rates_prop)
-      if (sum(exp_reps) != exp_cells_length) {
-        cell_diff <- sum(exp_reps) - exp_cells_length
-        midpoint <- floor(median(1:length(exp_reps)))
-        fillNA <- rep(NA, length(exp_reps) *
-                        ceiling(cell_diff/length(exp_reps)) - cell_diff)
-        cell_diff_mat <- matrix(c(1:cell_diff, fillNA),
-                                 ncol = length(exp_reps),
-                                 nrow = ceiling(cell_diff/length(exp_reps)),
-                                 byrow = TRUE)
-        for (i in 1:nrow(cell_diff_mat)) {
-          exp_reps <- private$.trimExpReps(na.omit(cell_diff_mat[i, ]),
-                                           exp_reps,
-                                           midpoint)
-        }
-      }
-      return(exp_reps)
-    },
-    .trimExpReps = function(cell_diff, exp_reps, midpoint) {
-      for (i in 1:length(cell_diff)) {
-        if (i == 1) {
-          exp_reps[midpoint] <- exp_reps[midpoint] - 1
-        } else {
-          even <- ifelse((as.integer(i / 2) - i / 2) == 0,
-                         TRUE,
-                         FALSE)
-          if (even) {
-            ind <- ifelse(i == 2, i - 1, ind + 1)
-            exp_reps[midpoint + ind] <- ifelse(
-              exp_reps[midpoint + ind] - 1 < 0,
-              exp_reps[midpoint] <- exp_reps[midpoint] - 1,
-              exp_reps[midpoint + ind] - 1
-            )
-
-          } else {
-            exp_reps[midpoint - ind] <- ifelse(
-              exp_reps[midpoint - ind] - 1 < 0,
-              exp_reps[midpoint] <- exp_reps[midpoint] - 1,
-              exp_reps[midpoint - ind] - 1
-            )
-          }
-        }
-      }
-      return(exp_reps)
-    },
-    .makeBaseRate = function(db,
-                             fieldname,
-                             unq_fieldname,
-                             base_rate,
-                             boom_width,
-                             trt_length,
-                             farmername) {
-      fld_bound <- private$.getFldBound(fieldname, db, farmername)
-      names(fld_bound)[5] <- "field"
-      fld_bound[, c(1:4, 6)] <- NULL
-      fld_bound$exprate <- base_rate
-      fld_bound$row <- rep(1, nrow(fld_bound))
-      fld_bound$col <- rep(1, nrow(fld_bound))
-      fld_bound$cell_id <- rep(1, nrow(fld_bound))
-      fld_bound$field <- unq_fieldname
-      fld_bound$width <- boom_width
-      fld_bound$length <- trt_length
-      fld_bound$cell_type <- "base"
-      coords <- sf::st_centroid(fld_bound) %>% sf::st_coordinates()
-      fld_bound$x <- coords[, 1]
-      fld_bound$y <- coords[, 2]
-      fld_bound$applrate <- NA
-      fld_bound$size <- paste0(trt_length, " x ", boom_width * 2)
-      return(fld_bound)
+    .makeOutLabels = function() {
+      self$out_name <- paste0(self$out_path,
+                              "/Outputs/Rx/",
+                              self$unique_fieldname, "_Exp_",
+                              self$rx_for_year, ".shp")
+      self$var <- paste0("exp", ifelse(self$expvar == "aa_n", "N", "Seed"), "Rates")
+      self$var_col_name <- "exprate"
+      self$var_label <- paste0(ifelse(self$expvar == "aa_n", "N", "Seed"), " Rate (lbs/ac)")
+      self$var_main_label <- paste0(self$unique_fieldname, "experimental ",
+                                    ifelse(self$expvar=="aa_n", "N", "Seed"),
+                                    " rates for ", self$rx_for_year)
+      self$out_map_name <- paste0(self$out_path, "/Outputs/Rx/",
+                                  self$unique_fieldname, "_", tolower(self$var),
+                                  "_ExpMap_", self$rx_for_year, ".png")
+      self$cell_out_map_name <- paste0(self$out_path, "/Outputs/Rx/",
+                                       self$unique_fieldname, "_rateTypeMap_",
+                                       self$rx_for_year, ".png")
+      self$size <- paste0(self$trt_length, " x ", self$boom_width * 2)
     }
   )
 )

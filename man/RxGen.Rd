@@ -31,7 +31,7 @@ as a check to evaluate the performance of the optimized rates or whether
 further experimentation is needed.
 
 When creating an experimental prescription or a prescription, the user must pass
-an initialized SimClass. This implies that the user has initialized and set up
+an set up SimClass. This implies that the user has initialized and set up
 the required DatClass, ModClass, and EconDat R6 objects. The user has the option
 of passing a SimClass object that has been executed or not. Regardless, the RxClass
 will check 1) for simulation output data and 2) execute the simulation for any year(s)
@@ -42,10 +42,305 @@ prescriptions and the prescriptions.
 This class follows the generator interface that includes an initialization method
 and an 'executeOutput' method.
 }
+\section{Public fields}{
+\if{html}{\out{<div class="r6-fields">}}
+\describe{
+\item{\code{dbCon}}{Database connection object connected to an OFPE formatted
+database, see DBCon class.}
+
+\item{\code{simClass}}{If the user is creating an experimental prescription or
+prescription an R6 class SimClass object must be supplied. This has to be
+set up, however does not need to have the execution method performed.
+The RxClass will check the SimClass for simulation output data that matches
+the year of the data provided, and execute simulations for any years not
+present.}
+
+\item{\code{mgmt_scen}}{If the user is creating a prescription or experimental
+prescription, they must provide the management scenario to use for their
+prescription. The user can choose from the management options listed in
+the SimClass. The options are 'SSOPT': site-specific optimized rates,
+'FFOPT': full-field optimum uniform rate, 'FS': farmer selected uniform
+rate, 'Min': applying the least intensive input rates (i.e. 0 lbs N/ac, or
+25 lbs seed/ac), 'Opp' is omitted because this strategy is the least intensive
+input rate in conventional system types, and the farmer selected rate for
+organic systems, both of which are already provided.}
+
+\item{\code{trt_length}}{Length, in meters, for which to apply treatments.}
+
+\item{\code{boom_width}}{The width of the sprayer boom or spreader.}
+
+\item{\code{orientation}}{TODO...}
+
+\item{\code{expvar}}{Experimental variable to optimize, select/input
+'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
+input that is experimentally varied across the field as part of the
+on-farm experimentation.}
+
+\item{\code{conv}}{The conversion factor between lbs of the input to the
+units of the as-applied input (i.e. lbs N/ac to unit input/ac)}
+
+\item{\code{base_rate}}{The rate to apply between the experimental rates
+and the field edge, or as check rates in the prescription selected
+option.}
+
+\item{\code{rx_years}}{The year or vector of years to base the prescription
+off of. If the user passes in multiple years, the average optimum rate
+from the simulations will be used. If the user has passed in a SimClass
+object where the simulation has been executed, the RxClass will check the
+output data to avoid redundantly running a simulation.}
+
+\item{\code{rx_for_year}}{Provide the year that the prescription or experiment
+is made for. Used for labeling outputs.}
+
+\item{\code{out_path}}{Provide the path to the folder in which to store and
+save figures and the prescription Type NA to not create any folders.
+You will not be able to save any outputs. (Note, even if a path is provided,
+the user can pass FALSE as the sole argument to the 'setupOP' method
+to prevent the creation of folders. This will automatically prevent
+any plots to be saved.). If not applied and a SimClass object has
+been supplied, the selected option in that class will be used.}
+
+\item{\code{SAVE}}{Logical, whether to save figures and the prescription.
+Autofilled to FALSE if a user selects NA in the 'out_path' or is NULL.
+Autofilled to TRUE otherwise. If not applied and a SimClass object has
+been supplied, the selected option in that class will be used.}
+
+\item{\code{opt_rate_length}}{Provide the number of oprimum rates to use.
+This applies to prescriptions and experimental prescriptions. This
+represents the equipment constraints of the farmer. In the case of the
+experimental prescription, this number of rates does not include the
+number of experimental rates, so take your selections for
+the management scenario and number of experimental rates into account.}
+
+\item{\code{fld_prop}}{The percent of available cells to
+apply check rates to (i.e. 0.05, 0.1).}
+
+\item{\code{exp_rate_gen}}{Logical, for the experimental prescription provide
+TRUE or FALSE for whether to create experimentla rates from gaps in the
+optimized rates. These experimental rates are placed between optimum rates
+to establish a range of rates for which to improve model predictions in future
+years.}
+
+\item{\code{exp_rate_length}}{Provide the length of experimental rates to apply.
+This applies to new experiments and experimental prescriptions. This
+represents the equipment constraints of the farmer. In the case of the
+experimental prescription, this number of rates does not include the
+number of rates for the optimized base map, so take your selections for
+the management scenario and number of optimum rates into account.}
+
+\item{\code{exp_rates}}{Provide a vector of experimental rates equal to the
+number of experimental rates provided in 'exp_rate_length'. This is
+required for all new experiments, however can be left to null for
+experimental prescriptions if experimental rates should be generated
+based on gaps in optimum rates.}
+
+\item{\code{exp_rates_prop}}{Provide proportions (0 - 1) for the length
+of experimental rates provided in 'exp_rate_length'. This is required
+for all new experiments and experimental prescriptions.}
+
+\item{\code{unique_fieldname}}{Unique fieldname for the field(s) used for the experiment. This
+concatenates multiple fields with an ampersand. Used for labelling.}
+
+\item{\code{rx_dt}}{Data frame that contains the coordinates of locations to apply
+experimental inputs. For an experiment, these are the centroids of the grid
+made to aggregate data for the field.}
+
+\item{\code{RX}}{Table containing the geographic locations of the experiment. Also
+contains the rates in the experimental and as-applied units. This can be
+saved as a shapefile and given to the equipment applying the input.}
+
+\item{\code{out_name}}{Created parameter for the file name of the prescription data,
+used for saving the data to the 'Outputs' folder.}
+
+\item{\code{out_map_name}}{Created parameter with the file name for the map of the
+prescription. Used for saving the map to the 'Outputs' folder.}
+
+\item{\code{cell_out_map_name}}{Created parameter with the file name for the map of the
+rate type applied to each cell. Used for saving the map to the 'Outputs' folder.}
+
+\item{\code{var}}{The label of the variable to map. Used in figure labelling for plotting
+in RxClass.}
+
+\item{\code{var_col_name}}{The name of the column of the variable in the
+supplied data ('dat'). Used in figure labelling for plotting
+in RxClass.}
+
+\item{\code{var_label}}{The label to be applied to the legend of the map
+corresponding to the variable mapped. Used in figure labelling for plotting
+in RxClass.}
+
+\item{\code{var_main_label}}{The main label to apply to the map. Used in figure
+labelling for plotting in RxClass.}
+
+\item{\code{size}}{The size of the treatment zones, which is the treatment length x
+the boom width x 2.}
+}
+\if{html}{\out{</div>}}
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
+\item \href{#method-new}{\code{RxGen$new()}}
+\item \href{#method-executeOutput}{\code{RxGen$executeOutput()}}
 \item \href{#method-clone}{\code{RxGen$clone()}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
+\subsection{Method \code{new()}}{
+It is recommended to initialize this class through the RxClass,
+because it is integrated into the OFPE workflow. This also ensures all of the
+inputs are in the correct format and present.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RxGen$new(
+  dbCon,
+  simClass,
+  mgmt_scen,
+  trt_length,
+  boom_width,
+  orientation,
+  expvar,
+  conv,
+  base_rate,
+  rx_years,
+  rx_for_year,
+  out_path = NULL,
+  SAVE,
+  opt_rate_length,
+  fld_prop,
+  exp_rate_gen = NULL,
+  exp_rate_length = NULL,
+  exp_rates = NULL,
+  exp_rates_prop = NULL
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{dbCon}}{Database connection object connected to an OFPE formatted
+database, see DBCon class.}
+
+\item{\code{simClass}}{If the user is creating an experimental prescription or
+prescription an R6 class SimClass object must be supplied. This has to be
+set up, however does not need to have the execution method performed.
+The RxClass will check the SimClass for simulation output data that matches
+the year of the data provided, and execute simulations for any years not
+present.}
+
+\item{\code{mgmt_scen}}{If the user is creating a prescription or experimental
+prescription, they must provide the management scenario to use for their
+prescription. The user can choose from the management options listed in
+the SimClass. The options are 'SSOPT': site-specific optimized rates,
+'FFOPT': full-field optimum uniform rate, 'FS': farmer selected uniform
+rate, 'Min': applying the least intensive input rates (i.e. 0 lbs N/ac, or
+25 lbs seed/ac), 'Opp' is omitted because this strategy is the least intensive
+input rate in conventional system types, and the farmer selected rate for
+organic systems, both of which are already provided.}
+
+\item{\code{trt_length}}{Length, in meters, for which to apply treatments.}
+
+\item{\code{boom_width}}{The width of the sprayer boom or spreader.}
+
+\item{\code{orientation}}{TODO...}
+
+\item{\code{expvar}}{Experimental variable to optimize, select/input
+'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
+input that is experimentally varied across the field as part of the
+on-farm experimentation.}
+
+\item{\code{conv}}{The conversion factor between lbs of the input to the
+units of the as-applied input (i.e. lbs N/ac to unit input/ac)}
+
+\item{\code{base_rate}}{The rate to apply between the experimental rates
+and the field edge, or as check rates in the prescription selected
+option.}
+
+\item{\code{rx_years}}{The year or vector of years to base the prescription
+off of. If the user passes in multiple years, the average optimum rate
+from the simulations will be used. If the user has passed in a SimClass
+object where the simulation has been executed, the RxClass will check the
+output data to avoid redundantly running a simulation.}
+
+\item{\code{rx_for_year}}{Provide the year that the prescription or experiment
+is made for. Used for labeling outputs.}
+
+\item{\code{out_path}}{Provide the path to the folder in which to store and
+save figures and the prescription Type NA to not create any folders.
+You will not be able to save any outputs. (Note, even if a path is provided,
+the user can pass FALSE as the sole argument to the 'setupOP' method
+to prevent the creation of folders. This will automatically prevent
+any plots to be saved.). If not applied and a SimClass object has
+been supplied, the selected option in that class will be used.}
+
+\item{\code{SAVE}}{Logical, whether to save figures and the prescription.
+Autofilled to FALSE if a user selects NA in the 'out_path' or is NULL.
+Autofilled to TRUE otherwise. If not applied and a SimClass object has
+been supplied, the selected option in that class will be used.}
+
+\item{\code{opt_rate_length}}{Provide the number of oprimum rates to use.
+This applies to prescriptions and experimental prescriptions. This
+represents the equipment constraints of the farmer. In the case of the
+experimental prescription, this number of rates does not include the
+number of experimental rates, so take your selections for
+the management scenario and number of experimental rates into account.}
+
+\item{\code{fld_prop}}{The percent of available cells to
+apply check rates to (i.e. 0.05, 0.1).}
+
+\item{\code{exp_rate_gen}}{Logical, for the experimental prescription provide
+TRUE or FALSE for whether to create experimentla rates from gaps in the
+optimized rates. These experimental rates are placed between optimum rates
+to establish a range of rates for which to improve model predictions in future
+years. Not needed if pure prescription.}
+
+\item{\code{exp_rate_length}}{Provide the length of experimental rates to apply.
+This applies to new experiments and experimental prescriptions. This
+represents the equipment constraints of the farmer. In the case of the
+experimental prescription, this number of rates does not include the
+number of rates for the optimized base map, so take your selections for
+the management scenario and number of optimum rates into account.
+Not needed if pure prescription.}
+
+\item{\code{exp_rates}}{Provide a vector of experimental rates equal to the
+number of experimental rates provided in 'exp_rate_length'. This is
+required for all new experiments, however can be left to null for
+experimental prescriptions if experimental rates should be generated
+based on gaps in optimum rates. Not needed if pure prescription.}
+
+\item{\code{exp_rates_prop}}{Provide proportions (0 - 1) for the length
+of experimental rates provided in 'exp_rate_length'. This is required
+for all new experiments and experimental prescriptions. Not needed if
+pure prescription.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+An initialized RxGen R6 class object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-executeOutput"></a>}}
+\if{latex}{\out{\hypertarget{method-executeOutput}{}}}
+\subsection{Method \code{executeOutput()}}{
+Method for calling the execution method of the experiment
+generator. This randomly applies the experimental rates across
+the field. If the user selected stratification data, these are
+used for stratification during the random placement.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RxGen$executeOutput()}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{None}}{All parametes supplied upon initialization.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A completed experiment table containing the output.
 }
 }
 \if{html}{\out{<hr>}}

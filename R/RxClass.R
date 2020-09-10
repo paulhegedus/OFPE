@@ -29,7 +29,7 @@
 #' further experimentation is needed.
 #'
 #' When creating an experimental prescription or a prescription, the user must pass
-#' an initialized SimClass. This implies that the user has initialized and set up
+#' an set up SimClass. This implies that the user has initialized and set up
 #' the required DatClass, ModClass, and EconDat R6 objects. The user has the option
 #' of passing a SimClass object that has been executed or not. Regardless, the RxClass
 #' will check 1) for simulation output data and 2) execute the simulation for any year(s)
@@ -64,7 +64,8 @@ RxClass <- R6::R6Class(
     #' @field orientation TODO...
     orientation = NULL,
     #' @field fld_prop The proportion of the field to apply experimental
-    #' or optimum check rates to.
+    #' rates to (i.e. 0.5 or 1.0), OR, the percent of available cells to
+    #' apply check rates to (i.e. 0.05, 0.1).
     fld_prop = NULL,
     #' @field conv The conversion factor between lbs of the input to the
     #' units of the as-applied input (i.e. lbs N/ac to unit input/ac)
@@ -133,7 +134,7 @@ RxClass <- R6::R6Class(
     strat_dat_year = NULL,
     #' @field simClass If the user is creating an experimental prescription or
     #' prescription an R6 class SimClass object must be supplied. This has to be
-    #' initialized, however does not need to have the execution method performed.
+    #' set up, however does not need to have the execution method performed.
     #' The RxClass will check the SimClass for simulation output data that matches
     #' the year of the data provided, and execute simulations for any years not
     #' present.
@@ -157,18 +158,20 @@ RxClass <- R6::R6Class(
     #' the SimClass. The options are 'SSOPT': site-specific optimized rates,
     #' 'FFOPT': full-field optimum uniform rate, 'FS': farmer selected uniform
     #' rate, 'Min': applying the least intensive input rates (i.e. 0 lbs N/ac, or
-    #' 25 lbs seed/ac), or 'Opp': to create a prescription using the rate used to
-    #' calculate the net-return under the opposite management price scenario for
-    #' the crop (e.g. if your system is conventional this would be the rate of input
-    #' used to calculate net-return if grown organically). This is a rate of 0 lbs
-    #' input for N fertilizer inputs and the same as the farmer selected rate for seed
-    #' inputs.
+    #' 25 lbs seed/ac), 'Opp' is omitted because this strategy is the least intensive
+    #' input rate in conventional system types, and the farmer selected rate for
+    #' organic systems, both of which are already provided.
     mgmt_scen = NULL,
     #' @field expvar Experimental variable to optimize, select/input
     #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
     #' input that is experimentally varied across the field as part of the
     #' on-farm experimentation.
     expvar = NULL,
+    #' @field min_app_rate The minimum as-applied rate that the equipment can
+    #' apply. This must be in the units of the input applied to the field,
+    #' which is not necessarily the same as the experimental input. This is
+    #' an equipment restriction specific to the farmer.
+    min_app_rate = NULL,
 
     #' @field out_gen An output generator R6 class (i.e. ExpGen or RxGen), that produces
     #' the output specified by the user. There are different classes with different
@@ -183,12 +186,18 @@ RxClass <- R6::R6Class(
     #' initialize the class with the arguments specified in the documentation
     #' for that method. It is recommended that the user uses the interactive
     #' setup method rather than passing in arguments, unless an experienced
-    #' user. For new experiments, the user will not require an initialized
+    #' user. For new experiments, the user will not require a set up
     #' SimClass object, however if creating a prescription or experimental
-    #' prescription the user will need to pass in an initialized and/or executed
+    #' prescription the user will need to pass in a set up and/or executed
     #' SimClass R6 class, EVEN IF using the interactive methods.
     #' @param dbCon Database connection object connected to an OFPE formatted
     #' database, see DBCon class.
+    #' @param simClass If the user is creating an experimental prescription or
+    #' prescription an R6 class SimClass object must be supplied. This has to be
+    #' set up, however does not need to have the execution method performed.
+    #' The RxClass will check the SimClass for simulation output data that matches
+    #' the year of the data provided, and execute simulations for any years not
+    #' present.
     #' @param gen_type What type of output to generate; 'NewExp_NoStrat' for
     #' a new experiment with randomly placed experimental rates with no stratification,
     #' 'NewExp_wStrat' for a new experiment with randomly placed experimental rates
@@ -200,7 +209,8 @@ RxClass <- R6::R6Class(
     #' @param boom_width The width of the sprayer boom or spreader (feet).
     #' @param orientation TODO...
     #' @param fld_prop The proportion of the field to apply experimental
-    #' or optimum check rates to.
+    #' rates to (i.e. 0.5 or 1.0), OR, the percent of available cells to
+    #' apply check rates to (i.e. 0.05, 0.1).
     #' @param conv The conversion factor between lbs of the input to the
     #' units of the as-applied input (i.e. lbs N/ac to unit input/ac)
     #' @param base_rate The rate to apply between the experimental rates
@@ -256,12 +266,6 @@ RxClass <- R6::R6Class(
     #' data would be required.
     #' @param strat_dat_year Follows the same structure of 'strat_dat', however contains
     #' the years to use for stratification of each of the data types for each of the fields.
-    #' @param simClass If the user is creating an experimental prescription or
-    #' prescription an R6 class SimClass object must be supplied. This has to be
-    #' initialized, however does not need to have the execution method performed.
-    #' The RxClass will check the SimClass for simulation output data that matches
-    #' the year of the data provided, and execute simulations for any years not
-    #' present.
     #' @param exp_rate_gen Logical, for the experimental prescription provide
     #' TRUE or FALSE for whether to create experimentla rates from gaps in the
     #' optimized rates. These experimental rates are placed between optimum rates
@@ -279,18 +283,20 @@ RxClass <- R6::R6Class(
     #' the SimClass. The options are 'SSOPT': site-specific optimized rates,
     #' 'FFOPT': full-field optimum uniform rate, 'FS': farmer selected uniform
     #' rate, 'Min': applying the least intensive input rates (i.e. 0 lbs N/ac, or
-    #' 25 lbs seed/ac), or 'Opp': to create a prescription using the rate used to
-    #' calculate the net-return under the opposite management price scenario for
-    #' the crop (e.g. if your system is conventional this would be the rate of input
-    #' used to calculate net-return if grown organically). This is a rate of 0 lbs
-    #' input for N fertilizer inputs and the same as the farmer selected rate for seed
-    #' inputs.
+    #' 25 lbs seed/ac), 'Opp' is omitted because this strategy is the least intensive
+    #' input rate in conventional system types, and the farmer selected rate for
+    #' organic systems, both of which are already provided.
     #' @param expvar Experimental variable to optimize, select/input
     #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
     #' input that is experimentally varied across the field as part of the
     #' on-farm experimentation.
-    #' @return
+    #' @param min_app_rate The minimum as-applied rate that the equipment can
+    #' apply. This must be in the units of the input applied to the field,
+    #' which is not necessarily the same as the experimental input. This is
+    #' an equipment restriction specific to the farmer.
+    #' @return An initialized RxClass R6 class object.
     initialize = function(dbCon,
+                          simClass = NULL,
                           gen_type = NULL,
                           trt_length = NULL,
                           boom_width = NULL,
@@ -310,11 +316,11 @@ RxClass <- R6::R6Class(
                           exp_rates_prop = NULL,
                           strat_dat = NULL,
                           strat_dat_year = NULL,
-                          simClass = NULL,
                           exp_rate_gen = NULL,
                           opt_rate_length = NULL,
                           mgmt_scen = NULL,
-                          expvar = NULL) {
+                          expvar = NULL,
+                          min_app_rate = NULL) {
       stopifnot(!is.null(dbCon))
       self$dbCon <- dbCon
 
@@ -325,7 +331,7 @@ RxClass <- R6::R6Class(
       }
       if (!is.null(gen_type)) {
         stopifnot(is.character(gen_type),
-                  any(grepl("NewExp_noStrat|NewExp_wStrat|ExpRx|Exp", gen_type)))
+                  any(grepl("NewExp_noStrat|NewExp_wStrat|ExpRx|Rx", gen_type)))
         self$gen_type <- gen_type
       }
       if (!is.null(trt_length)) {
@@ -414,10 +420,11 @@ RxClass <- R6::R6Class(
         self$strat_dat_year <- strat_dat_year
       }
       if (!is.null(simClass)) {
-        stopifnot(any(grepl("SimClass", class(modClass))))
+        stopifnot(any(grepl("SimClass", class(simClass))))
         self$simClass <- simClass
         self$expvar <- self$simClass$datClass$expvar
         self$out_path <- self$simClass$out_path
+        self$farmername <- self$simClass$datClass$farmername
       }
       if (!is.null(exp_rate_gen)) {
         stopifnot(is.logical(exp_rate_gen))
@@ -429,8 +436,12 @@ RxClass <- R6::R6Class(
       }
       if (!is.null(mgmt_scen)) {
         stopifnot(is.character(mgmt_scen),
-                  any(grepl("SSOPT|FFOPT|FS|Min|Opp", mgmt_scen)))
+                  any(grepl("SSOPT|FFOPT|FS|Min", mgmt_scen)))
         self$mgmt_scen <- mgmt_scen
+      }
+      if (!is.null(min_app_rate)) {
+        stopifnot(is.numeric(min_app_rate))
+        self$min_app_rate <- min_app_rate
       }
     },
     #' @description
@@ -438,7 +449,7 @@ RxClass <- R6::R6Class(
     #' experiment generation process. It is recommended to use this interactive
     #' method rather than passing in inputs as arguments unless an experienced
     #' user. If the user is creating an experimental prescription or prescription,
-    #' they must have initialized this class with a SimClass object, even if using
+    #' they must have set up this class with a SimClass object, even if using
     #' this interactive method for selecting other inputs.
     #'
     #' The user first selects whether to make a prescription or experiment. If
@@ -468,6 +479,7 @@ RxClass <- R6::R6Class(
       if (is.null(self$simClass)) {
         private$.selectOutPath()
       } else {
+        self$SAVE <- self$simClass$SAVE
         self$out_path <- self$simClass$out_path
       }
       if (grepl("NewExp", self$gen_type)) {
@@ -484,13 +496,14 @@ RxClass <- R6::R6Class(
         }
       }
       if (grepl("Rx", self$gen_type)) {
-        stopifnot(is.null(self$simClass))
+        stopifnot(!is.null(self$simClass))
         private$.selectRxYears(self$simClass$datClass$farmername,
-                               self$simClass$datClass$fieldname)
+                               self$simClass$datClass$fieldname,
+                               self$dbCon$db)
         private$.selectOptRateLength()
+        private$.selectFldProp()
         private$.selectMgmtScen()
         if (grepl("ExpRx", self$gen_type)) {
-          private$.selectFldProp()
           private$.selectExpRateLength()
           private$.selectExpRateGen()
           if (!self$exp_rate_gen) {
@@ -501,6 +514,7 @@ RxClass <- R6::R6Class(
         self$expvar <- self$simClass$datClass$expvar
         self$farmername <- self$simClass$datClass$farmername
       }
+      private$.selectMinAppRate()
     },
     #' @description
     #' Method used to setup the output location for the prescription and related
@@ -544,6 +558,10 @@ RxClass <- R6::R6Class(
     #' @return A completed experiment or prescription.
     executeOutGen = function() {
       self$out_gen$executeOutput()
+      self$out_gen$RX$applrate <- ifelse(self$out_gen$RX$applrate < self$min_app_rate &
+                                           self$out_gen$RX$applrate > 0,
+                                         self$min_app_rate,
+                                         self$out_gen$RX$applrate)
     },
     #' @description
     #' Method for saving prescriptions or experiments and related plots. This only
@@ -555,147 +573,93 @@ RxClass <- R6::R6Class(
     #' @param SAVE Whether to save diagnostic plots. If NULL uses the user selected
     #' choice. If not NULL and is logical, argument replaces previously set SAVE
     #' options for the entire class.
+    #' @param to_DB Logical, whether to save the prescription or experiment
+    #' into the database. If NULL uses the user selected choice. If not NULL
+    #' and is logical, argument replaces previously set to_DB options for the
+    #' entire class.
     #' @return Shapefile and map saved in 'Outputs' folder and in database.
-    saveOutputs = function(SAVE = NULL) {
-      browser()
-
+    saveOutputs = function(SAVE = NULL, to_DB = NULL) {
       if (is.null(SAVE)) {
         SAVE <- self$SAVE
       } else {
         stopifnot(is.logical(SAVE))
         self$SAVE <- SAVE
       }
-      if (!is.null(self$simClass)) {
-        unique_fxn <- do.call(rbind, self$simClass$modClass$fxn)
-        unique_fxn <- paste0(row.names(unique_fxn), "-", unique_fxn[, 1]) %>%
-          paste(collapse = "--")
-        unique_fieldname <- OFPE::uniqueFieldname(self$simClass$datClass$fieldname)
-        opt <- self$simClass$opt
+      if (is.null(to_DB)) {
+        to_DB <- self$to_DB
       } else {
-        unique_fxn <- NA
-        unique_fieldname <- OFPE::uniqueFieldname(self$fieldname)
-        opt <- NA
+        stopifnot(is.logical(to_DB))
+        self$to_DB <- to_DB
       }
-      ## TODO
-      # plot exp/rx map
-      self$plotRxMap(
-        self$out_gen$RX,
-        paste0("exp",
-               ifelse(self$expvar == "aa_n", "N", "Seed"),
-               "Rates"),
-        "exprate",
-        paste0(ifelse(self$expvar == "aa_n", "N", "Seed"),
-               " Rate (lbs/ac)"),
-        paste0(unique_fieldname, "experimental ",
-               ifelse(self$expvar=="aa_n", "N", "Seed"),
-               " rates for ", self$rx_for_year),
-        unique_fieldname,
-        self$rx_for_year,
-        unique_fxn,
-        opt,
-        SAVE,
-        self$farmername,
-        self$out_path
-      )
-
-      # save to outputs folder
-      if (grepl("NewExp", self$gen_type)) {
-        suppressWarnings(sf::st_write(
-            self$out_gen$RX,
-            paste0(self$out_path,
-                   "/Outputs/Rx/",
-                   unique_fieldname, "_Exp_",
-                   self$rx_for_year, ".shp"),
-            quiet = TRUE,
-            delete_dsn = TRUE))
-      } else {
+      self$plotRxMap(SAVE)
+      self$plotCellTypeMap(SAVE)
+      if (SAVE) {
         suppressWarnings(sf::st_write(
           self$out_gen$RX,
-          paste0(self$out_path,
-                 "/Outputs/SimData/",
-                 unique_fieldname, "_Rx_",
-                 unique_fxn, "_",
-                 self$rx_for_year, "_",
-                 opt, ".shp"),
+          self$out_gen$out_name,
           quiet = TRUE,
           delete_dsn = TRUE))
       }
-      # save to database
-      invisible(self$uploadRxFun(
+      if (to_DB) {
+        invisible(self$uploadRxFun(
           self$out_gen$RX,
           self$dbCon$db,
           self$farmername,
-          unique_fieldname,
-          self$rx_for_year
-      ))
+          self$out_gen$unique_fieldname,
+          self$rx_for_year,
+          self$out_gen$size,
+          self$out_gen$mgmt_scen
+        ))
+      }
     },
     #' @description
     #' This method is for plotting maps of simulation outcomes. These
     #' include the net-returns from the management strategies, predicted
     #' responses, and optimized rates. Is a wrapper to a private plotRxMap
     #' method.
-    #' @param dat Data frame with the net-returns and experimental optimums
-    #' for every point for every simulation iteration.
-    #' @param var The label of the variable to map. Used in figure name.
-    #' @param var_col_name The name of the column of the variable in the
-    #' supplied data ('dat')
-    #' @param var_label The label to be applied to the legend of the map
-    #' corresponding to the variable mapped.
-    #' @param var_main_label The main label to apply to the map.
-    #' @param fieldname Unique field name corresponding to all fields used
-    #' in the simulation.
-    #' @param rx_for_year Provide the year that the prescription or experiment
-    #' is made for. Used for labeling outputs.
-    #' @param fxn The functional form of the models used for analysis. Not
-    #' applicable for
-    #' experiments, only prescriptions using an optimization method.
-    #' @param opt The optimization method used in the simulation. Not applicable for
-    #' experiments, only prescriptions using an optimization method.
     #' @param SAVE Logical, whether to save figure.
-    #' @param farmername The name of the farmer that manages the field.
-    #' @param out_path The path to the folder in which to store and
-    #' save outputs from the simulation.
-    #' @return Maps saved in 'Outputs/Rx/'
-    plotRxMap = function(dat,
-                         var,
-                         var_col_name,
-                         var_label,
-                         var_main_label,
-                         fieldname,
-                         rx_for_year,
-                         fxn = NULL,
-                         opt = NULL,
-                         SAVE = TRUE,
-                         farmername,
-                         out_path) {
-      p <- private$.plotRxMap(dat,
-                          var_col_name,
-                          var_label,
-                          var_main_label,
-                          fieldname,
-                          farmername) %>%
+    #' @return Maps saved in 'Outputs/Rx/' and/or returned.
+    plotRxMap = function(SAVE = TRUE) {
+      p <- private$.plotRxMap(self$out_gen$RX,
+                              self$out_gen$var_col_name,
+                              self$out_gen$var_label,
+                              self$out_gen$var_main_label,
+                              self$out_gen$unique_fieldname,
+                              self$farmername) %>%
         suppressMessages() %>%
         suppressWarnings()
+
       if (SAVE) {
-        if (!is.na(fxn) & !is.na(opt)) {
-          ggplot2::ggsave(
-            file = paste0(out_path, "/Outputs/Rx/",
-                          fieldname, "_", tolower(var),
-                          "_RxMap_", fxn, "_", rx_for_year, "_", opt, ".png"),
-            plot = p, device = "png",
-            width = 7.5, height = 7.5, units = "in"
-          )
-        } else {
-          ggplot2::ggsave(
-            file = paste0(out_path, "/Outputs/Rx/",
-                          fieldname, "_", tolower(var),
-                          "_ExpMap_", rx_for_year, ".png"),
-            plot = p, device = "png",
-            width = 7.5, height = 7.5, units = "in"
-          )
-        }
+        ggplot2::ggsave(
+          file = self$out_gen$out_map_name,
+          plot = p, device = "png",
+          width = 7.5, height = 7.5, units = "in"
+        )
       }
       #return(p)
+    },
+    #' @description
+    #' This method is for plotting a map showing the distribution of cell
+    #' types. This shows which cells are the optimized or management scenario
+    #' rates, which are experimental rates, and where base rates are applied.
+    #' @param SAVE Logical, whether to save figure.
+    #' @return Maps saved in 'Outputs/Rx/' and/or returned.
+    plotCellTypeMap = function(SAVE = TRUE) {
+      p <- private$.plotCellTypeMap(self$out_gen$RX,
+                                    self$out_gen$unique_fieldname,
+                                    self$farmername,
+                                    self$rx_for_year) %>%
+        suppressMessages() %>%
+        suppressWarnings()
+
+      if (SAVE) {
+        ggplot2::ggsave(
+          file = self$out_gen$cell_out_map_name,
+          plot = p, device = "png",
+          width = 7.5, height = 7.5, units = "in"
+        )
+      }
+
     },
     #' @description
     #' This method is for uploading the experiment or prescription to the
@@ -709,159 +673,61 @@ RxClass <- R6::R6Class(
     #' in the simulation.
     #' @param rx_year Provide the year that the prescription or experiment
     #' is made for. Used for labeling outputs.
+    #' @param size The size of the treatment zones, which is the treatment length x
+    #' the boom width x 2.
+    #' @param mgmt_scen If the user is creating a prescription or experimental
+    #' prescription, they must provide the management scenario to use for their
+    #' prescription. The user can choose from the management options listed in
+    #' the SimClass. The options are 'SSOPT': site-specific optimized rates,
+    #' 'FFOPT': full-field optimum uniform rate, 'FS': farmer selected uniform
+    #' rate, 'Min': applying the least intensive input rates (i.e. 0 lbs N/ac, or
+    #' 25 lbs seed/ac), 'Opp' is omitted because this strategy is the least intensive
+    #' input rate in conventional system types, and the farmer selected rate for
+    #' organic systems, both of which are already provided. This is set to 'exp'
+    #' for all new experiments.
+    #' @param dtype The data type of the data for upload to the database, default
+    #' to 'rx'.
     #' @return Output saved in database
-    uploadRxFun = function(RX, db, farmername, fieldname, rx_year) {
-      browser()
-
-      RX <- sf::st_transform(RX, "epsg:4326")
-      RX <- as(RX, "Spatial")
-      tabExist <- as.logical(DBI::dbGetQuery(
-        db,
-        paste0("SELECT EXISTS (
-          SELECT 1
-          FROM   information_schema.tables
-          WHERE  table_schema = '", farmername, "_a'
-          AND    table_name = 'rx')")
-      ))
-      if (!tabExist) {
-        for (j in 1:ncol(RX)) { # convert NA to NaN for db import
-          if (anyNA(as.data.frame(RX[, j])[1])) {
-            naIndex <- which(is.na(as.data.frame(RX[, j])[1]))
-            RX[naIndex[1]:naIndex[length(naIndex)], j] <- NaN
-          }
-        }
-        suppressMessages(rpostgis::pgInsert(db,
-                                            c(paste0(farmername, "_a"), "rx"),
-                                            RX,
-                                            geom = "geometry",
-                                            new.id = "gid")) #, return.pgi=TRUE
-        # make field and year and orig_file primary keys to prevent overwriting (updates instead)
-        invisible(DBI::dbGetQuery(
-          db,
-          paste0("ALTER TABLE ", farmername, "_a.rx
-                 ADD PRIMARY KEY (gid, field, rxyear)"))
-        )
-        for (j in 1:length(names(RX))) {
-          tryCatch({
-            DBI::dbSendQuery(db,
-                             paste0("ALTER TABLE ", farmername, "_a.rx
-                                    ALTER COLUMN ", names(RX)[j], " TYPE TEXT"))
-          },
-          error = function(e) {print(paste0("warning in column ", names(RX)[j]))})
-        }
-        # convert polygon table to multiploygon geometry
-        # if it is a polygon df
-        if (any(grepl("poly", class(sf::st_geometry(sf::st_as_sf(RX))),
-                      ignore.case = TRUE))) {
-          # if it is NOT a multipolygon df
-          if (!any(grepl("multi", class(sf::st_geometry(sf::st_as_sf(RX))),
-                         ignore.case = TRUE))) {
-            invisible(DBI::dbGetQuery(
-              db,
-              paste0("ALTER TABLE ", farmername, "_a.rx
-              ALTER COLUMN geometry TYPE geometry(MultiPolygon, 4326)
-              USING ST_Multi(geometry)")
-            ))
-          }
-        }
-        # create spatial index
-        tryCatch({
-          invisible(DBI::dbSendQuery(
-            db,
-            paste0("CREATE INDEX rx_geom_idx_new",
-                   " ON ", farmername, "_a.rx
-                   USING GIST (geometry)")
-          ))},
-          error = function(e) {
-            print(paste0("error creating spatial index for ", farmername, "_a.", dtype))
-          }
-        )
+    uploadRxFun = function(RX, db, farmername, fieldname, rx_year, size, mgmt_scen, dtype = "rx") {
+      RX <- sf::st_transform(RX, "epsg:4326") %>%
+        as("Spatial")
+      schema <- paste0(farmername, "_a")
+      query <- paste0("ALTER TABLE ", schema,".", dtype,
+                      " ADD PRIMARY KEY (gid, field, rxyear, size, mgmt_scen)")
+      upserts <- c("gid", "field", "rxyear", "size", "mgmt_scen")
+      tab_exist <- OFPE::tabExist(db, schema, dtype)
+      if (!tab_exist) {
+        RX <- OFPE::setNAtoNaN(RX)
+        OFPE::importNewDat(db, RX, schema, dtype)
+        invisible(DBI::dbGetQuery(db, query))
+        OFPE::makeDBcolsText(db, names(RX), schema, dtype)
+        OFPE::convPolyToMulti(db, RX, schema, dtype)
+        OFPE::makeSpatialIndex(db, "rx_geom_idx_new", schema, dtype)
       } else {
-        # get column names from db
-        dbCols <- DBI::dbGetQuery(db, paste0("SELECT column_name
-                                   FROM information_schema.columns
-                                   WHERE table_schema = '", farmername, "_a'
-                                   AND table_name = 'rx'"))[, 1]
-        dbCols <- dbCols[c(-which(dbCols == "gid"), -which(dbCols == "geometry"))] # take out "gid" & "geometry" column, will be added later
-        # get columns from db that are not in file & columns from file that are not in db
-        inDB <- noMatch(dbCols, names(RX))
-        inDF <- noMatch(names(RX), dbCols)
-        # add cols from db to file and cols from file to db
-        if (length(inDB) > 0) {
-          row.names(RX) <- as.character(seq(1, nrow(RX), 1))
-          RX <- sp::spCbind(RX, as.data.frame(matrix(NA, nrow(RX), length(inDB))))
-          names(RX) <- c(names(RX), inDB)
-        }
-        if (length(inDF) > 0) {
-          for (j in 1:length(inDF)) {
-            DBI::dbGetQuery(db, paste0("ALTER TABLE ", farmername, "_a.rx
-                                       ADD COLUMN ", inDF[j], " TEXT"))
-          }
-        }
-        # convert NA to NaN for db import
-        for (j in 1:ncol(RX)) {
-          if (anyNA(as.data.frame(RX[, j])[1])) {
-            naIndex <- which(is.na(as.data.frame(RX[, j])[1]))
-            RX[naIndex[1]:naIndex[length(naIndex)], j] <- NaN
-          }
-        }
-        # if geometry is polygon change to multipolygon
-        # if it is a polygon df
+        RX <- OFPE::standardizeColNames(db, RX,schema, dtype)
+        RX <- OFPE::setNAtoNaN(RX)
         if (any(grepl("poly", class(sf::st_geometry(sf::st_as_sf(RX))),
                       ignore.case = TRUE))) {
           # if it is NOT a multipolygon df
           if (!any(grepl("multi", class(sf::st_geometry(sf::st_as_sf(RX))),
                          ignore.case = TRUE))) {
-            RX <- sf::st_cast(sf::st_as_sf(RX), "MULTIPOLYGON")
-            RX$gid <- 1:nrow(RX)
             invisible(DBI::dbSendQuery(
-                db,
-                paste0(
-                  "DELETE FROM ", farmername, "_a.rx
-                  WHERE field = '", fieldname, "'
-                  AND rx_year = 'rx';")
-            ))
-            tryCatch(sf::st_write(RX, db, paste0(farmername, "_a.rx"), append = TRUE),
-                     error = function(e) {
-                       print(paste0("RX already exists in database"))
-                     })
-            RX <- as(RX, "Spatial")
-          } else {
-            suppressMessages(rpostgis::pgInsert(
               db,
-              c(paste0(farmername, "_a"), "rx"),
-              RX,
-              geom = "geometry",
-              new.id = "gid",
-              upsert.using = c("gid", "field", "rxyear")
+              paste0(
+                "DELETE FROM ", schema, ".", dtype, "
+                  WHERE field = '", fieldname, "'
+                  AND rxyear = '", rx_year,"'
+                  AND size = '", size, "'
+                  AND mgmt_scen = '", mgmt_scen, "';")
             ))
-            for (j in 1:length(names(RX))) {
-              tryCatch({
-                DBI::dbSendQuery(db,
-                                 paste0("ALTER TABLE ", farmername, "_a.rx
-                                        ALTER COLUMN ", names(RX)[j], " TYPE TEXT"))
-              },
-              error = function(e) {print(paste0("warning in column ", names(RX)[j]))})
-            }
+            OFPE::importMulti(db, RX, schema, dtype)
+          } else {
+            OFPE::importDat(db, RX, schema, dtype, upserts)
+            OFPE::makeDBcolsText(db, names(RX), schema, dtype)
           }
         } else {
-          # add file to database (upsert using field, year, orig_file) - gid added here
-          suppressMessages(rpostgis::pgInsert(
-            db,
-            c(paste0(farmername, "_a"), "rx"),
-            RX,
-            geom = "geometry",
-            new.id = "gid",
-            upsert.using=c("gid", "fieldname", "rxyear")
-          ))
-          for (j in 1:length(names(RX))) {
-            tryCatch({
-              DBI::dbSendQuery(db,
-                               paste0("ALTER TABLE ", farmername, "_a.rx
-                                      ALTER COLUMN ", names(RX)[j], " TYPE TEXT"))
-            },
-            error = function(e) {print(paste0("warning in column ", names(RX)[j]))})
-          }
+          OFPE::importDat(db, RX, schema, dtype, upserts)
+          OFPE::makeDBcolsText(db, names(RX), schema, dtype)
         }
       }
       return()
@@ -875,8 +741,13 @@ RxClass <- R6::R6Class(
       self$expvar <- ifelse(expVar == "As-Applied Nitrogen", "aa_n", "aa_sr")
     },
     .selectGenType = function() {
+      if (is.null(self$simClass)) {
+        gen_options <- c("NewExp_noStrat", "NewExp_wStrat")
+      } else {
+        gen_options <- c("ExpRx", "Rx")
+      }
       gen_type <- as.character(select.list(
-        c("NewExp_noStrat", "NewExp_wStrat", "ExpRx", "Rx"),
+        gen_options,
         title = "Select the type of output to create (i.e. experiment and/or prescription."))
       self$gen_type <- gen_type
     },
@@ -899,7 +770,7 @@ RxClass <- R6::R6Class(
     },
     .selectFldProp = function() {
       self$fld_prop <- as.numeric(readline(
-        "Provide the proportion (0 - 1) of the field to use for experimentation: "
+        "Provide the proportion (0 - 1) of the field to use for experimentation (e.g. 0.8) or to apply check rates to (e.g. 0.1): "
       ))
       stopifnot(is.numeric(self$fld_prop),
                 self$fld_prop >= 0 & self$fld_prop <= 1)
@@ -927,46 +798,12 @@ RxClass <- R6::R6Class(
         "Provide the base rate to apply around experimental rates for new experiments, OR the farmer selected check rate for prescriptions: "
       ))
     },
-    .selectRxYears = function(farmername, fieldname) {
-      sat_exist <- as.logical(
-        DBI::dbGetQuery(
-          db,
-          paste0("SELECT EXISTS (
-             SELECT 1
-             FROM information_schema.tables
-             WHERE table_schema = '",farmername,"_a'
-             AND table_name = 'sat')")
-        )
-      )
-      if (sat_exist) {
-        sim_years <- as.list(fieldname) %>%
-          `names<-`(fieldname)
-        for (i in 1:length(sim_years)) {
-          sim_years[[i]] <- unique(DBI::dbGetQuery(
-            db,
-            paste0("SELECT DISTINCT year
-                       FROM ", farmername, "_a.sat sat
-                       WHERE sat.field = '", sim_years[[i]], "'")
-          )$year)
-        }
-        for (i in 1:length(sim_years)) {
-          for (j in 1:length(sim_years)) {
-            if (i != j) {
-              sim_years[[i]] <-
-                sim_years[[i]][sim_years[[i]] %in% sim_years[[j]]]
-            }
-          }
-        }
-        sim_years <- do.call(c, sim_years) %>% unique
-
-        self$sim_years <- as.numeric(select.list(
-          sim_years,
-          multiple = TRUE,
-          title = paste0("Select year(s) to generate a prescription for.")
-        ))
-      } else {
-        stop("No satellite data exists. Return to the aggregation step (Vignette 3) and aggregate 'Satellite' data.")
-      }
+    .selectRxYears = function() {
+      self$rx_years <- as.numeric(select.list(
+        names(self$simClass$sim_out),
+        multiple = TRUE,
+        title = paste0("Select the year(s) with weather conditions to generate a prescription based on.")
+      ))
     },
     .selectYearForRx = function() {
       self$rx_for_year <- as.numeric(readline(
@@ -1015,7 +852,7 @@ RxClass <- R6::R6Class(
       self$exp_rates <- rep(NA, self$exp_rate_length)
       for (i in 1:self$exp_rate_length) {
         self$exp_rates[i] <- as.numeric(readline(
-          paste0("Provide experimental rate ", i, ": ")
+          paste0("Provide experimental rate (low to high) ", i, ": ")
         ))
       }
     },
@@ -1023,7 +860,7 @@ RxClass <- R6::R6Class(
       self$exp_rates_prop <- rep(NA, self$exp_rate_length)
       for (i in 1:self$exp_rate_length) {
         self$exp_rates_prop[i] <- as.numeric(readline(
-          paste0("Provide the proportion of experimental rates to apply experimental rate ", i, ": ")
+          paste0("Provide the proportion of experimental rates to apply experimental rate (low to high) ", i, ": ")
         ))
       }
       stopifnot(sum(self$exp_rates_prop) >= 0.99)
@@ -1138,25 +975,30 @@ RxClass <- R6::R6Class(
     },
     .selectMgmtScen = function() {
       mgmt_scen <- as.character(select.list(
-        c("SSOPT", "FFOPT", "FS", "Min", "Opp"),
+        c("SSOPT", "FFOPT", "FS", "Min"),
         title = "Select the management scenario to use for the prescription output. See documentation for acronym descriptions."))
       self$mgmt_scen <- mgmt_scen
+    },
+    .selectMinAppRate = function() {
+      self$min_app_rate <- as.numeric(readline(
+        "Provide the minimum as-applied rate (in units of conversion) that the producer's equipment can apply: "
+      ))
     },
     .loadGenerator = function() {
       out_gen <- ifelse(grepl("Rx", self$gen_type), "RxGen", "ExpGen")
       if (grepl("Exp", out_gen)) {
-        init_text <- c("dbCon", "trt_length", "boom_width", "orientation", "fld_prop",
+        init_text <- c("dbCon", "trt_length", "boom_width", "orientation", "fld_prop", "expvar",
                        "conv", "base_rate", "rx_for_year", "out_path", "SAVE", "fieldname",
                        "farmername", "exp_rate_length", "exp_rates", "exp_rates_prop")
         if (grepl("wStrat", self$gen_type)) {
           init_text <- c(init_text, "strat_dat", "strat_dat_year")
         }
       } else {
-        init_text <- c("dbCon", "simClass", "mgmt_scnen", "trt_length", "boom_width",
-                       "orientation", "conv", "base_rate", "rx_years",
-                       "rx_for_year", "out_path", "SAVE", "opt_rate_length")
+        init_text <- c("dbCon", "simClass", "mgmt_scen", "trt_length", "boom_width",
+                       "orientation", "expvar", "conv", "base_rate", "rx_years",
+                       "rx_for_year", "out_path", "SAVE", "opt_rate_length", "fld_prop")
         if (grepl("Exp", self$gen_type)) {
-          init_text <- c(init_text, "fld_prop", "exp_rate_gen", "exp_rate_length",
+          init_text <- c(init_text, "exp_rate_gen", "exp_rate_length",
                          "exp_rates", "exp_rates_prop")
         }
       }
@@ -1205,22 +1047,18 @@ RxClass <- R6::R6Class(
                                          lat = mean(sp::coordinates(as(utm, "Spatial"))[, 2])),
                             zoom = 14, maptype = "satellite", source = "google")
       dat <- sf::st_transform(dat, "epsg:4326")
-      # attr(map, "bb")$ll.lat <- sf::st_bbox(dat)["ymin"]
-      # attr(map, "bb")$ll.lon <- sf::st_bbox(dat)["xmin"]
-      # attr(map, "bb")$ur.lat <- sf::st_bbox(dat)["ymax"]
-      # attr(map, "bb")$ur.lon <- sf::st_bbox(dat)["xmax"]
 
       var_map <-
         ggmap::ggmap(map, extent  =  "panel") +
         ggplot2::coord_sf(crs = sf::st_crs(4326)) +
         ggplot2::geom_sf(data = dat, ggplot2::aes(fill = exprate), inherit.aes = FALSE) +
-        ggplot2::scale_fill_gradientn(limits = c(floor(min(dat$exprate)),
-                                                 ceiling(max(dat$exprate))),
+        ggplot2::scale_fill_gradientn(limits = c(floor(min(dat$exprate, na.rm = TRUE)),
+                                                 ceiling(max(dat$exprate, na.rm = TRUE))),
                                       colours = color,
-                                      breaks = seq(as.integer(floor(min(dat$exprate))),
-                                                   as.integer(ceiling(max(dat$exprate))),
-                                                   by = (ceiling(max(dat$exprate)) -
-                                                           floor(min(dat$exprate))) / 5),
+                                      breaks = seq(as.integer(floor(min(dat$exprate, na.rm = TRUE))),
+                                                   as.integer(ceiling(max(dat$exprate, na.rm = TRUE))),
+                                                   by = (ceiling(max(dat$exprate, na.rm = TRUE)) -
+                                                           floor(min(dat$exprate, na.rm = TRUE))) / 5),
                                       name = var_label) +
         ggplot2::scale_x_continuous(limits = c(e@xmin-0.002, e@xmax+0.002),
                                     expand = c(0, 0),
@@ -1228,6 +1066,65 @@ RxClass <- R6::R6Class(
         ggplot2::scale_y_continuous(limits = c(e@ymin-0.002, e@ymax+0.002),
                                     expand = c(0, 0)) +
         ggplot2::labs(title = var_main_label, x = "", y = "") +
+        ggplot2::theme_bw() +
+        ggplot2::theme(axis.text.x = ggplot2::element_blank(),
+                       axis.text.y = ggplot2::element_blank()) +
+        OFPE::scale_bar(lon = e@xmin-0.0015,
+                        lat = e@ymin-0.0015,
+                        distance_lon = 0.2,
+                        distance_lat = .01,
+                        distance_legend = -.01,
+                        dist_unit = "km",
+                        orientation = TRUE,
+                        arrow_length = .05,
+                        arrow_distance = .02) %>%
+        suppressMessages()
+      return(var_map)
+    },
+    .plotCellTypeMap = function(dat,
+                                unique_fieldname,
+                                farmername,
+                                rx_for_year) {
+      stopifnot(any(grepl("cell_type", names(dat))))
+      utm_zone <- OFPE::findUTMzone(farmername = farmername)
+
+      df <- as.data.frame(dat)
+      sp <- sp::SpatialPoints(coords = df[, c("x", "y")])
+      utm <- sf::st_as_sf(sp, remove_coordinates = FALSE)
+      utm <- cbind(utm, sp@coords)
+      if (is.na(raster::crs(utm))) {
+        sf::st_crs(utm) <- utm_zone
+      }
+      utm <- sf::st_transform(utm, "epsg:4326")
+      utm[, 1:2] <- sp::coordinates(as(utm, "Spatial"))
+      llc <- sp::coordinates(as(utm, "Spatial")) %>%
+        as.data.frame() %>%
+        `names<-`(c("x", "y"))
+      sp <- sp::SpatialPoints(coords = llc[, c("x", "y")])
+      e <- raster::extent(llc[, c("x", "y")])
+      map <- ggmap::get_map(location = c(lon = mean(sp::coordinates(as(utm, "Spatial"))[, 1]),
+                                         lat = mean(sp::coordinates(as(utm, "Spatial"))[, 2])),
+                            zoom = 14, maptype = "satellite", source = "google")
+      dat <- sf::st_transform(dat, "epsg:4326")
+      dat$cell_type <- ifelse(dat$cell_type == "base", "Base",
+                              ifelse(dat$cell_type == "exp", "Exp",
+                                     ifelse(dat$cell_type == "check", "Check",
+                                            dat$cell_type)))
+
+      var_map <-
+        ggmap::ggmap(map, extent  =  "panel") +
+        ggplot2::coord_sf(crs = sf::st_crs(4326)) +
+        ggplot2::geom_sf(data = dat, ggplot2::aes(fill = cell_type), inherit.aes = FALSE) +
+        ggplot2::scale_x_continuous(limits = c(e@xmin-0.002, e@xmax+0.002),
+                                    expand = c(0, 0),
+                                    breaks = c(e@xmin-0.002, e@xmax+0.002)) +
+        ggplot2::scale_y_continuous(limits = c(e@ymin-0.002, e@ymax+0.002),
+                                    expand = c(0, 0)) +
+        ggplot2::labs(title = paste0(unique_fieldname, " Rate Type Applied"),
+                      subtitle = rx_for_year,
+                      x = "",
+                      y = "",
+                      fill = "Rate Type") +
         ggplot2::theme_bw() +
         ggplot2::theme(axis.text.x = ggplot2::element_blank(),
                        axis.text.y = ggplot2::element_blank()) +

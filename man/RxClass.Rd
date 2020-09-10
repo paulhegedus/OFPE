@@ -33,7 +33,7 @@ as a check to evaluate the performance of the optimized rates or whether
 further experimentation is needed.
 
 When creating an experimental prescription or a prescription, the user must pass
-an initialized SimClass. This implies that the user has initialized and set up
+an set up SimClass. This implies that the user has initialized and set up
 the required DatClass, ModClass, and EconDat R6 objects. The user has the option
 of passing a SimClass object that has been executed or not. Regardless, the RxClass
 will check 1) for simulation output data and 2) execute the simulation for any year(s)
@@ -59,14 +59,17 @@ placed, stratified on the optimum rates from the user selected prescription,
 or 'Rx' where the prescription is output to the user, with check rates of a
 farmer selected base rate randomly placed, stratified on optimum rates.}
 
-\item{\code{trt_length}}{Length, in meters, for which to apply treatments.}
+\item{\code{trt_length}}{Length, given in feet and converted to meters, for
+which to apply treatments.}
 
-\item{\code{boom_width}}{The width of the sprayer boom or spreader.}
+\item{\code{boom_width}}{The width of the sprayer boom or spreader, given as feet
+and converted to meters.}
 
 \item{\code{orientation}}{TODO...}
 
 \item{\code{fld_prop}}{The proportion of the field to apply experimental
-or optimum check rates to.}
+rates to (i.e. 0.5 or 1.0), OR, the percent of available cells to
+apply check rates to (i.e. 0.05, 0.1).}
 
 \item{\code{conv}}{The conversion factor between lbs of the input to the
 units of the as-applied input (i.e. lbs N/ac to unit input/ac)}
@@ -135,7 +138,7 @@ the years to use for stratification of each of the data types for each of the fi
 
 \item{\code{simClass}}{If the user is creating an experimental prescription or
 prescription an R6 class SimClass object must be supplied. This has to be
-initialized, however does not need to have the execution method performed.
+set up, however does not need to have the execution method performed.
 The RxClass will check the SimClass for simulation output data that matches
 the year of the data provided, and execute simulations for any years not
 present.}
@@ -159,12 +162,19 @@ prescription. The user can choose from the management options listed in
 the SimClass. The options are 'SSOPT': site-specific optimized rates,
 'FFOPT': full-field optimum uniform rate, 'FS': farmer selected uniform
 rate, 'Min': applying the least intensive input rates (i.e. 0 lbs N/ac, or
-25 lbs seed/ac), or 'Opp': to create a prescription using the rate used to
-calculate the net-return under the opposite management price scenario for
-the crop (e.g. if your system is conventional this would be the rate of input
-used to calculate net-return if grown organically). This is a rate of 0 lbs
-input for N fertilizer inputs and the same as the farmer selected rate for seed
-inputs.}
+25 lbs seed/ac), 'Opp' is omitted because this strategy is the least intensive
+input rate in conventional system types, and the farmer selected rate for
+organic systems, both of which are already provided.}
+
+\item{\code{expvar}}{Experimental variable to optimize, select/input
+'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
+input that is experimentally varied across the field as part of the
+on-farm experimentation.}
+
+\item{\code{min_app_rate}}{The minimum as-applied rate that the equipment can
+apply. This must be in the units of the input applied to the field,
+which is not necessarily the same as the experimental input. This is
+an equipment restriction specific to the farmer.}
 
 \item{\code{out_gen}}{An output generator R6 class (i.e. ExpGen or RxGen), that produces
 the output specified by the user. There are different classes with different
@@ -183,6 +193,9 @@ method.}
 \item \href{#method-setupGen}{\code{RxClass$setupGen()}}
 \item \href{#method-executeOutGen}{\code{RxClass$executeOutGen()}}
 \item \href{#method-saveOutputs}{\code{RxClass$saveOutputs()}}
+\item \href{#method-plotRxMap}{\code{RxClass$plotRxMap()}}
+\item \href{#method-plotCellTypeMap}{\code{RxClass$plotCellTypeMap()}}
+\item \href{#method-uploadRxFun}{\code{RxClass$uploadRxFun()}}
 \item \href{#method-clone}{\code{RxClass$clone()}}
 }
 }
@@ -196,13 +209,14 @@ If the user is creating a new experiment for a field, they should
 initialize the class with the arguments specified in the documentation
 for that method. It is recommended that the user uses the interactive
 setup method rather than passing in arguments, unless an experienced
-user. For new experiments, the user will not require an initialized
+user. For new experiments, the user will not require a set up
 SimClass object, however if creating a prescription or experimental
-prescription the user will need to pass in an initialized and/or executed
+prescription the user will need to pass in a set up and/or executed
 SimClass R6 class, EVEN IF using the interactive methods.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RxClass$new(
   dbCon,
+  simClass = NULL,
   gen_type = NULL,
   trt_length = NULL,
   boom_width = NULL,
@@ -222,10 +236,11 @@ SimClass R6 class, EVEN IF using the interactive methods.
   exp_rates_prop = NULL,
   strat_dat = NULL,
   strat_dat_year = NULL,
-  simClass = NULL,
   exp_rate_gen = NULL,
   opt_rate_length = NULL,
-  mgmt_scen = NULL
+  mgmt_scen = NULL,
+  expvar = NULL,
+  min_app_rate = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -235,6 +250,13 @@ SimClass R6 class, EVEN IF using the interactive methods.
 \item{\code{dbCon}}{Database connection object connected to an OFPE formatted
 database, see DBCon class.}
 
+\item{\code{simClass}}{If the user is creating an experimental prescription or
+prescription an R6 class SimClass object must be supplied. This has to be
+set up, however does not need to have the execution method performed.
+The RxClass will check the SimClass for simulation output data that matches
+the year of the data provided, and execute simulations for any years not
+present.}
+
 \item{\code{gen_type}}{What type of output to generate; 'NewExp_NoStrat' for
 a new experiment with randomly placed experimental rates with no stratification,
 'NewExp_wStrat' for a new experiment with randomly placed experimental rates
@@ -243,14 +265,15 @@ placed, stratified on the optimum rates from the user selected prescription,
 or 'Rx' where the prescription is output to the user, with check rates of a
 farmer selected base rate randomly placed, stratified on optimum rates.}
 
-\item{\code{trt_length}}{Length, in meters, for which to apply treatments.}
+\item{\code{trt_length}}{Length, in feet, for which to apply treatments.}
 
-\item{\code{boom_width}}{The width of the sprayer boom or spreader.}
+\item{\code{boom_width}}{The width of the sprayer boom or spreader (feet).}
 
 \item{\code{orientation}}{TODO...}
 
 \item{\code{fld_prop}}{The proportion of the field to apply experimental
-or optimum check rates to.}
+rates to (i.e. 0.5 or 1.0), OR, the percent of available cells to
+apply check rates to (i.e. 0.05, 0.1).}
 
 \item{\code{conv}}{The conversion factor between lbs of the input to the
 units of the as-applied input (i.e. lbs N/ac to unit input/ac)}
@@ -321,13 +344,6 @@ data would be required.}
 \item{\code{strat_dat_year}}{Follows the same structure of 'strat_dat', however contains
 the years to use for stratification of each of the data types for each of the fields.}
 
-\item{\code{simClass}}{If the user is creating an experimental prescription or
-prescription an R6 class SimClass object must be supplied. This has to be
-initialized, however does not need to have the execution method performed.
-The RxClass will check the SimClass for simulation output data that matches
-the year of the data provided, and execute simulations for any years not
-present.}
-
 \item{\code{exp_rate_gen}}{Logical, for the experimental prescription provide
 TRUE or FALSE for whether to create experimentla rates from gaps in the
 optimized rates. These experimental rates are placed between optimum rates
@@ -347,17 +363,24 @@ prescription. The user can choose from the management options listed in
 the SimClass. The options are 'SSOPT': site-specific optimized rates,
 'FFOPT': full-field optimum uniform rate, 'FS': farmer selected uniform
 rate, 'Min': applying the least intensive input rates (i.e. 0 lbs N/ac, or
-25 lbs seed/ac), or 'Opp': to create a prescription using the rate used to
-calculate the net-return under the opposite management price scenario for
-the crop (e.g. if your system is conventional this would be the rate of input
-used to calculate net-return if grown organically). This is a rate of 0 lbs
-input for N fertilizer inputs and the same as the farmer selected rate for seed
-inputs.}
+25 lbs seed/ac), 'Opp' is omitted because this strategy is the least intensive
+input rate in conventional system types, and the farmer selected rate for
+organic systems, both of which are already provided.}
+
+\item{\code{expvar}}{Experimental variable to optimize, select/input
+'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
+input that is experimentally varied across the field as part of the
+on-farm experimentation.}
+
+\item{\code{min_app_rate}}{The minimum as-applied rate that the equipment can
+apply. This must be in the units of the input applied to the field,
+which is not necessarily the same as the experimental input. This is
+an equipment restriction specific to the farmer.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-
+An initialized RxClass R6 class object.
 }
 }
 \if{html}{\out{<hr>}}
@@ -368,7 +391,7 @@ Interactive method for selecting inputs related to the prescription or
 experiment generation process. It is recommended to use this interactive
 method rather than passing in inputs as arguments unless an experienced
 user. If the user is creating an experimental prescription or prescription,
-they must have initialized this class with a SimClass object, even if using
+they must have set up this class with a SimClass object, even if using
 this interactive method for selecting other inputs.
 
 The user first selects whether to make a prescription or experiment. If
@@ -476,7 +499,7 @@ an argument to SAVE, this replaces any previously selected SAVE option (e.g.
 if SAVE was set to TRUE in the class initialization and the user passes FALSE
 as an argument here, the class' selection for SAVE is set to FALSE from TRUE).
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RxClass$saveOutputs(SAVE = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RxClass$saveOutputs(SAVE = NULL, to_DB = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -485,11 +508,120 @@ as an argument here, the class' selection for SAVE is set to FALSE from TRUE).
 \item{\code{SAVE}}{Whether to save diagnostic plots. If NULL uses the user selected
 choice. If not NULL and is logical, argument replaces previously set SAVE
 options for the entire class.}
+
+\item{\code{to_DB}}{Logical, whether to save the prescription or experiment
+into the database. If NULL uses the user selected choice. If not NULL
+and is logical, argument replaces previously set to_DB options for the
+entire class.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 Shapefile and map saved in 'Outputs' folder and in database.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-plotRxMap"></a>}}
+\if{latex}{\out{\hypertarget{method-plotRxMap}{}}}
+\subsection{Method \code{plotRxMap()}}{
+This method is for plotting maps of simulation outcomes. These
+include the net-returns from the management strategies, predicted
+responses, and optimized rates. Is a wrapper to a private plotRxMap
+method.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RxClass$plotRxMap(SAVE = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{SAVE}}{Logical, whether to save figure.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Maps saved in 'Outputs/Rx/' and/or returned.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-plotCellTypeMap"></a>}}
+\if{latex}{\out{\hypertarget{method-plotCellTypeMap}{}}}
+\subsection{Method \code{plotCellTypeMap()}}{
+This method is for plotting a map showing the distribution of cell
+types. This shows which cells are the optimized or management scenario
+rates, which are experimental rates, and where base rates are applied.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RxClass$plotCellTypeMap(SAVE = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{SAVE}}{Logical, whether to save figure.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Maps saved in 'Outputs/Rx/' and/or returned.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-uploadRxFun"></a>}}
+\if{latex}{\out{\hypertarget{method-uploadRxFun}{}}}
+\subsection{Method \code{uploadRxFun()}}{
+This method is for uploading the experiment or prescription to the
+database.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RxClass$uploadRxFun(
+  RX,
+  db,
+  farmername,
+  fieldname,
+  rx_year,
+  size,
+  mgmt_scen,
+  dtype = "rx"
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{RX}}{Data frame with the net-returns and experimental optimums
+for every point for every simulation iteration.}
+
+\item{\code{db}}{Database connection connected to an OFPE formatted
+database.}
+
+\item{\code{farmername}}{The name of the farmer that manages the field.}
+
+\item{\code{fieldname}}{Unique field name corresponding to all fields used
+in the simulation.}
+
+\item{\code{rx_year}}{Provide the year that the prescription or experiment
+is made for. Used for labeling outputs.}
+
+\item{\code{size}}{The size of the treatment zones, which is the treatment length x
+the boom width x 2.}
+
+\item{\code{mgmt_scen}}{If the user is creating a prescription or experimental
+prescription, they must provide the management scenario to use for their
+prescription. The user can choose from the management options listed in
+the SimClass. The options are 'SSOPT': site-specific optimized rates,
+'FFOPT': full-field optimum uniform rate, 'FS': farmer selected uniform
+rate, 'Min': applying the least intensive input rates (i.e. 0 lbs N/ac, or
+25 lbs seed/ac), 'Opp' is omitted because this strategy is the least intensive
+input rate in conventional system types, and the farmer selected rate for
+organic systems, both of which are already provided. This is set to 'exp'
+for all new experiments.}
+
+\item{\code{dtype}}{The data type of the data for upload to the database, default
+to 'rx'.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Output saved in database
 }
 }
 \if{html}{\out{<hr>}}

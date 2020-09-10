@@ -26,6 +26,9 @@
 #' @importFrom maptools gcDestination
 #' @importFrom grDevices topo.colors
 #' @importFrom methods as
+#' @importFrom data.table .SD
+#' @importFrom stats na.omit
+#' @importFrom stats median
 #'
 #' @seealso \url{https://sites.google.com/site/ofpeframework/}
 #' @seealso \url{https://paulhegedus.github.io/OFPE-Website/}
@@ -70,4 +73,3 @@
 #' @docType package
 #' @name OFPE
 NULL
-#> NULL

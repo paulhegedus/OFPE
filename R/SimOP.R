@@ -582,7 +582,7 @@ SimOP <- R6::R6Class(
 
       p <-
         ggplot2::ggplot(Bp.plot) +
-          ggplot2::geom_boxplot(aes(x = Method, y = NR),
+          ggplot2::geom_boxplot(ggplot2::aes(x = Method, y = NR),
                                 fill = "green3",
                                 notch = FALSE) +
           ggplot2::scale_y_continuous(name =  "Average Net Return ($/acre)",
@@ -744,9 +744,9 @@ SimOP <- R6::R6Class(
                        "Actual",
                        "Alt. Price")
       p <-
-        ggplot2::ggplot(TF3, aes(x = Method, y = MeanNR)) +
+        ggplot2::ggplot(TF3, ggplot2::aes(x = Method, y = MeanNR)) +
           ggplot2::geom_bar(stat = "identity", fill = "green3") +
-          ggplot2::geom_errorbar(aes(ymin = MeanNR - (1.96 * SDNR / 10),
+          ggplot2::geom_errorbar(ggplot2::aes(ymin = MeanNR - (1.96 * SDNR / 10),
                                      ymax = MeanNR + (1.96 * SDNR / 10)),
                                  width = .2) + #
           ggplot2::scale_y_continuous(name = "Average net return ($/acre)",
@@ -755,7 +755,7 @@ SimOP <- R6::R6Class(
           ggplot2::scale_x_discrete(name = "Management Strategy",
                                     labels = mgmt_labels) +
           ggplot2::geom_text(data = TF3,
-                             aes(x = Method, y = MeanNR, label = round(MeanNR, 2)),
+                             ggplot2::aes(x = Method, y = MeanNR, label = round(MeanNR, 2)),
                       hjust = 1.15,
                       vjust = 1.25) +
           ggplot2::theme_bw()
@@ -827,7 +827,7 @@ SimOP <- R6::R6Class(
                          " used with each application strategy")
       mgmt_labels <- c("Min. Rate", "FS", "SS.Opt", "FF.Opt")
       p <-
-        ggplot2::ggplot(TF4, aes(x = Method, y = EXP)) +
+        ggplot2::ggplot(TF4, ggplot2::aes(x = Method, y = EXP)) +
           ggplot2::geom_bar(stat = "identity", fill = "blue") +
           ggplot2::scale_y_continuous(name = y_lab,
                              limits=c(yMIN, yMAX),
@@ -835,7 +835,7 @@ SimOP <- R6::R6Class(
           ggplot2::scale_x_discrete(name = "Management Strategy",
                                     labels = mgmt_labels) +
           ggplot2::geom_text(data = TF4,
-                             aes(x = Method, y = EXP, label = round(EXP, 2)),
+                             ggplot2::aes(x = Method, y = EXP, label = round(EXP, 2)),
                     vjust = -.25) +
           ggplot2::theme_bw() +
           ggplot2::ggtitle(gg_title, subtitle = txt)
@@ -895,7 +895,7 @@ SimOP <- R6::R6Class(
       if (TF4[which(TF4$Method == "EXP.ssopt"), "EXP"] == 0) {
         p <-
           ggplot2::ggplot(NRplot) +
-            ggplot2::geom_histogram(aes(x = EXP.rate.ssopt + 1),
+            ggplot2::geom_histogram(ggplot2::aes(x = EXP.rate.ssopt + 1),
                            bins = 1,
                            col = "white",
                            fill = "blue",
@@ -913,7 +913,7 @@ SimOP <- R6::R6Class(
         xSTEP <- (xMAX - xMIN) / 10
         p <-
           ggplot2::ggplot(NRplot) +
-            ggplot2::geom_histogram(aes(x = EXP.rate.ssopt + 1),
+            ggplot2::geom_histogram(ggplot2::aes(x = EXP.rate.ssopt + 1),
                                     bins = bin_num,
                                     col = "white",
                                     fill = "blue",
@@ -926,10 +926,10 @@ SimOP <- R6::R6Class(
             ggplot2::ggtitle(gg_title, subtitle = sub_title)
       }
       yMIN <- 0
-      yMAX <- DescTools::RoundTo(max(ggplot_build(p)$data[[1]]$count), 5, ceiling)
+      yMAX <- DescTools::RoundTo(max(ggplot2::ggplot_build(p)$data[[1]]$count), 5, ceiling)
       ySTEP <- (yMAX - yMIN) / 10
       p <- p +
-        ggplot2::geom_point(aes(x = round(mean(NRopt[, "EXP.rate.ssopt"],
+        ggplot2::geom_point(ggplot2::aes(x = round(mean(NRopt[, "EXP.rate.ssopt"],
                                                na.rm = TRUE), 0),
                                 y = yMIN + ySTEP),
                             col = "red",
@@ -995,7 +995,7 @@ SimOP <- R6::R6Class(
       if (TF4[which(TF4$Method == "EXP.ffopt"), "EXP"] == 0) {
         p <-
           ggplot2::ggplot(Bp.plot) +
-            ggplot2::geom_histogram(aes(x=ffopt.EXPrate + 1),
+            ggplot2::geom_histogram(ggplot2::aes(x=ffopt.EXPrate + 1),
                            bins=1,
                            col="white",
                            fill="blue",
@@ -1013,7 +1013,7 @@ SimOP <- R6::R6Class(
         xSTEP <- (xMAX - xMIN) / 10
         p <-
           ggplot2::ggplot(Bp.plot) +
-          ggplot2::geom_histogram(aes(x = ffopt.EXPrate),
+          ggplot2::geom_histogram(ggplot2::aes(x = ffopt.EXPrate),
                                   bins = bin_num,
                                   col = "white",
                                   fill = "blue",
@@ -1026,11 +1026,11 @@ SimOP <- R6::R6Class(
           ggplot2::ggtitle(gg_title,
                            subtitle = sub_title)
       }
-      yMIN <- DescTools::RoundTo(min(ggplot_build(p)$data[[1]]$count), 5, floor)
-      yMAX <- DescTools::RoundTo(max(ggplot_build(p)$data[[1]]$count), 5, ceiling)
+      yMIN <- DescTools::RoundTo(min(ggplot2::ggplot_build(p)$data[[1]]$count), 5, floor)
+      yMAX <- DescTools::RoundTo(max(ggplot2::ggplot_build(p)$data[[1]]$count), 5, ceiling)
       ySTEP <- (yMAX - yMIN) / 10
       p <- p +
-        ggplot2::geom_point(aes(x = round(mean(Bp.var[, "ffopt.EXPrate"],
+        ggplot2::geom_point(ggplot2::aes(x = round(mean(Bp.var[, "ffopt.EXPrate"],
                                                na.rm = TRUE), 0),
                                 y = yMIN + ySTEP),
                             col = "red",
@@ -1340,7 +1340,7 @@ SimOP <- R6::R6Class(
                            ifelse(expvar == "aa_n", "N", "Seed"),
                            " Cost = $", round(CEXP, 2))
       var_plot <-
-        ggplot2::ggplot(DNR, aes(x = exp, y = var)) +
+        ggplot2::ggplot(DNR, ggplot2::aes(x = exp, y = var)) +
         ggplot2::geom_point(shape = 1) +
         ggplot2::geom_smooth(color = var_color) +
         ggplot2::labs(y = y_lab,

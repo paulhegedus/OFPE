@@ -310,13 +310,13 @@ ModClass <- R6::R6Class(
       xSTEP <- (xMAX - xMIN) / 10
       p <- ggplot2::ggplot() +
         ggplot2::geom_point(data = mod$dat$val,
-                   aes(x = get(mod$expvar), y = get(mod$respvar), col = cols[1], shape = year.field)) +
+                   ggplot2::aes(x = get(mod$expvar), y = get(mod$respvar), col = cols[1], shape = year.field)) +
         ggplot2::labs(y = ifelse(mod$respvar == "yld", "Yield (bu/ac)", "Grain Protein Content (%)"),
              x=paste0(ifelse(mod$expvar == "aa_n", "Nitrogen", "Seed"), " (lbs/ac)")) +
         ggplot2::ggtitle(paste0(mod$fieldname," ", mod$mod_type ," Analysis"),
                 subtitle = paste0("AIC = ", round(AIC(mod$mod), 4))) +
         ggplot2::geom_point(data = mod$dat$val,
-                   aes(x = get(mod$expvar), y = pred,
+                   ggplot2::aes(x = get(mod$expvar), y = pred,
                        col = cols[2],
                        shape = year.field)) +
         ggplot2::scale_color_manual(name = "", values = cols, labels = c("Observed", "Predicted")) +
@@ -343,7 +343,7 @@ ModClass <- R6::R6Class(
                     DescTools::RoundTo(min(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]], na.rm = T), 5, floor),
                     DescTools::RoundTo(min(mod$dat$val$pred, na.rm = T), 5, floor))
       p <- ggplot2::ggplot(data = mod$dat$val) +
-        ggplot2::geom_point(aes(x = get(mod$respvar), y = mod$dat$val$pred, shape = year.field)) +
+        ggplot2::geom_point(ggplot2::aes(x = get(mod$respvar), y = mod$dat$val$pred, shape = year.field)) +
         ggplot2::geom_abline(intercept = 0, slope = 1, color = ifelse(mod$respvar == "yld", "red", "cyan")) +
         ggplot2::labs(x = paste0("Observed ", ifelse(mod$respvar == "yld", "Yield", "Protein")),
              y = paste0("Predicted ", ifelse(mod$respvar == "yld", "Yield", "Protein"))) +
