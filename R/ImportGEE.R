@@ -56,6 +56,8 @@ ImportGEE <- R6::R6Class(
     #' @param None No arguments needed because of class instantiation.
     #' @return See 'GEE' table in database.
     executeUpload = function() {
+      browser()
+
       # prevents annoying and useless notices from postgresql
       invisible(DBI::dbGetQuery(dbCon$db, "SET client_min_messages TO WARNING"))
       invisible(
@@ -75,6 +77,8 @@ ImportGEE <- R6::R6Class(
     #' @param db Connection to an OFPE formatted database.
     #' @return See 'GEE' table in database.
     .uploadGEE = function(FILE, overwrite, db) {
+      browser()
+
       # check if table exists yet (after first upload it should)
       gee <- as.logical(
         DBI::dbGetQuery(db,
@@ -111,9 +115,10 @@ ImportGEE <- R6::R6Class(
         info <- self$.getInfo(FILE$name)
         ## bring in data file and convert from utm to wgs84
         browser()
-
-        tif <- raster::raster(FILE$name) %>%
-          raster:: projectRaster(crs= sp::CRS("+proj=longlat +datum=WGS84"))
+        tif <- raster::raster(FILE$name)
+        if (!grepl("longlat|WGS84", tif@crs)) {
+          tif <- raster:: projectRaster(tif, crs= sp::CRS("+proj=longlat +datum=WGS84"))
+        }
         ## upload to temp database folder
         invisible(
           suppressMessages(
