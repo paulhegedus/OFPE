@@ -110,6 +110,8 @@ ImportGEE <- R6::R6Class(
         ## get field and farmer and year etc. info
         info <- self$.getInfo(FILE$name)
         ## bring in data file and convert from utm to wgs84
+        browser()
+
         tif <- raster::raster(FILE$name) %>%
           raster:: projectRaster(crs= sp::CRS("+proj=longlat +datum=WGS84"))
         ## upload to temp database folder
