@@ -29,17 +29,19 @@
 #' further experimentation is needed.
 #'
 #' When creating an experimental prescription or a prescription, the user must pass
-#' an set up SimClass. This implies that the user has initialized and set up
-#' the required DatClass, ModClass, and EconDat R6 objects. The user has the option
-#' of passing a SimClass object that has been executed or not. Regardless, the RxClass
-#' will check 1) for simulation output data and 2) execute the simulation for any year(s)
-#' that the user specified for generating a prescription for that is not present in the
-#' simulation data. This simulation output data is used to generate the experimental
-#' prescriptions and the prescriptions.
+#' a set up SimClass. This implies that the user has initialized and set up
+#' the required DatClass, ModClass, and EconDat R6 objects. The user must pass a
+#' SimClass object that has been executed. This simulation output data is used to
+#' generate the experimental prescriptions and the prescriptions.
 #'
 #' If the user allows, the prescriptions or experiments are saved to the 'Outputs' folder
 #' and are saved in the OFPE database in the farmer specific aggregated schema in a table
 #' called 'rx' (farmername_a.rx).
+#' @seealso \code{\link{DBCon}} for the database connection class,
+#' \code{\link{SimClass}} for the class that contains simulation outputs,
+#' \code{\link{ExpGen}} for the class for creating new experiments, and
+#' \code{\link{RxGen}} for the class that creates experimental prescriptions
+#' or pure prescriptions.
 #' @export
 RxClass <- R6::R6Class(
   "RxClass",
@@ -61,7 +63,7 @@ RxClass <- R6::R6Class(
     #' @field boom_width The width of the sprayer boom or spreader, given as feet
     #' and converted to meters.
     boom_width = NULL,
-    #' @field orientation TODO...
+    #' @field orientation TODO... Not implemented yet.
     orientation = NULL,
     #' @field fld_prop The proportion of the field to apply experimental
     #' rates to (i.e. 0.5 or 1.0), OR, the percent of available cells to
@@ -83,7 +85,7 @@ RxClass <- R6::R6Class(
     #' @field rx_for_year Provide the year that the prescription or experiment
     #' is made for. Used for labeling outputs.
     rx_for_year = NULL,
-    #' @field SAVE Logical, whether to save figures and the prescription.
+    #' @field SAVE Logical, whether to save figures and the experiment or prescription.
     #' Autofilled to FALSE if a user selects NA in the 'out_path' or is NULL.
     #' Autofilled to TRUE otherwise. If not applied and a SimClass object has
     #' been supplied, the selected option in that class will be used.
@@ -134,10 +136,8 @@ RxClass <- R6::R6Class(
     strat_dat_year = NULL,
     #' @field simClass If the user is creating an experimental prescription or
     #' prescription an R6 class SimClass object must be supplied. This has to be
-    #' set up, however does not need to have the execution method performed.
-    #' The RxClass will check the SimClass for simulation output data that matches
-    #' the year of the data provided, and execute simulations for any years not
-    #' present.
+    #' set up. The RxClass will check the SimClass for simulation output data
+    #' from which years(s) can be selected from.
     simClass = NULL,
     #' @field exp_rate_gen Logical, for the experimental prescription provide
     #' TRUE or FALSE for whether to create experimentla rates from gaps in the
@@ -194,10 +194,8 @@ RxClass <- R6::R6Class(
     #' database, see DBCon class.
     #' @param simClass If the user is creating an experimental prescription or
     #' prescription an R6 class SimClass object must be supplied. This has to be
-    #' set up, however does not need to have the execution method performed.
-    #' The RxClass will check the SimClass for simulation output data that matches
-    #' the year of the data provided, and execute simulations for any years not
-    #' present.
+    #' set up and simulations from years that the user expects the upcoming year
+    #' will be like must be executed.
     #' @param gen_type What type of output to generate; 'NewExp_NoStrat' for
     #' a new experiment with randomly placed experimental rates with no stratification,
     #' 'NewExp_wStrat' for a new experiment with randomly placed experimental rates
@@ -207,7 +205,7 @@ RxClass <- R6::R6Class(
     #' farmer selected base rate randomly placed, stratified on optimum rates.
     #' @param trt_length Length, in feet, for which to apply treatments.
     #' @param boom_width The width of the sprayer boom or spreader (feet).
-    #' @param orientation TODO...
+    #' @param orientation TODO... Not implemented yet.
     #' @param fld_prop The proportion of the field to apply experimental
     #' rates to (i.e. 0.5 or 1.0), OR, the percent of available cells to
     #' apply check rates to (i.e. 0.05, 0.1).
@@ -223,7 +221,7 @@ RxClass <- R6::R6Class(
     #' output data to avoid redundantly running a simulation.
     #' @param rx_for_year Provide the year that the prescription or experiment
     #' is made for. Used for labeling outputs.
-    #' @param SAVE Logical, whether to save figures and the prescription.
+    #' @param SAVE Logical, whether to save figures and the experiment or prescription.
     #' Autofilled to FALSE if a user selects NA in the 'out_path' or is NULL.
     #' Autofilled to TRUE otherwise. If not applied and a SimClass object has
     #' been supplied, the selected option in that class will be used.
@@ -620,12 +618,18 @@ RxClass <- R6::R6Class(
     #' @param SAVE Logical, whether to save figure.
     #' @return Maps saved in 'Outputs/Rx/' and/or returned.
     plotRxMap = function(SAVE = TRUE) {
+      if (is.null(self$fieldname)) {
+        utm_zone <- OFPE::findUTMzone(self$dbCon$db, fieldname = self$simClass$datClass$fieldname[1])
+      } else {
+        utm_zone <- OFPE::findUTMzone(self$dbCon$db, fieldname = self$fieldname[1])
+      }
       p <- private$.plotRxMap(self$out_gen$RX,
                               self$out_gen$var_col_name,
                               self$out_gen$var_label,
                               self$out_gen$var_main_label,
                               self$out_gen$unique_fieldname,
-                              self$farmername) %>%
+                              self$farmername,
+                              utm_zone) %>%
         suppressMessages() %>%
         suppressWarnings()
 
@@ -645,10 +649,17 @@ RxClass <- R6::R6Class(
     #' @param SAVE Logical, whether to save figure.
     #' @return Maps saved in 'Outputs/Rx/' and/or returned.
     plotCellTypeMap = function(SAVE = TRUE) {
+      if (is.null(self$fieldname)) {
+        utm_zone <- OFPE::findUTMzone(self$dbCon$db, fieldname = self$simClass$datClass$fieldname[1])
+      } else {
+        utm_zone <- OFPE::findUTMzone(self$dbCon$db, fieldname = self$fieldname[1])
+      }
       p <- private$.plotCellTypeMap(self$out_gen$RX,
                                     self$out_gen$unique_fieldname,
                                     self$farmername,
-                                    self$rx_for_year) %>%
+                                    self$rx_for_year,
+                                    self$fieldname,
+                                    utm_zone) %>%
         suppressMessages() %>%
         suppressWarnings()
 
@@ -687,7 +698,7 @@ RxClass <- R6::R6Class(
     #' for all new experiments.
     #' @param dtype The data type of the data for upload to the database, default
     #' to 'rx'.
-    #' @return Output saved in database
+    #' @return Output experiment or prescription saved in database.
     uploadRxFun = function(RX, db, farmername, fieldname, rx_year, size, mgmt_scen, dtype = "rx") {
       RX <- sf::st_transform(RX, "epsg:4326") %>%
         as("Spatial")
@@ -1011,7 +1022,8 @@ RxClass <- R6::R6Class(
                           var_label,
                           var_main_label,
                           fieldname,
-                          farmername) {
+                          farmername,
+                          utm_zone) {
       color <- rev(colorRamps::matlab.like2(15))
       stopifnot(
         length(var_col_name) == length(var_label),
@@ -1027,8 +1039,6 @@ RxClass <- R6::R6Class(
         !is.null(dat$y),
         any(grepl(var_col_name, names(dat)))
       )
-      utm_zone <- OFPE::findUTMzone(farmername = farmername)
-
       df <- as.data.frame(dat)
       sp <- sp::SpatialPoints(coords = df[, c("x", "y")])
       utm <- sf::st_as_sf(sp, remove_coordinates = FALSE)
@@ -1084,9 +1094,10 @@ RxClass <- R6::R6Class(
     .plotCellTypeMap = function(dat,
                                 unique_fieldname,
                                 farmername,
-                                rx_for_year) {
+                                rx_for_year,
+                                fieldname,
+                                utm_zone) {
       stopifnot(any(grepl("cell_type", names(dat))))
-      utm_zone <- OFPE::findUTMzone(farmername = farmername)
 
       df <- as.data.frame(dat)
       sp <- sp::SpatialPoints(coords = df[, c("x", "y")])

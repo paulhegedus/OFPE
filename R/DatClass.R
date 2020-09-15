@@ -2,7 +2,7 @@
 #'
 #' @description R6 Class for storing user specified inputs and processing data
 #' for the analysis/simulation and Rx building steps of the OFPE data cycle.
-#' This object inlcudes user selections such as the field and year of data
+#' This object includes user selections such as the field and year of data
 #' to export from an OFPE database and the type of data (grid or observed) for analysis
 #' and simulation/prescription generation.
 #'
@@ -14,6 +14,9 @@
 #' This class stores inputs from the user and has the methods for for exporting
 #' data from the database and processing the data for analysis, simulation, and
 #' prescription building.
+#' @seealso \code{\link{DBCon}} for database connection class,
+#' \code{\link{ModClass}} for model fitting class that relies on data in DatClass,
+#' \code{\link{SimClass}} for simulation class that rely on data in DatClass.
 #' @export
 DatClass <- R6::R6Class(
   "DatClass",
@@ -23,7 +26,7 @@ DatClass <- R6::R6Class(
     dbCon = NULL,
     #' @field farmername Name of the farmer that owns the selected field.
     farmername = NULL,
-    #' @field fieldname Name of the field to aggregate data for. Selected from
+    #' @field fieldname Name of the field for analysis. Selected from
     #' the 'all_farms.fields' table of an OFPE formatted database.
     fieldname = NULL,
     #' @field respvar Response variable(s) to optimize experimental inputs based
@@ -45,7 +48,7 @@ DatClass <- R6::R6Class(
     #' 'NRopp' shows the net-return calculated from organically grown wheat).
     #' In the example, organic prices are calculated from 0 N fertilizer rates,
     #' however with seeding rates it is purely the difference in the price received
-    #' used to calcualte net-return.
+    #' used to calculate net-return.
     sys_type = NULL,
     #' @field yldyears The year(s) of interest for the yield response
     #' variables in the selected field. This must be a named list with the
@@ -73,7 +76,7 @@ DatClass <- R6::R6Class(
     #' 'Grid' option if you have not executed the process of aggregation with
     #' the 'Grid' option selected. The same principle applies for the 'Observed'
     #' option. It is recommended that the analysis is performed with 'Observed'
-    #' data, and for the simulation tobe performed with 'Grid' data.
+    #' data, and for the simulation to be performed with 'Grid' data.
     sim_grid = NULL,
     #' @field dat_used Option for the length of year to use data in the analysis,
     #' simulation, and prescription building steps. See the 'AggInputs' class
@@ -81,7 +84,7 @@ DatClass <- R6::R6Class(
     dat_used = NULL,
     #' @field veg_index Option for the vegetation index data to use for analysis,
     #' simulation, and prescription building steps. Select from 'NDVI', 'NDRE',
-    #' and 'CIRE'. These are the three vegatation indices downloaded from
+    #' and 'CIRE'. These are the three vegetation indices downloaded from
     #' Google Earth Engine and used to enrich yield and protein datasets in the
     #' aggregation step.
     veg_index = NULL,
@@ -111,7 +114,7 @@ DatClass <- R6::R6Class(
     #' that is used to evaluate the model performance on data it has not 'seen' before.
     split_pct = NULL,
     #' @field clean_rate Select the maximum rate that could be realistically be applied
-    #' by the applicating machine (sprayer or seeder). This is used for a rudimentary
+    #' by the application equipment (sprayer or seeder). This is used for a rudimentary
     #' cleaning of the data that removes observations with as-applied rates above this
     #' user supplied threshold. Rates above this threshold should be able to be classified
     #' as machine measurement errors. For example, based on knowledge of the prescription/
@@ -152,7 +155,7 @@ DatClass <- R6::R6Class(
     #' @param dbCon Database connection object connected to an OFPE formatted
     #' database, see DBCon class.
     #' @param farmername Name of the farmer that owns the selected field.
-    #' @param fieldname Name of the field to aggregate data for. Selected from
+    #' @param fieldname Name of the field to for analysis. Selected from
     #' the 'all_farms.fields' table of an OFPE formatted database.
     #' @param respvar Response variable(s) to optimize experimental inputs based
     #' off of. The user can select 'Yield' and/or 'Protein' based on data
@@ -171,7 +174,7 @@ DatClass <- R6::R6Class(
     #' 'NRopp' shows the net-return calculated from organically grown wheat).
     #' In the example, organic prices are calculated from 0 N fertilizer rates,
     #' however with seeding rates it is purely the difference in the price received
-    #' used to calcualte net-return.
+    #' used to calculate net-return.
     #' @param yldyears The year(s) of interest for the yield response
     #' variables in the selected field. This must be a named list with the
     #' specified field names.
@@ -192,7 +195,7 @@ DatClass <- R6::R6Class(
     #' documentation for more information on the 'dat_used' selection.
     #' @param veg_index Option for the vegetation index data to use for analysis,
     #' simulation, and prescription building steps. Select from 'NDVI', 'NDRE',
-    #' and 'CIRE'. These are the three vegatation indices downloaded from
+    #' and 'CIRE'. These are the three vegetation indices downloaded from
     #' Google Earth Engine and used to enrich yield and protein datasets in the
     #' aggregation step.
     #' @param prec_source Option for the satellite source of precipitation data
@@ -217,7 +220,7 @@ DatClass <- R6::R6Class(
     #' of the crop responses. The difference will be split into a validation dataset
     #' that is used to evaluate the model performance on data it has not 'seen' before.
     #' @param clean_rate Select the maximum rate that could be realistically be applied
-    #' by the applicating machine (sprayer or seeder). This is used for a rudimentary
+    #' by the application equipment (sprayer or seeder). This is used for a rudimentary
     #' cleaning of the data that removes observations with as-applied rates above this
     #' user supplied threshold. Rates above this threshold should be able to be classified
     #' as machine measurement errors. For example, based on knowledge of the prescription/
@@ -361,7 +364,7 @@ DatClass <- R6::R6Class(
     #' growing degree day data. Finally, the user has the option of whether
     #' to center covariate data or to use the raw observed data for analysis
     #' and simulation and the percent of data to use in the training data for
-    #' model fitting. The rest of the data is witheld for validation.
+    #' model fitting. The rest of the data is withheld for validation.
     #' @param None No arguments needed because passed in during class
     #' instantiation.
     #' @return A 'DatClass' object with complete user selections.
@@ -685,60 +688,87 @@ DatClass <- R6::R6Class(
       return(dat)
     },
     .trimCols = function(dat, trim_cols) {
-      return(dat[,!(names(dat) %in% trim_cols)])
+      return(dat[, !(names(dat) %in% trim_cols), with = FALSE])
     },
     .selectDat = function(dat) {
-      df <- matrix(NA, nrow = nrow(dat), ncol = 7) %>%
-        as.data.frame()
-      names(df) <- c("prec_cy","prec_py","gdd_cy","gdd_py",
-                     "veg_cy","veg_py","veg_2py")
+      sub_cols <- c("prec_cy_d", "prec_py_d", "gdd_cy_d", "gdd_py_d",
+                    "prec_cy_g", "prec_py_g", "gdd_cy_g", "gdd_py_g",
+                    "ndvi_cy_s", "ndvi_py_s", "ndvi_2py_s",
+                    "ndvi_cy_l", "ndvi_py_l", "ndvi_2py_l",
+                    "ndre_cy", "ndre_py", "ndre_2py",
+                    "cire_cy", "cire_py", "cire_2py")
+      sub_dat <- dat[, sub_cols, with = FALSE] %>%
+        apply(2, as.numeric) %>%
+        `names<-`(sub_cols)
+
       prec_key <- ifelse(self$prec_source == "daymet", "d", "g")
       alt_prec_key <- ifelse(self$prec_source == "daymet", "g", "d")
       gdd_key <- ifelse(self$gdd_source == "daymet", "d", "g")
       alt_gdd_key <- ifelse(self$gdd_source == "daymet", "g", "d")
 
-      df$prec_cy <- ifelse(!is.na(dat[, grep(paste0("prec_cy_", prec_key),
-                                             names(dat))]),
-                           dat[, grep(paste0("prec_cy_", prec_key),
-                                      names(dat))],
-                           dat[, grep(paste0("prec_cy_", alt_prec_key),
-                                      names(dat))])
-      df$prec_py <- ifelse(!is.na(dat[, grep(paste0("prec_py_", prec_key),
-                                             names(dat))]),
-                           dat[, grep(paste0("prec_py_", prec_key),
-                                      names(dat))],
-                           dat[, grep(paste0("prec_py_", alt_prec_key),
-                                      names(dat))])
-      df$gdd_cy <- ifelse(!is.na(dat[, grep(paste0("gdd_cy_", gdd_key),
-                                            names(dat))]),
-                          dat[, grep(paste0("gdd_cy_", gdd_key),
-                                     names(dat))],
-                          dat[, grep(paste0("gdd_cy_", alt_gdd_key),
-                                     names(dat))])
-      df$gdd_py <- ifelse(!is.na(dat[, grep(paste0("gdd_py_", gdd_key),
-                                            names(dat))]),
-                          dat[, grep(paste0("gdd_py_", gdd_key),
-                                     names(dat))],
-                          dat[, grep(paste0("gdd_py_", alt_gdd_key),
-                                     names(dat))])
-      df$veg_cy <- ifelse(!is.na(dat[, grep(paste0(self$veg_index, "_cy_s"),
-                                            names(dat))]),
-                          dat[, grep(paste0(self$veg_index, "_cy_s"),
-                                     names(dat))],
-                          dat[, grep(paste0(self$veg_index, "_cy_l"),
-                                     names(dat))])
-      df$veg_py <- ifelse(!is.na(dat[, grep(paste0(self$veg_index, "_py_s"),
-                                            names(dat))]),
-                          dat[, grep(paste0(self$veg_index, "_py_s"),
-                                     names(dat))],
-                          dat[, grep(paste0(self$veg_index, "_py_l"),
-                                     names(dat))])
-      df$veg_2py <- ifelse(!is.na(dat[, grep(paste0(self$veg_index, "_2py_s"),
-                                             names(dat))]),
-                           dat[, grep(paste0(self$veg_index, "_2py_s"),
-                                      names(dat))],
-                           dat[, grep(paste0(self$veg_index, "_2py_l"),
-                                      names(dat))])
+      df <- OFPE::selectDatCpp(
+        as.matrix(sub_dat),
+        nrow(sub_dat),
+        grep(paste0("prec_cy_", prec_key),  names(sub_dat)) - 1,
+        grep(paste0("prec_cy_", alt_prec_key), names(sub_dat)) - 1,
+        grep(paste0("prec_py_", prec_key), names(sub_dat)) - 1,
+        grep(paste0("prec_py_", alt_prec_key), names(sub_dat)) - 1,
+        grep(paste0("gdd_cy_", gdd_key), names(sub_dat)) - 1,
+        grep(paste0("gdd_cy_", alt_gdd_key), names(sub_dat)) - 1,
+        grep(paste0("gdd_py_", gdd_key), names(sub_dat)) - 1,
+        grep(paste0("gdd_py_", alt_gdd_key), names(sub_dat)) - 1,
+        grep(paste0(self$veg_index, "_cy_s"), names(sub_dat)) - 1,
+        grep(paste0(self$veg_index, "_cy_l"), names(sub_dat)) - 1,
+        grep(paste0(self$veg_index, "_py_s"), names(sub_dat)) - 1,
+        grep(paste0(self$veg_index, "_py_l"), names(sub_dat)) - 1,
+        grep(paste0(self$veg_index, "_2py_s"), names(sub_dat)) - 1,
+        grep(paste0(self$veg_index, "_2py_l"), names(sub_dat)) - 1
+      ) %>%
+        as.data.frame() %>%
+        `names<-`(c("prec_cy","prec_py","gdd_cy","gdd_py",
+                    "veg_cy","veg_py","veg_2py"))
+
+      # df <- matrix(NA, nrow = nrow(dat), ncol = 7) %>%
+      #   as.data.frame()
+      # names(df) <- c("prec_cy","prec_py","gdd_cy","gdd_py",
+      #                "veg_cy","veg_py","veg_2py")
+      # for (i in 1:nrow(dat)) {
+      #   df$prec_cy[i] <- ifelse(
+      #     !is.na(dat[i, grep(paste0("prec_cy_", prec_key),  names(dat)), with = FALSE]),
+      #     as.numeric(dat[i, grep(paste0("prec_cy_", prec_key), names(dat)), with = FALSE]),
+      #     as.numeric(dat[i, grep(paste0("prec_cy_", alt_prec_key), names(dat)), with = FALSE])
+      #   )
+      #   df$prec_py[i] <- ifelse(
+      #     !is.na(dat[i, grep(paste0("prec_py_", prec_key), names(dat)), with = FALSE]),
+      #     as.numeric(dat[i, grep(paste0("prec_py_", prec_key), names(dat)), with = FALSE]),
+      #     as.numeric(dat[i, grep(paste0("prec_py_", alt_prec_key), names(dat)), with = FALSE])
+      #   )
+      #   df$gdd_cy[i] <- ifelse(
+      #     !is.na(dat[i, grep(paste0("gdd_cy_", gdd_key), names(dat)), with = FALSE]),
+      #     as.numeric(dat[i, grep(paste0("gdd_cy_", gdd_key), names(dat)), with = FALSE]),
+      #     as.numeric(dat[i, grep(paste0("gdd_cy_", alt_gdd_key), names(dat)), with = FALSE])
+      #   )
+      #   df$gdd_py[i] <- ifelse(
+      #     !is.na(dat[i, grep(paste0("gdd_py_", gdd_key), names(dat)), with = FALSE]),
+      #     as.numeric(dat[i, grep(paste0("gdd_py_", gdd_key), names(dat)), with = FALSE]),
+      #     as.numeric(dat[i, grep(paste0("gdd_py_", alt_gdd_key), names(dat)), with = FALSE])
+      #   )
+      #   df$veg_cy[i] <- ifelse(
+      #     !is.na(dat[i, grep(paste0(self$veg_index, "_cy_s"), names(dat)), with = FALSE]),
+      #     as.numeric(dat[i, grep(paste0(self$veg_index, "_cy_s"), names(dat)), with = FALSE]),
+      #     as.numeric(dat[i, grep(paste0(self$veg_index, "_cy_l"), names(dat)), with = FALSE])
+      #   )
+      #   df$veg_py[i] <- ifelse(
+      #     !is.na(dat[i, grep(paste0(self$veg_index, "_py_s"), names(dat)), with = FALSE]),
+      #     as.numeric(dat[i, grep(paste0(self$veg_index, "_py_s"), names(dat)), with = FALSE]),
+      #     as.numeric(dat[i, grep(paste0(self$veg_index, "_py_l"), names(dat)), with = FALSE])
+      #   )
+      #   df$veg_2py[i] <- ifelse(
+      #     !is.na(dat[i, grep(paste0(self$veg_index, "_2py_s"), names(dat)), with = FALSE]),
+      #     as.numeric(dat[i, grep(paste0(self$veg_index, "_2py_s"), names(dat)), with = FALSE]),
+      #     as.numeric(dat[i, grep(paste0(self$veg_index, "_2py_l"), names(dat)), with = FALSE])
+      #   )
+      # }
       dat <- private$.trimCols(
         dat,
         c("prec_cy_d", "prec_py_d", "gdd_cy_d", "gdd_py_d",
@@ -761,14 +791,14 @@ DatClass <- R6::R6Class(
       if (any(grepl("aa_n|aa_sr|yld|pro", names(dat)))) {
         col <- names(dat)[grep("aa_n|aa_sr", names(dat))]
         for(i in 1:length(col)){
-          rows <- which(dat[names(dat) %in% col[i]] < self$clean_rate |
-                          is.na(dat[names(dat) %in% col[i]]))
+          rows <- which(dat[, names(dat) %in% col[i], with = FALSE] < self$clean_rate |
+                          is.na(dat[, names(dat) %in% col[i], with = FALSE]))
           dat <- dat[rows, ]
         }
         col <- names(dat)[grep("yld|pro", names(dat))]
         for(i in 1:length(col)){
-          rows <- which(dat[names(dat) %in% col[i]] > 0 |
-                          is.na(dat[names(dat) %in% col[i]]))
+          rows <- which(dat[, names(dat) %in% col[i], with = FALSE] > 0 |
+                          is.na(dat[, names(dat) %in% col[i], with = FALSE]))
           dat <- dat[rows, ]
         }
       }
@@ -787,8 +817,8 @@ DatClass <- R6::R6Class(
       num_names <- names(num_means)
       if (self$center) {
         for (i in 1:length(num_names)) {
-          subdat[names(subdat) %in% num_names[i]] <-
-            subdat[names(subdat) %in% num_names[i]] - num_means[i]
+          subdat[, grep(paste0("^", num_names[i], "$"), names(subdat))] <-
+            subdat[, names(subdat) %in% num_names[i], with = FALSE] - num_means[i]
         }
       }
       return(subdat)
@@ -798,7 +828,7 @@ DatClass <- R6::R6Class(
       num_names <- num_names[!grepl(paste0("^x$|^y$|^yld$|^pro$"), num_names)]
       num_means <- rep(as.list(NA), length(unique(dat$year))) %>%
         `names<-`(unique(dat$year))
-      means <- by(dat[num_names], dat$year, sapply, mean, na.rm = TRUE)
+      means <- by(dat[, num_names, with = FALSE], dat$year, sapply, mean, na.rm = TRUE)
       for (i in 1:length(unique(dat$year))) {
         means[[i]][grep(paste0("^", self$expvar, "$"), names(means[[i]]))] <- 0 # don't center exp var
         if (self$center) {

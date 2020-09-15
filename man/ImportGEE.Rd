@@ -7,6 +7,11 @@
 R6 class for for importing data collected from Google Earth
 Engine into an OFPE formatted database.
 }
+\seealso{
+\code{\link{DBCon}} for the database connection class, and
+\code{\link{ImportOF}} for the associated on-farm data import
+class in the data import step.
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -150,7 +155,7 @@ Adds columns to the data file importing to the database.
 
 \item{\code{name}}{The name of the column to add.}
 
-\item{\code{db}}{The conncetion to the OFPE database.}
+\item{\code{db}}{The connection to the OFPE database.}
 }
 \if{html}{\out{</div>}}
 }

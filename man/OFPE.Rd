@@ -20,54 +20,80 @@ outlined on the OFPE Website \url{https://paulhegedus.github.io/OFPE-Website/}.
 
 The package follows Google's R Style Guide which follows the Tidyverse Style Guide.
 However, there are a couple distinctions from Google's style guide. Rather
-than naming functions with BigCamelCase, they are named with smallCamelCase,
-while R6 classes are named with BigCamelCase and assigned to smallCamelCase
-objects. Anything besides a class object or function is in snake_case.
+than naming functions with 'BigCamelCase', they are named with 'smallCamelCase',
+while R6 classes are named with 'BigCamelCase' and assigned to 'smallCamelCase'
+objects. Anything besides a class object or function is in 'snake_case.'
 }
-\section{General Functions}{
+\section{General}{
 
-DBCon
+General R6 Classes that spread over more than one step.
+DBCon, DatClass, ModClass, SimClass
+
+General Function Files.
+removeTempFuns, analysisFuns, findUTMzone, legendMap, importFuns,
+noSpecialChar, plotFuns, rxFuns
 }
 
 \section{Database Creation & Managements}{
 
 See Vignette 1 for database management and updating examples.
+The classes and functions used in this step of the OFPE cycle
+are listed below.
 
+OFPE database build and management R6 classes.
 BuildDB, ManageDB, ManageFarmers, ManageFarms, ManageFields
 }
 
 \section{Data Import}{
 
-See the Vignettes 2A and 2B for examples importing data from farms and
-Google Earth Engine.
+See the Vignettes 2 for examples importing data from farms and
+Google Earth Engine. The classes and functions used in this step
+of the OFPE cycle are listed below.
 
-The OFPE data import functions and R6 class generators...
-ImportOF,
+The OFPE data import R6 classes.
+ImportOF, ImportGEE
 
-The GEE data import functions and R6 class generators...
+The OFPE data import functions.
+setNAtoNaN, makeDBcolsText, convPolyToMulti, makeSpatialIndex,
+importNewDat, standardizeColNames, noMatch, tabExist, importDat,
+importMulti
 }
 
 \section{Data Aggregation}{
 
 See Vignette 3 for examples aggregating data from disparate sources.
-
-The OFPE data aggregation functions and R6 class generators...
+The classes and functions used in this step of the OFPE cycle
+are listed below.
+The OFPE data aggregation R6 classes.
+AggDat, AggGEE, AggInputs
 }
 
 \section{Data Analysis and Simulation}{
 
 See Vignette 4 for an example on analyzing collected data and simulating
-management outcomes.
+management outcomes. The classes and functions used in this step of the
+OFPE cycle are listed below.
 
-The OFPE data analysis and simulation functions and R6 class generators...
+The OFPE data analysis and simulation R6 classes.
+DatClass, EconDat, ModClass, SimClass, SimOP, RcppExports
+
+The OFPE data analysis and simulation R6 functions.
+findBadParms, valPrep, uniqueFieldname, plotMaps, getColorRamp
 }
 
 \section{Prescription Generation}{
 
 See Vignette 5 for an example on creating an optimized site-specific variable
-rate input prescription.
+rate input prescription. The classes and functions used in this step of the
+OFPE cycle are listed below.
 
-The OFPE prescription creation functions and R6 class generators...
+The OFPE experiment and prescription generation R6 classes.
+RxClass, SimClass, ExpGen, RxGen
+
+The OFPE experiment and prescription generation R6 functions.
+getRxGrid, makeTempBound, makeRXGrid, getFldBound, applyExpRates,
+getExpReps, trimExpReps, makeBaseRate, trimGrid, makeRx,
+uniqueFieldname, plotMaps, getColorRamp
 }
 
 \seealso{

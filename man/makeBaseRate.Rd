@@ -23,7 +23,7 @@ select the fieldname of the field to use. The field list is from the
 available fields in the database for experimentation.}
 
 \item{unique_fieldname}{Unique fieldname for the field(s) used for the experiment. This
-concatenates multiple fields with an ampersand. Used for labelling.}
+concatenates multiple fields with an ampersand. Used for labeling.}
 
 \item{base_rate}{The rate to apply between the experimental rates
 and the field edge, or as check rates in the prescription selected

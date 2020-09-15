@@ -16,7 +16,7 @@ DBCon <- R6::R6Class(
     #' @description
     #' Create a database connection inside of the DBCon class.
     #' @param drv Database driver for connection. Default is PostgreSQL
-    #' but can be overrided by passing in an argument.
+    #' but can be overridden by passing in an argument.
     #' @param user Username associated with the database owner.
     #' @param password Password associated with the database owner.
     #' @param dbname Name of the database to connect to.

@@ -22,20 +22,16 @@ getRxGrid(
 experimental inputs. For an experiment, these are the centroids of the grid
 made to aggregate data for the field.}
 
-\item{farmername}{If the user is creating a new experiment, provide or
-select the name of the farmer that owns or manages the field(s) that
-an experiment is going to be generated for.}
+\item{farmername}{Provide the farmer name that manages the field}
 
-\item{fieldname}{If the user is creating a new experiment, provide or
-select the fieldname of the field to use. The field list is from the
-available fields in the database for experimentation.}
+\item{fieldname}{Provide the name of the field for the experiment or prescription.}
 
 \item{trt_length}{Length, in meters, for which to apply treatments.}
 
 \item{boom_width}{The width of the sprayer boom or spreader.}
 
 \item{unique_fieldname}{Unique fieldname for the field(s) used for the experiment. This
-concatenates multiple fields with an ampersand. Used for labelling.}
+concatenates multiple fields with an ampersand. Used for labeling.}
 
 \item{mgmt_scen}{If the user is creating a prescription or experimental
 prescription, they must provide the management scenario to use for their

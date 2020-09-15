@@ -9,7 +9,7 @@ findBadParms(parm_df, dat)
 \arguments{
 \item{parm_df}{Data.frame with a column for the parameters to check, named 'parms',
 a column called 'bad_parms' filled with logical responses on whether to omit the
-parameter from the model fitting process, and columns labeld 'mean' and 'sd' to
+parameter from the model fitting process, and columns labeled 'mean' and 'sd' to
 populate in the 'bad_parm' identification process. Other columns may be included
 but these columns and specific column names are required.}
 

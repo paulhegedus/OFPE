@@ -9,6 +9,6 @@
 #'   \item{Year}{Year observation corresponds to.}
 #'   \item{org}{Price of HRWW grown organically, in dollars per bushel.}
 #'   \item{conv}{Price of HRWW grown conventionally, in dollars per bushel.}
-#'   \item{cost}{Cost of nitrogen fertilzier, in dollars per pound.}
+#'   \item{cost}{Cost of nitrogen fertilizer, in dollars per pound.}
 #' }
 "MT_Organic_vs_Conv_wheat_N_prices"

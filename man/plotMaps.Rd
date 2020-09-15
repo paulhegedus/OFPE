@@ -4,7 +4,15 @@
 \alias{plotMaps}
 \title{Create a map of a variable of interest from provided data.}
 \usage{
-plotMaps(df, var_col_name, var_label, var_main_label, fieldname, farmername)
+plotMaps(
+  df,
+  var_col_name,
+  var_label,
+  var_main_label,
+  fieldname,
+  farmername,
+  utm_zone
+)
 }
 \arguments{
 \item{df}{Data.frame or data.table with data to be mapped. Must include columns
@@ -25,11 +33,13 @@ corresponding with 'var_col_name' and 'var_label'.}
 
 \item{farmername}{Name of the farmer managing the field. Used to identify UTM zone and
 for figure labeling.}
+
+\item{utm_zone}{The user must provide the UTM zone of the data.}
 }
 \value{
 If one variable for plotting is passed as an argument, a map of
 selected variable is returned, otherwise a list with the map for each
-variable the user passed in will be returned..
+variable the user passed in will be returned.
 }
 \description{
 Function for creating a map with a Google satellite basemap

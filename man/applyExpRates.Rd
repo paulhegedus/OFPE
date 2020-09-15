@@ -39,7 +39,7 @@ number of rates for the optimized base map, so take your selections for
 the management scenario and number of optimum rates into account.}
 
 \item{strat_dat}{List of data to stratify data on from the OFPE
-database...}
+database... TODO... not implemented yet}
 }
 \value{
 Amended 'rx_sdt' object wit randomly placed experimental

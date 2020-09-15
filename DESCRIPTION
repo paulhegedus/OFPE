@@ -22,10 +22,6 @@ Authors@R: c(
            role = c("ctb"),
            email = "bmax@montana.edu",
            comment = c(ORCID = "000-0001-7775-9419")),
-    person(given = "Nick",
-           family = "Silverman",
-           role = c("ctb"),
-           email = "nicholas.silverman@umontana.edu"),
     person(given = "Montana State University", 
            role = c("cph"))
     )
@@ -70,7 +66,3 @@ LinkingTo:
     RcppArmadillo
 Remotes:
     github::dkahle/ggmap
-
-    
-
-    

@@ -30,6 +30,12 @@ discussed more in the 'AggInputs' class documentation. Finally, after all on-far
 and remotely sensed data has been combined into one dataset, this is saved to the
 database in the farmer's aggregated ('_a') schema.
 }
+\seealso{
+\code{\link{DBCon}} for the database connection class,
+\code{\link{AggGEE}} for the class responsible for aggregating Google Earth
+Engine data, \code{\link{AggInputs}} for the inputs required for the aggregation
+process.
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -204,7 +210,7 @@ Temporary table in the database.
 \subsection{Method \code{.cleanRespData()}}{
 Go through the cleaning process of cleaning the response variable data.
 Removes data that are outside of four standard deviations from the mean
-of the resposne variable and the distance, if supplied. Removes points
+of the response variable and the distance, if supplied. Removes points
 within 30m of the field boundary. This table is stored in the farmer's
 raw database schema before it is processed and added to the temporary
 table in the farmer's aggregated schema. The dot indicates that this
@@ -231,7 +237,7 @@ function would be private if not for documentations sake.
 
 \item{\code{resp_files}}{Files used for aggregation.}
 
-\item{\code{boundary_import}}{Whether the user imported thier own field boundary or
+\item{\code{boundary_import}}{Whether the user imported their own field boundary or
 using a predefined experimental field in the database.}
 
 \item{\code{resp_col}}{The column in the response variable data that corresponds
@@ -331,7 +337,8 @@ would be private if not for documentations sake.
   year,
   exp_conv,
   expvar,
-  CY = TRUE
+  CY = TRUE,
+  fieldname
 )}\if{html}{\out{</div>}}
 }
 
@@ -356,6 +363,8 @@ formula and any conversion to lbs per acre.}
 
 \item{\code{CY}}{Logical, whether the data for aggregation is from the year of
 interest (aka the 'current year').}
+
+\item{\code{fieldname}}{Name of the field for aggregation.}
 }
 \if{html}{\out{</div>}}
 }
@@ -375,9 +384,9 @@ across the fields that the aggregation data is based on is recreated
 and clipped to the bounding box of the experimental raw data. The raw experimental
 data is then extracted to the grid centroids where missing values are filled with
 NULL. This is a difference compared to the previous approach that did this after
-aggregation, where some missing values should be missing (field edges, carlinwest
+aggregation, where some missing values should be missing (field edges, partial files,
 etc.) and fills in the gaps within observations (real zeroes where the machine
-stopped applicating) are filled with zeroes more reliably. This data is then
+stopped applying the inptu) are filled with zeroes more reliably. This data is then
 used when aggregating experimental data. The The dot indicates that this function
 would be private if not for documentations sake.
 \subsection{Usage}{

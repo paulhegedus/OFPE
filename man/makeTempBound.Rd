@@ -9,13 +9,9 @@ makeTempBound(db, fieldname, farmername)
 \arguments{
 \item{db}{Connection to an OFPE formatted database.}
 
-\item{fieldname}{If the user is creating a new experiment, provide or
-select the fieldname of the field to use. The field list is from the
-available fields in the database for experimentation.}
+\item{fieldname}{Provide the field name for the experiment or prescription.}
 
-\item{farmername}{If the user is creating a new experiment, provide or
-select the name of the farmer that owns or manages the field(s) that
-an experiment is going to be generated for.}
+\item{farmername}{Provide the name of the farmer that manages the field.}
 }
 \value{
 NULL, temporary field boundary table in 'all_farms'.

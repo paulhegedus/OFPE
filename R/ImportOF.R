@@ -2,6 +2,9 @@
 #'
 #' @description R6 class for for importing data collected on-farms data into an
 #' OFPE formatted database.
+#' @seealso \code{\link{DBCon}} for the database connection class, and
+#' \code{\link{ImportGEE}} for the associated Google Earth Engine data import
+#' class in the data import step.
 #' @export
 ImportOF <- R6::R6Class(
   "ImportOF",
@@ -71,111 +74,81 @@ ImportOF <- R6::R6Class(
       self$status$fileName <- names(self$status)
     },
     #' @description
-    #' Uploads data to an OFPE formatted database following a chain of mehtods
+    #' Uploads data to an OFPE formatted database following a chain of methods
     #' and returning the status of the upload. The dot indicates that this
     #' function would be private if not for documentations sake.
     #' @param name Name of the data file to upload to the database.
     #' @return See 'status' object.
     .uploadData = function(name) { # MASTER FUNCTION
-      tryCatch(
-        {
-          FILE <- self$.impDat(name)
-        }, warning = function(w) {print()},
-        error = function(e) {
-          self$status[[which(names(self$status) == name)]] <-
-            paste0("!!! ERROR IN impDat() FOR ", name, " !!!")
-          print(paste0("!!! ERROR IN impDat() FOR " ,name, " !!!"))
-        }
-      )
+      tryCatch({FILE <- self$.impDat(name)},
+               warning = function(w) {print()},
+               error = function(e) {
+                 self$status[[which(names(self$status) == name)]] <-
+                   paste0("!!! ERROR IN impDat() FOR ", name, " !!!")
+                 print(paste0("!!! ERROR IN impDat() FOR " ,name, " !!!"))
+               })
       if (self$status[[which(names(self$status) == name)]] == 0) {
-        tryCatch(
-          {
-            FILE <- self$.makeSptl(FILE, name)
-          }, warning = function(w) {print()},
-          error = function(e) {
-            self$status[[which(names(self$status) == name)]] <-
-              paste0("!!! ERROR IN makeSptl() FOR ", name, " !!!")
-            print(paste0("!!! ERROR IN makeSptl() FOR ", name," !!!"))
-          }
+        tryCatch({FILE <- self$.makeSptl(FILE, name)},
+                 warning = function(w) {print()},
+                 error = function(e) {
+                   self$status[[which(names(self$status) == name)]] <-
+                     paste0("!!! ERROR IN makeSptl() FOR ", name, " !!!")
+                   print(paste0("!!! ERROR IN makeSptl() FOR ", name," !!!"))
+                 })
+      }
+      if (self$status[[which(names(self$status) == name)]] == 0) {
+        tryCatch({FILE <- self$.oldDatClean(FILE)},
+                 warning = function(w) {print()},
+                 error = function(e) {
+                   self$status[[which(names(self$status) == name)]] <-
+                     paste0("!!! ERROR IN oldDatClean() FOR ", name, " !!!")
+                   print(paste0("!!! ERROR IN oldDatClean() FOR ", name, " !!!"))
+                 })
+      }
+      if (self$status[[which(names(self$status) == name)]] == 0) {
+        tryCatch({FILE <- self$.findInfo(FILE, name)},
+                 warning = function(w) {print()},
+                 error = function(e) {
+                   self$status[[which(names(self$status) == name)]] <-
+                     paste0("!!! ERROR IN findInfo() FOR ", name, " !!!")
+                   print(paste0("!!! ERROR IN findInfo() FOR ", name, " !!!"))
+                 }
         )
       }
       if (self$status[[which(names(self$status) == name)]] == 0) {
-        tryCatch(
-          {
-            FILE <- self$.oldDatClean(FILE)
-          }, warning = function(w) {print()},
-          error = function(e) {
-            self$status[[which(names(self$status) == name)]] <-
-              paste0("!!! ERROR IN oldDatClean() FOR ", name, " !!!")
-            print(paste0("!!! ERROR IN oldDatClean() FOR ", name, " !!!"))
-          }
-        )
+        tryCatch({FILE <- self$.fixCols(FILE)},
+                 warning = function(w) {print()},
+                 error = function(e) {
+                   self$status[[which(names(self$status) == name)]] <-
+                     paste0("!!! ERROR IN fixCols() FOR ", name, " !!!")
+                   print(paste0("!!! ERROR IN fixCols() FOR ", name, " !!!"))
+                 })
       }
       if (self$status[[which(names(self$status) == name)]] == 0) {
-        tryCatch(
-          {
-            FILE <- self$.findInfo(FILE, name)
-          },warning = function(w) {print()},
-          error = function(e) {
-            self$status[[which(names(self$status) == name)]] <-
-              paste0("!!! ERROR IN findInfo() FOR ", name, " !!!")
-            print(paste0("!!! ERROR IN findInfo() FOR ", name, " !!!"))
-          }
-        )
-      }
-      if (self$status[[which(names(self$status) == name)]] == 0) {
-        tryCatch(
-          {
-            FILE <- self$.fixCols(FILE)
-          }, warning = function(w) {print()},
-          error = function(e) {
-            self$status[[which(names(self$status) == name)]] <-
-              paste0("!!! ERROR IN fixCols() FOR ", name, " !!!")
-            print(paste0("!!! ERROR IN fixCols() FOR ", name, " !!!"))
-          }
-        )
-      }
-      if (self$status[[which(names(self$status) == name)]] == 0) {
-        tryCatch(
-          {
-            FILE <- FILE %>%
-              sf::st_transform("epsg:4326")
-          }, warning = function(w) {print()},
+        tryCatch({FILE <- FILE %>%
+          sf::st_transform("epsg:4326")},
+          warning = function(w) {print()},
           error = function(e) {
             self$status[[which(names(self$status) == name)]] <-
               paste0("!!! ERROR IN st_transform(", name,
                      ") TO LONGLAT WGS84 !!!")
             print(paste0("!!! ERROR IN st_transform(", name,
                          ") TO LONGLAT WGS84 !!!"))
-          }
-        )
+          })
       }
       if (self$status[[which(names(self$status) == name)]] == 0) {
-        tryCatch(
-          {
-            FILE <- as(FILE, "Spatial")
-          }, warning = function(w) {print()},
-          error = function(e) {
-            self$status[[which(names(self$status) == name)]] <-
-              paste0("!!! ERROR CONVERTING ", name, " TO CLASS 'sp' !!!")
-            print(paste0("!!! ERROR IN CONVERTING ", name, " TO CLASS 'sp' !!!"))
-          }
-        )
+        tryCatch({FILE <- as(FILE, "Spatial")},
+                 warning = function(w) {print()},
+                 error = function(e) {
+                   self$status[[which(names(self$status) == name)]] <-
+                     paste0("!!! ERROR CONVERTING ", name, " TO CLASS 'sp' !!!")
+                   print(paste0("!!! ERROR IN CONVERTING ", name, " TO CLASS 'sp' !!!"))
+                 })
       }
       if (self$status[[which(names(self$status) == name)]] == 0) {
         self$.uploadFun(FILE, name, dbCon$db)
         self$status[[which(names(self$status) == name)]] <-
           paste0("IMPORT COMPLETE: ", name)
-        # tryCatch(
-        #   {
-        #
-        #   }, warning = function(w) {print()},
-        #   error = function(e) {
-        #     self$status[[which(names(self$status) == name)]] <-
-        #       paste0("!!! ERROR UPLOADING ", name, " TO DB !!!")
-        #     print(paste0("!!! ERROR UPLOADING ", name, " TO DB !!!"))
-        #   }
-        # )
       }
     },
     #' @description
@@ -192,20 +165,15 @@ ImportOF <- R6::R6Class(
           sf::st_zm()
       }
       if (grepl("csv$",name)) {
-        tryCatch(
-          {
+        tryCatch({
             FILE <- data.table::fread(paste0(self$dat_path, name)) %>%
               as.data.frame()
             if (any(grepl("Longitude|Latitude", names(FILE)))) {
               names(FILE)[which(names(FILE) == "Longitude")] <- "x"
-              names(FILE)[which(names(FILE) == "Latitude")] <- "y"
-            }
-          },
-          warning = function(w) {
-            print()},
+              names(FILE)[which(names(FILE) == "Latitude")] <- "y"}},
+          warning = function(w) {print()},
           error = function(e) {
-            tryCatch(
-              {
+            tryCatch({
                 FILE <- read.csv(paste0(self$dat_path, name),
                                  skip=2, header=FALSE)
                 header <- read.csv(paste0(self$dat_path, name),
@@ -216,9 +184,7 @@ ImportOF <- R6::R6Class(
               warning = function(w) {
                 print()},
               error = function(e) {
-                print(paste0("Error: loading ", name, " !!!"))
-              }
-            )
+                print(paste0("Error: loading ", name, " !!!"))})
           }
         )
       }
@@ -250,6 +216,24 @@ ImportOF <- R6::R6Class(
         if (grepl("csv$",name)) {
           FILE$X <- FILE$x
           FILE$Y <- FILE$y
+          FILE <- FILE[!is.na(FILE$X) & !is.na(FILE$Y), ]
+          ## put correct sign on lat long
+          x_dir <- grep("^x$", names(FILE)) + 1
+          x_dir <- unique(na.omit(FILE[, x_dir]))
+          x_dir <- x_dir[grep("W|E", x_dir)]
+          y_dir <- grep("^y$", names(FILE)) + 1
+          y_dir <- unique(na.omit(FILE[, y_dir]))
+          y_dir <- y_dir[grep("N|S", y_dir)]
+          if (x_dir == "W") {
+            FILE$X <- ifelse(FILE$X < 0,
+                             FILE$X,
+                             FILE$X * -1)
+          }
+          if (y_dir == "S") {
+            FILE$X <- ifelse(FILE$Y < 0,
+                             FILE$Y,
+                             FILE$Y * -1)
+          }
           sp::coordinates(FILE) <- c("X", "Y") # makes spatial points df
           sp::proj4string(FILE) <- sp::CRS("+proj=longlat +datum=WGS84")
           FILE <- sf::st_as_sf(FILE)
@@ -262,8 +246,8 @@ ImportOF <- R6::R6Class(
           FILE <- sf::st_transform(FILE, "epsg:4326")
         }
         #******************************************************************
-        utmEpsg <- OFPE::findUTMzone(FILE)
-        tempCRS <- paste0("epsg:", utmEpsg)
+        utm_epsg <- OFPE::calcUTMzone(FILE)
+        tempCRS <- paste0("epsg:", utm_epsg)
         FILE <- sf::st_transform(FILE, tempCRS)
 
         #******************************************************************
@@ -312,13 +296,13 @@ ImportOF <- R6::R6Class(
           FILE <- sf::st_buffer(FILE, dist=0)
         }
       }
-      utmEpsg <- OFPE::findUTMzone(FILE)
+      utm_epsg <- OFPE::calcUTMzone(FILE)
       self$fields <-
         sf::st_transform(self$fields,
-                         paste0("epsg:", utmEpsg))
+                         paste0("epsg:", utm_epsg))
       self$farms <-
         sf::st_transform(self$farms,
-                         paste0("epsg:", utmEpsg))
+                         paste0("epsg:", utm_epsg))
       ## get info
       if (!grepl("ssurgo", name)) {
         ## 1) update "fieldname" and "fieldidx" and "farmeridx" if possible in FILE
@@ -382,7 +366,7 @@ ImportOF <- R6::R6Class(
     },
     #' @description
     #' Goes through each file and replaces any column names with more palatable
-    #' formats such as lower case and without any specialc characters. The dot
+    #' formats such as lower case and without any special characters. The dot
     #' indicates that this would be private if not for documentations sake.
     #' @param FILE The imported data for upload.
     #' @return Data with cleaned up column names.
@@ -390,7 +374,7 @@ ImportOF <- R6::R6Class(
       colNames <- names(FILE) %>%
         lapply(tolower) %>%
         unlist() %>%
-        lapply(noSpecialChar, FALSE) %>%
+        lapply(OFPE::noSpecialChar, FALSE) %>%
         unlist()
       names(FILE) <- colNames
       return(FILE)

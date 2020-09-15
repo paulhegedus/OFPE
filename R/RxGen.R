@@ -28,16 +28,16 @@
 #'
 #' When creating an experimental prescription or a prescription, the user must pass
 #' an set up SimClass. This implies that the user has initialized and set up
-#' the required DatClass, ModClass, and EconDat R6 objects. The user has the option
-#' of passing a SimClass object that has been executed or not. Regardless, the RxClass
-#' will check 1) for simulation output data and 2) execute the simulation for any year(s)
-#' that the user specified for generating a prescription for that is not present in the
-#' simulation data. This simulation output data is used to generate the experimental
-#' prescriptions and the prescriptions.
+#' the required DatClass, ModClass, and EconDat R6 objects. The user must pass a
+#' SimClass object that has been executed. This simulation output data is used to select
+#' the years that the farmer thinks the upcoming year will resemble and generate
+#' the experimental prescriptions and the prescriptions.
 #'
 #' This class follows the generator interface that includes an initialization method
 #' and an 'executeOutput' method.
-#'
+#' @seealso \code{\link{DBCon}} for the database connection class,
+#' \code{\link{SimClass}} for the class that contains simulation outputs, and
+#' \code{\link{ExpGen}} for the alternative class that creates new experiments.
 #' @export
 RxGen <- R6::R6Class(
   "RxGen",
@@ -66,7 +66,7 @@ RxGen <- R6::R6Class(
     trt_length = NULL,
     #' @field boom_width The width of the sprayer boom or spreader.
     boom_width = NULL,
-    #' @field orientation TODO...
+    #' @field orientation TODO... Not implemented yet.
     orientation = NULL,
     #' @field expvar Experimental variable to optimize, select/input
     #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
@@ -197,7 +197,7 @@ RxGen <- R6::R6Class(
     #' organic systems, both of which are already provided.
     #' @param trt_length Length, in meters, for which to apply treatments.
     #' @param boom_width The width of the sprayer boom or spreader.
-    #' @param orientation TODO...
+    #' @param orientation TODO... Not implemented yet.
     #' @param expvar Experimental variable to optimize, select/input
     #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
     #' input that is experimentally varied across the field as part of the
@@ -451,7 +451,7 @@ RxGen <- R6::R6Class(
       opt <- self$simClass$opt
       unique_rx_years <- paste(self$rx_years, collapse = " & ")
       self$out_name <- paste0(self$out_path,
-                         "/Outputs/SimData/",
+                         "/Outputs/Rx/",
                          self$unique_fieldname, "_",
                          self$mgmt_scen, "_Rx_",
                          unique_fxn, "_",
@@ -460,7 +460,7 @@ RxGen <- R6::R6Class(
       self$var <- paste0("rx", ifelse(self$expvar == "aa_n", "N", "Seed"), "Rates")
       self$var_col_name <- "exprate"
       self$var_label <- paste0(ifelse(self$expvar == "aa_n", "N", "Seed"), " Rate (lbs/ac)")
-      self$var_main_label <- paste0(self$unique_fieldname, "Rx ",
+      self$var_main_label <- paste0(self$unique_fieldname, " Rx ",
                                     ifelse(self$expvar=="aa_n", "N", "Seed"),
                                     " rates for ", self$rx_for_year, " for conditions
                                     like ", unique_rx_years)

@@ -12,6 +12,10 @@ present in the database, it's information will be updated. This
 follows the ManageDB interface and includes a setup and execute method that
 is called from the ManageDB class.
 }
+\seealso{
+\code{\link{DBCon}} for database connection class,
+\code{\link{ManageDB}} for the class that calls this class to manage the database.
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -151,7 +155,7 @@ ESRI shapefile of field boundary.
 \if{latex}{\out{\hypertarget{method-.uploadFields}{}}}
 \subsection{Method \code{.uploadFields()}}{
 Uploads a field to the database. Takes the field shapefile and
-identifies the coresponding farmeridx, adds it as a column, and
+identifies the corresponding farmeridx, adds it as a column, and
 then uploads to the 'all_farms.fields' table. Makes sure there is
 no conflict defined in the .buildTables method of the BuildDB class.
 A fieldidx is automatically generated upon upload by PostgreSQL based

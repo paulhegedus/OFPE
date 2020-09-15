@@ -66,11 +66,38 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// selectDatCpp
+arma::mat selectDatCpp(arma::mat dat, int rr, int prec_cy_1, int prec_cy_2, int prec_py_1, int prec_py_2, int gdd_cy_1, int gdd_cy_2, int gdd_py_1, int gdd_py_2, int veg_cy_1, int veg_cy_2, int veg_py_1, int veg_py_2, int veg_2py_1, int veg_2py_2);
+RcppExport SEXP _OFPE_selectDatCpp(SEXP datSEXP, SEXP rrSEXP, SEXP prec_cy_1SEXP, SEXP prec_cy_2SEXP, SEXP prec_py_1SEXP, SEXP prec_py_2SEXP, SEXP gdd_cy_1SEXP, SEXP gdd_cy_2SEXP, SEXP gdd_py_1SEXP, SEXP gdd_py_2SEXP, SEXP veg_cy_1SEXP, SEXP veg_cy_2SEXP, SEXP veg_py_1SEXP, SEXP veg_py_2SEXP, SEXP veg_2py_1SEXP, SEXP veg_2py_2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type dat(datSEXP);
+    Rcpp::traits::input_parameter< int >::type rr(rrSEXP);
+    Rcpp::traits::input_parameter< int >::type prec_cy_1(prec_cy_1SEXP);
+    Rcpp::traits::input_parameter< int >::type prec_cy_2(prec_cy_2SEXP);
+    Rcpp::traits::input_parameter< int >::type prec_py_1(prec_py_1SEXP);
+    Rcpp::traits::input_parameter< int >::type prec_py_2(prec_py_2SEXP);
+    Rcpp::traits::input_parameter< int >::type gdd_cy_1(gdd_cy_1SEXP);
+    Rcpp::traits::input_parameter< int >::type gdd_cy_2(gdd_cy_2SEXP);
+    Rcpp::traits::input_parameter< int >::type gdd_py_1(gdd_py_1SEXP);
+    Rcpp::traits::input_parameter< int >::type gdd_py_2(gdd_py_2SEXP);
+    Rcpp::traits::input_parameter< int >::type veg_cy_1(veg_cy_1SEXP);
+    Rcpp::traits::input_parameter< int >::type veg_cy_2(veg_cy_2SEXP);
+    Rcpp::traits::input_parameter< int >::type veg_py_1(veg_py_1SEXP);
+    Rcpp::traits::input_parameter< int >::type veg_py_2(veg_py_2SEXP);
+    Rcpp::traits::input_parameter< int >::type veg_2py_1(veg_2py_1SEXP);
+    Rcpp::traits::input_parameter< int >::type veg_2py_2(veg_2py_2SEXP);
+    rcpp_result_gen = Rcpp::wrap(selectDatCpp(dat, rr, prec_cy_1, prec_cy_2, prec_py_1, prec_py_2, gdd_cy_1, gdd_cy_2, gdd_py_1, gdd_py_2, veg_cy_1, veg_cy_2, veg_py_1, veg_py_2, veg_2py_1, veg_2py_2));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_OFPE_NRcalcCpp", (DL_FUNC) &_OFPE_NRcalcCpp, 20},
     {"_OFPE_derivFFoptCpp", (DL_FUNC) &_OFPE_derivFFoptCpp, 4},
     {"_OFPE_derivNRoptCpp", (DL_FUNC) &_OFPE_derivNRoptCpp, 6},
+    {"_OFPE_selectDatCpp", (DL_FUNC) &_OFPE_selectDatCpp, 16},
     {NULL, NULL, 0}
 };
 

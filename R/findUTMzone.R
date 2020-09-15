@@ -1,34 +1,71 @@
 #' @title Identify the Universal Transverse Mercator coordinate system zone
 #'
-#' @description Identifies the UTM zone number for the specified data and
-#' returns a UTM code for WGS84 (i.e. 32612, 32614). Any of the three
-#' arguments can be used to identify the UTM zone. When a shapefile is
-#' passed in with the 'FILE' argument, the spatial data is used to determine
-#' the UTM zone mathematically, same if the 'bounds' argument is used. If only
-#' the 'farmername' is passed in, the UTM zone returned will be for Montana,
-#' unless the farmer's name is "loewen", in which case the UTM zone is for Manitoba.
+#' @description Function for querying the database to identify the UTM zone
+#' from the corresponding farm for the field the user is working with. This
+#' function is used many times and requires a database connection and either
+#' a farm name or farm id, or a field name. The returned value
+#' is the UTM EPSG code for the WGS84 datum.
 #'
-#' NEEDS UPDATING. This function needs to be updated to use the
-#' mathematical approach from the site below.
+#' @param db Connection to an OFPE formatted database.
+#' @param farm Either a farm id (integer), or a farm name.
+#' @param fieldname Name of the field for aggregation.
+#' @return WGS84 UTM code (i.e. 32612, 32614).
+#' @export
+findUTMzone <- function(db,
+                        farm = NULL,
+                        fieldname = NULL) {
+  if (!is.null(fieldname)) {
+    stopifnot(is.character(fieldname))
+    farm <- DBI::dbGetQuery(
+      db,
+      paste0("SELECT DISTINCT farmidx
+             FROM all_farms.fields
+             WHERE fieldname = '", fieldname, "'")
+    )
+    farm <- as.numeric(farm)
+  }
+  stopifnot(!is.null(farm),
+            is.character(farm) | is.numeric(farm))
+  if (is.character(farm)) {
+    utm_epsg <- DBI::dbGetQuery(
+      db,
+      paste0("SELECT utm_epsg
+                FROM all_farms.farms
+                WHERE farm = '", farm, "'")
+    )
+  } else {
+    utm_epsg <- DBI::dbGetQuery(
+      db,
+      paste0("SELECT utm_epsg
+                FROM all_farms.farms
+                WHERE farmidx = '", farm, "'")
+    )
+  }
+  return(as.integer(utm_epsg))
+}
+#' @title Calculate the Universal Transverse Mercator coordinate system zone
+#'
+#' @description Calculates the UTM zone for the specified data and
+#' returns a UTM code for WGS84 (i.e. 32612, 32614). This function is
+#' performed in the ManageParms class to store the UTM zone for the farm.
+#' A shapefile is passed in with the 'FILE' argument, the spatial data is
+#' used to determine the UTM zone mathematically, same if the 'bounds'
+#' argument is used. The returned value is the UTM EPSG code for the WGS84 datum.
 #'
 #' @param FILE Spatial shapefile for determining UTM zone.
-#' @param farmername Name of the OFPE farmer, for hardcoded cases (i.e. Loewen).
 #' @return WGS84 UTM code (i.e. 32612, 32614).
 #' @source https://apollomapping.com/blog/gtm-finding-a-utm-zone-number-easily
 #' @export
-findUTMzone <- function(FILE = NULL, farmername = NULL) {
-  # quick and dirty - not sustainable
-  if (!is.null(farmername)) {
-    utm_epsg <- ifelse(farmername == "loewen",
-                      32614,
-                      32612)
-  }
+calcUTMzone = function(FILE) {
+  browser()
 
-  # legit way
   if (!is.null(FILE)) {
-    sf::st_crs(FILE) <- 4326
+    if (is.na(raster::crs(FILE))) {
+      sf::st_crs(FILE) <- 4326
+    }
     FILE <- sf::st_transform(FILE, 4326)
-    bounds <- sf::st_bbox(FILE) # get boundary of file
+    # get boundary of file
+    bounds <- sf::st_bbox(FILE)
     # calculate zone
     utm_zone <- ceiling((bounds["xmin"] + 180) / 6) %>% as.numeric()
     # check hemisphere
@@ -38,8 +75,5 @@ findUTMzone <- function(FILE = NULL, farmername = NULL) {
       utm_epsg <- paste0(327, utm_zone)
     }
   }
-  return(utm_epsg)
+  return(as.integer(utm_epsg))
 }
-
-
-

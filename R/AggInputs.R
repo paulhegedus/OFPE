@@ -13,6 +13,10 @@
 #' This class is passed to the 'AggDat' class that executes the methods for
 #' aggregating data and storing in the database. Most methods are executed
 #' in the database.
+#' @seealso \code{\link{DBCon}} for the database connection class,
+#' \code{\link{AggDat}} for the class responsible for aggregating on-farm data,
+#' \code{\link{AggGEE}} for the class responsible for aggregating Google Earth
+#' Engine data.
 #' @export
 AggInputs <- R6::R6Class(
   "AggInputs",
@@ -22,7 +26,7 @@ AggInputs <- R6::R6Class(
     dbCon = NULL,
     #' @field boundary_import Yes/No, will user be uploading their own field boundary?
     #' Used for spatially querying the database for intersecting data.
-    boundary_import = NULL,
+    boundary_import = "No",
     #' @field boundary_location Only relevant if boundary_import == "Yes". Is the location
     #' of the shapefile containing the field boundary to use for spatial queries.
     boundary_location = NULL,
@@ -52,7 +56,7 @@ AggInputs <- R6::R6Class(
     #' following August).
     cy_resp = NULL,
     #' @field py_resp The year prior to the selected CY that a crop was harvested
-    #' in the specified field. This iss the latest year before the CY during which
+    #' in the specified field. This is the latest year before the CY during which
     #' the field was cropped. If you do not data from any previous year, you can
     #' provide a year for labeling and annotations sake in output figures.
     py_resp = NULL,
@@ -200,7 +204,7 @@ AggInputs <- R6::R6Class(
     #' and 'orig_file'. Based on the users selection of 'product' in the
     #' cy_exp_col data.frame, the formula from the 'product' column is extracted
     #' and used to ask the user the desired conversion factor from the product
-    #' applied to lbs per acre. Again, this is only really applicable for fertilzier
+    #' applied to lbs per acre. Again, this is only really applicable for fertilizer
     #' rates unless seeding rates are reported in units besides lbs per acre. The
     #' 'orig_file' is the same as those selected in the 'cy_exp_files' table.
     cy_exp_conv = NULL,
@@ -208,7 +212,7 @@ AggInputs <- R6::R6Class(
     #' and 'orig_file'. Based on the users selection of 'product' in the
     #' cy_exp_col data.frame, the formula from the 'product' column is extracted
     #' and used to ask the user the desired conversion factor from the product
-    #' applied to lbs per acre. Again, this is only really applicable for fertilzier
+    #' applied to lbs per acre. Again, this is only really applicable for fertilizer
     #' rates unless seeding rates are reported in units besides lbs per acre. The
     #' 'orig_file' is the same as those selected in the 'cy_exp_files' table.
     py_exp_conv = NULL,
@@ -244,7 +248,7 @@ AggInputs <- R6::R6Class(
     #' (i.e. WW seeding rates occur in fall of the year before harvest in the
     #' following August).
     #' @param py_resp The year prior to the selected CY that a crop was harvested
-    #' in the specified field. This iss the latest year before the CY during which
+    #' in the specified field. This is the latest year before the CY during which
     #' the field was cropped. If you do not data from any previous year, you can
     #' provide a year for labeling and annotations sake in output figures.
     #' @param cy_exp The year of interest of the selected experimental variable.
@@ -376,14 +380,14 @@ AggInputs <- R6::R6Class(
     #' and 'orig_file'. Based on the users selection of 'product' in the
     #' cy_exp_col data.frame, the formula from the 'product' column is extracted
     #' and used to ask the user the desired conversion factor from the product
-    #' applied to lbs per acre. Again, this is only really applicable for fertilzier
+    #' applied to lbs per acre. Again, this is only really applicable for fertilizer
     #' rates unless seeding rates are reported in units besides lbs per acre. The
     #' 'orig_file' is the same as those selected in the 'cy_exp_files' table.
     #' @param py_exp_conv Data.frame with 3 columns, 'FORMULA', 'conversion',
     #' and 'orig_file'. Based on the users selection of 'product' in the
     #' cy_exp_col data.frame, the formula from the 'product' column is extracted
     #' and used to ask the user the desired conversion factor from the product
-    #' applied to lbs per acre. Again, this is only really applicable for fertilzier
+    #' applied to lbs per acre. Again, this is only really applicable for fertilizer
     #' rates unless seeding rates are reported in units besides lbs per acre. The
     #' 'orig_file' is the same as those selected in the 'cy_exp_files' table.
     #' @param size Optional, the size, in meters, to make a grid across the field.
@@ -392,7 +396,7 @@ AggInputs <- R6::R6Class(
     #' to 10m if left NULL.
     #' @return A new 'AggInputs' object.
     initialize = function(dbCon,
-                          boundary_import = NULL,
+                          boundary_import = "No",
                           boundary_location = NULL,
                           fieldname = NULL,
                           farmername = NULL,
@@ -425,7 +429,7 @@ AggInputs <- R6::R6Class(
           is.character(boundary_import),
           grepl("Yes|No", boundary_import)
         )
-        self$boundary_import <- boundary_import
+        #self$boundary_import <-  boundary_import
         if (self$boundary_import == "Yes") {
           stopifnot(
             !is.null(boundary_location)
@@ -666,7 +670,7 @@ AggInputs <- R6::R6Class(
     #' locations. This only applies to yield or protein data because by default
     #' satellite data is aggregated to the grid cell locations.
     #'
-    #' Select current year and previous year(s) to aggregate data for. If user impprts
+    #' Select current year and previous year(s) to aggregate data for. If user imports
     #' their own field boundary it needs to be added to a temporary folder to do PostGIS
     #' functions within the database and not R.
     #'
@@ -723,16 +727,16 @@ AggInputs <- R6::R6Class(
 
   private = list(
     .selectField = function(db) {
-      self$boundary_import <- as.character(
-        select.list(
-          c("Yes", "No"),
-          title = paste0("Will user be uploading their own field boundary?
-                         If so, must be in working directory. If the user
-                         uploaded field boundary will be accessed often,
-                         the user is encouraged to update the database with
-                         this boundary to provide for faster queries and long
-                         term storage of the field boundary."))
-      )
+      # self$boundary_import <- as.character(
+      #   select.list(
+      #     c("Yes", "No"),
+      #     title = paste0("Will user be uploading their own field boundary?
+      #                    If so, must be in working directory. If the user
+      #                    uploaded field boundary will be accessed often,
+      #                    the user is encouraged to update the database with
+      #                    this boundary to provide for faster queries and long
+      #                    term storage of the field boundary."))
+      # )
       if (self$boundary_import == "No") {
         ## select field boundary
         self$fieldname <- as.character(
@@ -882,7 +886,7 @@ AggInputs <- R6::R6Class(
       self$cy_resp_files <- as.character(
         select.list(
           c(orig_filesCY_resp$orig_file, "None"),
-          multiple = ifelse(self$GRID == "grid", TRUE, FALSE),
+          multiple = TRUE, # ifelse(self$GRID == "grid", TRUE, FALSE),
           title = paste0("Select file(s) to aggregate data on. Or select all
                          to gather data for all available files as one. If
                          unsure, it is recommended to visualize extent of each
@@ -917,7 +921,6 @@ AggInputs <- R6::R6Class(
         )
       }
     },
-
     .selectExpFiles = function(db) {
       schema_tabs <- private$.tabNames(paste0(self$farmername, "_r"), db)
       schema_tabs <- schema_tabs[grepl(self$expvar, schema_tabs)]
@@ -1342,17 +1345,18 @@ AggInputs <- R6::R6Class(
       names(temp_tab_cols) <- resp_files
 
       # make temp table w/necessary data to get columns
-      temp_tab_cols <- lapply(resp_files,
+      temp_tab_cols <- suppressWarnings(lapply(resp_files,
                               private$.getDatForCols,
                               db,
                               respvar,
                               year,
                               farmername,
-                              fieldname)
-      temp_tab_cols <- temp_tab_cols %>%
+                              fieldname)) %>%
         lapply(as.data.frame) %>%
+        lapply(private$.convNaN2NumNaN) %>%
         lapply(function(df) {df[, grep("geom", colnames(df))] <- NULL; return(df)}) %>%
         lapply(function(df) {sapply(df, function(x) all(is.nan(x)|is.na(x)))})
+
       for (i in 1:length(temp_tab_cols)) {
         temp_tab_cols[[i]] <- as.data.frame(
           t(subset(temp_tab_cols[[i]],  temp_tab_cols[[i]] == FALSE))
@@ -1366,19 +1370,26 @@ AggInputs <- R6::R6Class(
                               year,
                               farmername,
                               fieldname) {
-      OUT_FILE <- invisible(
-        DBI::dbGetQuery(
-          db,
-          paste0("
-             (SELECT ", respvar, ".*
-             FROM  ", farmername, "_r.", respvar, " ", respvar, "
-             JOIN all_farms.temp temp
-             ON ST_Within(", respvar, ".geometry, temp.geometry)
-             WHERE ", respvar, ".year = '", year, "'
-             AND ", respvar, ".orig_file = '", resp_file, "')
-             ")
-        )
-      )
+      OUT_FILE <- invisible(DBI::dbGetQuery(
+        db,
+        paste0("SELECT ", respvar, ".*
+               FROM  ", farmername, "_r.", respvar, "
+               WHERE orig_file = '", resp_file, "'
+               AND fieldname = '", fieldname, "'")
+      ))
+      # OUT_FILE <- invisible(
+      #   DBI::dbGetQuery(
+      #     db,
+      #     paste0("
+      #        (SELECT ", respvar, ".*
+      #        FROM  ", farmername, "_r.", respvar, " ", respvar, "
+      #        JOIN all_farms.temp temp
+      #        ON ST_Within(", respvar, ".geometry, temp.geometry)
+      #        WHERE ", respvar, ".year = '", year, "'
+      #        AND ", respvar, ".orig_file = '", resp_file, "')
+      #        ")
+      #   )
+      # )
       return(OUT_FILE)
     },
     .getTempExpTableCols = function(exp_files,
@@ -1390,6 +1401,15 @@ AggInputs <- R6::R6Class(
       temp_tab_cols <- rep(list(NULL), nrow(exp_files))
       names(temp_tab_cols) <- exp_files$orig_file
       for (i in 1:nrow(exp_files)) {
+        # temp_tab_cols[[i]] <- invisible(DBI::dbGetQuery(
+        #     db,
+        #     paste0(
+        #       "(SELECT ", exp_files$table[i], ".*
+        #        FROM  ", farmername, "_r.", exp_files$table[i], "
+        #        WHERE fieldname = '", fieldname, "'
+        #        AND orig_file = '", exp_files$orig_file[i], "')"
+        #     )
+        #   ))
         temp_tab_cols[[i]] <- invisible(
           DBI::dbGetQuery(
             db,
@@ -1444,6 +1464,14 @@ AggInputs <- R6::R6Class(
         schema_out <- as.list(schema_out[1:length(schema_out)])
       }
       return(schema_out)
+    },
+    .convNaN2NumNaN = function(df) {
+      for (i in 1:ncol(df)) {
+        if (all(grepl("NaN", df[, i]))) {
+          df[, i] <- as.numeric(df[, i])
+        }
+      }
+      return(df)
     }
   )
 )

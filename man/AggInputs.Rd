@@ -18,6 +18,12 @@ This class is passed to the 'AggDat' class that executes the methods for
 aggregating data and storing in the database. Most methods are executed
 in the database.
 }
+\seealso{
+\code{\link{DBCon}} for the database connection class,
+\code{\link{AggDat}} for the class responsible for aggregating on-farm data,
+\code{\link{AggGEE}} for the class responsible for aggregating Google Earth
+Engine data.
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -56,7 +62,7 @@ instances, applied data was categorized as or applied in the year prior
 following August).}
 
 \item{\code{py_resp}}{The year prior to the selected CY that a crop was harvested
-in the specified field. This iss the latest year before the CY during which
+in the specified field. This is the latest year before the CY during which
 the field was cropped. If you do not data from any previous year, you can
 provide a year for labeling and annotations sake in output figures.}
 
@@ -204,7 +210,7 @@ The 'orig_file' is the same as those selected in the 'py_exp_files' table.}
 and 'orig_file'. Based on the users selection of 'product' in the
 cy_exp_col data.frame, the formula from the 'product' column is extracted
 and used to ask the user the desired conversion factor from the product
-applied to lbs per acre. Again, this is only really applicable for fertilzier
+applied to lbs per acre. Again, this is only really applicable for fertilizer
 rates unless seeding rates are reported in units besides lbs per acre. The
 'orig_file' is the same as those selected in the 'cy_exp_files' table.}
 
@@ -212,7 +218,7 @@ rates unless seeding rates are reported in units besides lbs per acre. The
 and 'orig_file'. Based on the users selection of 'product' in the
 cy_exp_col data.frame, the formula from the 'product' column is extracted
 and used to ask the user the desired conversion factor from the product
-applied to lbs per acre. Again, this is only really applicable for fertilzier
+applied to lbs per acre. Again, this is only really applicable for fertilizer
 rates unless seeding rates are reported in units besides lbs per acre. The
 'orig_file' is the same as those selected in the 'cy_exp_files' table.}
 
@@ -239,7 +245,7 @@ Initialize an object for storing aggregation inputs.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AggInputs$new(
   dbCon,
-  boundary_import = NULL,
+  boundary_import = "No",
   boundary_location = NULL,
   fieldname = NULL,
   farmername = NULL,
@@ -303,7 +309,7 @@ instances, applied data was categorized as or applied in the year prior
 following August).}
 
 \item{\code{py_resp}}{The year prior to the selected CY that a crop was harvested
-in the specified field. This iss the latest year before the CY during which
+in the specified field. This is the latest year before the CY during which
 the field was cropped. If you do not data from any previous year, you can
 provide a year for labeling and annotations sake in output figures.}
 
@@ -451,7 +457,7 @@ The 'orig_file' is the same as those selected in the 'py_exp_files' table.}
 and 'orig_file'. Based on the users selection of 'product' in the
 cy_exp_col data.frame, the formula from the 'product' column is extracted
 and used to ask the user the desired conversion factor from the product
-applied to lbs per acre. Again, this is only really applicable for fertilzier
+applied to lbs per acre. Again, this is only really applicable for fertilizer
 rates unless seeding rates are reported in units besides lbs per acre. The
 'orig_file' is the same as those selected in the 'cy_exp_files' table.}
 
@@ -459,7 +465,7 @@ rates unless seeding rates are reported in units besides lbs per acre. The
 and 'orig_file'. Based on the users selection of 'product' in the
 cy_exp_col data.frame, the formula from the 'product' column is extracted
 and used to ask the user the desired conversion factor from the product
-applied to lbs per acre. Again, this is only really applicable for fertilzier
+applied to lbs per acre. Again, this is only really applicable for fertilizer
 rates unless seeding rates are reported in units besides lbs per acre. The
 'orig_file' is the same as those selected in the 'cy_exp_files' table.}
 
@@ -514,7 +520,7 @@ select multiple files because data will be averaged to the grid cell centroid
 locations. This only applies to yield or protein data because by default
 satellite data is aggregated to the grid cell locations.
 
-Select current year and previous year(s) to aggregate data for. If user impprts
+Select current year and previous year(s) to aggregate data for. If user imports
 their own field boundary it needs to be added to a temporary folder to do PostGIS
 functions within the database and not R.
 

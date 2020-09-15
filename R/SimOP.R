@@ -13,13 +13,15 @@
 #' rate ('AAmin'), NRfs: uniform farmer selected rate, NRact: if experiment applied in
 #' simulated year, NRssopt: site-specific optimum rates, NRffopt: uniform full-
 #' field optimum rate, NRopp: if the crop received the opposite system crop price (e.g.
-#' 'conventional' vs. 'organic' or vice versa, see SimClass$executeSim() method
+#' 'conventional' vs. 'organic' or reverse, see SimClass$executeSim() method
 #' documentation for specifics on the difference in the calculation of this net-return
 #' between systems).
 #'
 #' Error checking inputs to these functions is scant because the user should only use
 #' these after executing the simulation method in the SimClass R6 class to generate
 #' the necessary data for the output generation methods.
+#' @seealso \code{\link{SimClass}} for the class that executes the Monte Carlo
+#' simulation and provides the data for saving and plotting in this class.
 #' @export
 SimOP <- R6::R6Class(
   "SimOP",
@@ -75,7 +77,7 @@ SimOP <- R6::R6Class(
     #' the public methods for each figure, map,  and table generated. This
     #' applies over the user selected simulation years. The user can pass a
     #' logical argument to this function which will disable all plotting and
-    #' not save anything to your computre. It will override any previous
+    #' not save anything to your computer It will override any previous
     #' setting you have set for 'SAVE'. If calling plots individually, a
     #' SAVE option for each can be selected.
     #'
@@ -213,8 +215,6 @@ SimOP <- R6::R6Class(
           SAVE,
           self$simClass$out_path
         )
-
-        ## maps...
         # SSOPT map (avg all sim)
         self$plotSimMaps(
           NRdat$NRopt,
@@ -356,7 +356,7 @@ SimOP <- R6::R6Class(
     #' @param SAVE Logical, whether to save figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
-    #' @return Data saved in 'Outputs/SimData'
+    #' @return Data saved in 'Outputs/SimData'.
     saveSimData = function(out_list,
                            fieldname,
                            fxn,
@@ -439,7 +439,7 @@ SimOP <- R6::R6Class(
     #' @param SAVE Logical, whether to save figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
-    #' @return Data saved in 'Outputs/Predictions'
+    #' @return Data saved in 'Outputs/Predictions'.
     plotEstsVsExp = function(sim_list,
                                cd,
                                B0pd,
@@ -548,7 +548,7 @@ SimOP <- R6::R6Class(
     #' @param SAVE Logical, whether to save figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
-    #' @return Data saved in 'Outputs/NR/NRboxplots'
+    #' @return Data saved in 'Outputs/NR/NRboxplots'.
     plotNRbox = function(Bp.var,
                          fieldname,
                          fxn,
@@ -622,7 +622,7 @@ SimOP <- R6::R6Class(
     #' @param SAVE Logical, whether to save figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
-    #' @return Data saved in 'Outputs/NR/NRProbabilities'
+    #' @return Data saved in 'Outputs/NR/NRProbabilities'.
     mgmtNRprobTable = function(mgmt,
                                Bp.var,
                                rt,
@@ -675,7 +675,7 @@ SimOP <- R6::R6Class(
     #' @param SAVE Logical, whether to save figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
-    #' @return Data saved in 'Outputs/NR/NRbarplots'
+    #' @return Data saved in 'Outputs/NR/NRbarplots'.
     plotNRbar = function(Bp.var,
                          fieldname,
                          fxn,
@@ -683,6 +683,7 @@ SimOP <- R6::R6Class(
                          opt,
                          SAVE,
                          out_path) {
+      Bp.var <- as.data.frame(Bp.var)
       #Average net return over the field for the different N application methods without organic
       TF3 <- data.frame(NR.ssopt = mean(Bp.var[, 'NR.ssopt'], na.rm = TRUE),
                         NR.min = mean(Bp.var[, 'NR.min'], na.rm = TRUE),
@@ -774,7 +775,7 @@ SimOP <- R6::R6Class(
     #' is averaged across the simulation for each point and summed to
     #' get a total amount of experimental input applied with the site-
     #' specific method. The total amount of experimental input applied
-    #' with all other strategies is calcualted the same way.
+    #' with all other strategies is calculated the same way.
     #' @param TF4 Data.frame with columns for the amount of experimental rates applied
     #' for each strategy.
     #' @param expvar Experimental variable optimized, select/input
@@ -789,7 +790,7 @@ SimOP <- R6::R6Class(
     #' @param SAVE Logical, whether to save figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
-    #' @return Data saved in 'Outputs/EXP/EXPapplied'
+    #' @return Data saved in 'Outputs/EXP/EXPapplied'.
     plotTotExpAppl = function(TF4,
                               expvar,
                               fieldname,
@@ -871,7 +872,7 @@ SimOP <- R6::R6Class(
     #' @param SAVE Logical, whether to save figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
-    #' @return Data saved in 'Outputs/EXP/ssoptEXP'
+    #' @return Data saved in 'Outputs/EXP/ssoptEXP'.
     plotSSOPThist = function(NRopt,
                              TF4,
                              expvar,
@@ -968,7 +969,7 @@ SimOP <- R6::R6Class(
     #' @param SAVE Logical, whether to save figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
-    #' @return Data saved in 'Outputs/EXP/ffoptEXP'
+    #' @return Data saved in 'Outputs/EXP/ffoptEXP'.
     plotFFOPThist = function(Bp.var,
                              TF4,
                              expvar,
@@ -978,7 +979,7 @@ SimOP <- R6::R6Class(
                              opt,
                              SAVE,
                              out_path) {
-      Bp.plot <- as.data.frame(Bp.var)
+      Bp.var <- as.data.frame(Bp.var)
       x_lab <- paste0("Profit Maximizing Top-Dress ",
                       ifelse(expvar == "aa_n", "N", "Seed"),
                       " Rate (lbs/acre)")
@@ -994,8 +995,8 @@ SimOP <- R6::R6Class(
                           " lbs/ac")
       if (TF4[which(TF4$Method == "EXP.ffopt"), "EXP"] == 0) {
         p <-
-          ggplot2::ggplot(Bp.plot) +
-            ggplot2::geom_histogram(ggplot2::aes(x=ffopt.EXPrate + 1),
+          ggplot2::ggplot(Bp.var) +
+            ggplot2::geom_histogram(ggplot2::aes(x = ffopt.EXPrate + 1),
                            bins=1,
                            col="white",
                            fill="blue",
@@ -1004,15 +1005,15 @@ SimOP <- R6::R6Class(
             ggplot2::theme_bw() +
             ggplot2::ggtitle(gg_title, subtitle=sub_title)
       } else {
-        bin_num <- DescTools::RoundTo(max(Bp.plot$ffopt.EXPrate,
+        bin_num <- DescTools::RoundTo(max(Bp.var$ffopt.EXPrate,
                                           na.rm = TRUE), 5, ceiling) / 5
-        xMIN <- DescTools::RoundTo(min(Bp.plot$ffopt.EXPrate,
+        xMIN <- DescTools::RoundTo(min(Bp.var$ffopt.EXPrate,
                                        na.rm = TRUE), 5, floor)
-        xMAX <- DescTools::RoundTo(max(Bp.plot$ffopt.EXPrate,
+        xMAX <- DescTools::RoundTo(max(Bp.var$ffopt.EXPrate,
                                        na.rm = TRUE), 5, ceiling)
         xSTEP <- (xMAX - xMIN) / 10
         p <-
-          ggplot2::ggplot(Bp.plot) +
+          ggplot2::ggplot(Bp.var) +
           ggplot2::geom_histogram(ggplot2::aes(x = ffopt.EXPrate),
                                   bins = bin_num,
                                   col = "white",
@@ -1057,7 +1058,7 @@ SimOP <- R6::R6Class(
     #' for every point for every simulation iteration.
     #' @param var The label of the variable to map. Used in figure name.
     #' @param var_col_name The name of the column of the variable in the
-    #' supplied data ('dat')
+    #' supplied data ('dat').
     #' @param var_label The label to be applied to the legend of the map
     #' corresponding to the variable mapped.
     #' @param var_main_label The main label to apply to the map.
@@ -1070,7 +1071,7 @@ SimOP <- R6::R6Class(
     #' @param farmername The name of the farmer that manages the field.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
-    #' @return Maps saved in 'Outputs/Maps'
+    #' @return Maps saved in 'Outputs/Maps'.
     plotSimMaps = function(dat,
                            var,
                            var_col_name,
@@ -1083,13 +1084,15 @@ SimOP <- R6::R6Class(
                            SAVE = TRUE,
                            farmername,
                            out_path) {
-      dat <- as.data.frame(dat)
+      utm_zone <- OFPE::findUTMzone(self$simClass$dbCon$db,
+                                    fieldname = self$simClass$datClass$fieldname[1])
       p <- OFPE::plotMaps(dat,
                           var_col_name,
                           var_label,
                           var_main_label,
                           fieldname,
-                          farmername) %>%
+                          farmername,
+                          utm_zone) %>%
         suppressMessages() %>%
         suppressWarnings()
       if (SAVE) {
@@ -1152,7 +1155,7 @@ SimOP <- R6::R6Class(
     #' @param SAVE Logical, whether to save figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
-    #' @return Map of the actual net-return from a given year in 'Outputs/Maps'
+    #' @return Map of the actual net-return from a given year in 'Outputs/Maps'.
     plotActNR = function(dat,
                          year,
                          Bp,
@@ -1198,12 +1201,15 @@ SimOP <- R6::R6Class(
       var_col_name <- "NR"
       var_label <- "Net-return ($/ac)"
       var_main_label <- paste0("Observed net-return in ", year)
+      utm_zone <- OFPE::findUTMzone(self$simClass$dbCon$db,
+                                    fieldname = self$simClass$datClass$fieldname[1])
       p <- OFPE::plotMaps(dat,
                           var_col_name,
                           var_label,
                           var_main_label,
                           fieldname,
-                          farmername) %>%
+                          farmername,
+                          utm_zone) %>%
         suppressMessages() %>%
         suppressWarnings()
       if (SAVE) {
@@ -1275,7 +1281,12 @@ SimOP <- R6::R6Class(
       }
     },
     .setupNRdat = function(NRopt, NRffmax) {
+      NRopt$field <- match(NRopt$field, self$simClass$datClass$fieldname_codes$field)
       NRopt <- aggregate(NRopt, list(NRopt$x, NRopt$y), mean, na.rm = TRUE)
+      NRopt$field <-
+        self$simClass$datClass$fieldname_codes[match(NRopt$field,
+                                                     self$simClass$datClass$fieldname_codes$field_code),
+                                               "field"]
       NRffmax <- sapply(NRffmax, mean) %>% as.matrix() %>% t() %>% as.data.frame()
       NRdat <- list(NRopt = NRopt,
                     NRffmax = NRffmax)
@@ -1353,11 +1364,6 @@ SimOP <- R6::R6Class(
                                     breaks = seq(xMIN, xMAX, xSTEP)) +
         ggplot2::theme_bw()
       return(var_plot)
-    },
-    .error.bar = function(x, y, upper, lower=upper, length=0.1,...){
-      if(length(x) != length(y) | length(y) !=length(lower) | length(lower) != length(upper))
-        stop("vectors must be same length")
-      arrows(x,y+upper, x, y-lower, angle=90, code=3, length=length, ...)
     }
   )
 )

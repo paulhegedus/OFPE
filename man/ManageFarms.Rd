@@ -12,6 +12,10 @@ present in the database, it's information will be updated. This
 follows the ManageDB interface and includes a setup and execute method that
 is called from the ManageDB class.
 }
+\seealso{
+\code{\link{DBCon}} for database connection class,
+\code{\link{ManageDB}} for the class that calls this class to manage the database.
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -133,7 +137,7 @@ to EPSG 4326 for storage.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{farm_info}}{List with information about the farm to uplaod.}
+\item{\code{farm_info}}{List with information about the farm to upload.}
 
 \item{\code{farm_path}}{Path to the location of farm boundary shapefiles.}
 }

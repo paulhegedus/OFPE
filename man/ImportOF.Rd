@@ -7,6 +7,11 @@
 R6 class for for importing data collected on-farms data into an
 OFPE formatted database.
 }
+\seealso{
+\code{\link{DBCon}} for the database connection class, and
+\code{\link{ImportGEE}} for the associated Google Earth Engine data import
+class in the data import step.
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -95,7 +100,7 @@ See 'status' object.
 \if{html}{\out{<a id="method-.uploadData"></a>}}
 \if{latex}{\out{\hypertarget{method-.uploadData}{}}}
 \subsection{Method \code{.uploadData()}}{
-Uploads data to an OFPE formatted database following a chain of mehtods
+Uploads data to an OFPE formatted database following a chain of methods
 and returning the status of the upload. The dot indicates that this
 function would be private if not for documentations sake.
 \subsection{Usage}{
@@ -214,7 +219,7 @@ Data without old columns.
 \if{latex}{\out{\hypertarget{method-.fixCols}{}}}
 \subsection{Method \code{.fixCols()}}{
 Goes through each file and replaces any column names with more palatable
-formats such as lower case and without any specialc characters. The dot
+formats such as lower case and without any special characters. The dot
 indicates that this would be private if not for documentations sake.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ImportOF$.fixCols(FILE)}\if{html}{\out{</div>}}

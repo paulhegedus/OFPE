@@ -6,7 +6,7 @@
 \description{
 R6 class using Generalized Additive Models (GAM) to fit a crop
 response model with the experimental variable and remotely sensed covariate
-data. This class is initialized with a named list of traning (named 'trn')
+data. This class is initialized with a named list of training (named 'trn')
 and validation (named 'val') datasets, the response variable, the experimental
 variable, and the means of the centered data.
 
@@ -27,6 +27,11 @@ plots, etc. The fitting process also prepares data for validation plots in the
 dataset, making a unique id using the year and fieldname, uncentering data, and
 identifying a field name to use for plotting that reflects all fields in the
 dataset.
+}
+\seealso{
+\code{\link{ModClass}} for the class that calls the ModClass interface,
+\code{\link{NonLinear_Logistic}} for the alternative class that fits a
+non-linear logistic model.
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -86,7 +91,7 @@ deviation of zero, indicating singularity.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{dat}}{Named list of traning (named 'trn') and validation (named 'val')
+\item{\code{dat}}{Named list of training (named 'trn') and validation (named 'val')
 datasets with the response, experimental, and remotely sensed variables.}
 
 \item{\code{respvar}}{Character, the response variable of interest.}
@@ -99,7 +104,7 @@ converting centered data back to the original form. The centering process does n
 center three numerical variables; the x and y coordinates, and the response variable
 (yld/pro). This is for the data specified from the analysis data inputs (grid specific).}
 
-\item{\code{init_k}}{Optional, provide an intial 'k' value to use for the GAM. If no selection
+\item{\code{init_k}}{Optional, provide an initial 'k' value to use for the GAM. If no selection
 automatically 50. K is the the dimension of the basis used to represent the smooth term.
 Multiple k values will be tested, consider this the upper limit and starting place.}
 }
@@ -142,7 +147,7 @@ necessary, and identifying a unique field name from the data.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{None}}{Put parameters here}
+\item{\code{None}}{Parameters provided upon class instantiation.}
 }
 \if{html}{\out{</div>}}
 }

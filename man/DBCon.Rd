@@ -46,7 +46,7 @@ Create a database connection inside of the DBCon class.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{drv}}{Database driver for connection. Default is PostgreSQL
-but can be overrided by passing in an argument.}
+but can be overridden by passing in an argument.}
 
 \item{\code{user}}{Username associated with the database owner.}
 

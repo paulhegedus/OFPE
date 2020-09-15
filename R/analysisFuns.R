@@ -9,7 +9,7 @@
 #'
 #' @param parm_df Data.frame with a column for the parameters to check, named 'parms',
 #' a column called 'bad_parms' filled with logical responses on whether to omit the
-#' parameter from the model fitting process, and columns labeld 'mean' and 'sd' to
+#' parameter from the model fitting process, and columns labeled 'mean' and 'sd' to
 #' populate in the 'bad_parm' identification process. Other columns may be included
 #' but these columns and specific column names are required.
 #' @param dat Data.table with the data to check validity of parameters in. Typically
@@ -29,7 +29,7 @@ findBadParms <- function(parm_df, dat) {
     unlist()
   for (i in 1:nrow(parm_df)) {
     dfNAs <- by(
-      dat[which(names(dat) %in% as.character(parm_df$parms[i]))][[1]],
+      dat[, which(names(dat) %in% as.character(parm_df$parms[i])), with = FALSE][[1]],
       dat$year,
       summary
     )
@@ -47,7 +47,7 @@ findBadParms <- function(parm_df, dat) {
     }
     # bad_parm if standard deviation = 0
     sds <- by(
-      dat[which(names(dat) %in% as.character(parm_df$parms[i]))][[1]],
+      dat[, which(names(dat) %in% as.character(parm_df$parms[i])), with = FALSE][[1]],
       dat$year,
       sd,
       na.rm = TRUE
@@ -62,11 +62,11 @@ findBadParms <- function(parm_df, dat) {
     }
     if (!parm_df$bad_parms[i]) {
       parm_df$means[i] <- mean(
-        dat[which(names(dat) %in% as.character(parm_df$parms[i]))][[1]],
+        dat[, which(names(dat) %in% as.character(parm_df$parms[i])), with = FALSE][[1]],
         na.rm = TRUE
       )
       parm_df$sd[i] <- sd(
-        dat[which(names(dat) %in% as.character(parm_df$parms[i]))][[1]],
+        dat[, which(names(dat) %in% as.character(parm_df$parms[i])), with = FALSE][[1]],
         na.rm = TRUE
       )
     }
@@ -95,20 +95,10 @@ valPrep <- function(dat, respvar, expvar, num_means) {
             any(grepl("pred", names(dat))))
   dat$field <- as.character(dat$field)
   dat$year.field <- paste0(dat$year,  " ", dat$field)
-
-  ## Not needed b/c exp data not centered
-  # cent_correct <- lapply(num_means,
-  #                        function(x) x[which(names(x) == expvar)] %>%
-  #                          as.numeric()) %>%
-  #   unlist()
-  # dat_list <- split(dat, dat$year)
-  # for (i in 1:length(dat_list)) {
-  #   dat_list[[i]][which(names(dat_list[[i]]) == expvar)] <-
-  #     dat_list[[i]][which(names(dat_list[[i]]) == expvar)] + cent_correct[i]
-  # }
-  # dat <- data.table::rbindlist(dat_list)
-  dat <-
-    dat[-which(is.na(dat[which(names(dat) %in% respvar)][[1]]) | is.na(dat$pred)), ]
+  NArows <- which(is.na(dat[, which(names(dat) %in% respvar), with = FALSE][[1]]) | is.na(dat$pred))
+  if (length(NArows) > 0) {
+    dat <- dat[-NArows, ]
+  }
   return(dat)
 }
 #' @title Identify a unique fieldname from data.

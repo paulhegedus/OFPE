@@ -15,6 +15,12 @@
 #' This class performs the Monte Carlo simulation to compare management outcomes.
 #' The inputs also determine whether to activate and execute methods of the 'LikeYear'
 #' class to identify the year from the past that is most likely to reflect the upcoming year.
+#' @seealso \code{\link{DBCon}} for the database connection class,
+#' \code{\link{DatClass}} for the class containing simulation data,
+#' \code{\link{ModClass}} for the class containing the fitted models,
+#' \code{\link{EconDat}} for the class containing economic data for the simulation,
+#' and \code{\link{SimOP}} for the class that save data and figures from the simulation
+#' results.
 #' @export
 SimClass <- R6::R6Class(
   "SimClass",
@@ -103,7 +109,8 @@ SimClass <- R6::R6Class(
     #' gathered from the OFPE database.
     fieldsize = NULL,
     #' @field sim_out A list named for each user selected simulation year,
-    #' each containing a named list containing ... TODO ...
+    #' each containing a named list containing every location in the field
+    #' and associated net-returns and optimized rates for management scenarios.
     sim_out = NULL,
 
     #' @param dbCon Database connection object connected to an OFPE formatted
@@ -217,15 +224,15 @@ SimClass <- R6::R6Class(
     #'
     #' The user will need to select the functional form of a model to use for
     #' analysis. The user can select 'GAM' for a generalized additive model,
-    #' 'Non-Linear Logistic' for a logistic function, or... if more model
-    #' options are added, they will need to be added here. They will also
+    #' 'Non-Linear Logistic' for a logistic function, or user generated models.
+    #' If more model options are created, they will need to be added here. They will also
     #' need to provide the number of iterations to run the Monte Carlo
     #' simulation, as well as the optimization method to use.
     #'
     #' There are two current options, 'Maximum' or 'Derivative'. Both methods select
     #' the optimum as-applied rate at each location in the field based on calculating
     #' the net-return at each point under a sequence of as-applied rates. Selecting
-    #' 'Maximum' selects the optimim rate as the as-applied rate with the highest
+    #' 'Maximum' selects the optimum rate as the as-applied rate with the highest
     #' calculated net-return. The 'Derivative' approach calculates the first
     #' derivatives (slope) at each as-applied rate at each point and selects the
     #' optimum as the as-applied rate where an increase of one unit of the as-applied
@@ -252,7 +259,7 @@ SimClass <- R6::R6Class(
     #' the target of analysis/simulation/prescription generation.
     #' @param fieldname Provide the name of the field that is
     #' the target of analysis/simulation/prescription generation.
-    #' @return A 'SimClass' object with completed .
+    #' @return A 'SimClass' object with completed inputs.
     selectInputs = function(farmername, fieldname) {
       private$.selectIter()
       private$.selectOpt()
@@ -358,9 +365,9 @@ SimClass <- R6::R6Class(
     #' simulation year.
     executeSim = function() {
       ## TODO - TEMP
-      temp_rr <- nrow(self$datClass$sim_dat[[1]])
-      self$datClass$sim_dat <- lapply(self$datClass$sim_dat,
-                                      function(x) x[runif(50, 1, temp_rr), ])
+      # temp_rr <- nrow(self$datClass$sim_dat[[1]])
+      # self$datClass$sim_dat <- lapply(self$datClass$sim_dat,
+      #                                 function(x) x[runif(50, 1, temp_rr), ])
       ## END TEMP
 
       ## for all sim years rep sim dat for length of EXP rate range & add EXP val
@@ -708,7 +715,7 @@ SimClass <- R6::R6Class(
         exp_index <- grep(paste0("^", self$datClass$expvar, "$"),
                           names(temp_list[[i]]))
         temp_list[[i]] <-
-          by(temp_list[[i]][, exp_index],
+          by(temp_list[[i]][, exp_index, with = FALSE][[1]],
              temp_list[[i]]$cell_id,
              median,
              na.rm = TRUE)

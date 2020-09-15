@@ -3,29 +3,23 @@
 \name{findUTMzone}
 \alias{findUTMzone}
 \title{Identify the Universal Transverse Mercator coordinate system zone}
-\source{
-https://apollomapping.com/blog/gtm-finding-a-utm-zone-number-easily
-}
 \usage{
-findUTMzone(FILE = NULL, farmername = NULL)
+findUTMzone(db, farm = NULL, fieldname = NULL)
 }
 \arguments{
-\item{FILE}{Spatial shapefile for determining UTM zone.}
+\item{db}{Connection to an OFPE formatted database.}
 
-\item{farmername}{Name of the OFPE farmer, for hardcoded cases (i.e. Loewen).}
+\item{farm}{Either a farm id (integer), or a farm name.}
+
+\item{fieldname}{Name of the field for aggregation.}
 }
 \value{
 WGS84 UTM code (i.e. 32612, 32614).
 }
 \description{
-Identifies the UTM zone number for the specified data and
-returns a UTM code for WGS84 (i.e. 32612, 32614). Any of the three
-arguments can be used to identify the UTM zone. When a shapefile is
-passed in with the 'FILE' argument, the spatial data is used to determine
-the UTM zone mathematically, same if the 'bounds' argument is used. If only
-the 'farmername' is passed in, the UTM zone returned will be for Montana,
-unless the farmer's name is "loewen", in which case the UTM zone is for Manitoba.
-
-NEEDS UPDATING. This function needs to be updated to use the
-mathematical approach from the site below.
+Function for querying the database to identify the UTM zone
+from the corresponding farm for the field the user is working with. This
+function is used many times and requires a database connection and either
+a farm name or farm id, or a field name. The returned value
+is the UTM EPSG code for the WGS84 datum.
 }

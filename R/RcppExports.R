@@ -120,3 +120,51 @@ derivNRoptCpp <- function(NRdf, NRoptDat, Nrates, rr, cc, CEXP) {
     .Call(`_OFPE_derivNRoptCpp`, NRdf, NRoptDat, Nrates, rr, cc, CEXP)
 }
 
+#' Function for subsetting remotely sensed data from the user
+#' selected source. This function takes a matrix with all the
+#' remotely sensed data and returns a matrix with the selected
+#' data. This function exists because data such as precipitation and
+#' vegetation indices are collected from multiple sources, and
+#' the user can select the source based on their data preferences.
+#'
+#' The user also must pass in the column index of the data passed
+#' in that corresponds to the primary and secondary source for each
+#' variable.
+#'
+#' @param dat A matrix with all of the remotely sensed data to
+#' select from.
+#' @param rr The number of rows in dat and df (must be the same).
+#' @param prec_cy_1 The column index of the preferred precipitation source for
+#' the current year.
+#' @param prec_cy_2 The column index of the secondary precipitation source for
+#' the current year.
+#' @param prec_py_1 The column index of the preferred precipitation source for
+#' the previous year.
+#' @param prec_py_2 The column index of the secondary precipitation source for
+#' the previous year.
+#' @param gdd_cy_1 The column index of the preferred growing degree day source
+#' for the current year.
+#' @param gdd_cy_2 The column index of the secondary growing degree day source
+#' for the current year.
+#' @param gdd_py_1 The column index of the preferred growing degree day source
+#' for the previous year.
+#' @param gdd_py_2 The column index of the secondary growing degree day source
+#' for the previous year.
+#' @param veg_cy_1 The column index of the preferred vegetation index source
+#' for the current year.
+#' @param veg_cy_2 The column index of the secondary vegetation index source
+#' for the current year.
+#' @param veg_py_1 The column index of the preferred vegetation index source
+#' for the previous year.
+#' @param veg_py_2 The column index of the secondary vegetation index source
+#' for the previous year.
+#' @param veg_2py_1 The column index of the preferred vegetation index source
+#' for two years prior.
+#' @param veg_2py_2 The column index of the secondary vegetation index source
+#' for two years prior.
+#' @return df Returns a completed table with selected data.
+#' @export
+selectDatCpp <- function(dat, rr, prec_cy_1, prec_cy_2, prec_py_1, prec_py_2, gdd_cy_1, gdd_cy_2, gdd_py_1, gdd_py_2, veg_cy_1, veg_cy_2, veg_py_1, veg_py_2, veg_2py_1, veg_2py_2) {
+    .Call(`_OFPE_selectDatCpp`, dat, rr, prec_cy_1, prec_cy_2, prec_py_1, prec_py_2, gdd_cy_1, gdd_cy_2, gdd_py_1, gdd_py_2, veg_cy_1, veg_cy_2, veg_py_1, veg_py_2, veg_2py_1, veg_2py_2)
+}
+

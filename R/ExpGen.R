@@ -9,6 +9,9 @@
 #'
 #' This class follows the generator interface that includes an initialization method
 #' and an 'executeOutput' method.
+#' @seealso \code{\link{DBCon}} for the database connection class, and
+#' \code{\link{RxGen}} for the alternative class that creates
+#' experimental prescriptions or pure prescriptions.
 #' @export
 ExpGen <- R6::R6Class(
   "ExpGen",
@@ -20,7 +23,7 @@ ExpGen <- R6::R6Class(
     trt_length = NULL,
     #' @field boom_width The width of the sprayer boom or spreader.
     boom_width = NULL,
-    #' @field orientation TODO...
+    #' @field orientation TODO... Not implemented yet.
     orientation = NULL,
     #' @field fld_prop The proportion of the field to apply experimental
     #' or optimum check rates to.
@@ -37,21 +40,19 @@ ExpGen <- R6::R6Class(
     #' and the field edge, or as check rates in the prescription selected
     #' option.
     base_rate = NULL,
-    #' @field rx_for_year Provide the year that the prescription or experiment
+    #' @field rx_for_year Provide the year that the experiment
     #' is made for. Used for labeling outputs.
     rx_for_year = NULL,
-    #' @field SAVE Logical, whether to save figures and the prescription.
+    #' @field SAVE Logical, whether to save figures and the experiment.
     #' Autofilled to FALSE if a user selects NA in the 'out_path' or is NULL.
-    #' Autofilled to TRUE otherwise. If not applied and a SimClass object has
-    #' been supplied, the selected option in that class will be used.
+    #' Autofilled to TRUE otherwise.
     SAVE = NULL,
     #' @field out_path Provide the path to the folder in which to store and
     #' save figures and the prescription Type NA to not create any folders.
     #' You will not be able to save any outputs. (Note, even if a path is provided,
     #' the user can pass FALSE as the sole argument to the 'setupOP' method
     #' to prevent the creation of folders. This will automatically prevent
-    #' any plots to be saved.). If not applied and a SimClass object has
-    #' been supplied, the selected option in that class will be used.
+    #' any plots to be saved.).
     out_path = NULL,
     #' @field farmername If the user is creating a new experiment, provide or
     #' select the name of the farmer that owns or manages the field(s) that
@@ -81,14 +82,14 @@ ExpGen <- R6::R6Class(
     #' @field strat_dat If the user is creating a new experiment with stratification
     #' they must apply the data that they are stratifying on. This provides an
     #' identifier for the data being used for the stratification. These must be codes
-    #' used in the OFPE workflow sucha as 'yld', 'pro', 'aa_n', 'aa_sr', etc.
+    #' used in the OFPE workflow such as 'yld', 'pro', 'aa_n', 'aa_sr', etc.
     strat_dat = NULL,
     #' @field strat_dat_year Follows the same structure of 'strat_dat', however contains
     #' the years to use for stratification of each of the data types for each of the fields.
     strat_dat_year = NULL,
 
     #' @field unique_fieldname Unique fieldname for the field(s) used for the experiment. This
-    #' concatenates multiple fields with an ampersand. Used for labelling.
+    #' concatenates multiple fields with an ampersand. Used for labeling.
     unique_fieldname = NULL,
     #' @field rx_dt Data frame that contains the coordinates of locations to apply
     #' experimental inputs. For an experiment, these are the centroids of the grid
@@ -107,19 +108,19 @@ ExpGen <- R6::R6Class(
     #' @field cell_out_map_name Created parameter with the file name for the map of the
     #' rate type applied to each cell. Used for saving the map to the 'Outputs' folder.
     cell_out_map_name = NULL,
-    #' @field var The label of the variable to map. Used in figure labelling for plotting
+    #' @field var The label of the variable to map. Used in figure labeling for plotting
     #' in RxClass.
     var = NULL,
     #' @field var_col_name The name of the column of the variable in the
-    #' supplied data ('dat'). Used in figure labelling for plotting
+    #' supplied data ('dat'). Used in figure labeling for plotting
     #' in RxClass.
     var_col_name = NULL,
     #' @field var_label The label to be applied to the legend of the map
-    #' corresponding to the variable mapped. Used in figure labelling for plotting
+    #' corresponding to the variable mapped. Used in figure labeling for plotting
     #' in RxClass.
     var_label = NULL,
     #' @field var_main_label The main label to apply to the map. Used in figure
-    #' labelling for plotting in RxClass.
+    #' labeling for plotting in RxClass.
     var_main_label = NULL,
     #' @field mgmt_scen For this class, the management scenario is always an experiment
     #' so this parameter is set to 'exp'.
@@ -135,7 +136,7 @@ ExpGen <- R6::R6Class(
     #' database, see DBCon class.
     #' @param trt_length Length, in meters, for which to apply treatments.
     #' @param boom_width The width of the sprayer boom or spreader.
-    #' @param orientation TODO...
+    #' @param orientation TODO... Not implemented yet.
     #' @param fld_prop The proportion of the field to apply experimental
     #' or optimum check rates to.
     #' @param expvar Experimental variable to optimize, select/input
@@ -147,19 +148,17 @@ ExpGen <- R6::R6Class(
     #' @param base_rate The rate to apply between the experimental rates
     #' and the field edge, or as check rates in the prescription selected
     #' option.
-    #' @param rx_for_year Provide the year that the prescription or experiment
+    #' @param rx_for_year Provide the year that experiment
     #' is made for. Used for labeling outputs.
-    #' @param SAVE Logical, whether to save figures and the prescription.
+    #' @param SAVE Logical, whether to save figures and the experiment
     #' Autofilled to FALSE if a user selects NA in the 'out_path' or is NULL.
-    #' Autofilled to TRUE otherwise. If not applied and a SimClass object has
-    #' been supplied, the selected option in that class will be used.
+    #' Autofilled to TRUE otherwise.
     #' @param out_path Provide the path to the folder in which to store and
     #' save figures and the prescription Type NA to not create any folders.
     #' You will not be able to save any outputs. (Note, even if a path is provided,
     #' the user can pass FALSE as the sole argument to the 'setupOP' method
     #' to prevent the creation of folders. This will automatically prevent
-    #' any plots to be saved.). If not applied and a SimClass object has
-    #' been supplied, the selected option in that class will be used.
+    #' any plots to be saved.).
     #' @param farmername If the user is creating a new experiment, provide or
     #' select the name of the farmer that owns or manages the field(s) that
     #' an experiment is going to be generated for.
@@ -292,7 +291,7 @@ ExpGen <- R6::R6Class(
     #' generator. This randomly applies the experimental rates across
     #' the field. If the user selected stratification data, these are
     #' used for stratification during the random placement.
-    #' @param None All parametes supplied upon initialization.
+    #' @param None All parameters supplied upon initialization.
     #' @return A completed experiment table containing the output.
     executeOutput = function() {
       rx_sdt <- OFPE::getRxGrid(self$dbCon$db,
@@ -328,7 +327,7 @@ ExpGen <- R6::R6Class(
   ),
   private = list(
     .makeExpDt = function(fieldname, db, base_rate, unique_fieldname, farmername) {
-      utm_epsg <- OFPE::findUTMzone(farmername = farmername)
+      utm_epsg <- OFPE::findUTMzone(db, fieldname = fieldname[1])
       fld_bound <- OFPE::getFldBound(fieldname, db, farmername)
       xy <- rep(list(NA), length(fieldname))
       for(i in 1:length(xy)) {
@@ -369,7 +368,7 @@ ExpGen <- R6::R6Class(
       self$var <- paste0("exp", ifelse(self$expvar == "aa_n", "N", "Seed"), "Rates")
       self$var_col_name <- "exprate"
       self$var_label <- paste0(ifelse(self$expvar == "aa_n", "N", "Seed"), " Rate (lbs/ac)")
-      self$var_main_label <- paste0(self$unique_fieldname, "experimental ",
+      self$var_main_label <- paste0(self$unique_fieldname, " experimental ",
                                     ifelse(self$expvar=="aa_n", "N", "Seed"),
                                     " rates for ", self$rx_for_year)
       self$out_map_name <- paste0(self$out_path, "/Outputs/Rx/",

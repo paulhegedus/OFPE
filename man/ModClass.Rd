@@ -35,6 +35,12 @@ this is NOT recommended except for advanced users. It is recommended that the
 user supplies the response variables, and uses the interactive selection methods
 to select user inputs.
 }
+\seealso{
+\code{\link{DatClass}} for data required for model fitting and validation,
+\code{\link{SimClass}} for simulation class that rely on models from ModClass,
+\code{\link{GAM}} for the class used for fitting a generalized additive model, and
+\code{\link{NonLinear_Logistic}} for the class that fits a non-linear logistic model.
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -60,7 +66,7 @@ validation plots. Type NA to not create any folders. You will not be
 able to save any outputs. (Note, even if a path is provided, the user
 can pass FALSE as the sole argument to the 'setupOP' method to prevent
 the creation of folders. This will automatically prevent any plots to
-be saved.)}
+be saved).}
 
 \item{\code{SAVE}}{Logical, whether to save figures. Autofilled to FALSE if
 a user selects NA in the 'out_path' or is NULL. Autofilled to TRUE
@@ -228,7 +234,7 @@ specific.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{None}}{All parametes supplied upon initialization.}
+\item{\code{None}}{All parameters supplied upon initialization.}
 }
 \if{html}{\out{</div>}}
 }

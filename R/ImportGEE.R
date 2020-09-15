@@ -2,6 +2,9 @@
 #'
 #' @description R6 class for for importing data collected from Google Earth
 #' Engine into an OFPE formatted database.
+#' @seealso \code{\link{DBCon}} for the database connection class, and
+#' \code{\link{ImportOF}} for the associated on-farm data import
+#' class in the data import step.
 #' @export
 ImportGEE <- R6::R6Class(
   "ImportGEE",
@@ -308,7 +311,7 @@ ImportGEE <- R6::R6Class(
     #' Adds columns to the data file importing to the database.
     #' @param info Object holding all necessary information about the data.
     #' @param name The name of the column to add.
-    #' @param db The conncetion to the OFPE database.
+    #' @param db The connection to the OFPE database.
     #' @return Columns added to database table.
     .addColsToDB = function(info, name, db) {
      DBI::dbGetQuery(db,

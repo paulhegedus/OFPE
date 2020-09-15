@@ -10,16 +10,12 @@
 #' @param rx_dt Data frame that contains the coordinates of locations to apply
 #' experimental inputs. For an experiment, these are the centroids of the grid
 #' made to aggregate data for the field.
-#' @param farmername If the user is creating a new experiment, provide or
-#' select the name of the farmer that owns or manages the field(s) that
-#' an experiment is going to be generated for.
-#' @param fieldname If the user is creating a new experiment, provide or
-#' select the fieldname of the field to use. The field list is from the
-#' available fields in the database for experimentation.
+#' @param farmername Provide the farmer name that manages the field
+#' @param fieldname Provide the name of the field for the experiment or prescription.
 #' @param trt_length Length, in meters, for which to apply treatments.
 #' @param boom_width The width of the sprayer boom or spreader.
 #' @param unique_fieldname Unique fieldname for the field(s) used for the experiment. This
-#' concatenates multiple fields with an ampersand. Used for labelling.
+#' concatenates multiple fields with an ampersand. Used for labeling.
 #' @param mgmt_scen If the user is creating a prescription or experimental
 #' prescription, they must provide the management scenario to use for their
 #' prescription. The user can choose from the management options listed in
@@ -40,7 +36,7 @@ getRxGrid <- function(db,
                       boom_width,
                       unique_fieldname,
                       mgmt_scen = "base") {
-  utm_epsg <- OFPE::findUTMzone(farmername = farmername)
+  utm_epsg <- OFPE::findUTMzone(db, fieldname = fieldname[1])
   # remove temp tables
   OFPE::removeTempTables(db)
   OFPE::removeTempFarmerTables(db, farmername)
@@ -146,16 +142,12 @@ getRxGrid <- function(db,
 #' for the fields selected by the user.
 #'
 #' @param db Connection to an OFPE formatted database.
-#' @param fieldname If the user is creating a new experiment, provide or
-#' select the fieldname of the field to use. The field list is from the
-#' available fields in the database for experimentation.
-#' @param farmername If the user is creating a new experiment, provide or
-#' select the name of the farmer that owns or manages the field(s) that
-#' an experiment is going to be generated for.
+#' @param fieldname Provide the field name for the experiment or prescription.
+#' @param farmername Provide the name of the farmer that manages the field.
 #' @return NULL, temporary field boundary table in 'all_farms'.
 #' @export
 makeTempBound <- function(db, fieldname, farmername) {
-  utm_epsg <- OFPE::findUTMzone(farmername = farmername)
+  utm_epsg <- OFPE::findUTMzone(db, fieldname = fieldname[1])
   for (i in 1:length(fieldname)) {
     if (i == 1) {
       invisible(DBI::dbSendQuery(
@@ -192,16 +184,12 @@ makeTempBound <- function(db, fieldname, farmername) {
 #' two passes of the equipment.
 #'
 #' @param db Connection to an OFPE formatted database.
-#' @param fieldname If the user is creating a new experiment, provide or
-#' select the fieldname of the field to use. The field list is from the
-#' available fields in the database for experimentation.
+#' @param fieldname Provide the name of the field for the experiment or prescription.
 #' @param trt_length Length, in meters, for which to apply treatments.
 #' @param boom_width The width of the sprayer boom or spreader.
-#' @param farmername If the user is creating a new experiment, provide or
-#' select the name of the farmer that owns or manages the field(s) that
-#' an experiment is going to be generated for.
+#' @param farmername The name of the farmer that manages the field.
 #' @param unique_fieldname Unique fieldname for the field(s) used for the experiment. This
-#' concatenates multiple fields with an ampersand. Used for labelling.
+#' concatenates multiple fields with an ampersand. Used for labeling.
 #' @param mgmt_scen If the user is creating a prescription or experimental
 #' prescription, they must provide the management scenario to use for their
 #' prescription. The user can choose from the management options listed in
@@ -221,7 +209,7 @@ makeRXGrid <- function(db,
                        unique_fieldname,
                        mgmt_scen) {
   boom_width <- boom_width * 2
-  utm_epsg <- OFPE::findUTMzone(farmername = farmername)
+  utm_epsg <- OFPE::findUTMzone(db, fieldname = fieldname[1])
   size <- paste0(trt_length, " x ", boom_width)
   grids_exist <- FALSE
   field_exist <- FALSE
@@ -349,7 +337,7 @@ makeRXGrid <- function(db,
 #' @return A field boundary sf object.
 #' @export
 getFldBound = function(fieldname, db, farmername) {
-  utm_epsg <- OFPE::findUTMzone(farmername = farmername)
+  utm_epsg <- OFPE::findUTMzone(db, fieldname = fieldname[1])
   fld_bound_list <- as.list(fieldname)
   for (i in 1:length(fieldname)) {
     fld_bound_list[[i]] <- sf::st_read(
@@ -391,7 +379,7 @@ getFldBound = function(fieldname, db, farmername) {
 #' number of rates for the optimized base map, so take your selections for
 #' the management scenario and number of optimum rates into account.
 #' @param strat_dat List of data to stratify data on from the OFPE
-#' database...
+#' database... TODO... not implemented yet
 #' @return Amended 'rx_sdt' object wit randomly placed experimental
 #' rates applied.
 #' @export
@@ -507,7 +495,7 @@ trimExpReps = function(cell_diff, exp_reps, midpoint) {
 #' select the fieldname of the field to use. The field list is from the
 #' available fields in the database for experimentation.
 #' @param unique_fieldname Unique fieldname for the field(s) used for the experiment. This
-#' concatenates multiple fields with an ampersand. Used for labelling.
+#' concatenates multiple fields with an ampersand. Used for labeling.
 #' @param base_rate The rate to apply between the experimental rates
 #' and the field edge, or as check rates in the prescription selected
 #' option.
@@ -565,13 +553,10 @@ makeBaseRate = function(db,
 #' the field(s).
 #' @param rx_sdt A 'sf' object containing the experiment or prescription
 #' grid generated by user inputs.
-#' @param fieldname If the user is creating a new experiment, provide or
-#' select the fieldname of the field to use. The field list is from the
-#' available fields in the database for experimentation.
+#' @param fieldname Provide the name of the field for the experiment or prescription.
 #' @param db Connection to an OFPE formatted database.
-#' @param farmername If the user is creating a new experiment, provide or
-#' select the name of the farmer that owns or manages the field(s) that
-#' an experiment is going to be generated for. Must be same for all
+#' @param farmername Name of the farmer that owns or manages the field(s) that
+#' an experiment or prescription is going to be generated for. Must be same for all
 #' fields.
 #' @return A 'sf' object with a clipped grid for experimentation or prescription generation.
 #' @export

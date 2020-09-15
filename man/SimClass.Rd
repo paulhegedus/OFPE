@@ -20,6 +20,14 @@ This class performs the Monte Carlo simulation to compare management outcomes.
 The inputs also determine whether to activate and execute methods of the 'LikeYear'
 class to identify the year from the past that is most likely to reflect the upcoming year.
 }
+\seealso{
+\code{\link{DBCon}} for the database connection class,
+\code{\link{DatClass}} for the class containing simulation data,
+\code{\link{ModClass}} for the class containing the fitted models,
+\code{\link{EconDat}} for the class containing economic data for the simulation,
+and \code{\link{SimOP}} for the class that save data and figures from the simulation
+results.
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -106,7 +114,8 @@ for identifying the full field optimum rate.}
 gathered from the OFPE database.}
 
 \item{\code{sim_out}}{A list named for each user selected simulation year,
-each containing a named list containing ... TODO ...}
+each containing a named list containing every location in the field
+and associated net-returns and optimized rates for management scenarios.}
 }
 \if{html}{\out{</div>}}
 }
@@ -214,15 +223,15 @@ needed for the automated analysis, simulation, and prescription building.
 
 The user will need to select the functional form of a model to use for
 analysis. The user can select 'GAM' for a generalized additive model,
-'Non-Linear Logistic' for a logistic function, or... if more model
-options are added, they will need to be added here. They will also
+'Non-Linear Logistic' for a logistic function, or user generated models.
+If more model options are created, they will need to be added here. They will also
 need to provide the number of iterations to run the Monte Carlo
 simulation, as well as the optimization method to use.
 
 There are two current options, 'Maximum' or 'Derivative'. Both methods select
 the optimum as-applied rate at each location in the field based on calculating
 the net-return at each point under a sequence of as-applied rates. Selecting
-'Maximum' selects the optimim rate as the as-applied rate with the highest
+'Maximum' selects the optimum rate as the as-applied rate with the highest
 calculated net-return. The 'Derivative' approach calculates the first
 derivatives (slope) at each as-applied rate at each point and selects the
 optimum as the as-applied rate where an increase of one unit of the as-applied
@@ -261,7 +270,7 @@ the target of analysis/simulation/prescription generation.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A 'SimClass' object with completed .
+A 'SimClass' object with completed inputs.
 }
 }
 \if{html}{\out{<hr>}}

@@ -33,17 +33,21 @@ as a check to evaluate the performance of the optimized rates or whether
 further experimentation is needed.
 
 When creating an experimental prescription or a prescription, the user must pass
-an set up SimClass. This implies that the user has initialized and set up
-the required DatClass, ModClass, and EconDat R6 objects. The user has the option
-of passing a SimClass object that has been executed or not. Regardless, the RxClass
-will check 1) for simulation output data and 2) execute the simulation for any year(s)
-that the user specified for generating a prescription for that is not present in the
-simulation data. This simulation output data is used to generate the experimental
-prescriptions and the prescriptions.
+a set up SimClass. This implies that the user has initialized and set up
+the required DatClass, ModClass, and EconDat R6 objects. The user must pass a
+SimClass object that has been executed. This simulation output data is used to
+generate the experimental prescriptions and the prescriptions.
 
 If the user allows, the prescriptions or experiments are saved to the 'Outputs' folder
 and are saved in the OFPE database in the farmer specific aggregated schema in a table
 called 'rx' (farmername_a.rx).
+}
+\seealso{
+\code{\link{DBCon}} for the database connection class,
+\code{\link{SimClass}} for the class that contains simulation outputs,
+\code{\link{ExpGen}} for the class for creating new experiments, and
+\code{\link{RxGen}} for the class that creates experimental prescriptions
+or pure prescriptions.
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -65,7 +69,7 @@ which to apply treatments.}
 \item{\code{boom_width}}{The width of the sprayer boom or spreader, given as feet
 and converted to meters.}
 
-\item{\code{orientation}}{TODO...}
+\item{\code{orientation}}{TODO... Not implemented yet.}
 
 \item{\code{fld_prop}}{The proportion of the field to apply experimental
 rates to (i.e. 0.5 or 1.0), OR, the percent of available cells to
@@ -87,7 +91,7 @@ output data to avoid redundantly running a simulation.}
 \item{\code{rx_for_year}}{Provide the year that the prescription or experiment
 is made for. Used for labeling outputs.}
 
-\item{\code{SAVE}}{Logical, whether to save figures and the prescription.
+\item{\code{SAVE}}{Logical, whether to save figures and the experiment or prescription.
 Autofilled to FALSE if a user selects NA in the 'out_path' or is NULL.
 Autofilled to TRUE otherwise. If not applied and a SimClass object has
 been supplied, the selected option in that class will be used.}
@@ -138,10 +142,8 @@ the years to use for stratification of each of the data types for each of the fi
 
 \item{\code{simClass}}{If the user is creating an experimental prescription or
 prescription an R6 class SimClass object must be supplied. This has to be
-set up, however does not need to have the execution method performed.
-The RxClass will check the SimClass for simulation output data that matches
-the year of the data provided, and execute simulations for any years not
-present.}
+set up. The RxClass will check the SimClass for simulation output data
+from which years(s) can be selected from.}
 
 \item{\code{exp_rate_gen}}{Logical, for the experimental prescription provide
 TRUE or FALSE for whether to create experimentla rates from gaps in the
@@ -252,10 +254,8 @@ database, see DBCon class.}
 
 \item{\code{simClass}}{If the user is creating an experimental prescription or
 prescription an R6 class SimClass object must be supplied. This has to be
-set up, however does not need to have the execution method performed.
-The RxClass will check the SimClass for simulation output data that matches
-the year of the data provided, and execute simulations for any years not
-present.}
+set up and simulations from years that the user expects the upcoming year
+will be like must be executed.}
 
 \item{\code{gen_type}}{What type of output to generate; 'NewExp_NoStrat' for
 a new experiment with randomly placed experimental rates with no stratification,
@@ -269,7 +269,7 @@ farmer selected base rate randomly placed, stratified on optimum rates.}
 
 \item{\code{boom_width}}{The width of the sprayer boom or spreader (feet).}
 
-\item{\code{orientation}}{TODO...}
+\item{\code{orientation}}{TODO... Not implemented yet.}
 
 \item{\code{fld_prop}}{The proportion of the field to apply experimental
 rates to (i.e. 0.5 or 1.0), OR, the percent of available cells to
@@ -299,7 +299,7 @@ to prevent the creation of folders. This will automatically prevent
 any plots to be saved.). If not applied and a SimClass object has
 been supplied, the selected option in that class will be used.}
 
-\item{\code{SAVE}}{Logical, whether to save figures and the prescription.
+\item{\code{SAVE}}{Logical, whether to save figures and the experiment or prescription.
 Autofilled to FALSE if a user selects NA in the 'out_path' or is NULL.
 Autofilled to TRUE otherwise. If not applied and a SimClass object has
 been supplied, the selected option in that class will be used.}
@@ -621,7 +621,7 @@ to 'rx'.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Output saved in database
+Output experiment or prescription saved in database.
 }
 }
 \if{html}{\out{<hr>}}

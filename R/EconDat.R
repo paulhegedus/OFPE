@@ -23,13 +23,15 @@
 #' This class also stores the coefficients from the protein premium/dockage
 #' model derived from the protein premium/dockage data, and user supplied
 #' inputs for the cost of site-specific technology, and the fixed ownership
-#' costs per acre related to production, not including the cost of fertilzier.
+#' costs per acre related to production, not including the cost of the input.
 #'
 #' This class, like all other 'inputs' classes, gives the user the option of supplying
 #' their own parameter selections or to use an interactive method to select parameter
 #' values and options. Like all other 'inputs' classes, it is recommended that the user
 #' uses the interactive selection method unless providing their own economic and premium/
 #' dockage data.
+#' @seealso \code{\link{DBCon}} for database connection class,
+#' \code{\link{SimClass}} for simulation class that rely on data in EconDat.
 #' @export
 EconDat <- R6::R6Class(
   "EconDat",
@@ -147,7 +149,7 @@ EconDat <- R6::R6Class(
     #'
     #' The user will be asked whether they would like to use the default
     #' economic conditions. The user can elect to use the default economic
-    #' conditions gathered from the Billings, MT elevator that conatin
+    #' conditions gathered from the Billings, MT elevator that contain
     #' data from 2000 - 2016 on the price received for organic and
     #' conventionally grown hard red winter wheat and the cost of nitrogen
     #' fertilizer. ... Alternatively, the user will have the option of selecting

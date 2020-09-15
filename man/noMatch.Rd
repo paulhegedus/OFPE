@@ -4,13 +4,13 @@
 \alias{noMatch}
 \title{Get names in source present in target}
 \usage{
-noMatch(source, target)
+noMatch(source_vec, target_vec)
 }
 \arguments{
-\item{source}{Character vector to check if present in
+\item{source_vec}{Character vector to check if present in
 target.}
 
-\item{target}{Character vector to check if source elements
+\item{target_vec}{Character vector to check if source elements
 are present in.}
 }
 \value{

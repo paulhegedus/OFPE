@@ -6,7 +6,7 @@
 \description{
 R6 Class for storing user specified inputs and processing data
 for the analysis/simulation and Rx building steps of the OFPE data cycle.
-This object inlcudes user selections such as the field and year of data
+This object includes user selections such as the field and year of data
 to export from an OFPE database and the type of data (grid or observed) for analysis
 and simulation/prescription generation.
 
@@ -19,6 +19,11 @@ This class stores inputs from the user and has the methods for for exporting
 data from the database and processing the data for analysis, simulation, and
 prescription building.
 }
+\seealso{
+\code{\link{DBCon}} for database connection class,
+\code{\link{ModClass}} for model fitting class that relies on data in DatClass,
+\code{\link{SimClass}} for simulation class that rely on data in DatClass.
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -27,7 +32,7 @@ database, see DBCon class.}
 
 \item{\code{farmername}}{Name of the farmer that owns the selected field.}
 
-\item{\code{fieldname}}{Name of the field to aggregate data for. Selected from
+\item{\code{fieldname}}{Name of the field for analysis. Selected from
 the 'all_farms.fields' table of an OFPE formatted database.}
 
 \item{\code{respvar}}{Response variable(s) to optimize experimental inputs based
@@ -49,7 +54,7 @@ scenario (see SimClass$executeSim) will be based on the opposite
 'NRopp' shows the net-return calculated from organically grown wheat).
 In the example, organic prices are calculated from 0 N fertilizer rates,
 however with seeding rates it is purely the difference in the price received
-used to calcualte net-return.}
+used to calculate net-return.}
 
 \item{\code{yldyears}}{The year(s) of interest for the yield response
 variables in the selected field. This must be a named list with the
@@ -77,7 +82,7 @@ to this step. (i.e. you will not have access to data aggregated with the
 'Grid' option if you have not executed the process of aggregation with
 the 'Grid' option selected. The same principle applies for the 'Observed'
 option. It is recommended that the analysis is performed with 'Observed'
-data, and for the simulation tobe performed with 'Grid' data.}
+data, and for the simulation to be performed with 'Grid' data.}
 
 \item{\code{dat_used}}{Option for the length of year to use data in the analysis,
 simulation, and prescription building steps. See the 'AggInputs' class
@@ -85,7 +90,7 @@ documentation for more information on the 'dat_used' selection.}
 
 \item{\code{veg_index}}{Option for the vegetation index data to use for analysis,
 simulation, and prescription building steps. Select from 'NDVI', 'NDRE',
-and 'CIRE'. These are the three vegatation indices downloaded from
+and 'CIRE'. These are the three vegetation indices downloaded from
 Google Earth Engine and used to enrich yield and protein datasets in the
 aggregation step.}
 
@@ -115,7 +120,7 @@ of the crop responses. The difference will be split into a validation dataset
 that is used to evaluate the model performance on data it has not 'seen' before.}
 
 \item{\code{clean_rate}}{Select the maximum rate that could be realistically be applied
-by the applicating machine (sprayer or seeder). This is used for a rudimentary
+by the application equipment (sprayer or seeder). This is used for a rudimentary
 cleaning of the data that removes observations with as-applied rates above this
 user supplied threshold. Rates above this threshold should be able to be classified
 as machine measurement errors. For example, based on knowledge of the prescription/
@@ -196,7 +201,7 @@ database, see DBCon class.}
 
 \item{\code{farmername}}{Name of the farmer that owns the selected field.}
 
-\item{\code{fieldname}}{Name of the field to aggregate data for. Selected from
+\item{\code{fieldname}}{Name of the field to for analysis. Selected from
 the 'all_farms.fields' table of an OFPE formatted database.}
 
 \item{\code{respvar}}{Response variable(s) to optimize experimental inputs based
@@ -218,7 +223,7 @@ scenario (see SimClass$executeSim) will be based on the opposite
 'NRopp' shows the net-return calculated from organically grown wheat).
 In the example, organic prices are calculated from 0 N fertilizer rates,
 however with seeding rates it is purely the difference in the price received
-used to calcualte net-return.}
+used to calculate net-return.}
 
 \item{\code{yldyears}}{The year(s) of interest for the yield response
 variables in the selected field. This must be a named list with the
@@ -244,7 +249,7 @@ documentation for more information on the 'dat_used' selection.}
 
 \item{\code{veg_index}}{Option for the vegetation index data to use for analysis,
 simulation, and prescription building steps. Select from 'NDVI', 'NDRE',
-and 'CIRE'. These are the three vegatation indices downloaded from
+and 'CIRE'. These are the three vegetation indices downloaded from
 Google Earth Engine and used to enrich yield and protein datasets in the
 aggregation step.}
 
@@ -274,7 +279,7 @@ of the crop responses. The difference will be split into a validation dataset
 that is used to evaluate the model performance on data it has not 'seen' before.}
 
 \item{\code{clean_rate}}{Select the maximum rate that could be realistically be applied
-by the applicating machine (sprayer or seeder). This is used for a rudimentary
+by the application equipment (sprayer or seeder). This is used for a rudimentary
 cleaning of the data that removes observations with as-applied rates above this
 user supplied threshold. Rates above this threshold should be able to be classified
 as machine measurement errors. For example, based on knowledge of the prescription/
@@ -319,7 +324,7 @@ covariates, as well as the preferred source for precipitation and
 growing degree day data. Finally, the user has the option of whether
 to center covariate data or to use the raw observed data for analysis
 and simulation and the percent of data to use in the training data for
-model fitting. The rest of the data is witheld for validation.
+model fitting. The rest of the data is withheld for validation.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DatClass$selectInputs()}\if{html}{\out{</div>}}
 }

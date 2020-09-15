@@ -8,6 +8,12 @@ R6 Class for executing the OFPE data aggregation process that
 consolidates data from Google Earth Engine to on-farm data. This is used
 within the 'AggDat' R6 class.
 }
+\seealso{
+\code{\link{DBCon}} for the database connection class,
+\code{\link{AggDat}} for the class responsible for aggregating on-farm data,
+\code{\link{AggInputs}} for the inputs required for the aggregation
+process.
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -32,7 +38,7 @@ aggregated.}
 
 \item{\code{SOURCE}}{The SOURCE of data corresponding to each respective label.}
 
-\item{\code{year}}{The year of data to gather,  corresponding to each respective
+\item{\code{year}}{The year of data to gather, corresponding to each respective
 label.}
 
 \item{\code{loy}}{The length of year for which to gather data for each respective
@@ -102,7 +108,7 @@ and subsurface soil moisture from SMAP.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{None}}{No argumetns necessary because identified in class
+\item{\code{None}}{No arguments necessary because identified in class
 instantiation.}
 }
 \if{html}{\out{</div>}}
@@ -117,7 +123,7 @@ in the database.
 \if{latex}{\out{\hypertarget{method-.getGEEdata}{}}}
 \subsection{Method \code{.getGEEdata()}}{
 Method for aggregating the Google Earth Engine data to the on-farm
-aggregated data. Identifies the appropirate data from the 'all_farms.
+aggregated data. Identifies the appropriate data from the 'all_farms.
 gee' schema and extracts the values of each raster to each point in
 the field. All labels, type, SOURCE etc. are identified in the GEE
 data original filenames exported from GEE. The dot indicates that

@@ -7,6 +7,8 @@
 #' present in the database, it's information will be updated. This
 #' follows the ManageDB interface and includes a setup and execute method that
 #' is called from the ManageDB class.
+#' @seealso \code{\link{DBCon}} for database connection class,
+#' \code{\link{ManageDB}} for the class that calls this class to manage the database.
 #' @export
 ManageFarms <- R6::R6Class(
   "ManageFarms",
@@ -75,12 +77,10 @@ ManageFarms <- R6::R6Class(
     #' uploading to the database. Imports the shapefile using the path name
     #' in the list provided and adds a column for the farmer name. Converts
     #' to EPSG 4326 for storage.
-    #' @param farm_info List with information about the farm to uplaod.
+    #' @param farm_info List with information about the farm to upload.
     #' @param farm_path Path to the location of farm boundary shapefiles.
     #' @return ESRI shapefile of farm boundary.
     .setupFarms = function(farm_info, farm_path = NULL) {
-      browser()
-
       farm <- sf::st_read(paste0(self$farm_path,
                                  farm_info$farm_shp_name,
                                  ".shp"),
@@ -99,8 +99,7 @@ ManageFarms <- R6::R6Class(
       farm <- farm %>%
         sf::st_set_crs(4326) %>%
         sf::st_transform(4326)
-      # farm$area <- sf::st_area(farm) %>%
-      #   units::set_units("acre")
+      farm$utm_epsg <- OFPE::calcUTMzone(farm)
       return(farm)
     },
     #' @description
@@ -122,7 +121,7 @@ ManageFarms <- R6::R6Class(
                WHERE farmer = '", unique(farm$farmer), "'")
       )$farmeridx
 
-      farm <- farm[, c("farm", "farmeridx","geom")]
+      farm <- farm[, c("farm", "farmeridx", "utm_epsg", "geom")]
       suppressMessages(
         rpostgis::pgInsert(db,
                            c("all_farms","farms"),

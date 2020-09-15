@@ -7,6 +7,8 @@
 #' present in the database, it's information will be updated. This
 #' follows the ManageDB interface and includes a setup and execute method that
 #' is called from the ManageDB class.
+#' @seealso \code{\link{DBCon}} for database connection class,
+#' \code{\link{ManageDB}} for the class that calls this class to manage the database.
 #' @export
 ManageFields <- R6::R6Class(
   "ManageFields",
@@ -105,13 +107,11 @@ ManageFields <- R6::R6Class(
       field <- field %>%
         sf::st_set_crs(4326) %>%
         sf::st_transform(4326)
-      # field$area <- sf::st_area(field) %>%
-      #   units::set_units("acre")
       return(field)
     },
     #' @description
     #' Uploads a field to the database. Takes the field shapefile and
-    #' identifies the coresponding farmeridx, adds it as a column, and
+    #' identifies the corresponding farmeridx, adds it as a column, and
     #' then uploads to the 'all_farms.fields' table. Makes sure there is
     #' no conflict defined in the .buildTables method of the BuildDB class.
     #' A fieldidx is automatically generated upon upload by PostgreSQL based

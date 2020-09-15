@@ -9,6 +9,12 @@ such as new farmer names, farm names and boundaries, and experimental
 field names and boundaries used in OFPE. Users can build and add their
 own methods.
 }
+\seealso{
+\code{\link{DBCon}} for database connection class,
+\code{\link{ManageFarmers}} for the class that manages farmer data,
+\code{\link{ManageFarms}} for the class that manages farm data, and
+\code{\link{ManageFields}} for the class that manages field data.
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -73,7 +79,7 @@ prior to uploading to the OFPE database.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{None}}{There are no arguments to this method as the list of
-actions was supplied upong initialization of the ManageDB class.}
+actions was supplied upon initialization of the ManageDB class.}
 }
 \if{html}{\out{</div>}}
 }
@@ -86,7 +92,7 @@ Prepared R6 action classes specified by the user.
 \if{latex}{\out{\hypertarget{method-executeActions}{}}}
 \subsection{Method \code{executeActions()}}{
 Executes the upload method of each action class that was passed in by
-the user and has been initialzied and set up. These methods upload the
+the user and has been initialized and set up. These methods upload the
 data prepared by each action's setup method.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ManageDB$executeActions()}\if{html}{\out{</div>}}

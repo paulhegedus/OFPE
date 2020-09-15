@@ -25,6 +25,8 @@
 #' dataset, making a unique id using the year and fieldname, uncentering data, and
 #' identifying a field name to use for plotting that reflects all fields in the
 #' dataset.
+#' @seealso \code{\link{ModClass}} for the class that calls the ModClass interface,
+#' \code{\link{GAM}} for the alternative class that fits a generalized additive model.
 #' @export
 NonLinear_Logistic <- R6::R6Class(
   "NonLinear_Logistic",
@@ -43,9 +45,12 @@ NonLinear_Logistic <- R6::R6Class(
     #' (yld/pro). This is for the data specified from the analysis data inputs (grid specific).
     num_means = NULL,
 
-    #' @field mod Fitted GAM.
+    #' @field mod Fitted non-linear logistic model.
     mod = NULL,
-    #' @field form Final GAM formula.
+    #' @field mod0 Fitted non-linear logistic model with the minimum rates and locking beta,
+    #' delta, and gamma.
+    mod0 = NULL,
+    #' @field form Final non-linear logistic formula.
     form = NULL,
     #' @field parm_df Data frame of parameter names, the function component and ID, and a column
     #' named 'bad_parms' to indicate whether to include in the model formula. Also includes
@@ -121,19 +126,19 @@ NonLinear_Logistic <- R6::R6Class(
     #' The process first identifies parameters that will cause errors in the model fitting
     #' method, then creates some initial coefficient estimates to use for fitting an initial
     #' model. The estimates are based off of the mean to reduce the weight of large parameter
-    #' values on the estiamtes. Then the alpha and beta components are estimated with these
+    #' values on the estimates. Then the alpha and beta components are estimated with these
     #' initial values and the means of each parameter. If alpha and beta fall outside of half a
-    #' standard deviation from the 1st and 3rd quartiles of the data the intercept for each
+    #' standard deviation from the 1st and 3rd quantiles of the data the intercept for each
     #' component of alpha and beta (a0 and b0) are set to the 1st and 3rd quantiles, respectively.
-    #' This sets up the intitial model to follow a logistic curve from the 1st to the 3rd quantile
+    #' This sets up the initial model to follow a logistic curve from the 1st to the 3rd quantile
     #' levels of the response variable, mimicking the expected response of crop yield and protein
     #' to look.
     #'
     #' Then, an initial model only using data from the lowest experimental rates is used to fit
     #' the coefficients for the alpha component. Beta components are held constant in this process.
-    #' Once the alpha coefficeints are fitted, these are locked in and another model fitting step
-    #' uses the estiamted alpha component in a model to fit the beta, delta, and gamma components.
-    #' If this fails, delta is set at the mean of the experimenal value and the fit is tried again.
+    #' Once the alpha coefficients are fitted, these are locked in and another model fitting step
+    #' uses the estimated alpha component in a model to fit the beta, delta, and gamma components.
+    #' If this fails, delta is set at the mean of the experimental value and the fit is tried again.
     #' This usually works, if not there are deeper issues in the data. This final model  is returned
     #' to the user for use in the simulation to predict the response under varying
     #' rates of the experimental variable.
@@ -218,6 +223,15 @@ NonLinear_Logistic <- R6::R6Class(
   private = list(
     .makeInitCoefEsts = function() {
       # make initial estimate based on means
+      # if (sum(self$num_means[[1]], na.rm = TRUE) == 0) {
+      #   self$parm_df$est <- ifelse(self$parm_df$means > 1000, 0.001,
+      #                              ifelse(self$parm_df$means > 100, 0.01,
+      #                                     ifelse(self$parm_df$means > 10, 0.1, 1)))
+      # } else {
+      #   self$parm_df$est <- ifelse(self$parm_df$means > 1, 0.001,
+      #                              ifelse(self$parm_df$means > 0.01, 0.01,
+      #                                     ifelse(self$parm_df$means > 0.001, 0.1, 1)))
+      # }
       self$parm_df$est <- ifelse(self$parm_df$means > 1000, 0.001,
                                  ifelse(self$parm_df$means > 100, 0.01,
                                         ifelse(self$parm_df$means > 10, 0.1, 1)))
@@ -231,9 +245,9 @@ NonLinear_Logistic <- R6::R6Class(
           as.numeric(na.omit(self$parm_df[self$parm_df$fxn_comp == "beta", "means"]))
       )
       # adjust estimates to match to 1st and 3rd quantile of resp (sets up initial logistic curve)
-      resp_smry <- summary(self$dat$trn[which(names(self$dat$trn) %in% self$respvar)][[1]]) %>%
+      resp_smry <- summary(self$dat$trn[, which(names(self$dat$trn) %in% self$respvar), with = FALSE][[1]]) %>%
         as.numeric()
-      resp_sd <- sd(self$dat$trn[which(names(self$dat$trn) %in% self$respvar)][[1]])
+      resp_sd <- sd(self$dat$trn[, which(names(self$dat$trn) %in% self$respvar), with = FALSE][[1]])
       est_alpha <- resp_smry[2] - ((resp_smry[2] - resp_smry[1]) / 2)
       est_beta <- resp_smry[5]
       if(alpha < est_alpha - 0.5 * resp_sd | alpha > est_alpha + 0.5 * resp_sd | alpha <= 0){
@@ -247,11 +261,11 @@ NonLinear_Logistic <- R6::R6Class(
       self$parm_df[which(self$parm_df$coef_id %in% "EXP"), "bad_parms"] <- TRUE
     },
     .lockAlpha = function() {
-      min_exp <- min(self$dat$trn[which(names(self$dat$trn) %in% self$expvar)][[1]], na.rm = TRUE)
-      sd_exp <- sd(self$dat$trn[which(names(self$dat$trn) %in% self$expvar)][[1]], na.rm = TRUE)
-      d_zero <- self$dat$trn[self$dat$trn[which(names(self$dat$trn) %in% self$expvar)][[1]] <= min_exp, ]
+      min_exp <- min(self$dat$trn[, which(names(self$dat$trn) %in% self$expvar), with = FALSE][[1]], na.rm = TRUE)
+      sd_exp <- sd(self$dat$trn[, which(names(self$dat$trn) %in% self$expvar), with = FALSE][[1]], na.rm = TRUE)
+      d_zero <- self$dat$trn[self$dat$trn[, which(names(self$dat$trn) %in% self$expvar), with = FALSE][[1]] <= min_exp, ]
       if (nrow(d_zero) < min_exp + 10) {
-        d_zero <- self$dat$trn[self$dat$trn[which(names(self$dat$trn) %in% self$expvar)][[1]] <= (min_exp - sd_exp), ]
+        d_zero <- self$dat$trn[self$dat$trn[, which(names(self$dat$trn) %in% self$expvar), with = FALSE][[1]] <= (min_exp - sd_exp), ]
       }
       fxn <- private$.makeFormula(TRUE)
       # make parm start list
@@ -261,12 +275,12 @@ NonLinear_Logistic <- R6::R6Class(
       delta <- self$parm_df[self$parm_df$fxn_comp == "EXP", "means"] %>% na.omit() %>% as.numeric()
       gamma <- 0.1
       b0 <- self$parm_df[self$parm_df$coef_id == "b0", "est"] %>% na.omit() %>% as.numeric()
-      mod0 <- minpack.lm::nlsLM(as.formula(fxn),
+      self$mod0 <- minpack.lm::nlsLM(as.formula(fxn),
                   data = d_zero,
                   control = nls.control(maxiter = 500, minFactor = 1e-10),
                   start = start_list)
-      self$parm_df[self$parm_df$coef_id %in% names(summary(mod0)$coefficients[, 1]), "est"] <-
-        as.numeric(summary(mod0)$coefficients[, 1])
+      self$parm_df[self$parm_df$coef_id %in% names(summary(self$mod0)$coefficients[, 1]), "est"] <-
+        as.numeric(summary(self$mod0)$coefficients[, 1])
     },
     logistic2 = function(alpha, beta, delta, gamma, EXP) {
       ### Logistic function ###
@@ -283,27 +297,32 @@ NonLinear_Logistic <- R6::R6Class(
       self$form <- private$.makeFormula()
       delta <- self$parm_df[self$parm_df$fxn_comp == "EXP", "means"] %>% na.omit() %>% as.numeric()
       # make parm start list & fit model
-      self$mod <- tryCatch(
-        {start_list <- as.list(self$parm_df$est[self$parm_df$fxn_comp == "beta"]) %>%
+      tryCatch({
+        start_list <- as.list(self$parm_df$est[self$parm_df$fxn_comp == "beta"]) %>%
           `names<-`(self$parm_df$coef_id[self$parm_df$fxn_comp == "beta"])
         start_list <- start_list[!is.na(start_list)]
         start_list$delta <- delta
         gamma <- 0.1
-        minpack.lm::nlsLM(as.formula(self$form),
+        self$mod <- minpack.lm::nlsLM(as.formula(self$form),
             data = self$dat$trn,
             control = nls.control(maxiter = 500, minFactor = 1e-10),
             start = start_list)},
       warning = function(w) {},
       error = function(e) {
-        start_list <- as.list(self$parm_df$est[self$parm_df$fxn_comp == "beta"]) %>%
-          `names<-`(self$parm_df$coef_id[self$parm_df$fxn_comp == "beta"])
-        start_list <- start_list[!is.na(start_list)]
-        delta <- delta
-        gamma <- 0.1
-        minpack.lm::nlsLM(as.formula(self$form),
-            data = self$dat$trn,
-            control = nls.control(maxiter = 500, minFactor = 1e-10),
-            start = start_list)
+        tryCatch({
+          start_list <- as.list(self$parm_df$est[self$parm_df$fxn_comp == "beta"]) %>%
+            `names<-`(self$parm_df$coef_id[self$parm_df$fxn_comp == "beta"])
+          start_list <- start_list[!is.na(start_list)]
+          delta <- delta
+          gamma <- 0.1
+          self$mod <- minpack.lm::nlsLM(as.formula(self$form),
+                                        data = self$dat$trn,
+                                        control = nls.control(maxiter = 500, minFactor = 1e-10),
+                                        start = start_list)},
+          warning = function(w) {},
+          error = function(e) {
+            self$mod <- self$mod0
+          })
       })
 
       self$parm_df <- rbind(self$parm_df, c("delta", "delta", "delta", FALSE, 1, 1, delta))
@@ -319,19 +338,20 @@ NonLinear_Logistic <- R6::R6Class(
                           self$parm_df$parms[self$parm_df$fxn_comp == "alpha"] %>% na.omit() %>% as.character()))
         alpha <- c("a0", alpha[2:length(alpha)])
         beta <- "b0"
+        if (any(as.logical(na.omit(self$parm_df[self$parm_df$fxn_comp == "alpha", "bad_parms"])))) {
+          alpha <- alpha[-grep(paste(self$parm_df$parms[which(as.logical(self$parm_df$bad_parms))], collapse = "|"), alpha)]
+        }
       } else {
         alpha <- c(paste0(self$parm_df$est[self$parm_df$fxn_comp == "alpha"] %>% na.omit() %>% as.character(), "*",
-                          self$parm_df$parms[self$parm_df$fxn_comp == "alpha"] %>% na.omit() %>% as.character()))
+                          self$parm_df$parms[self$parm_df$fxn_comp == "alpha" &
+                                               self$parm_df$bad_parms == FALSE] %>% na.omit() %>% as.character()))
         alpha <- c(self$parm_df$est[self$parm_df$coef_id == "a0"] %>% na.omit() %>% as.character(), alpha[2:length(alpha)])
         beta <- c(paste0(self$parm_df$coef_id[self$parm_df$fxn_comp == "beta"] %>% na.omit() %>% as.character(), "*",
                          self$parm_df$parms[self$parm_df$fxn_comp == "beta"] %>% na.omit() %>% as.character()))
         beta <- c("b0", beta[2:length(beta)])
-        if (any(as.logical(self$parm_df[self$parm_df$fxn_comp == "beta", "bad_parms"]))) {
+        if (any(as.logical(na.omit(self$parm_df[self$parm_df$fxn_comp == "beta", "bad_parms"])))) {
           beta <- beta[-grep(paste(self$parm_df$parms[which(as.logical(self$parm_df$bad_parms))], collapse = "|"), beta)]
         }
-      }
-      if (any(as.logical(self$parm_df[self$parm_df$fxn_comp == "alpha", "bad_parms"]))) {
-        alpha <- alpha[-grep(paste(self$parm_df$parms[which(as.logical(self$parm_df$bad_parms))], collapse = "|"), alpha)]
       }
       # make function statement
       fxn <- paste0("private$logistic2(", paste(alpha, collapse = " + "), ", ",

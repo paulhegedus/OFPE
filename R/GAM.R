@@ -2,7 +2,7 @@
 #'
 #' @description R6 class using Generalized Additive Models (GAM) to fit a crop
 #' response model with the experimental variable and remotely sensed covariate
-#' data. This class is initialized with a named list of traning (named 'trn')
+#' data. This class is initialized with a named list of training (named 'trn')
 #' and validation (named 'val') datasets, the response variable, the experimental
 #' variable, and the means of the centered data.
 #'
@@ -23,6 +23,9 @@
 #' dataset, making a unique id using the year and fieldname, uncentering data, and
 #' identifying a field name to use for plotting that reflects all fields in the
 #' dataset.
+#' @seealso \code{\link{ModClass}} for the class that calls the ModClass interface,
+#' \code{\link{NonLinear_Logistic}} for the alternative class that fits a
+#' non-linear logistic model.
 #' @export
 GAM <- R6::R6Class(
   "GAM",
@@ -62,7 +65,7 @@ GAM <- R6::R6Class(
     #' the criteria to be omitted from the model, making it a 'bad_parm'. The criteria for
     #' this is over 30% of data for a given year missing for a parameter or a standard
     #' deviation of zero, indicating singularity.
-    #' @param dat Named list of traning (named 'trn') and validation (named 'val')
+    #' @param dat Named list of training (named 'trn') and validation (named 'val')
     #' datasets with the response, experimental, and remotely sensed variables.
     #' @param respvar Character, the response variable of interest.
     #' @param expvar Character, the experimental variable of interest.
@@ -71,7 +74,7 @@ GAM <- R6::R6Class(
     #' converting centered data back to the original form. The centering process does not
     #' center three numerical variables; the x and y coordinates, and the response variable
     #' (yld/pro). This is for the data specified from the analysis data inputs (grid specific).
-    #' @param init_k Optional, provide an intial 'k' value to use for the GAM. If no selection
+    #' @param init_k Optional, provide an initial 'k' value to use for the GAM. If no selection
     #' automatically 50. K is the the dimension of the basis used to represent the smooth term.
     #' Multiple k values will be tested, consider this the upper limit and starting place.
     #' @return A instantiated 'GAM' object.
@@ -123,14 +126,20 @@ GAM <- R6::R6Class(
     #' Finally, this method prepares the validation data for plotting by using the model to predict
     #' the response for each of the observations in the validation dataset, uncentering data if
     #' necessary, and identifying a unique field name from the data.
-    #' @param None Put parameters here
+    #' @param None Parameters provided upon class instantiation.
     #' @return A fitted GAM.
     fitMod = function() {
       self$parm_df <- OFPE::findBadParms(self$parm_df, self$dat$trn)
-
       #private$.findK()
       self$form <- private$.makeFormula()
-      self$mod <- mgcv::bam(as.formula(self$form), data = self$dat$trn)
+      tryCatch({
+        self$mod <- mgcv::bam(as.formula(self$form), data = self$dat$trn)
+        }, warning = function(w) {},
+        error = function(e) {
+          private$.findK()
+          self$form <- private$.makeFormula()
+          self$mod <- mgcv::bam(as.formula(self$form), data = self$dat$trn)
+      })
       self$dat$val$pred <- self$predResps(self$dat$val, self$mod)
       self$dat$val <- OFPE::valPrep(self$dat$val,
                                     self$respvar,
@@ -171,19 +180,23 @@ GAM <- R6::R6Class(
   private = list(
     .findK = function() {
       ## brute force method for finding a reasonable 'k' estimate.
-      for (i in 1:nrow(self$parm_df)) {
-        tryK <- c(self$parm_df$k[i],
-                  ifelse(round(self$parm_df$k[i] / 2) > 20,
-                         round(self$parm_df$k[i] / 2),
+      potentially_bad <- c("prev_pro", "prev_aa_n", "ssm_cy", "ssm_py", "susm_cy",
+                           "susm_py", "prec_cy", "prec_py", "gdd_cy",
+                           "gdd_py", "veg_cy", "veg_py", "veg_2py")
+      for (i in 1:length(potentially_bad)) {
+        trgtK <- self$parm_df[grep(potentially_bad[i], self$parm_df$parms), "k"]
+        tryK <- c(trgtK,
+                  ifelse(round(trgtK / 2) > 20,
+                         round(trgtK / 2),
                          20),
-                  ifelse(round(self$parm_df$k[i] / 4) > 15,
-                         round(self$parm_df$k[i] / 4),
+                  ifelse(round(trgtK / 4) > 15,
+                         round(trgtK / 4),
                          15),
-                  ifelse(round(self$parm_df$k[i] / 10) > 10,
-                         round(self$parm_df$k[i] / 10),
+                  ifelse(round(trgtK / 10) > 10,
+                         round(trgtK / 10),
                          10),
-                  ifelse(round(self$parm_df$k[i] / 20) > 5,
-                         round(self$parm_df$k[i] / 20),
+                  ifelse(round(trgtK / 20) > 5,
+                         round(trgtK / 20),
                          5),
                   3, 2, 1
                   )
@@ -192,7 +205,7 @@ GAM <- R6::R6Class(
           # if foundK  = FALSE (have not found a k that fits, keep trying)
           if (!foundK) {
             # set the k in the paramter table to the k estimate
-            self$parm_df$k[i] <- tryK[j]
+            self$parm_df[grep(potentially_bad[i], self$parm_df$parms), "k"] <- tryK[j]
             # make the function statement
             fxn <- private$.makeFormula()
             # fit model with the estimated k
@@ -209,8 +222,8 @@ GAM <- R6::R6Class(
         } # end tryK
         # if no k found
         if (!foundK) {
-          self$parm_df$bad_parms[i] <- TRUE
-          self$parm_df$k[i] <- NA
+          self$parm_df[grep(potentially_bad[i], self$parm_df$parms), "bad_parms"] <- TRUE
+          self$parm_df[grep(potentially_bad[i], self$parm_df$parms), "k"] <- NA
         }
         rm(foundK) # remove the indicator for the next var in loop
       } # end parms

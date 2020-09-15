@@ -8,7 +8,8 @@
 [![Project Status: WIP – Initial development is in progress, but there
 has not yet been a stable, usable release suitable for the
 public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-[![Last-changedate](https://img.shields.io/badge/last%20change-2020--09--08-yellowgreen.svg)](/commits/master)
+<!-- [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active) -->
+[![Last-changedate](https://img.shields.io/badge/last%20change-2020--09--15-yellowgreen.svg)](/commits/master)
 [![R build
 status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
 [![Build
@@ -52,8 +53,8 @@ remotely-sensed sources to the database, then aggregating all covariate
 data to the yield and protein datasets, analysis and simulation of
 ecological and economic outcomes, and generation of input prescriptions
 based on the field specific predictions. In the next year, data is
-collected and the cycle repeats, beginning with downloading GEE data and
-importing data collected from on-farm equipment.
+collected and the cycle repeats, beginning with downloading that year’s
+GEE data and importing data collected from on-farm equipment.
 
 Below (Fig. 1) is a schematic of the general On-Field Precision
 Experiments data workflow, with a more detailed description of the data
@@ -89,7 +90,7 @@ More information/products of the MSU OFPE Project can be found at;
 It is **strongly** recommended that the user familiarizes themselves
 with the OFPE project and the data workflow that this package supports
 by reading the general project information on the [OFPE Project
-Website](https://sites.google.com/site/ofpeframework/) and the detailed
+Website](https://sites.google.com/site/ofpeframework/) and the
 descriptions and diagrams of the OFPE data cycle on the [OFPE Technical
 Website](https://paulhegedus.github.io/OFPE-Website/). The [OFPE Web
 Application](https://paulhegedus.shinyapps.io/OFPE_AnalysisAndSim_App_v1/?_ga=2.189182059.1336631904.1592115204-590292424.1592115204)
@@ -97,7 +98,8 @@ may also be illuminating to see the intended use of this package’s
 functions in a user friendly GUI. Finally, **please** read the
 *Workflow/Vignettes* section below and work through Vignettes 1 - 5 for
 a complete understanding of the usage of this package in supporting your
-own or your client’s on-farm precision experiments.
+own or your client’s on-farm precision experiments. And of course, each
+class’ and function’s documentation is the best source for the process.
 
 ## Intended Use/Disclaimer
 
@@ -146,7 +148,10 @@ This package includes functions for interfacing with Google Earth Engine
 and Google Drive. To access and operate these functions, or for complete
 usage of the OFPE workflow, the user will need to set up a [Google Earth
 Engine](https://earthengine.google.com) account and sign up for [Google
-Drive](https://www.google.com/drive/).
+Drive](https://www.google.com/drive/). Additionally, the user will need
+a [Google API
+key](https://developers.google.com/maps/documentation/javascript/get-api-key)
+to plot maps with a Google satellite basemap.
 
 While not required, it is assumed that the user has access and uses
 grain protein percent as a response variable complementary to winter
@@ -176,20 +181,20 @@ package ring closest to the database and the green OFPE web app ring
 closest to the users. The rings touch because the OFPE package powers
 the OFPE web app. The yellow boxes in Figure 2 represent each process in
 the OFPE data workflow, and are different pages available for the user
-on the OFPE web app, which also have an accompying vignette in the OFPE
-R package to demonstrate the usage of the code outside of the OFPE web
-app GUI. This process consists of setting up (creating) the database
+on the OFPE web app, which also have an accompanying vignette in the
+OFPE R package to demonstrate the usage of the code outside of the OFPE
+web app GUI. This process consists of setting up (creating) the database
 with user specified field and farm data (Step 1), importing data
 collected on-fields and from open sources like SSURGO and Google Earth
 Engine (Step 2a & 2b), enriching yield and protein datasets by
 aggregating covariate data (Step 3), analyzing response of yield and
-protein to variable input rates, simualting and predicting net-return
+protein to variable input rates, simulating and predicting net-return
 outcomes of management strategies (Step 4), and generating site-specific
 prescriptions of inputs (Step 5).
 
 <div class="figure" style="text-align: center">
 
-<img src="man/figures/ofpe_data_workflow.png" alt="**Figure 2.** Key is found in the top right corner of the schematic. The green ring represents the R-Shiny OFPE web spplication which is driven by the OFPE R-Package (blue ring). These both require connection to a PostgreSQL spatial database with PostGIS enabled. The yellow boxes represent different pages of the OFPE web application and vignettes in the R-package. Black boxes represent user inputs and orange clouds represent cloud based tools." width="100%" />
+<img src="vignettes/ofpe_data_workflow.png" alt="**Figure 2.** Key is found in the top right corner of the schematic. The green ring represents the R-Shiny OFPE web spplication which is driven by the OFPE R-Package (blue ring). These both require connection to a PostgreSQL spatial database with PostGIS enabled. The yellow boxes represent different pages of the OFPE web application and vignettes in the R-package. Black boxes represent user inputs and orange clouds represent cloud based tools." width="100%" />
 
 <p class="caption">
 
@@ -239,8 +244,10 @@ and database driver. The database schematic and format can be found
 The user will need access to or need to create necessary farm and field
 boundaries associated with their experimental fields to set up their
 database. These farm boundaries that encompass the fields within a
-farmer’s ownership/management purview are imported as assets into Google
-Earth Engine and imported into the database. See this
+farmer’s ownership/management purview are imported as [assets into
+Google Earth
+Engine](https://paulhegedus.github.io/OFPE-Website/gee_setup.html) and
+imported into the database. See this
 [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html)
 for creating a shapefile of a field or farm boundary. These are
 necessary for identifying data based on geographic location rather than
@@ -267,13 +274,13 @@ data can be batch uploaded to the database through a script that
 automatically identifies and organizes each upload.
 
 The process for importing on-farm data to the database is outlined and a
-more detailed descriptionin the activity diagram on [this
+more detailed description the activity diagram on [this
 page](https://paulhegedus.github.io/OFPE-Website/dat_import.html), where
 a component diagram can also be found.
 
 Remote sensing data is collected from Google Earth Engine and includes
 data temporally variable data such as weather and static data such as
-topogrophy. The user is responsible for running the Google Earth Engine
+topography. The user is responsible for running the Google Earth Engine
 Javascript code to download data for each year required. See this
 [tutorial](https://paulhegedus.github.io/OFPE-Website/gee_setup.html)
 for adding farm boundaries to GEE as asset and this
@@ -319,7 +326,26 @@ condition (winter wheat price, price of fertilizer or seed) to generate
 the probability of outcomes. Because the farmer has to make a decision
 on their input rates by March 30th for winter wheat, the farmer will not
 know the weather conditions for the rest of the growing season, so the
-user will be able to select a year or scenario to simulate.
+user will be able to select a year or scenario to simulate. The user
+also has control over the model functional type used and how to optimize
+the input. The simulation is a Monte-Carlo simulation that iteratively
+selects a year from a period of record from which to predict crop
+responses and net-returns under that year’s observed price and or
+weather conditions. The user can provide a data frame with ranges of
+prices received and the cost of the experimental variable. After the
+simulation, the probability of the site-specific optimization management
+strategy can be compared to other strategies such as the minimum rate of
+input (typically zero for nitrogen fertilizer, non-zero for seeding
+rates), the farmer selected uniform rate, the full-field optimized rate,
+if the actual experiment applied in the simulated year, and if the crop
+was grown in the opposite system type. For example, if the farmer grows
+conventional wheat, this would be the management case where zero
+fertilizer is applied and an organic price is received. If the farmer is
+an organic grower, than this management scenario is simply the farmer
+selected rate with conventional prices received. The user can use this
+tool to simulate different management outcomes under various economic
+and climate scenarios to decide conditions for which to make an input
+prescription for the upcoming year.
 
 The activity workflow for simulating management outcomes is described on
 [this page](https://paulhegedus.github.io/OFPE-Website/sim_anal.html),
@@ -332,9 +358,21 @@ year and decides on a management strategy, a prescriptive fertilizer or
 seed map can be generated based on optimizing inputs. This optimization
 can take the form of profit maximization or profit maximization and
 pollution minimization. This prescription can reflect a specified price
-scenario or the *mean/median* of inputs across simulation results. The
+scenario or the mean of inputs across simulation results. The
 prescription is exported as a shapefile that the farmer can upload to
-their equipment and apply the inputs.
+their equipment and apply the inputs. The user has the option of
+including experimental rates, with the prescriptive rates as a base, or
+to make a pure prescription, in which case check rates can be added to
+the map to assess the how the prescription performs compared to a farmer
+selected rate. Alternatively, the user can elect to create a new
+experiment for a field. They must select a field present in the
+‘all\_farms.fields’ table of the OFPE database to create the
+experiment for. The user has the option of stratifying the experiment on
+previous data available in the database, such as yield, protein, or
+previous as-applied rates. The user must provide the number of
+experimental rates to apply if experimental rates are applied, as well
+as the number of optimum rates to use. In addition to the base rate
+applied, the sum should equal the equipment limitation on rates applied.
 
 The activity workflow for generating prescriptions and a more detailed
 description is described on [this

@@ -149,8 +149,9 @@ standardizeColNames <- function(db, dat, schema, dtype) {
   # add cols from db to file and cols from file to db
   if (length(in_db) > 0) {
     row.names(dat) <- as.character(seq(1, nrow(dat), 1))
-    dat <- maptools::spCbind(dat, as.data.frame(matrix(NA, nrow(dat), length(in_db))))
-    names(dat) <- c(names(dat), in_db)
+    from_db <- as.data.frame(matrix(NA, nrow(dat), length(in_db))) %>%
+      `names<-`(in_db)
+    dat <- maptools::spCbind(dat, from_db)
   }
   if (length(in_df) > 0) {
     for (j in 1:length(in_df)) {
@@ -168,21 +169,15 @@ standardizeColNames <- function(db, dat, schema, dtype) {
 #' to identify which columns don't match in database table
 #' and data column names.
 #'
-#' @param source Character vector to check if present in
+#' @param source_vec Character vector to check if present in
 #' target.
-#' @param target Character vector to check if source elements
+#' @param target_vec Character vector to check if source elements
 #' are present in.
 #' @return Elements of source vector not present in target.
 #' @export
-noMatch = function(source, target) {
-  inSource <- rep(NA, length(source))
-  for (j in 1:length(source)) {
-    if (!any(grepl(paste0("^", source[j], "$"), target))) {
-      inSource[j] <- source[j]
-    }
-  }
-  inSource <- inSource[!is.na(inSource)]
-  return(inSource)
+noMatch = function(source_vec, target_vec) {
+  in_source_vec <- source_vec[!source_vec %in% target_vec]
+  return(in_source_vec)
 }
 #' @title Check if table exists
 #'

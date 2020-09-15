@@ -4,7 +4,7 @@
 #' single special characters as well as ".-" and "__".
 #'
 #' @param strng Character string for cleaning.
-#' @param files Logical, are the strings filenames? If TRUE, "." not removed,
+#' @param files Logical, are strings filenames, if TRUE, "." not removed,
 #' if FALSE, "." removed.
 #' @return Clean character string.
 #' @export

@@ -19,16 +19,18 @@
 #' @param fieldname Unique field name corresponding to all fields used in the simulation.
 #' @param farmername Name of the farmer managing the field. Used to identify UTM zone and
 #' for figure labeling.
+#' @param utm_zone The user must provide the UTM zone of the data.
 #' @return If one variable for plotting is passed as an argument, a map of
 #' selected variable is returned, otherwise a list with the map for each
-#' variable the user passed in will be returned..
+#' variable the user passed in will be returned.
 #' @export
 plotMaps <- function(df,
                      var_col_name,
                      var_label,
                      var_main_label,
                      fieldname,
-                     farmername) {
+                     farmername,
+                     utm_zone) {
   stopifnot(
     length(var_col_name) == length(var_label),
     length(var_col_name) == length(var_main_label),
@@ -42,9 +44,9 @@ plotMaps <- function(df,
     is.character(farmername),
     !is.null(df$x),
     !is.null(df$y),
-    any(grepl(var_col_name, names(df)))
+    any(grepl(var_col_name, names(df))),
+    !is.null(utm_zone)
   )
-  utm_zone <- OFPE::findUTMzone(farmername = farmername)
   df <- as.data.frame(df)
   dfOG <- df
   plot_list <- rep(list(NA), length(var_col_name))

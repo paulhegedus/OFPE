@@ -3,6 +3,10 @@
 #' @description R6 Class for executing the OFPE data aggregation process that
 #' consolidates data from Google Earth Engine to on-farm data. This is used
 #' within the 'AggDat' R6 class.
+#' @seealso \code{\link{DBCon}} for the database connection class,
+#' \code{\link{AggDat}} for the class responsible for aggregating on-farm data,
+#' \code{\link{AggInputs}} for the inputs required for the aggregation
+#' process.
 #' @export
 AggGEE <- R6::R6Class(
   "AggGEE",
@@ -28,7 +32,7 @@ AggGEE <- R6::R6Class(
     type = NULL,
     #' @field SOURCE The SOURCE of data corresponding to each respective label.
     SOURCE = NULL,
-    #' @field year The year of data to gather,  corresponding to each respective
+    #' @field year The year of data to gather, corresponding to each respective
     #' label.
     year = NULL,
     #' @field loy The length of year for which to gather data for each respective
@@ -50,8 +54,6 @@ AggGEE <- R6::R6Class(
       self$aggInputs <- aggInputs
       self$farmidx <- farmidx
       self$farmeridx <- farmeridx
-
-
       invisible(
         DBI::dbSendQuery(
           self$aggInputs$dbCon$db,
@@ -94,7 +96,6 @@ AggGEE <- R6::R6Class(
                  self$aggInputs$farmername, "_a.temp")
         )
       )
-
       self$PY <-  as.character(as.numeric(self$aggInputs$cy_resp) - 1 )
       self$PY2 <-  as.character(as.numeric(self$aggInputs$cy_resp) - 2 )
       self$labels <- c("aspect_rad", "slope", "elev", "tpi",
@@ -145,7 +146,7 @@ AggGEE <- R6::R6Class(
     #' when Sentinel 2 data is available. If available, gather SMAP data
     #' from the current and previous year. Get the surface soil moisture
     #' and subsurface soil moisture from SMAP.
-    #' @param None No argumetns necessary because identified in class
+    #' @param None No arguments necessary because identified in class
     #' instantiation.
     #' @return GEE data aggregated to the temporary aggregated table
     #' in the database.
@@ -169,7 +170,7 @@ AggGEE <- R6::R6Class(
     },
     #' @description
     #' Method for aggregating the Google Earth Engine data to the on-farm
-    #' aggregated data. Identifies the appropirate data from the 'all_farms.
+    #' aggregated data. Identifies the appropriate data from the 'all_farms.
     #' gee' schema and extracts the values of each raster to each point in
     #' the field. All labels, type, SOURCE etc. are identified in the GEE
     #' data original filenames exported from GEE. The dot indicates that
@@ -239,19 +240,6 @@ AggGEE <- R6::R6Class(
                     DROP COLUMN id;")
           )
         )
-        ## below only works if not multipolygon
-        #invisible(
-        #  dbSendQuery(
-        #    db,
-        #    paste0( "WITH temp AS(
-        #    SELECT *
-        #    FROM all_farms.temp temp)
-
-        #    DELETE FROM all_farms.geetemp AS geetemp
-        #    USING temp
-        #    WHERE NOT ST_Intersects(temp.geometry, geetemp.rast);")
-        #  )
-        #)
         # extract values
         invisible(
           DBI::dbSendQuery(

@@ -9,7 +9,7 @@ noSpecialChar(strng, files)
 \arguments{
 \item{strng}{Character string for cleaning.}
 
-\item{files}{Logical, are the strings filenames? If TRUE, "." not removed,
+\item{files}{Logical, are strings filenames, if TRUE, "." not removed,
 if FALSE, "." removed.}
 }
 \value{

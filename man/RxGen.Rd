@@ -32,15 +32,18 @@ further experimentation is needed.
 
 When creating an experimental prescription or a prescription, the user must pass
 an set up SimClass. This implies that the user has initialized and set up
-the required DatClass, ModClass, and EconDat R6 objects. The user has the option
-of passing a SimClass object that has been executed or not. Regardless, the RxClass
-will check 1) for simulation output data and 2) execute the simulation for any year(s)
-that the user specified for generating a prescription for that is not present in the
-simulation data. This simulation output data is used to generate the experimental
-prescriptions and the prescriptions.
+the required DatClass, ModClass, and EconDat R6 objects. The user must pass a
+SimClass object that has been executed. This simulation output data is used to select
+the years that the farmer thinks the upcoming year will resemble and generate
+the experimental prescriptions and the prescriptions.
 
 This class follows the generator interface that includes an initialization method
 and an 'executeOutput' method.
+}
+\seealso{
+\code{\link{DBCon}} for the database connection class,
+\code{\link{SimClass}} for the class that contains simulation outputs, and
+\code{\link{ExpGen}} for the alternative class that creates new experiments.
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -69,7 +72,7 @@ organic systems, both of which are already provided.}
 
 \item{\code{boom_width}}{The width of the sprayer boom or spreader.}
 
-\item{\code{orientation}}{TODO...}
+\item{\code{orientation}}{TODO... Not implemented yet.}
 
 \item{\code{expvar}}{Experimental variable to optimize, select/input
 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
@@ -243,7 +246,7 @@ organic systems, both of which are already provided.}
 
 \item{\code{boom_width}}{The width of the sprayer boom or spreader.}
 
-\item{\code{orientation}}{TODO...}
+\item{\code{orientation}}{TODO... Not implemented yet.}
 
 \item{\code{expvar}}{Experimental variable to optimize, select/input
 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of

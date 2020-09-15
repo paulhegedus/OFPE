@@ -30,6 +30,10 @@
 #' this is NOT recommended except for advanced users. It is recommended that the
 #' user supplies the response variables, and uses the interactive selection methods
 #' to select user inputs.
+#' @seealso \code{\link{DatClass}} for data required for model fitting and validation,
+#' \code{\link{SimClass}} for simulation class that rely on models from ModClass,
+#' \code{\link{GAM}} for the class used for fitting a generalized additive model, and
+#' \code{\link{NonLinear_Logistic}} for the class that fits a non-linear logistic model.
 #' @export
 ModClass <- R6::R6Class(
   "ModClass",
@@ -56,7 +60,7 @@ ModClass <- R6::R6Class(
     #' able to save any outputs. (Note, even if a path is provided, the user
     #' can pass FALSE as the sole argument to the 'setupOP' method to prevent
     #' the creation of folders. This will automatically prevent any plots to
-    #' be saved.)
+    #' be saved).
     out_path = NULL,
     #' @field SAVE Logical, whether to save figures. Autofilled to FALSE if
     #' a user selects NA in the 'out_path' or is NULL. Autofilled to TRUE
@@ -210,7 +214,7 @@ ModClass <- R6::R6Class(
     #' Method for calling the specific model class' method for executing the model
     #' fitting function. This can differ between model types and is thus model
     #' specific.
-    #' @param None All parametes supplied upon initialization.
+    #' @param None All parameters supplied upon initialization.
     #' @return Fitted models.
     fitModels = function() {
       lapply(self$mod_list, function(mod) mod$fitMod())
@@ -302,11 +306,11 @@ ModClass <- R6::R6Class(
         cols <- c("black", "cyan")
       }
       shps <- as.integer(runif(length(unique(mod$dat$val$year.field)), 1, 10))
-      yMIN <- DescTools::RoundTo(min(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]], na.rm = T), 5, floor)
-      yMAX <- DescTools::RoundTo(max(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]], na.rm = T), 5, ceiling)
+      yMIN <- DescTools::RoundTo(min(mod$dat$val[, which(names(mod$dat$val) %in% mod$respvar), with = FALSE][[1]], na.rm = T), 5, floor)
+      yMAX <- DescTools::RoundTo(max(mod$dat$val[, which(names(mod$dat$val) %in% mod$respvar), with = FALSE][[1]], na.rm = T), 5, ceiling)
       ySTEP <- (yMAX -  yMIN) / 10
-      xMIN <- DescTools::RoundTo(min(mod$dat$val[which(names(mod$dat$val) %in% mod$expvar)][[1]], na.rm = T), 5, floor)
-      xMAX <- DescTools::RoundTo(max(mod$dat$val[which(names(mod$dat$val) %in% mod$expvar)][[1]], na.rm = T), 5, ceiling)
+      xMIN <- DescTools::RoundTo(min(mod$dat$val[, which(names(mod$dat$val) %in% mod$expvar), with = FALSE][[1]], na.rm = T), 5, floor)
+      xMAX <- DescTools::RoundTo(max(mod$dat$val[, which(names(mod$dat$val) %in% mod$expvar), with = FALSE][[1]], na.rm = T), 5, ceiling)
       xSTEP <- (xMAX - xMIN) / 10
       p <- ggplot2::ggplot() +
         ggplot2::geom_point(data = mod$dat$val,
@@ -336,11 +340,11 @@ ModClass <- R6::R6Class(
       set.seed(13113)
       shps <- as.integer(runif(length(unique(mod$dat$val$year.field)), 1, 10))
 
-      MAX <- ifelse(max(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]], na.rm = T) > max(mod$dat$val$pred, na.rm = T),
-                    DescTools::RoundTo(max(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]], na.rm = T), 5, ceiling),
+      MAX <- ifelse(max(mod$dat$val[, which(names(mod$dat$val) %in% mod$respvar), with = FALSE][[1]], na.rm = T) > max(mod$dat$val$pred, na.rm = T),
+                    DescTools::RoundTo(max(mod$dat$val[, which(names(mod$dat$val) %in% mod$respvar), with = FALSE][[1]], na.rm = T), 5, ceiling),
                     DescTools::RoundTo(max(mod$dat$val$pred, na.rm = T), 5, ceiling))
-      MIN <- ifelse(min(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]], na.rm = T) < min(mod$dat$val$pred, na.rm = T),
-                    DescTools::RoundTo(min(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]], na.rm = T), 5, floor),
+      MIN <- ifelse(min(mod$dat$val[, which(names(mod$dat$val) %in% mod$respvar), with = FALSE][[1]], na.rm = T) < min(mod$dat$val$pred, na.rm = T),
+                    DescTools::RoundTo(min(mod$dat$val[, which(names(mod$dat$val) %in% mod$respvar), with = FALSE][[1]], na.rm = T), 5, floor),
                     DescTools::RoundTo(min(mod$dat$val$pred, na.rm = T), 5, floor))
       p <- ggplot2::ggplot(data = mod$dat$val) +
         ggplot2::geom_point(ggplot2::aes(x = get(mod$respvar), y = mod$dat$val$pred, shape = year.field)) +
@@ -354,7 +358,7 @@ ModClass <- R6::R6Class(
         ggplot2::ggtitle(paste0("Predicted vs. Observed ", ifelse(mod$respvar=="yld", "Yield", "Protein")),
                 subtitle = paste0("Line = 1:1, RMSE = ",
                                   suppressWarnings(round(Metrics::rmse(
-                                    na.omit(mod$dat$val[which(names(mod$dat$val) %in% mod$respvar)][[1]]),
+                                    na.omit(mod$dat$val[, which(names(mod$dat$val) %in% mod$respvar), with = FALSE][[1]]),
                                     na.omit(mod$dat$val$pred)),
                                     4
                                   ))))

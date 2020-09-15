@@ -14,6 +14,11 @@ choice for stratification.
 This class follows the generator interface that includes an initialization method
 and an 'executeOutput' method.
 }
+\seealso{
+\code{\link{DBCon}} for the database connection class, and
+\code{\link{RxGen}} for the alternative class that creates
+experimental prescriptions or pure prescriptions.
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -24,7 +29,7 @@ database, see DBCon class.}
 
 \item{\code{boom_width}}{The width of the sprayer boom or spreader.}
 
-\item{\code{orientation}}{TODO...}
+\item{\code{orientation}}{TODO... Not implemented yet.}
 
 \item{\code{fld_prop}}{The proportion of the field to apply experimental
 or optimum check rates to.}
@@ -41,21 +46,19 @@ units of the as-applied input (i.e. lbs N/ac to unit input/ac)}
 and the field edge, or as check rates in the prescription selected
 option.}
 
-\item{\code{rx_for_year}}{Provide the year that the prescription or experiment
+\item{\code{rx_for_year}}{Provide the year that the experiment
 is made for. Used for labeling outputs.}
 
-\item{\code{SAVE}}{Logical, whether to save figures and the prescription.
+\item{\code{SAVE}}{Logical, whether to save figures and the experiment.
 Autofilled to FALSE if a user selects NA in the 'out_path' or is NULL.
-Autofilled to TRUE otherwise. If not applied and a SimClass object has
-been supplied, the selected option in that class will be used.}
+Autofilled to TRUE otherwise.}
 
 \item{\code{out_path}}{Provide the path to the folder in which to store and
 save figures and the prescription Type NA to not create any folders.
 You will not be able to save any outputs. (Note, even if a path is provided,
 the user can pass FALSE as the sole argument to the 'setupOP' method
 to prevent the creation of folders. This will automatically prevent
-any plots to be saved.). If not applied and a SimClass object has
-been supplied, the selected option in that class will be used.}
+any plots to be saved.).}
 
 \item{\code{farmername}}{If the user is creating a new experiment, provide or
 select the name of the farmer that owns or manages the field(s) that
@@ -85,13 +88,13 @@ for all new experiments and experimental prescriptions.}
 \item{\code{strat_dat}}{If the user is creating a new experiment with stratification
 they must apply the data that they are stratifying on. This provides an
 identifier for the data being used for the stratification. These must be codes
-used in the OFPE workflow sucha as 'yld', 'pro', 'aa_n', 'aa_sr', etc.}
+used in the OFPE workflow such as 'yld', 'pro', 'aa_n', 'aa_sr', etc.}
 
 \item{\code{strat_dat_year}}{Follows the same structure of 'strat_dat', however contains
 the years to use for stratification of each of the data types for each of the fields.}
 
 \item{\code{unique_fieldname}}{Unique fieldname for the field(s) used for the experiment. This
-concatenates multiple fields with an ampersand. Used for labelling.}
+concatenates multiple fields with an ampersand. Used for labeling.}
 
 \item{\code{rx_dt}}{Data frame that contains the coordinates of locations to apply
 experimental inputs. For an experiment, these are the centroids of the grid
@@ -110,19 +113,19 @@ prescription. Used for saving the map to the 'Outputs' folder.}
 \item{\code{cell_out_map_name}}{Created parameter with the file name for the map of the
 rate type applied to each cell. Used for saving the map to the 'Outputs' folder.}
 
-\item{\code{var}}{The label of the variable to map. Used in figure labelling for plotting
+\item{\code{var}}{The label of the variable to map. Used in figure labeling for plotting
 in RxClass.}
 
 \item{\code{var_col_name}}{The name of the column of the variable in the
-supplied data ('dat'). Used in figure labelling for plotting
+supplied data ('dat'). Used in figure labeling for plotting
 in RxClass.}
 
 \item{\code{var_label}}{The label to be applied to the legend of the map
-corresponding to the variable mapped. Used in figure labelling for plotting
+corresponding to the variable mapped. Used in figure labeling for plotting
 in RxClass.}
 
 \item{\code{var_main_label}}{The main label to apply to the map. Used in figure
-labelling for plotting in RxClass.}
+labeling for plotting in RxClass.}
 
 \item{\code{mgmt_scen}}{For this class, the management scenario is always an experiment
 so this parameter is set to 'exp'.}
@@ -180,7 +183,7 @@ database, see DBCon class.}
 
 \item{\code{boom_width}}{The width of the sprayer boom or spreader.}
 
-\item{\code{orientation}}{TODO...}
+\item{\code{orientation}}{TODO... Not implemented yet.}
 
 \item{\code{fld_prop}}{The proportion of the field to apply experimental
 or optimum check rates to.}
@@ -197,7 +200,7 @@ units of the as-applied input (i.e. lbs N/ac to unit input/ac)}
 and the field edge, or as check rates in the prescription selected
 option.}
 
-\item{\code{rx_for_year}}{Provide the year that the prescription or experiment
+\item{\code{rx_for_year}}{Provide the year that experiment
 is made for. Used for labeling outputs.}
 
 \item{\code{out_path}}{Provide the path to the folder in which to store and
@@ -205,13 +208,11 @@ save figures and the prescription Type NA to not create any folders.
 You will not be able to save any outputs. (Note, even if a path is provided,
 the user can pass FALSE as the sole argument to the 'setupOP' method
 to prevent the creation of folders. This will automatically prevent
-any plots to be saved.). If not applied and a SimClass object has
-been supplied, the selected option in that class will be used.}
+any plots to be saved.).}
 
-\item{\code{SAVE}}{Logical, whether to save figures and the prescription.
+\item{\code{SAVE}}{Logical, whether to save figures and the experiment
 Autofilled to FALSE if a user selects NA in the 'out_path' or is NULL.
-Autofilled to TRUE otherwise. If not applied and a SimClass object has
-been supplied, the selected option in that class will be used.}
+Autofilled to TRUE otherwise.}
 
 \item{\code{fieldname}}{If the user is creating a new experiment, provide or
 select the fieldname of the field to use. The field list is from the
@@ -267,7 +268,7 @@ used for stratification during the random placement.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{None}}{All parametes supplied upon initialization.}
+\item{\code{None}}{All parameters supplied upon initialization.}
 }
 \if{html}{\out{</div>}}
 }

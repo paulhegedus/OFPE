@@ -30,6 +30,10 @@ dataset, making a unique id using the year and fieldname, uncentering data, and
 identifying a field name to use for plotting that reflects all fields in the
 dataset.
 }
+\seealso{
+\code{\link{ModClass}} for the class that calls the ModClass interface,
+\code{\link{GAM}} for the alternative class that fits a generalized additive model.
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -46,9 +50,12 @@ converting centered data back to the original form. The centering process does n
 center three numerical variables; the x and y coordinates, and the response variable
 (yld/pro). This is for the data specified from the analysis data inputs (grid specific).}
 
-\item{\code{mod}}{Fitted GAM.}
+\item{\code{mod}}{Fitted non-linear logistic model.}
 
-\item{\code{form}}{Final GAM formula.}
+\item{\code{mod0}}{Fitted non-linear logistic model with the minimum rates and locking beta,
+delta, and gamma.}
+
+\item{\code{form}}{Final non-linear logistic formula.}
 
 \item{\code{parm_df}}{Data frame of parameter names, the function component and ID, and a column
 named 'bad_parms' to indicate whether to include in the model formula. Also includes
@@ -117,19 +124,19 @@ using experimental and covariate data.
 The process first identifies parameters that will cause errors in the model fitting
 method, then creates some initial coefficient estimates to use for fitting an initial
 model. The estimates are based off of the mean to reduce the weight of large parameter
-values on the estiamtes. Then the alpha and beta components are estimated with these
+values on the estimates. Then the alpha and beta components are estimated with these
 initial values and the means of each parameter. If alpha and beta fall outside of half a
-standard deviation from the 1st and 3rd quartiles of the data the intercept for each
+standard deviation from the 1st and 3rd quantiles of the data the intercept for each
 component of alpha and beta (a0 and b0) are set to the 1st and 3rd quantiles, respectively.
-This sets up the intitial model to follow a logistic curve from the 1st to the 3rd quantile
+This sets up the initial model to follow a logistic curve from the 1st to the 3rd quantile
 levels of the response variable, mimicking the expected response of crop yield and protein
 to look.
 
 Then, an initial model only using data from the lowest experimental rates is used to fit
 the coefficients for the alpha component. Beta components are held constant in this process.
-Once the alpha coefficeints are fitted, these are locked in and another model fitting step
-uses the estiamted alpha component in a model to fit the beta, delta, and gamma components.
-If this fails, delta is set at the mean of the experimenal value and the fit is tried again.
+Once the alpha coefficients are fitted, these are locked in and another model fitting step
+uses the estimated alpha component in a model to fit the beta, delta, and gamma components.
+If this fails, delta is set at the mean of the experimental value and the fit is tried again.
 This usually works, if not there are deeper issues in the data. This final model  is returned
 to the user for use in the simulation to predict the response under varying
 rates of the experimental variable.

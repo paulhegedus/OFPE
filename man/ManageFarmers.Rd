@@ -10,6 +10,10 @@ is used for internal relationships. If a farmer is already present in the
 database, it will be skipped. This follows the ManageDB interface and
 includes a setup and execute method that is called from the ManageDB class.
 }
+\seealso{
+\code{\link{DBCon}} for database connection class,
+\code{\link{ManageDB}} for the class that calls this class to manage the database.
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{

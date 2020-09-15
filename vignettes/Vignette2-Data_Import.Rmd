@@ -1,5 +1,5 @@
 ---
-title: "Vignette2-Data_Import"
+title: "Vignette2 - Data Import"
 author: "Paul Hegedus"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: rmarkdown::html_vignette
@@ -25,24 +25,20 @@ Note that the OFPE formatted database can also handle the upload of [SSURGO soil
 
 Also of note is that when import seeding rate data, this **NEEDS** to have either "seed" or "_SR_" in the filename. This is because the seeding rate and as-applied nitrogen rate data are not easily distinguishable from each other.
 
-The process for importing on-farm data to the database is outlined and a more detailed descriptionin the activity diagram on [this page](https://paulhegedus.github.io/OFPE-Website/dat_import.html), where a component diagram can also be found.
+The process for importing data to the database is outlined and a more detailed description the activity diagram on [this page](https://paulhegedus.github.io/OFPE-Website/dat_import.html), where a component diagram can also be found. This vignette outlines step 2 of the OFPE data cycle, executed using the R package. This is represented by step 2 in the blue ring of the figure below. There is an associated page on the OFPE web application (green ring) that utilizes these R classes and functions to achieve the same effect in a user friendly environment.
 
-```{r, out.width='100%', fig.align='center', fig.cap='**Figure 1.** On-Farm data import workflow. Blue processes are chained together by arrows indicating the next step in the workflow, and black boxes indicate the addition of user inputs.', echo = FALSE}
-knitr::include_graphics('figures/ofpe_dat_import.png')
+```{r, out.width='100%', fig.align='center', fig.cap='**Figure 1.** Key is found in the top right corner of the schematic. The green ring represents the R-Shiny OFPE web spplication which is driven by the OFPE R-Package (blue ring). These both require connection to a PostgreSQL spatial database with PostGIS enabled. The yellow boxes represent different pages of the OFPE web application and vignettes in the R-package. Black boxes represent user inputs and orange clouds represent cloud based tools.', echo = FALSE}
+knitr::include_graphics('ofpe_data_workflow.png')
 ```
 
 #### Google Earth Engine Data
-Remote sensing data is collected from Google Earth Engine and includes data temporally variable data such as weather and static data such as topogrophy. The user is responsible for running the Google Earth Engine Javascript code to download data for each year required. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/gee_setup.html) for adding farm boundaries to GEE as asset and this [tutorial](https://paulhegedus.github.io/OFPE-Website/run_gee.html) for editing and using Javascript code. This data is downloaded to Google Drive, where the data can be batch uploaded to the database. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/gd_setup.html) for setting up Google Drive to receive your data from Google Earth Engine.
+Remote sensing data is collected from Google Earth Engine and includes data temporally variable data such as weather and static data such as topography. The user is responsible for running the Google Earth Engine Javascript code to download data for each year required. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/gee_setup.html) for adding farm boundaries to GEE as asset and this [tutorial](https://paulhegedus.github.io/OFPE-Website/run_gee.html) for editing and using Javascript code. This data is downloaded to Google Drive, where the data can be batch uploaded to the database. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/gd_setup.html) for setting up Google Drive to receive your data from Google Earth Engine.
 
-The user can use the farm boundary shapefiles in the OFPE data package as assets in Google Earth Engine. This way the user will be able to follow along with the rest of the vignettes of this package. Simply write "OFPEDATA::FarmerB_FarmName_bbox", "OFPEDATA::FarmerC_FarmName_bbox", and "OFPEDATA::FarmerI_FarmName_bbox" the as shapefiles with the 'sf::st_write()' function and upload as a GEE asset as shown in this [tutorial](https://paulhegedus.github.io/OFPE-Website/gee_setup.html).
+The user can use the farm boundary shapefiles in the OFPE data package as assets in Google Earth Engine. This way the user will be able to follow along with the rest of the vignettes of this package. Simply write "OFPEDATA::FarmerB_FarmName_bbox", "OFPEDATA::FarmerC_FarmName_bbox", and "OFPEDATA::FarmerI_FarmName_bbox" in a fresh r script and save the shapefiles with the 'sf::st_write()' function. Then the user can upload as a GEE asset as shown in this [tutorial](https://paulhegedus.github.io/OFPE-Website/gee_setup.html).
 
-This [tutorial](https://paulhegedus.github.io/OFPE-Website/run_gee.html) outlines how to gather data from Google Earth Engine. This step needs to be completed before executing section 2 of this vignette. This vignette gatheres all variables from all farms from 2015 to 2020, however only 'FarmerB' is used for examples.
+This [tutorial](https://paulhegedus.github.io/OFPE-Website/run_gee.html) outlines how to gather data from Google Earth Engine. This step needs to be completed before executing section 2 of this vignette. This vignette gathers all variables from all farms from 2015 to 2020, however only 'FarmerB' is used for examples.
 
-The process for importing Google Earth Engine data to the database and a more detailed description is outlined in the activity diagram on [this page](https://paulhegedus.github.io/OFPE-Website/dat_import.html), where a component diagram can also be found.
-
-```{r, out.width='100%', fig.align='center', fig.cap='**Figure 2.** Google Earth Engine data import workflow. Blue processes are chained together by arrows indicating the next step in the workflow, and black boxes indicate the addition of user inputs.', echo = FALSE}
-knitr::include_graphics('figures/ofpe_gee_import.png')
-```
+The process for importing Google Earth Engine data to the database and a more detailed description is outlined in the activity diagram on [this page](https://paulhegedus.github.io/OFPE-Website/dat_import.html), where a component diagram can also be found. 
 
 # Resources
 The resources below are strongly recommended as supplemental information regarding the use and intent of this vignette and associated functions.
@@ -55,7 +51,7 @@ The resources below are strongly recommended as supplemental information regardi
 Again, it is assumed that the user has completed Vignette 1 and understands the database management methods described at this [site](https://paulhegedus.github.io/OFPE-Website/dat_import.html). A database is required to store your data.
 
 # Workflow
-The sections below describe the process of importing data collected on-farms to the OFPE formatted database. The initial section loads the required packages and connects to the database. 
+The sections below describe the process of importing data collected on-farms to the OFPE formatted database. The initial section loads the required packages and connects to the database. The activity workflow for importing data and a more detailed description is described on [this page](https://paulhegedus.github.io/OFPE-Website/data_import.html), where a component diagram can also be found.
 
 ## Set-Up
 The below contains the packages used in the vignette and a demonstration of connecting to your database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette uses example data located in the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) R-package. This vignette downloads data from the OFPE package in order to demonstrate a realistic data workflow. 
@@ -82,21 +78,11 @@ dbCon <- DBCon$new(
   host = "localhost",
   port = "5432"
 )
-```
-
-```{r, echo = FALSE, eval = FALSE}
-dbCon <- DBCon$new(
-  user = "postgres",
-  password = "Paul210220",
-  dbname = "OFPE", 
-  host = "localhost",
-  port = "5432"
-)
 OFPE::removeTempTables(dbCon$db)
 ```
 
 ### Prepare Example Data
-This section is for creating a folder that contains the experimental field data. **NOTE:** when using your own data, this section is irrelevant, but you still might want to check out that tutorial. This vignette only uses FarmerB, as with Vignette1. Modify the code below to include data from FarmerC or FarmerI from the OFPEDATA package.
+This section is for creating a folder that contains the experimental field data FOR FARMER B. Extract FarmerB's data from the OFPEDATA package and put in a folder in you "~" directory called "INIT_UPLOADS" to follow along after this section. **NOTE:** when using your own data, this section is irrelevant, but you still might want to check out that tutorial. This vignette only uses FarmerB, as with Vignette1. Modify the code below to include data from FarmerC or FarmerI from the OFPEDATA package, but you may need to modify the code below. Again, this section is not used in the workflow, it is simply to get you setup for following along with the vignette.
 
 First, get the names of the data in the OFPEDATA package that has example data for these vignettes. Isolate the names of data corresponding to field data which does not have "_bbox" suffix. Extract from OFPEDATA.
 
@@ -110,9 +96,9 @@ dat_list <- as.list(dat_names) %>%
 rm(dat, dat_names) 
 ```
 
-Second, save boundaries to a temporary folder. Again, in your real world situation you do not need to do this. **NOTE:** This example will create a temporary folder called 'INIT_UPLOADS' in your home directory and WILL delete any folder called 'INIT_UPLOADS' in your home directory. 
+Second, save boundaries to a temporary folder. Again, in your real world situation you do not need to do this. **NOTE:** This example will create a temporary folder called 'INIT_UPLOADS' in your home directory and WILL delete any folder called 'INIT_UPLOADS' in your home directory. Also note that a special case is coded in the 'toTempFolder' function for FarmerB's 2019 protein data.
 
-```{r, eval = FALSE}
+```{r, eval = FALSE, message = FALSE}
 temp_path <- "~/INIT_UPLOADS/"
 ifelse(dir.exists(temp_path), 
        {do.call(file.remove, list(list.files(temp_path, full.names = TRUE)));
@@ -125,22 +111,25 @@ toTempFolder <- function (x, y, farmer) {
     if (!grepl("pro", y)) {
       sf::st_write(x, paste0(temp_path, y, ".shp"), quiet = TRUE)
     } else {
-      data.table::fwrite(x, paste0(temp_path, y, ".csv"))
+      if (grepl("2019", y)) {
+        data.table::fwrite(x, paste0(temp_path, y, ".csv"))
+      } else {
+        sf::st_write(x, paste0(temp_path, y, ".shp"), quiet = TRUE)
+      }
     }
   }
 }
 # only using farmer B as an example, repeat for other farmers if desired
-mapply(toTempFolder,
+invisible(mapply(toTempFolder,
        dat_list, 
        names(dat_list),
-       MoreArgs = list(farmer = "FarmerB")) %>% 
-  invisible()
+       MoreArgs = list(farmer = "FarmerB")))
 rm(dat_list, temp_path)
 ```
 
 
 ## Import On-Farm Data
-The steps required for importing the data consist of initializing the import data R6 class with the path to the folder in which the data to be uploaded is saved. It is efficient to put all the data you want to import into one folder and path to that. That way you can instantiate the class, run it, and walk away for awhile while it loads. The on-farm import class has a method for intializing and a method for running. After the completion of the execution method, a data frame with the status of each attempted file is generated.
+The steps required for importing the data consist of initializing the import data R6 class with the path to the folder in which the data to be uploaded is saved. It is efficient to put all the data you want to import into one folder and path to that. That way you can instantiate the class, run it, and walk away for awhile while it loads. The on-farm import class has a method for initializing and a method for running. After the completion of the execution method, a data frame with the status of each attempted file is generated.
 
 ### Initialize ImportOF
 The ImportOF class is initialized with the path to the location of the data that the user wants to upload and a database object. This class can be initialized and executed as many times as needed. Data that is already present in the database and reuploaded to the database will be replaced.
@@ -152,12 +141,6 @@ dat_path <- "<your/folder/path>"
 importOF <- ImportOF$new(dbCon, dat_path)
 ```
 
-```{r, eval = FALSE, echo = FALSE}
-dat_path <- "~/INIT_UPLOADS/" # MAC # "C:/Users/paulhegedus/Documents/INIT_UPLOADS" # PC
-importOF <- ImportOF$new(dbCon, dat_path)
-```
-
-
 ### Import On-Farm Data
 The execution method of the ImportOF class simply requires the file names to the data that is to be uploaded into the database. After the method has completed execution, the 'status' object in the ImportOF R6 class will indicate which files uploaded successfully and which did not.
 
@@ -168,7 +151,7 @@ importOF$executeUpload()
 
 
 ### Check Status
-After the 'uploadData' method of the 'ImportOF' class has been executed, the import status of your data can be found in the 'status' object, a dataframe indicating the completion/fail of each file name.
+After the 'uploadData' method of the 'ImportOF' class has been executed, the import status of your data can be found in the 'status' object, a data.frame indicating the completion/fail of each file name.
 
 ```{r, eval = FALSE}
 importOF$status
@@ -186,21 +169,13 @@ Before using the ImportGEE class, the Google Drive account where the user data i
 googledrive::drive_auth("<your_email@address>")
 ```
 
-```{r, eval = FALSE, echo = FALSE}
-googledrive::drive_auth("paulhegedus@montana.edu")
-```
-
-
 ### Initialize ImportGEE
-The ImportGEE class is initialized with the path to the location of the Google Drive folder where the data is connected, and a database connection. This class can be initialized and executed as many times as needed. Data that is already present in the database and re-uploaded to the database will be replaced if desired by setting the option of OVERWRITE to TRUE.
+The ImportGEE class is initialized with the path to the location of the Google Drive folder where the data is connected, and a database connection. This class can be initialized and executed as many times as needed. Data that is already present in the database and re-uploaded to the database will be replaced if desired by setting the option of OVERWRITE to TRUE. 
+
+If following along with the FarmerB example for these vignettes, you will likely only want to import Farmer B's GEE data, so put in a specific folder in your Google Drive and set the path to that (e.g. make a folder called 'GEE_Surfaces_FarmerB').
 
 ```{r, eval = FALSE}
 dat_path <- "<your_google_drive_foldername>"
-importGEE <- ImportGEE$new(dbCon, dat_path, FALSE)
-```
-
-```{r, eval = FALSE, echo = FALSE}
-dat_path <- "GEE_Surfaces"
 importGEE <- ImportGEE$new(dbCon, dat_path, FALSE)
 ```
 
@@ -216,12 +191,7 @@ importGEE$executeUpload()
 # Conclusion
 This vignette provided a demonstration of how to import your on-farm data and data gathered from Google Earth Engine. This also covers how to import SSURGO data to the database. **IMPORTANT:** when uploading seeding rate data include "seed" or "_SR_" in the filename to distinguish from as-applied nitrogen fertilizer data and when uploading SSURGO data include "SSURGO" or "ssurgo" to the filename.
 
-A component diagram outlining the R6 classes used and the inputs required for the import of data from farms and from Google Earth Engine is represented below in Figure 3. Each class is represented by a table with the title of the class as the header, with the first row showing inputs, the second row showing public methods, the third row showing private methods, and an optional fourth row showing any tangible outputs from the class. Most methods have nothing to return as their functions modify the OFPE database.
-
-```{r, out.width="100%", fig.align="center", fig.cap="**Figure 3.** Component diagram of the data import workflows. Both the ImportOF and ImportGEE classes take an object of the DBCon class and a path to either the folder on the user's local machine in which their on-farm data is stored for import, or the folder name in the user's Google Drive that contains their GEE data stored for import.", echo = FALSE}
-knitr::include_graphics('figures/ofpe_dat_import_component.png')
-```
-
+A diagram demonstrating the implementation and existence of modules related to the data import step can be seen [here](https://paulhegedus.github.io/OFPE-Website/dat_import.html), diagramming the relationship of the classes used in this step. 
 
 Whenever a database connection is open it needs to be closed.
 ```{r, eval = FALSE}

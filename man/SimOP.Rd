@@ -17,13 +17,17 @@ scenarios reported. NR is net-return. The abbreviations used are; NRmin: uniform
 rate ('AAmin'), NRfs: uniform farmer selected rate, NRact: if experiment applied in
 simulated year, NRssopt: site-specific optimum rates, NRffopt: uniform full-
 field optimum rate, NRopp: if the crop received the opposite system crop price (e.g.
-'conventional' vs. 'organic' or vice versa, see SimClass$executeSim() method
+'conventional' vs. 'organic' or reverse, see SimClass$executeSim() method
 documentation for specifics on the difference in the calculation of this net-return
 between systems).
 
 Error checking inputs to these functions is scant because the user should only use
 these after executing the simulation method in the SimClass R6 class to generate
 the necessary data for the output generation methods.
+}
+\seealso{
+\code{\link{SimClass}} for the class that executes the Monte Carlo
+simulation and provides the data for saving and plotting in this class.
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -105,7 +109,7 @@ Method for saving simulation output plots. This method is used to call
 the public methods for each figure, map,  and table generated. This
 applies over the user selected simulation years. The user can pass a
 logical argument to this function which will disable all plotting and
-not save anything to your computre. It will override any previous
+not save anything to your computer It will override any previous
 setting you have set for 'SAVE'. If calling plots individually, a
 SAVE option for each can be selected.
 \subsection{Usage}{
@@ -168,7 +172,7 @@ save outputs from the simulation.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Data saved in 'Outputs/SimData'
+Data saved in 'Outputs/SimData'.
 }
 }
 \if{html}{\out{<hr>}}
@@ -274,7 +278,7 @@ save outputs from the simulation.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Data saved in 'Outputs/Predictions'
+Data saved in 'Outputs/Predictions'.
 }
 }
 \if{html}{\out{<hr>}}
@@ -312,7 +316,7 @@ save outputs from the simulation.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Data saved in 'Outputs/NR/NRboxplots'
+Data saved in 'Outputs/NR/NRboxplots'.
 }
 }
 \if{html}{\out{<hr>}}
@@ -370,7 +374,7 @@ save outputs from the simulation.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Data saved in 'Outputs/NR/NRProbabilities'
+Data saved in 'Outputs/NR/NRProbabilities'.
 }
 }
 \if{html}{\out{<hr>}}
@@ -406,7 +410,7 @@ save outputs from the simulation.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Data saved in 'Outputs/NR/NRbarplots'
+Data saved in 'Outputs/NR/NRbarplots'.
 }
 }
 \if{html}{\out{<hr>}}
@@ -418,7 +422,7 @@ each strategy. The amount of the site-specific input applied
 is averaged across the simulation for each point and summed to
 get a total amount of experimental input applied with the site-
 specific method. The total amount of experimental input applied
-with all other strategies is calcualted the same way.
+with all other strategies is calculated the same way.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{SimOP$plotTotExpAppl(
   TF4,
@@ -460,7 +464,7 @@ save outputs from the simulation.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Data saved in 'Outputs/EXP/EXPapplied'
+Data saved in 'Outputs/EXP/EXPapplied'.
 }
 }
 \if{html}{\out{<hr>}}
@@ -516,7 +520,7 @@ save outputs from the simulation.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Data saved in 'Outputs/EXP/ssoptEXP'
+Data saved in 'Outputs/EXP/ssoptEXP'.
 }
 }
 \if{html}{\out{<hr>}}
@@ -571,7 +575,7 @@ save outputs from the simulation.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Data saved in 'Outputs/EXP/ffoptEXP'
+Data saved in 'Outputs/EXP/ffoptEXP'.
 }
 }
 \if{html}{\out{<hr>}}
@@ -607,7 +611,7 @@ for every point for every simulation iteration.}
 \item{\code{var}}{The label of the variable to map. Used in figure name.}
 
 \item{\code{var_col_name}}{The name of the column of the variable in the
-supplied data ('dat')}
+supplied data ('dat').}
 
 \item{\code{var_label}}{The label to be applied to the legend of the map
 corresponding to the variable mapped.}
@@ -633,7 +637,7 @@ save outputs from the simulation.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Maps saved in 'Outputs/Maps'
+Maps saved in 'Outputs/Maps'.
 }
 }
 \if{html}{\out{<hr>}}
@@ -733,7 +737,7 @@ save outputs from the simulation.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Map of the actual net-return from a given year in 'Outputs/Maps'
+Map of the actual net-return from a given year in 'Outputs/Maps'.
 }
 }
 \if{html}{\out{<hr>}}
