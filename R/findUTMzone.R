@@ -57,8 +57,6 @@ findUTMzone <- function(db,
 #' @source https://apollomapping.com/blog/gtm-finding-a-utm-zone-number-easily
 #' @export
 calcUTMzone = function(FILE) {
-  browser()
-
   if (!is.null(FILE)) {
     if (is.na(raster::crs(FILE))) {
       sf::st_crs(FILE) <- 4326
