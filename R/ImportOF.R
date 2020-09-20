@@ -159,8 +159,6 @@ ImportOF <- R6::R6Class(
     #' @param name Name of the data file to upload to the database.
     #' @return Imported data.
     .impDat = function(name) {
-      browser()
-
       if (grepl("shp$", name)) {
         FILE <- sf::read_sf(self$dat_path,
                             stringr::str_sub(name, 1, nchar(name) - 4)) %>%
@@ -219,8 +217,6 @@ ImportOF <- R6::R6Class(
     #' @param name The filename for the data imported from the .impDat method.
     #' @return Data in spatial format.
     .makeSptl = function(FILE, name) {
-      browser()
-
       tryCatch({
           if (grepl("csv$",name)) {
             FILE$X <- FILE$x
