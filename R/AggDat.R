@@ -295,12 +295,12 @@ AggDat <- R6::R6Class(
           OFPE::removeTempTables(self$aggInputs$dbCon$db)
           OFPE::removeTempFarmerTables(self$aggInputs$dbCon$db,
                                        self$aggInputs$farmername)
-          print(paste0("IMPORT COMPLETE: ",
+          print(paste0("AGGREGATION COMPLETE: ",
                        self$aggInputs$farmername,
                        " ", self$aggInputs$fieldname,
                        " ", self$aggInputs$cy_resp,
                        " ", self$aggInputs$respvar,
-                       " DATA."))},
+                       "."))},
         warning = function(w) {print()},
         error = function(e) {
           print(paste0("!!! ERROR AGGREGATING ",

@@ -159,6 +159,8 @@ ImportOF <- R6::R6Class(
     #' @param name Name of the data file to upload to the database.
     #' @return Imported data.
     .impDat = function(name) {
+      browser()
+
       if (grepl("shp$", name)) {
         FILE <- sf::read_sf(self$dat_path,
                             stringr::str_sub(name, 1, nchar(name) - 4)) %>%
@@ -170,7 +172,11 @@ ImportOF <- R6::R6Class(
                            skip = 2, header = FALSE)
           header <- read.csv(paste0(self$dat_path, "/", name),
                              header = TRUE, nrows = 1)
-          names(FILE) <- c(names(header), "utc_time", "y", "n", "x", "w")
+          if (length(names(header)) < length(names(FILE))) {
+            names(FILE) <- c(names(header), "utc_time", "y", "n", "x", "w")
+          } else {
+            names(FILE) <- names(header)
+          }
           FILE$x <- ifelse(FILE$x > 0, FILE$x * -1, FILE$x)
         },
         warning = function(w) {print()},
@@ -213,6 +219,8 @@ ImportOF <- R6::R6Class(
     #' @param name The filename for the data imported from the .impDat method.
     #' @return Data in spatial format.
     .makeSptl = function(FILE, name) {
+      browser()
+
       tryCatch({
           if (grepl("csv$",name)) {
             FILE$X <- FILE$x
@@ -520,8 +528,15 @@ ImportOF <- R6::R6Class(
     },
     .findYear = function(FILE) {
       ## look for a year column
-      if (any(grepl("year", names(FILE), ignore.case = TRUE))) {
-        year <- FILE$year[1]
+      if (any(grepl("^year$", names(FILE), ignore.case = TRUE))) {
+        year <- as.numeric(as.character(FILE$year[1]))
+        # to be more sure that it is actually a date and not a measure
+        if (year > 2000 & year < 2030) {
+          return(year)
+        }
+      }
+      if (any(grepl("^rxyear$", names(FILE), ignore.case = TRUE))) {
+        year <- as.numeric(as.character(FILE$rxyear[1]))
         # to be more sure that it is actually a date and not a measure
         if (year > 2000 & year < 2030) {
           return(year)
@@ -541,6 +556,7 @@ ImportOF <- R6::R6Class(
           )
         if (!is.na(yr)) {
           year <- stringr::str_sub(OGfile, str_locs[1], str_locs[1] + 3)
+          year <- as.numeric((as.character(year)))
           # to be more sure that it is actually a date and not a measure
           if (year > 2000 & year < 2030) {
             return(year)
