@@ -58,7 +58,8 @@ findUTMzone <- function(db,
 #' @export
 calcUTMzone = function(FILE) {
   if (!is.null(FILE)) {
-    if (is.na(raster::crs(FILE))) {
+    crs_raster <- suppressWarnings(raster::crs(FILE))
+    if (is.na(crs_raster)) {
       sf::st_crs(FILE) <- 4326
     }
     FILE <- sf::st_transform(FILE, 4326)

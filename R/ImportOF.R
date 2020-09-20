@@ -166,31 +166,32 @@ ImportOF <- R6::R6Class(
       }
       if (grepl("csv$",name)) {
         tryCatch({
-            FILE <- data.table::fread(paste0(self$dat_path, name)) %>%
+          FILE <- read.csv(paste0(self$dat_path, "/", name),
+                           skip = 2, header = FALSE)
+          header <- read.csv(paste0(self$dat_path, "/", name),
+                             header = TRUE, nrows = 1)
+          names(FILE) <- c(names(header), "utc_time", "y", "n", "x", "w")
+          FILE$x <- ifelse(FILE$x > 0, FILE$x * -1, FILE$x)
+        },
+        warning = function(w) {print()},
+        error = function(e) {
+          tryCatch({
+            FILE <- data.table::fread(paste0(self$dat_path, "/", name)) %>%
               as.data.frame()
-            if (any(grepl("Longitude|Latitude", names(FILE)))) {
-              names(FILE)[which(names(FILE) == "Longitude")] <- "x"
-              names(FILE)[which(names(FILE) == "Latitude")] <- "y"}},
-          warning = function(w) {print()},
+          },
+          warning = function(w) {
+            print()},
           error = function(e) {
-            tryCatch({
-                FILE <- read.csv(paste0(self$dat_path, name),
-                                 skip=2, header=FALSE)
-                header <- read.csv(paste0(self$dat_path, name),
-                                   header = TRUE, nrows = 1)
-                names(FILE) <- c(names(header), "utc_time", "y", "n", "x", "w")
-                FILE$x <- ifelse(FILE$x > 0, FILE$x * -1, FILE$x)
-              },
-              warning = function(w) {
-                print()},
-              error = function(e) {
-                print(paste0("Error: loading ", name, " !!!"))})
-          }
-        )
+            print(paste0("Error: loading ", name, " !!!"))})
+        })
+        if (any(grepl("Longitude|Latitude", names(FILE)))) {
+          names(FILE)[which(names(FILE) == "Longitude")] <- "x"
+          names(FILE)[which(names(FILE) == "Latitude")] <- "y"
+        }
       }
       if (length(FILE) == 1) {
-        FILE <- read.csv(paste0(self$dat_path, name), skip=2, header=FALSE)
-        header <- read.csv(paste0(self$dat_path, name), header = TRUE, nrows=1)
+        FILE <- read.csv(paste0(self$dat_path, "/", name), skip = 2, header = FALSE)
+        header <- read.csv(paste0(self$dat_path, "/", name), header = TRUE, nrows = 1)
         names(FILE) <- c(names(header), "utc_time", "y", "n", "x", "w")
         FILE$x <- ifelse(FILE$x > 0, FILE$x * -1, FILE$x)
       }
@@ -213,48 +214,53 @@ ImportOF <- R6::R6Class(
     #' @return Data in spatial format.
     .makeSptl = function(FILE, name) {
       tryCatch({
-        if (grepl("csv$",name)) {
-          FILE$X <- FILE$x
-          FILE$Y <- FILE$y
-          FILE <- FILE[!is.na(FILE$X) & !is.na(FILE$Y), ]
-          ## put correct sign on lat long
-          x_dir <- grep("^x$", names(FILE)) + 1
-          x_dir <- unique(na.omit(FILE[, x_dir]))
-          x_dir <- x_dir[grep("W|E", x_dir)]
-          y_dir <- grep("^y$", names(FILE)) + 1
-          y_dir <- unique(na.omit(FILE[, y_dir]))
-          y_dir <- y_dir[grep("N|S", y_dir)]
-          if (x_dir == "W") {
-            FILE$X <- ifelse(FILE$X < 0,
-                             FILE$X,
-                             FILE$X * -1)
+          if (grepl("csv$",name)) {
+            FILE$X <- FILE$x
+            FILE$Y <- FILE$y
+            FILE <- FILE[!is.na(FILE$X) & !is.na(FILE$Y), ]
+            ## put correct sign on lat long
+            x_dir <- grep("^x$", names(FILE)) + 1
+            x_dir <- unique(na.omit(FILE[, x_dir]))
+            x_dir <- x_dir[grep("W|E", x_dir)]
+            y_dir <- grep("^y$", names(FILE)) + 1
+            y_dir <- unique(na.omit(FILE[, y_dir]))
+            y_dir <- y_dir[grep("N|S", y_dir)]
+            if (x_dir == "W") {
+              FILE$X <- ifelse(FILE$X < 0,
+                               FILE$X,
+                               FILE$X * -1)
+            }
+            if (y_dir == "S") {
+              FILE$X <- ifelse(FILE$Y < 0,
+                               FILE$Y,
+                               FILE$Y * -1)
+            }
+            sp::coordinates(FILE) <- c("X", "Y") # makes spatial points df
+            sp::proj4string(FILE) <- sp::CRS("+proj=longlat +datum=WGS84")
+            FILE <- sf::st_as_sf(FILE)
           }
-          if (y_dir == "S") {
-            FILE$X <- ifelse(FILE$Y < 0,
-                             FILE$Y,
-                             FILE$Y * -1)
-          }
-          sp::coordinates(FILE) <- c("X", "Y") # makes spatial points df
-          sp::proj4string(FILE) <- sp::CRS("+proj=longlat +datum=WGS84")
-          FILE <- sf::st_as_sf(FILE)
+        },
+        warning = function(w) {print()},
+        error = function(e) {
+          print(paste0("Error: making ", name, " spatial."))
         }
-        if (is.na(raster::crs(FILE))) {
+      )
+      tryCatch({
+        crs_raster <- suppressWarnings(raster::crs(FILE))
+        if (is.na(crs_raster)) {
           sf::st_crs(FILE) <- 4326
         }
         if (!grepl("+datum=WGS84 +ellps=WGS84 +init=epsg:4326",
-                   raster::crs(FILE))) {
+                   crs_raster)) {
           FILE <- sf::st_transform(FILE, "epsg:4326")
         }
-        #******************************************************************
         utm_epsg <- OFPE::calcUTMzone(FILE)
         tempCRS <- paste0("epsg:", utm_epsg)
         FILE <- sf::st_transform(FILE, tempCRS)
-
-        #******************************************************************
         return(FILE)
       },
       warning = function(w) {print()},
-      error = function(e) {print(paste0("Error: making ", name, " spatial."))}
+      error = function(e) {print(paste0("Error: making ", name, " UTM."))}
       )
     },
     #' @description
@@ -274,6 +280,9 @@ ImportOF <- R6::R6Class(
       if (any(names(FILE) == "rm_code")) {
         FILE[, which(names(FILE) == "rm_code")] <- NULL
       }
+      # if (any(names(FILE) == "desc")) {
+      #   FILE[, which(names(FILE) == "desc")] <- NULL
+      # }
       return(FILE)
     },
     #' @description
@@ -289,11 +298,11 @@ ImportOF <- R6::R6Class(
       ## look for bad polygons
       if (any(grepl("geometry", names(FILE)))) {
         if (any(grepl("polygon", class(FILE$geometry), ignore.case=TRUE))) {
-          FILE <- sf::st_buffer(FILE, dist=0)
+          FILE <- sf::st_buffer(FILE, dist = 0)
         }
       } else {
         if (any(grepl("polygon", class(FILE$geom), ignore.case=TRUE))) {
-          FILE <- sf::st_buffer(FILE, dist=0)
+          FILE <- sf::st_buffer(FILE, dist = 0)
         }
       }
       utm_epsg <- OFPE::calcUTMzone(FILE)
@@ -316,7 +325,7 @@ ImportOF <- R6::R6Class(
             intscts <- as.numeric(intscts)
           }
           # if more than 80% of the points are within the field boundary
-          if ((intscts / nrow(FILE)) > 0.80) {
+          if ((intscts / nrow(FILE)) > 0.60) {
             FILE <- suppressWarnings(sf::st_intersection(self$fields, FILE))
             anyFarmer <- 1
           } else {
@@ -435,6 +444,7 @@ ImportOF <- R6::R6Class(
         OFPE::convPolyToMulti(db, FILE, schema, dtype)
         OFPE::makeSpatialIndex(db, geom_idx, schema, dtype)
       } else { # if table does exist. if exists = true than if () returns false
+        OFPE::removeTempFarmerTables(db, farmer)
         FILE <- OFPE::standardizeColNames(db, FILE, schema, dtype)
         FILE <- OFPE::setNAtoNaN(FILE)
         if (any(grepl("poly",
@@ -474,7 +484,7 @@ ImportOF <- R6::R6Class(
       } else {
         # [1] is b.c geometry included
         fieldname <- as.character(FILE[1, COL])[1] %>%
-          noSpecialChar() %>%
+          OFPE::noSpecialChar(FALSE) %>%
           tolower()
       }
       return(fieldname)
@@ -665,8 +675,7 @@ ImportOF <- R6::R6Class(
       }
       # Protein data - looks for the string protein and sample_id (cropscan formate)
       if (is.na(dtype) &
-          any(grepl("protein", NAMES, ignore.case = TRUE)) |
-          any(grepl("pro", NAMES, ignore.case = TRUE))) {
+          any(grepl("protein", NAMES, ignore.case = TRUE))) {
         dtype <- "pro"
       }
       # N data - looks for colnames containing "rate" or "AA" (as-applied) and doesn't include "seed"
@@ -700,6 +709,11 @@ ImportOF <- R6::R6Class(
       # looks for seed or rate b/c N should have been identified earlier
       if (is.na(dtype) & any(grepl("seed|rate",NAMES,ignore.case = TRUE))) {
         dtype <- "aa_sr"
+      }
+      # Protein data - again... now looks for "pro"
+      if (is.na(dtype) &
+          any(grepl("pro", NAMES, ignore.case = TRUE))) {
+        dtype <- "pro"
       }
       return(dtype)
     },

@@ -57,7 +57,6 @@ The user must have access to an OFPE formatted database for using the vignette b
 
 ```{r setup, message = FALSE, eval = FALSE}
 #devtools::install_github("paulhegedus/OFPE")
-library(magrittr)
 library(OFPE)
 ```
 

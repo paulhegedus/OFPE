@@ -99,201 +99,217 @@ AggDat <- R6::R6Class(
     #' class.
     #' @return Aggregated data in the 'farmername_a' schema
     aggregateData = function() {
-      # make 10m grid
-      self$.makeXmGrid(
-        self$aggInputs$dbCon$db,
-        self$aggInputs$boundary_import,
-        self$aggInputs$fieldname,
-        ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size), # size is 10m, but could be changed
-        self$aggInputs$farmername
-      )
-      # create agg table
-      self$.createAggTable(
-        self$aggInputs$dbCon$db,
-        self$aggInputs$farmername,
-        self$aggInputs$fieldname,
-        self$aggInputs$cy_resp,
-        self$aggInputs$py_resp,
-        self$aggInputs$GRID,
-        self$aggInputs$dat_used,
-        ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size)
-      )
-      # if not sat data
-      if (self$aggInputs$respvar != "sat") {
-        # clean resp data (CY) & aggregate resp data (CY)
-        if (!any(self$aggInputs$cy_resp_files == "None")) {
-          self$.cleanRespData(
-            self$aggInputs$respvar,
+      tryCatch({
+          # make 10m grid
+          self$.makeXmGrid(
             self$aggInputs$dbCon$db,
-            self$aggInputs$cy_resp_files,
             self$aggInputs$boundary_import,
-            self$aggInputs$cy_resp_col,
-            self$aggInputs$cy_resp,
             self$aggInputs$fieldname,
+            ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size), # size is 10m, but could be changed
             self$aggInputs$farmername
           )
-          self$.aggRespData(
+          # create agg table
+          self$.createAggTable(
             self$aggInputs$dbCon$db,
             self$aggInputs$farmername,
-            self$aggInputs$respvar,
             self$aggInputs$fieldname,
-            self$aggInputs$GRID,
             self$aggInputs$cy_resp,
             self$aggInputs$py_resp,
+            self$aggInputs$GRID,
             self$aggInputs$dat_used,
             ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size)
           )
-        } else { # end if file != none
-          invisible(
-            DBI::dbSendQuery(
-              self$aggInputs$dbCon$db,
-              paste0("ALTER TABLE ",
-                     self$aggInputs$farmername, "_a.temp
+          # if not sat data
+          if (self$aggInputs$respvar != "sat") {
+            # clean resp data (CY) & aggregate resp data (CY)
+            if (!any(self$aggInputs$cy_resp_files == "None")) {
+              self$.cleanRespData(
+                self$aggInputs$respvar,
+                self$aggInputs$dbCon$db,
+                self$aggInputs$cy_resp_files,
+                self$aggInputs$boundary_import,
+                self$aggInputs$cy_resp_col,
+                self$aggInputs$cy_resp,
+                self$aggInputs$fieldname,
+                self$aggInputs$farmername
+              )
+              self$.aggRespData(
+                self$aggInputs$dbCon$db,
+                self$aggInputs$farmername,
+                self$aggInputs$respvar,
+                self$aggInputs$fieldname,
+                self$aggInputs$GRID,
+                self$aggInputs$cy_resp,
+                self$aggInputs$py_resp,
+                self$aggInputs$dat_used,
+                ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size)
+              )
+            } else { # end if file != none
+              invisible(
+                DBI::dbSendQuery(
+                  self$aggInputs$dbCon$db,
+                  paste0("ALTER TABLE ",
+                         self$aggInputs$farmername, "_a.temp
                      ADD COLUMN ", self$aggInputs$respvar, " REAL;")
-            )
-          )
-        }
-        # clean resp data (PY) & aggregate resp data (PY)
-        if (!any(self$aggInputs$py_resp_files == "None")) {
-          self$.cleanRespData(
-            self$aggInputs$respvar,
-            self$aggInputs$dbCon$db,
-            self$aggInputs$py_resp_files,
-            self$aggInputs$boundary_import,
-            self$aggInputs$py_resp_col,
-            self$aggInputs$py_resp,
-            self$aggInputs$fieldname,
-            self$aggInputs$farmername
-          )
-          self$.aggRespData(
-            db = self$aggInputs$dbCon$db,
-            farmername = self$aggInputs$farmername,
-            respvar = self$aggInputs$respvar,
-            fieldname = self$aggInputs$fieldname,
-            GRID = self$aggInputs$GRID,
-            CY = NULL,
-            PY = NULL,
-            dat_used = self$aggInputs$dat_used,
-            size = ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size)
-          )
-        } else { # end if file != none
-          invisible(DBI::dbSendQuery(
-              self$aggInputs$dbCon$db,
-              paste0("ALTER TABLE ",
-                     self$aggInputs$farmername, "_a.temp
+                )
+              )
+            }
+            # clean resp data (PY) & aggregate resp data (PY)
+            if (!any(self$aggInputs$py_resp_files == "None")) {
+              self$.cleanRespData(
+                self$aggInputs$respvar,
+                self$aggInputs$dbCon$db,
+                self$aggInputs$py_resp_files,
+                self$aggInputs$boundary_import,
+                self$aggInputs$py_resp_col,
+                self$aggInputs$py_resp,
+                self$aggInputs$fieldname,
+                self$aggInputs$farmername
+              )
+              self$.aggRespData(
+                db = self$aggInputs$dbCon$db,
+                farmername = self$aggInputs$farmername,
+                respvar = self$aggInputs$respvar,
+                fieldname = self$aggInputs$fieldname,
+                GRID = self$aggInputs$GRID,
+                CY = NULL,
+                PY = NULL,
+                dat_used = self$aggInputs$dat_used,
+                size = ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size)
+              )
+            } else { # end if file != none
+              invisible(DBI::dbSendQuery(
+                self$aggInputs$dbCon$db,
+                paste0("ALTER TABLE ",
+                       self$aggInputs$farmername, "_a.temp
                      ADD COLUMN prev_", self$aggInputs$respvar, " REAL;")
-          ))
-        }
-        # clean exp data (CY) & aggregate exp data (CY)
-        if (!any(self$aggInputs$cy_exp_files == "None")) {
-          ## if file exist
-          self$.cleanExpData(
-            self$aggInputs$cy_exp_files,
-            self$aggInputs$dbCon$db,
-            self$aggInputs$cy_exp_col,
-            self$aggInputs$farmername,
-            self$aggInputs$cy_exp,
-            self$aggInputs$cy_exp_conv,
-            self$aggInputs$expvar,
-            CY = TRUE,
-            self$aggInputs$fieldname
-          )
-          self$.aggExpData(
-            self$aggInputs$dbCon$db,
-            self$aggInputs$farmername,
-            self$aggInputs$expvar,
-            self$aggInputs$GRID,
-            CY = TRUE,
-            self$aggInputs$fieldname,
-            size = ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size),
-            self$aggInputs$cy_exp_files
-          )
-        } else { #
-          ## if no exp data files
-          invisible(DBI::dbSendQuery(
-              self$aggInputs$dbCon$db,
-              paste0("ALTER TABLE ", self$aggInputs$farmername, "_a.temp
+              ))
+            }
+            # clean exp data (CY) & aggregate exp data (CY)
+            if (!any(self$aggInputs$cy_exp_files == "None")) {
+              ## if file exist
+              self$.cleanExpData(
+                self$aggInputs$cy_exp_files,
+                self$aggInputs$dbCon$db,
+                self$aggInputs$cy_exp_col,
+                self$aggInputs$farmername,
+                self$aggInputs$cy_exp,
+                self$aggInputs$cy_exp_conv,
+                self$aggInputs$expvar,
+                CY = TRUE,
+                self$aggInputs$fieldname
+              )
+              self$.aggExpData(
+                self$aggInputs$dbCon$db,
+                self$aggInputs$farmername,
+                self$aggInputs$expvar,
+                self$aggInputs$GRID,
+                CY = TRUE,
+                self$aggInputs$fieldname,
+                size = ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size),
+                self$aggInputs$cy_exp_files
+              )
+            } else { #
+              ## if no exp data files
+              invisible(DBI::dbSendQuery(
+                self$aggInputs$dbCon$db,
+                paste0("ALTER TABLE ", self$aggInputs$farmername, "_a.temp
                      ADD COLUMN ", self$aggInputs$expvar, " REAL;")
-          ))
-          if (self$aggInputs$farmername == "merja" &
-              self$aggInputs$cy_exp == "2019") {
-            ## chuck only applied 15lbs N/ac in 2019
-            invisible(DBI::dbSendQuery(
-                self$aggInputs$dbCon$db,
-                paste0("UPDATE ", self$aggInputs$farmername, "_a.temp
+              ))
+              if (self$aggInputs$farmername == "merja" &
+                  self$aggInputs$cy_exp == "2019") {
+                ## chuck only applied 15lbs N/ac in 2019
+                invisible(DBI::dbSendQuery(
+                  self$aggInputs$dbCon$db,
+                  paste0("UPDATE ", self$aggInputs$farmername, "_a.temp
                        SET ", self$aggInputs$expvar, " = 15;")
-            ))
-          }
-        }
-        # clean exp data (PY) & aggregate exp data (PY)
-        if (!any(self$aggInputs$py_exp_files == "None")) {
-          ## if files exist
-          self$.cleanExpData(
-            self$aggInputs$py_exp_files,
-            self$aggInputs$dbCon$db,
-            self$aggInputs$py_exp_col,
-            self$aggInputs$farmername,
-            self$aggInputs$py_exp,
-            self$aggInputs$py_exp_conv,
-            self$aggInputs$expvar,
-            CY = FALSE,
-            self$aggInputs$fieldname
-          )
-          self$.aggExpData(
-            self$aggInputs$dbCon$db,
-            self$aggInputs$farmername,
-            self$aggInputs$expvar,
-            self$aggInputs$GRID,
-            CY = FALSE,
-            self$aggInputs$fieldname,
-            size = ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size),
-            self$aggInputs$py_exp_files
-          )
-        } else { #
-          ## if no exp data files
-          invisible(DBI::dbSendQuery(
-              self$aggInputs$dbCon$db,
-              paste0("ALTER TABLE ", self$aggInputs$farmername, "_a.temp
-                       ADD COLUMN prev_", self$aggInputs$expvar, " REAL;")
-          ))
-          if (self$aggInputs$farmername == "merja" &
-              self$aggInputs$py_exp == "2019") {
-            ## chuck only applied 15lbs N/ac in 2019
-            invisible(DBI::dbSendQuery(
+                ))
+              }
+            }
+            # clean exp data (PY) & aggregate exp data (PY)
+            if (!any(self$aggInputs$py_exp_files == "None")) {
+              ## if files exist
+              self$.cleanExpData(
+                self$aggInputs$py_exp_files,
                 self$aggInputs$dbCon$db,
-                paste0("UPDATE ", self$aggInputs$farmername, "_a.temp
+                self$aggInputs$py_exp_col,
+                self$aggInputs$farmername,
+                self$aggInputs$py_exp,
+                self$aggInputs$py_exp_conv,
+                self$aggInputs$expvar,
+                CY = FALSE,
+                self$aggInputs$fieldname
+              )
+              self$.aggExpData(
+                self$aggInputs$dbCon$db,
+                self$aggInputs$farmername,
+                self$aggInputs$expvar,
+                self$aggInputs$GRID,
+                CY = FALSE,
+                self$aggInputs$fieldname,
+                size = ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size),
+                self$aggInputs$py_exp_files
+              )
+            } else { #
+              ## if no exp data files
+              invisible(DBI::dbSendQuery(
+                self$aggInputs$dbCon$db,
+                paste0("ALTER TABLE ", self$aggInputs$farmername, "_a.temp
+                       ADD COLUMN prev_", self$aggInputs$expvar, " REAL;")
+              ))
+              if (self$aggInputs$farmername == "merja" &
+                  self$aggInputs$py_exp == "2019") {
+                ## chuck only applied 15lbs N/ac in 2019
+                invisible(DBI::dbSendQuery(
+                  self$aggInputs$dbCon$db,
+                  paste0("UPDATE ", self$aggInputs$farmername, "_a.temp
                          SET prev_", self$aggInputs$expvar, " = 15;")
-            ))
+                ))
+              }
+            }
+          } # end if not sat dat
+          # clip to field boundary
+          self$.clipAggDat()
+          private$.idFarm()
+          # remote sensing data
+          aggGEE <- OFPE::AggGEE$new(self$aggInputs,
+                                     self$farmidx,
+                                     self$farmeridx)
+          aggGEE$aggregateGEE()
+          # ssurgo data
+          self$.aggSSURGO()
+          # vacuum analyze often
+          invisible(DBI::dbSendQuery(
+            self$aggInputs$dbCon$db,
+            paste0("VACUUM ANALYZE ",
+                   self$aggInputs$farmername, "_a.temp;")
+          ))
+          # export data
+          if (self$aggInputs$save_in_db == "Yes") {
+            self$.saveAggDat()
           }
-        }
-      } # end if not sat dat
-      # clip to field boundary
-      self$.clipAggDat()
-      private$.idFarm()
-      # remote sensing data
-      aggGEE <- OFPE::AggGEE$new(self$aggInputs,
-                                 self$farmidx,
-                                 self$farmeridx)
-      aggGEE$aggregateGEE()
-      # ssurgo data
-      self$.aggSSURGO()
-      # vacuum analyze often
-      invisible(DBI::dbSendQuery(
-          self$aggInputs$dbCon$db,
-          paste0("VACUUM ANALYZE ",
-                 self$aggInputs$farmername, "_a.temp;")
-      ))
-      # export data
-      if (self$aggInputs$save_in_db == "Yes") {
-        self$.saveAggDat()
-      }
-      if (self$aggInputs$export == "Yes") {
-        self$.exportAggDat()
-      }
-      # clean up
-      OFPE::removeTempTables(self$aggInputs$dbCon$db)
-      OFPE::removeTempFarmerTables(self$aggInputs$dbCon$db,
-                                   self$aggInputs$farmername)
+          if (self$aggInputs$export == "Yes") {
+            self$.exportAggDat()
+          }
+          # clean up
+          OFPE::removeTempTables(self$aggInputs$dbCon$db)
+          OFPE::removeTempFarmerTables(self$aggInputs$dbCon$db,
+                                       self$aggInputs$farmername)
+          print(paste0("IMPORT COMPLETE: ",
+                       self$aggInputs$farmername,
+                       " ", self$aggInputs$fieldname,
+                       " ", self$aggInputs$cy_resp,
+                       " ", self$aggInputs$respvar,
+                       " DATA."))},
+        warning = function(w) {print()},
+        error = function(e) {
+          print(paste0("!!! ERROR AGGREGATING ",
+                       self$aggInputs$farmername,
+                       " ", self$aggInputs$fieldname,
+                       " ", self$aggInputs$cy_resp,
+                       " ", self$aggInputs$respvar,
+                       " DATA !!!"))
+        })
     },
     #' @description
     #' Makes a grid across a field of a specified size. If the grid
@@ -1270,22 +1286,22 @@ AggDat <- R6::R6Class(
           db,
           paste0("CREATE TABLE ", farmername,"_a.exp_box AS
           (SELECT ST_SetSRID(ST_Extent(temp.geometry), ", utm_epsg,") AS
-          geometry FROM farmerb_r.temp temp);")
+          geometry FROM ", farmername,"_r.temp temp);")
       ))
       invisible(DBI::dbSendQuery(
-          self$aggInputs$dbCon$db,
-          paste0("ALTER TABLE ", self$aggInputs$farmername, "_a.exp_grid
+          db,
+          paste0("ALTER TABLE ", farmername, "_a.exp_grid
                  ADD COLUMN id SERIAL;
-                 DELETE FROM ", self$aggInputs$farmername, "_a.exp_grid AS exp_grid
+                 DELETE FROM ", farmername, "_a.exp_grid AS exp_grid
                  WHERE exp_grid.id IN (
                  SELECT a.id
-                 FROM ", self$aggInputs$farmername, "_a.exp_grid a, (
+                 FROM ", farmername, "_a.exp_grid a, (
                  SELECT ST_Union(geometry) As geometry
-                 FROM ", self$aggInputs$farmername, "_a.exp_box
+                 FROM ", farmername, "_a.exp_box
                  ) b
                  WHERE NOT ST_Within(a.geometry, b.geometry)
                  );
-                 ALTER TABLE ", self$aggInputs$farmername, "_a.exp_grid
+                 ALTER TABLE ", farmername, "_a.exp_grid
                  DROP COLUMN id;")
       ))
       # buff exp_grid within 5m of boundary?
@@ -1599,16 +1615,17 @@ AggDat <- R6::R6Class(
         ))
       } else {
         ## get column names of agg table
-        db_cols <- sf::st_read(
-          self$aggInputs$dbCon$db,
-          query = paste0("SELECT *
-                          FROM ", self$aggInputs$farmername, "_a.", self$aggInputs$respvar, "
-                          LIMIT 1"),
-          geometry_column = "geometry") %>%
-          as.data.frame()
-        db_cols$geometry <- NULL
-        db_cols <- paste(c("geometry" ,names(db_cols)), collapse=", ")
+        # db_cols <- sf::st_read(
+        #   self$aggInputs$dbCon$db,
+        #   query = paste0("SELECT *
+        #                   FROM ", self$aggInputs$farmername, "_a.", self$aggInputs$respvar, "
+        #                   LIMIT 1"),
+        #   geometry_column = "geometry") %>%
+        #   as.data.frame()
+        # db_cols$geometry <- NULL
+        # db_cols <- paste(c("geometry" ,names(db_cols)), collapse=", ")
         ## else append to it
+
         invisible(DBI::dbSendQuery(
             self$aggInputs$dbCon$db,
             paste0("DELETE FROM ", self$aggInputs$farmername, "_a.", self$aggInputs$respvar, "
@@ -1616,12 +1633,26 @@ AggDat <- R6::R6Class(
                     AND size = ", ifelse(is.null(self$aggInputs$size), 10, self$aggInputs$size), "
                     AND grid = '", self$aggInputs$GRID, "'
                     AND year = '", self$aggInputs$cy_resp, "'
-                    AND datused = '", self$aggInputs$dat_used, "';
-
-                    INSERT INTO ", self$aggInputs$farmername, "_a.", self$aggInputs$respvar, "
-                    SELECT ", db_cols, "
-                    FROM ", self$aggInputs$farmername, "_a.temp;")
+                    AND datused = '", self$aggInputs$dat_used, "';")
         ))
+        temp_dat <- sf::st_read(
+          self$aggInputs$dbCon$db,
+          query = paste0("SELECT * FROM ",
+                         self$aggInputs$farmername, "_a.temp;")) %>%
+          sf::`st_crs<-`(4326) %>%
+          sf::st_transform("epsg:4326")
+        sf::st_write(temp_dat,
+                     self$aggInputs$dbCon$db,
+                     c(paste0(self$aggInputs$farmername, "_a"),
+                       self$aggInputs$respvar),
+                     layer_options = "OVERWRITE=false",
+                     append = TRUE)
+
+        # DBI::dbSendQuery(
+        #   self$aggInputs$dbCon$db,
+        #   paste0("INSERT INTO ", self$aggInputs$farmername, "_a.", self$aggInputs$respvar, "
+        #             SELECT ", db_cols, "
+        #             FROM ", self$aggInputs$farmername, "_a.temp;"))
       }
       invisible(DBI::dbSendQuery(
           self$aggInputs$dbCon$db,

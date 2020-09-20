@@ -63,9 +63,11 @@ convPolyToMulti = function(db, dat, schema, dtype) {
                    ignore.case = TRUE))) {
       invisible(DBI::dbGetQuery(
         db,
-        paste0("ALTER TABLE ", schema, ".", dtype, "
-              ALTER COLUMN geometry TYPE geometry(MultiPolygon, 4326)
-              USING ST_Multi(geometry)")
+        paste0("ALTER TABLE ", schema, ".", dtype, " ALTER COLUMN geometry
+               SET DATA TYPE geometry;
+               ALTER TABLE ", schema, ".", dtype, "
+               ALTER COLUMN geometry TYPE geometry(MultiPolygon, 4326)
+               USING ST_Multi(geometry)")
       ))
     }
   }
@@ -157,7 +159,7 @@ standardizeColNames <- function(db, dat, schema, dtype) {
     for (j in 1:length(in_df)) {
       DBI::dbGetQuery(db,
                       paste0("ALTER TABLE ", schema, ".", dtype,
-                             " ADD COLUMN ", in_df[j], " TEXT"))
+                             " ADD COLUMN \"", in_df[j], "\" TEXT"))
     }
   }
   return(dat)
@@ -246,12 +248,20 @@ importDat = function(db, dat, schema, dtype, upserts) {
 importMulti <- function(db, dat, schema, dtype) {
   OFPE::importNewDat(db, dat, schema, "temp2")
   OFPE::convPolyToMulti(db, dat, schema, "temp2")
+  rm(dat) # free up space
+  temp_dat <- sf::st_read(
+    db,
+    query = paste0("SELECT * FROM ", schema, ".temp2")
+  ) %>%
+    sf::`st_crs<-`(4326) %>%
+    sf::st_transform("epsg:4326") %>%
+    sf::st_cast("MULTIPOLYGON")
   tryCatch({
-    invisible(DBI::dbSendQuery(
-      db,
-      paste0("INSERT INTO ", schema, ".", dtype,
-             " (SELECT * FROM ", schema, ".temp2)")
-    ))
+    sf::st_write(temp_dat,
+                 db,
+                 c(schema, dtype),
+                 layer_options = "OVERWRITE=false",
+                 append = TRUE)
   },
   error = function(e) {
     print(paste0("Data already exists in ", schema, ".", dtype))
