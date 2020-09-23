@@ -109,7 +109,8 @@ plotMaps <- function(df,
                     y = "") +
       ggplot2::theme_bw() +
       ggplot2::theme(axis.text.x = ggplot2::element_blank(),
-                     axis.text.y = ggplot2::element_blank()) +
+                     axis.text.y = ggplot2::element_blank(),
+                     legend.text = element_text(size = 14)) +
       OFPE::scale_bar(lon = e@xmin-0.0005,
                       lat = e@ymin-0.0005,
                       distance_lon = 0.2,
