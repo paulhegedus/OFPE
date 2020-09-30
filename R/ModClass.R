@@ -217,7 +217,7 @@ ModClass <- R6::R6Class(
     #' @param None All parameters supplied upon initialization.
     #' @return Fitted models.
     fitModels = function() {
-      lapply(self$mod_list, function(mod) mod$fitMod())
+      lapply(self$mod_list, function(m) m$fitMod())
     },
     #' @description
     #' Method for saving diagnostic and validation plots. The diagnostic plots
@@ -289,82 +289,86 @@ ModClass <- R6::R6Class(
       init_text <- "$new(dat, respvar, expvar, num_means)"
       return(eval(parse(text = paste0(fxn, init_text))))
     },
-    .saveDiagnostics = function(mod, SAVE) {
-      mod$saveDiagnostics(self$out_path, SAVE)
+    .saveDiagnostics = function(m, SAVE) {
+      m$saveDiagnostics(self$out_path, SAVE)
     },
-    .saveValidation = function(mod, SAVE) {
+    .saveValidation = function(m, SAVE) {
       if (SAVE) {
-        private$.plotObsPredRespVsExp(mod, self$out_path, SAVE)
-        private$.plotObsVsPred(mod, self$out_path, SAVE)
+        private$.plotObsPredRespVsExp(m, self$out_path, SAVE)
+        private$.plotObsVsPred(m, self$out_path, SAVE)
       }
     },
-    .plotObsPredRespVsExp = function(mod, out_path, SAVE) {
+    .plotObsPredRespVsExp = function(m, out_path, SAVE) {
       set.seed(13113)
-      if (mod$respvar == "yld") {
+      if (m$respvar == "yld") {
         cols <- c("black", "red")
       } else {
         cols <- c("black", "cyan")
       }
-      shps <- as.integer(runif(length(unique(mod$dat$val$year.field)), 1, 10))
-      yMIN <- DescTools::RoundTo(min(mod$dat$val[, which(names(mod$dat$val) %in% mod$respvar), with = FALSE][[1]], na.rm = T), 5, floor)
-      yMAX <- DescTools::RoundTo(max(mod$dat$val[, which(names(mod$dat$val) %in% mod$respvar), with = FALSE][[1]], na.rm = T), 5, ceiling)
+      shps <- as.integer(runif(length(unique(m$dat$val$year.field)), 1, 10))
+      yMIN <- DescTools::RoundTo(min(m$dat$val[, which(names(m$dat$val) %in% m$respvar), with = FALSE][[1]], na.rm = T), 5, floor)
+      yMAX <- DescTools::RoundTo(max(m$dat$val[, which(names(m$dat$val) %in% m$respvar), with = FALSE][[1]], na.rm = T), 5, ceiling)
       ySTEP <- (yMAX -  yMIN) / 10
-      xMIN <- DescTools::RoundTo(min(mod$dat$val[, which(names(mod$dat$val) %in% mod$expvar), with = FALSE][[1]], na.rm = T), 5, floor)
-      xMAX <- DescTools::RoundTo(max(mod$dat$val[, which(names(mod$dat$val) %in% mod$expvar), with = FALSE][[1]], na.rm = T), 5, ceiling)
+      xMIN <- DescTools::RoundTo(min(m$dat$val[, which(names(m$dat$val) %in% m$expvar), with = FALSE][[1]], na.rm = T), 5, floor)
+      xMAX <- DescTools::RoundTo(max(m$dat$val[, which(names(m$dat$val) %in% m$expvar), with = FALSE][[1]], na.rm = T), 5, ceiling)
       xSTEP <- (xMAX - xMIN) / 10
       p <- ggplot2::ggplot() +
-        ggplot2::geom_point(data = mod$dat$val,
-                   ggplot2::aes(x = get(mod$expvar), y = get(mod$respvar), col = cols[1], shape = year.field)) +
-        ggplot2::labs(y = ifelse(mod$respvar == "yld", "Yield (bu/ac)", "Grain Protein Content (%)"),
-             x=paste0(ifelse(mod$expvar == "aa_n", "Nitrogen", "Seed"), " (lbs/ac)")) +
-        ggplot2::ggtitle(paste0(mod$fieldname," ", mod$mod_type ," Analysis"),
-                subtitle = paste0("AIC = ", round(AIC(mod$mod), 4))) +
-        ggplot2::geom_point(data = mod$dat$val,
-                   ggplot2::aes(x = get(mod$expvar), y = pred,
+        ggplot2::geom_point(data = m$dat$val,
+                   ggplot2::aes(x = get(m$expvar), y = get(m$respvar), col = cols[1], shape = year.field)) +
+        ggplot2::labs(y = ifelse(m$respvar == "yld", "Yield (bu/ac)", "Grain Protein Content (%)"),
+             x=paste0(ifelse(m$expvar == "aa_n", "Nitrogen", "Seed"), " (lbs/ac)")) +
+        ggplot2::ggtitle(paste0(m$fieldname," ", m$mod_type ," Analysis"),
+                subtitle = paste0("AIC = ", round(AIC(m$m), 4))) +
+        ggplot2::geom_point(data = m$dat$val,
+                   ggplot2::aes(x = get(m$expvar), y = pred,
                        col = cols[2],
                        shape = year.field)) +
         ggplot2::scale_color_manual(name = "", values = cols, labels = c("Observed", "Predicted")) +
         ggplot2::scale_shape_manual(name = "", values = shps) +
         ggplot2::scale_y_continuous(limits = c(yMIN, yMAX), breaks = seq(yMIN, yMAX, ySTEP)) +
         ggplot2::scale_x_continuous(limits = c(xMIN, xMAX), breaks = seq(xMIN, xMAX, xSTEP)) +
-        ggplot2::theme_bw()
+        ggplot2::theme_bw() +
+        ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
+                       axis.title = ggplot2::element_text(size = 14))
       if (SAVE) {
         ggplot2::ggsave(paste0(out_path, "/Outputs/Validation/",
-                      mod$fieldname, "_", mod$mod_type, "_pred&Obs_", mod$respvar, "_vs_",
-                      ifelse(mod$expvar == "aa_n", "N", "SR"), ".png"),
+                      m$fieldname, "_", m$mod_type, "_pred&Obs_", m$respvar, "_vs_",
+                      ifelse(m$expvar == "aa_n", "N", "SR"), ".png"),
                plot = p, device = "png", scale = 1, width = 7.5, height = 5, units = "in")
       }
       return(p)
     },
-    .plotObsVsPred = function(mod, out_path, SAVE) {
+    .plotObsVsPred = function(m, out_path, SAVE) {
       set.seed(13113)
-      shps <- as.integer(runif(length(unique(mod$dat$val$year.field)), 1, 10))
+      shps <- as.integer(runif(length(unique(m$dat$val$year.field)), 1, 10))
 
-      MAX <- ifelse(max(mod$dat$val[, which(names(mod$dat$val) %in% mod$respvar), with = FALSE][[1]], na.rm = T) > max(mod$dat$val$pred, na.rm = T),
-                    DescTools::RoundTo(max(mod$dat$val[, which(names(mod$dat$val) %in% mod$respvar), with = FALSE][[1]], na.rm = T), 5, ceiling),
-                    DescTools::RoundTo(max(mod$dat$val$pred, na.rm = T), 5, ceiling))
-      MIN <- ifelse(min(mod$dat$val[, which(names(mod$dat$val) %in% mod$respvar), with = FALSE][[1]], na.rm = T) < min(mod$dat$val$pred, na.rm = T),
-                    DescTools::RoundTo(min(mod$dat$val[, which(names(mod$dat$val) %in% mod$respvar), with = FALSE][[1]], na.rm = T), 5, floor),
-                    DescTools::RoundTo(min(mod$dat$val$pred, na.rm = T), 5, floor))
-      p <- ggplot2::ggplot(data = mod$dat$val) +
-        ggplot2::geom_point(ggplot2::aes(x = get(mod$respvar), y = mod$dat$val$pred, shape = year.field)) +
-        ggplot2::geom_abline(intercept = 0, slope = 1, color = ifelse(mod$respvar == "yld", "red", "cyan")) +
-        ggplot2::labs(x = paste0("Observed ", ifelse(mod$respvar == "yld", "Yield", "Protein")),
-             y = paste0("Predicted ", ifelse(mod$respvar == "yld", "Yield", "Protein"))) +
+      MAX <- ifelse(max(m$dat$val[, which(names(m$dat$val) %in% m$respvar), with = FALSE][[1]], na.rm = T) > max(m$dat$val$pred, na.rm = T),
+                    DescTools::RoundTo(max(m$dat$val[, which(names(m$dat$val) %in% m$respvar), with = FALSE][[1]], na.rm = T), 5, ceiling),
+                    DescTools::RoundTo(max(m$dat$val$pred, na.rm = T), 5, ceiling))
+      MIN <- ifelse(min(m$dat$val[, which(names(m$dat$val) %in% m$respvar), with = FALSE][[1]], na.rm = T) < min(m$dat$val$pred, na.rm = T),
+                    DescTools::RoundTo(min(m$dat$val[, which(names(m$dat$val) %in% m$respvar), with = FALSE][[1]], na.rm = T), 5, floor),
+                    DescTools::RoundTo(min(m$dat$val$pred, na.rm = T), 5, floor))
+      p <- ggplot2::ggplot(data = m$dat$val) +
+        ggplot2::geom_point(ggplot2::aes(x = get(m$respvar), y = m$dat$val$pred, shape = year.field)) +
+        ggplot2::geom_abline(intercept = 0, slope = 1, color = ifelse(m$respvar == "yld", "red", "cyan")) +
+        ggplot2::labs(x = paste0("Observed ", ifelse(m$respvar == "yld", "Yield", "Protein")),
+             y = paste0("Predicted ", ifelse(m$respvar == "yld", "Yield", "Protein"))) +
         ggplot2::scale_shape_manual(name = "", values = shps) +
         ggplot2::scale_y_continuous(limits = c(MIN, MAX), breaks = seq(MIN, MAX, (MAX - MIN) / 10)) +
         ggplot2::scale_x_continuous(limits = c(MIN, MAX), breaks = seq(MIN, MAX, (MAX - MIN) / 10)) +
         ggplot2::theme_bw() +
-        ggplot2::ggtitle(paste0("Predicted vs. Observed ", ifelse(mod$respvar=="yld", "Yield", "Protein")),
+        ggplot2::ggtitle(paste0("Predicted vs. Observed ", ifelse(m$respvar=="yld", "Yield", "Protein")),
                 subtitle = paste0("Line = 1:1, RMSE = ",
                                   suppressWarnings(round(Metrics::rmse(
-                                    na.omit(mod$dat$val[, which(names(mod$dat$val) %in% mod$respvar), with = FALSE][[1]]),
-                                    na.omit(mod$dat$val$pred)),
+                                    na.omit(m$dat$val[, which(names(m$dat$val) %in% m$respvar), with = FALSE][[1]]),
+                                    na.omit(m$dat$val$pred)),
                                     4
-                                  ))))
+                                  )))) +
+        ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
+                       axis.title = ggplot2::element_text(size = 14))
       if (SAVE) {
         ggplot2::ggsave(paste0(out_path, "/Outputs/Validation/",
-                      mod$fieldname, "_", mod$mod_type, "_predVSobs_", mod$respvar, ".png"),
+                      m$fieldname, "_", m$mod_type, "_predVSobs_", m$respvar, ".png"),
                plot = p, device = "png", scale = 1, width = 7.5, height = 5, units = "in"
         )
       }

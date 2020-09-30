@@ -8,7 +8,7 @@
 [![Project Status: Active – The project has reached a stable, usable
 state and is being actively
 developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
-[![Last-changedate](https://img.shields.io/badge/last%20change-2020--09--15-yellowgreen.svg)](/commits/master)
+[![Last-changedate](https://img.shields.io/badge/last%20change-2020--09--21-yellowgreen.svg)](/commits/master)
 [![R build
 status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
 [![Build
@@ -218,9 +218,13 @@ of the processes/vignettes described below.
 Example data used in the vignettes can be found
 [here](https://github.com/paulhegedus/OFPEDATA.git) and installed using
 the code above. The vignettes show a workflow using data from “FarmerB”
-in the OFPEDATA package. This is to save memory and time when creating
-example databases. Users are encouraged to explore with “FarmerC” and
-“FarmerI” data.
+in the OFPEDATA package. Following along in the vignettes using only
+“FarmerB” data and importing GEE data for “FarmerB” from 2015 - 2020
+should take \~5GB on your machine. This is to save memory and time when
+creating example databases. Users are encouraged to explore with
+“FarmerC” and “FarmerI” data, but remember that adding more farmer
+data or more data from GEE will require more space on your machine or
+server.
 
 ### Database Creation/Management
 

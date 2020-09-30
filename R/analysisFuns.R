@@ -24,51 +24,69 @@ findBadParms <- function(parm_df, dat) {
             any(grepl("means", names(parm_df))),
             any(grepl("sd", names(parm_df))))
 
+  # check for aliased vars
+  resp <- ifelse(any(grepl("yld", names(dat))), "yld", "pro")
+  lm_form <- as.formula(
+    paste0(resp, " ~ ", paste(parm_df$parms, collapse = " + "))
+  )
+  m0 <- lm(lm_form, data = dat) %>%
+    alias()
+  if (!is.null(m0$Complete)) {
+    parm_df[parm_df$parms %in% row.names(m0$Complete), "bad_parms"] <- TRUE
+  }
+
+  # check each var
   obs_num <- by(dat, dat$year, nrow) %>%
     lapply(as.numeric) %>%
     unlist()
   for (i in 1:nrow(parm_df)) {
-    dfNAs <- by(
-      dat[, which(names(dat) %in% as.character(parm_df$parms[i])), with = FALSE][[1]],
-      dat$year,
-      summary
-    )
-    # NA's held in 7th positiong of summary table
-    dfNAs <- lapply(dfNAs, function(x) ifelse(length(x) == 7,
-                                              as.numeric(x[7]),
-                                              0)) %>%
-      unlist() %>%
-      as.numeric()
-    # bad_parm if more than 30% missing
-    for (j in 1:length(obs_num)) {
-      if (any(dfNAs[j] / obs_num[j] > 0.3)) {
-        parm_df$bad_parms[i] <- TRUE
-      }
-    }
-    # bad_parm if standard deviation = 0
-    sds <- by(
-      dat[, which(names(dat) %in% as.character(parm_df$parms[i])), with = FALSE][[1]],
-      dat$year,
-      sd,
-      na.rm = TRUE
-    )
-    sds <- as.numeric(sds)
-    if (any(is.na(sds))) {
-      parm_df$bad_parms[i] <- TRUE
-    } else {
-      parm_df$bad_parms[i] <- ifelse(any(sds == 0),
-                                          TRUE,
-                                          FALSE)
-    }
     if (!parm_df$bad_parms[i]) {
-      parm_df$means[i] <- mean(
-        dat[, which(names(dat) %in% as.character(parm_df$parms[i])), with = FALSE][[1]],
+      dfNAs <- by(
+        dat[, which(names(dat) %in% as.character(parm_df$parms[i])),
+            with = FALSE][[1]],
+        dat$year,
+        summary
+      )
+      # NA's held in 7th positiong of summary table
+      dfNAs <- lapply(dfNAs, function(x) ifelse(length(x) == 7,
+                                                as.numeric(x[7]),
+                                                0)) %>%
+        unlist() %>%
+        as.numeric()
+      # bad_parm if more than 30% missing
+      for (j in 1:length(obs_num)) {
+        if (any(dfNAs[j] / obs_num[j] > 0.3)) {
+          parm_df$bad_parms[i] <- TRUE
+        }
+      }
+      # bad_parm if standard deviation = 0
+      sds <- by(
+        dat[, which(names(dat) %in% as.character(parm_df$parms[i])),
+            with = FALSE][[1]],
+        dat$year,
+        sd,
         na.rm = TRUE
       )
-      parm_df$sd[i] <- sd(
-        dat[, which(names(dat) %in% as.character(parm_df$parms[i])), with = FALSE][[1]],
-        na.rm = TRUE
-      )
+      sds <- as.numeric(sds)
+      if (any(is.na(sds))) {
+        parm_df$bad_parms[i] <- TRUE
+      } else {
+        parm_df$bad_parms[i] <- ifelse(any(sds == 0),
+                                       TRUE,
+                                       FALSE)
+      }
+      if (!parm_df$bad_parms[i]) {
+        parm_df$means[i] <- mean(
+          dat[, which(names(dat) %in% as.character(parm_df$parms[i])),
+              with = FALSE][[1]],
+          na.rm = TRUE
+        )
+        parm_df$sd[i] <- sd(
+          dat[, which(names(dat) %in% as.character(parm_df$parms[i])),
+              with = FALSE][[1]],
+          na.rm = TRUE
+        )
+      }
     }
   }
   return(parm_df)

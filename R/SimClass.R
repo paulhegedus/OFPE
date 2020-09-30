@@ -364,12 +364,6 @@ SimClass <- R6::R6Class(
     #' @return A list of lists ('sim_out') with output from the simulation for each selected
     #' simulation year.
     executeSim = function() {
-      ## TODO - TEMP
-      # temp_rr <- nrow(self$datClass$sim_dat[[1]])
-      # self$datClass$sim_dat <- lapply(self$datClass$sim_dat,
-      #                                 function(x) x[runif(50, 1, temp_rr), ])
-      ## END TEMP
-
       ## for all sim years rep sim dat for length of EXP rate range & add EXP val
       EXPvec <- seq(self$AAmin, self$AArateCutoff, 1)
       self$sim_list <- lapply(self$datClass$sim_dat,
@@ -510,8 +504,8 @@ SimClass <- R6::R6Class(
       }
       return(sub_sim_list)
     },
-    .predResps = function(dat, mod, respvar) {
-      dat$pred <- mod$predResps(dat, mod$mod)
+    .predResps = function(dat, m, respvar) {
+      dat$pred <- m$predResps(dat, m$m)
       names(dat)[grep("^pred$", names(dat))] <- paste0("pred_", respvar)
       return(dat)
     },

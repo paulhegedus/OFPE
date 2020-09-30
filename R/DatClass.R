@@ -438,7 +438,7 @@ DatClass <- R6::R6Class(
                              self$fieldname,
                              'grid')
       self$sim_dat <- lapply(self$sim_dat,
-                             private$.processDat) %>%
+                             private$.processSatDat) %>%
         lapply(data.table::as.data.table) %>%
         invisible()
       self$sim_num_means <- as.list(self$respvar) %>%
@@ -677,12 +677,29 @@ DatClass <- R6::R6Class(
           )
         )
       )
+      ## TEMP - REMOVE!
+      set.seed(342134)
+      if (respvar == "yld") {
+        db_dat <- db_dat[runif(nrow(db_dat) * 0.01, 1, nrow(db_dat)), ]
+      } else {
+        db_dat <- db_dat[runif(nrow(db_dat) * 0.1, 1, nrow(db_dat)), ]
+      }
+      ## TEMP - REMOVE!
+
       return(db_dat)
     },
     .processDat = function(dat) {
       dat <- private$.trimCols(
         dat, c("grid", "size", "datused", "farmer", "prev_year")) %>%
         private$.selectDat() %>%
+        private$.makeFactors() %>%
+        private$.cleanDat()
+      return(dat)
+    },
+    .processSatDat = function(dat) {
+      dat <- private$.trimCols(
+        dat, c("grid", "size", "datused", "farmer", "prev_year")) %>%
+        private$.selectSatDat() %>%
         private$.makeFactors() %>%
         private$.cleanDat()
       return(dat)
@@ -727,48 +744,105 @@ DatClass <- R6::R6Class(
         as.data.frame() %>%
         `names<-`(c("prec_cy","prec_py","gdd_cy","gdd_py",
                     "veg_cy","veg_py","veg_2py"))
+      dat <- private$.trimCols(
+        dat,
+        c("prec_cy_d", "prec_py_d", "gdd_cy_d", "gdd_py_d",
+          "prec_cy_g", "prec_py_g", "gdd_cy_g", "gdd_py_g",
+          "ndvi_cy_s", "ndvi_py_s", "ndvi_2py_s",
+          "ndvi_cy_l", "ndvi_py_l", "ndvi_2py_l",
+          "ndre_cy", "ndre_py", "ndre_2py",
+          "cire_cy", "cire_py", "cire_2py")
+      )
+      dat <- cbind(dat, df)
+      return(dat)
+    },
+    .selectSatDat = function(dat) {
+      sub_cols <- c("prec_cy_d", "prec_py_d", "gdd_cy_d", "gdd_py_d",
+                    "prec_cy_g", "prec_py_g", "gdd_cy_g", "gdd_py_g",
+                    "ndvi_cy_s", "ndvi_py_s", "ndvi_2py_s",
+                    "ndvi_cy_l", "ndvi_py_l", "ndvi_2py_l",
+                    "ndre_cy", "ndre_py", "ndre_2py",
+                    "cire_cy", "cire_py", "cire_2py")
+      sub_dat <- dat[, sub_cols, with = FALSE] %>%
+        apply(2, as.numeric) %>%
+        `names<-`(sub_cols)
 
-      # df <- matrix(NA, nrow = nrow(dat), ncol = 7) %>%
-      #   as.data.frame()
-      # names(df) <- c("prec_cy","prec_py","gdd_cy","gdd_py",
-      #                "veg_cy","veg_py","veg_2py")
-      # for (i in 1:nrow(dat)) {
-      #   df$prec_cy[i] <- ifelse(
-      #     !is.na(dat[i, grep(paste0("prec_cy_", prec_key),  names(dat)), with = FALSE]),
-      #     as.numeric(dat[i, grep(paste0("prec_cy_", prec_key), names(dat)), with = FALSE]),
-      #     as.numeric(dat[i, grep(paste0("prec_cy_", alt_prec_key), names(dat)), with = FALSE])
-      #   )
-      #   df$prec_py[i] <- ifelse(
-      #     !is.na(dat[i, grep(paste0("prec_py_", prec_key), names(dat)), with = FALSE]),
-      #     as.numeric(dat[i, grep(paste0("prec_py_", prec_key), names(dat)), with = FALSE]),
-      #     as.numeric(dat[i, grep(paste0("prec_py_", alt_prec_key), names(dat)), with = FALSE])
-      #   )
-      #   df$gdd_cy[i] <- ifelse(
-      #     !is.na(dat[i, grep(paste0("gdd_cy_", gdd_key), names(dat)), with = FALSE]),
-      #     as.numeric(dat[i, grep(paste0("gdd_cy_", gdd_key), names(dat)), with = FALSE]),
-      #     as.numeric(dat[i, grep(paste0("gdd_cy_", alt_gdd_key), names(dat)), with = FALSE])
-      #   )
-      #   df$gdd_py[i] <- ifelse(
-      #     !is.na(dat[i, grep(paste0("gdd_py_", gdd_key), names(dat)), with = FALSE]),
-      #     as.numeric(dat[i, grep(paste0("gdd_py_", gdd_key), names(dat)), with = FALSE]),
-      #     as.numeric(dat[i, grep(paste0("gdd_py_", alt_gdd_key), names(dat)), with = FALSE])
-      #   )
-      #   df$veg_cy[i] <- ifelse(
-      #     !is.na(dat[i, grep(paste0(self$veg_index, "_cy_s"), names(dat)), with = FALSE]),
-      #     as.numeric(dat[i, grep(paste0(self$veg_index, "_cy_s"), names(dat)), with = FALSE]),
-      #     as.numeric(dat[i, grep(paste0(self$veg_index, "_cy_l"), names(dat)), with = FALSE])
-      #   )
-      #   df$veg_py[i] <- ifelse(
-      #     !is.na(dat[i, grep(paste0(self$veg_index, "_py_s"), names(dat)), with = FALSE]),
-      #     as.numeric(dat[i, grep(paste0(self$veg_index, "_py_s"), names(dat)), with = FALSE]),
-      #     as.numeric(dat[i, grep(paste0(self$veg_index, "_py_l"), names(dat)), with = FALSE])
-      #   )
-      #   df$veg_2py[i] <- ifelse(
-      #     !is.na(dat[i, grep(paste0(self$veg_index, "_2py_s"), names(dat)), with = FALSE]),
-      #     as.numeric(dat[i, grep(paste0(self$veg_index, "_2py_s"), names(dat)), with = FALSE]),
-      #     as.numeric(dat[i, grep(paste0(self$veg_index, "_2py_l"), names(dat)), with = FALSE])
-      #   )
-      # }
+      prec_key <- ifelse(self$prec_source == "daymet", "d", "g")
+      alt_prec_key <- ifelse(self$prec_source == "daymet", "g", "d")
+      gdd_key <- ifelse(self$gdd_source == "daymet", "d", "g")
+      alt_gdd_key <- ifelse(self$gdd_source == "daymet", "g", "d")
+
+      df <- OFPE::selectDatCpp(
+        as.matrix(sub_dat),
+        nrow(sub_dat),
+        grep(paste0("prec_cy_", prec_key),  names(sub_dat)) - 1,
+        grep(paste0("prec_cy_", alt_prec_key), names(sub_dat)) - 1,
+        grep(paste0("prec_py_", prec_key), names(sub_dat)) - 1,
+        grep(paste0("prec_py_", alt_prec_key), names(sub_dat)) - 1,
+        grep(paste0("gdd_cy_", gdd_key), names(sub_dat)) - 1,
+        grep(paste0("gdd_cy_", alt_gdd_key), names(sub_dat)) - 1,
+        grep(paste0("gdd_py_", gdd_key), names(sub_dat)) - 1,
+        grep(paste0("gdd_py_", alt_gdd_key), names(sub_dat)) - 1,
+        grep(paste0(self$veg_index, "_cy_s"), names(sub_dat)) - 1,
+        grep(paste0(self$veg_index, "_cy_l"), names(sub_dat)) - 1,
+        grep(paste0(self$veg_index, "_py_s"), names(sub_dat)) - 1,
+        grep(paste0(self$veg_index, "_py_l"), names(sub_dat)) - 1,
+        grep(paste0(self$veg_index, "_2py_s"), names(sub_dat)) - 1,
+        grep(paste0(self$veg_index, "_2py_l"), names(sub_dat)) - 1
+      ) %>%
+        as.data.frame() %>%
+        `names<-`(c("prec_cy","prec_py","gdd_cy","gdd_py",
+                    "veg_cy","veg_py","veg_2py"))
+      df$field <- dat$field
+      ## impute missing data
+      any_na <- apply(df, 2, function(x) all(is.na(x)))
+      if (any(any_na)) {
+        na_cols <- which(any_na)
+        impute_dat <- self$mod_dat[[1]]$trn
+        impute_years <- levels(impute_dat$year)
+        for (i in 1:length(na_cols)) {
+          dat_name <- names(na_cols[i])
+          dat_col <- grep(dat_name, names(impute_dat))
+          cov_sumry <- by(impute_dat[, dat_col, with = FALSE][[1]],
+                          impute_dat$year,
+                          summary) %>%
+            `attributes<-`(NULL) %>%
+            lapply(`attributes<-`, NULL) %>%
+            lapply(t) %>%
+            lapply(data.table::as.data.table) %>%
+            data.table::rbindlist()
+          cov_miss <- apply(cov_sumry, 1, function(x) all(is.na(x)))
+          if (all(cov_miss)) {
+            df[, na_cols[i]] <- NA
+          } else {
+            names(cov_miss) <- levels(impute_dat$year)
+            cov_miss <- cov_miss[!cov_miss]
+            cy <- max(as.numeric(as.character(names(cov_miss))))
+            cols <- c(dat_col, grep("field", names(impute_dat)))
+            imp_dat <- impute_dat[impute_dat$year == cy, cols, with = FALSE]
+            imp_dat_means <-
+              self$mod_num_means[[1]][[grep(cy, names(self$mod_num_means[[1]]))]]
+            uncenter_val <- imp_dat_means[grep(dat_name, names(imp_dat_means))] %>%
+              as.numeric()
+            imp_dat[[1]] <- imp_dat[[1]] + uncenter_val
+            means <- by(eval(parse(text = paste0("imp_dat$", dat_name))),
+                        imp_dat$field,
+                        mean)
+            sds <- by(eval(parse(text = paste0("imp_dat$", dat_name))),
+                      imp_dat$field,
+                      sd)
+            imp_tab <- data.frame(field = levels(imp_dat$field),
+                                  means = as.numeric(means),
+                                  sds = as.numeric(sds))
+            for (j in 1:nrow(imp_tab)) {
+              obs <- nrow(df[df$field == imp_tab[j, 1], ])
+              df[df$field == imp_tab[j, 1], as.numeric(na_cols[i])] <-
+                rnorm(obs, imp_tab[j, 2], imp_tab[j, 3])
+            }
+          }
+        }
+      }
+      df$field <- NULL
       dat <- private$.trimCols(
         dat,
         c("prec_cy_d", "prec_py_d", "gdd_cy_d", "gdd_py_d",

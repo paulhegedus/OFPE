@@ -38,6 +38,8 @@ The [PostgreSQL Database Set-Up](https://paulhegedus.github.io/OFPE-Website/post
 # Workflow
 The sections below describe the process of building and setting up an initial OFPE database for the first time and loading data into the database. The initial section loads the required packages and connects to the database. If the user does not have farm and field boundaries to upload, use the section for setting up example data in order to follow along with this and all of the vignettes. The activity workflow for building and formatting the database and a more detailed description is described on [this page](https://paulhegedus.github.io/OFPE-Website/db_management.html), where a component diagram can also be found.
 
+The vignette examples with "FarmerB" use only that farmer's data and Google Earth Engine data for the farm boundary of "FarmerB" from 2015 - 2020. This will take about 5GB on your machine.
+
 ## Set-Up
 The below contains the packages used in the vignette and a demonstration of connecting to your database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette uses example data located in the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) R-package. This vignette downloads data from the OFPE package in order to demonstrate a realistic data workflow. 
 

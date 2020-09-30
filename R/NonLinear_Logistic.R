@@ -45,11 +45,11 @@ NonLinear_Logistic <- R6::R6Class(
     #' (yld/pro). This is for the data specified from the analysis data inputs (grid specific).
     num_means = NULL,
 
-    #' @field mod Fitted non-linear logistic model.
-    mod = NULL,
-    #' @field mod0 Fitted non-linear logistic model with the minimum rates and locking beta,
+    #' @field m Fitted non-linear logistic model.
+    m = NULL,
+    #' @field m0 Fitted non-linear logistic model with the minimum rates and locking beta,
     #' delta, and gamma.
-    mod0 = NULL,
+    m0 = NULL,
     #' @field form Final non-linear logistic formula.
     form = NULL,
     #' @field parm_df Data frame of parameter names, the function component and ID, and a column
@@ -168,22 +168,22 @@ NonLinear_Logistic <- R6::R6Class(
       ## fit final model with beta, delta, gamma after alpha locked
       # save formula, return model
       private$.fitFinalMod()
-      self$dat$val$pred <- self$predResps(self$dat$val, self$mod)
+      self$dat$val$pred <- self$predResps(self$dat$val, self$m)
       self$dat$val <- OFPE::valPrep(self$dat$val,
                                     self$respvar,
                                     self$expvar,
                                     self$num_means)
       self$fieldname <- OFPE::uniqueFieldname(self$dat$val)
-      return(self$mod)
+      return(self$m)
     },
     #' @description
     #' Method for predicting response variables using data and a model.
     #' @param dat Data for predicting response variables for.
-    #' @param mod The fitted model to use for predicting the response
+    #' @param m The fitted model to use for predicting the response
     #' variable for each observation in 'dat'.
     #' @return Vector of predicted values for each location in 'dat'.
-    predResps = function(dat, mod) {
-      pred <- predict(mod, dat) %>% as.numeric()
+    predResps = function(dat, m) {
+      pred <- predict(m, dat) %>% as.numeric()
       return(pred)
     },
     #' @description
@@ -196,21 +196,21 @@ NonLinear_Logistic <- R6::R6Class(
     saveDiagnostics = function(out_path, SAVE) {
       if (SAVE) {
         ## Save main diagnostics
-        std_res <- self$mod$m$resid()/sigma(self$mod)
+        std_res <- self$m$m$resid()/sigma(self$m)
         png(paste0(out_path, "/Outputs/Diagnostics/", self$respvar, "_",
                    self$fieldname, "_NonLinear_Logistic_diagnostics.png"),
             width = 10, height = 10, units = 'in', res = 100)
         par(mfrow=c(2,2))
         qqnorm(std_res, ylab = "Standardized Residuals")
-        plot(self$mod$m$fitted(),
-             self$mod$m$resid(),
+        plot(self$m$m$fitted(),
+             self$m$m$resid(),
              pch=1,
              xlab = "Fitted Values",
              ylab = "Residuals",
              main = "Residuals vs Fitted Values")
-        hist(residuals(self$mod),
+        hist(residuals(self$m),
              xlab = "Residuals")
-        plot(self$mod$m$fitted(),
+        plot(self$m$m$fitted(),
              std_res,
              pch = 1,
              xlab = "Fitted Values",
@@ -275,12 +275,12 @@ NonLinear_Logistic <- R6::R6Class(
       delta <- self$parm_df[self$parm_df$fxn_comp == "EXP", "means"] %>% na.omit() %>% as.numeric()
       gamma <- 0.1
       b0 <- self$parm_df[self$parm_df$coef_id == "b0", "est"] %>% na.omit() %>% as.numeric()
-      self$mod0 <- minpack.lm::nlsLM(as.formula(fxn),
+      self$m0 <- minpack.lm::nlsLM(as.formula(fxn),
                   data = d_zero,
                   control = nls.control(maxiter = 500, minFactor = 1e-10),
                   start = start_list)
-      self$parm_df[self$parm_df$coef_id %in% names(summary(self$mod0)$coefficients[, 1]), "est"] <-
-        as.numeric(summary(self$mod0)$coefficients[, 1])
+      self$parm_df[self$parm_df$coef_id %in% names(summary(self$m0)$coefficients[, 1]), "est"] <-
+        as.numeric(summary(self$m0)$coefficients[, 1])
     },
     logistic2 = function(alpha, beta, delta, gamma, EXP) {
       ### Logistic function ###
@@ -303,7 +303,7 @@ NonLinear_Logistic <- R6::R6Class(
         start_list <- start_list[!is.na(start_list)]
         start_list$delta <- delta
         gamma <- 0.1
-        self$mod <- minpack.lm::nlsLM(as.formula(self$form),
+        self$m <- minpack.lm::nlsLM(as.formula(self$form),
             data = self$dat$trn,
             control = nls.control(maxiter = 500, minFactor = 1e-10),
             start = start_list)},
@@ -315,20 +315,20 @@ NonLinear_Logistic <- R6::R6Class(
           start_list <- start_list[!is.na(start_list)]
           delta <- delta
           gamma <- 0.1
-          self$mod <- minpack.lm::nlsLM(as.formula(self$form),
+          self$m <- minpack.lm::nlsLM(as.formula(self$form),
                                         data = self$dat$trn,
                                         control = nls.control(maxiter = 500, minFactor = 1e-10),
                                         start = start_list)},
           warning = function(w) {},
           error = function(e) {
-            self$mod <- self$mod0
+            self$m <- self$m0
           })
       })
 
       self$parm_df <- rbind(self$parm_df, c("delta", "delta", "delta", FALSE, 1, 1, delta))
       #self$parm_df$bad_parms <- as.logical(self$parm_df$bad_parms)
-      self$parm_df[self$parm_df$coef_id %in% names(summary(self$mod)$coefficients[, 1]), "est"] <-
-        as.numeric(summary(self$mod)$coefficients[,1])
+      self$parm_df[self$parm_df$coef_id %in% names(summary(self$m)$coefficients[, 1]), "est"] <-
+        as.numeric(summary(self$m)$coefficients[,1])
     },
     .makeFormula = function(fit_alpha = FALSE) {
       stopifnot(is.logical(fit_alpha))

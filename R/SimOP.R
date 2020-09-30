@@ -86,6 +86,8 @@ SimOP <- R6::R6Class(
     #' options for the entire class.
     #' @return Simulation outputs in the 'Outputs' folder.
     savePlots = function(SAVE = NULL) {
+      browser()
+
       if (is.null(SAVE)) {
         SAVE <- self$simClass$SAVE
       } else {
@@ -579,7 +581,6 @@ SimOP <- R6::R6Class(
       yMIN <- DescTools::RoundTo(min(Bp.plot$NR,na.rm=T),5,floor)
       yMAX <- DescTools::RoundTo(max(Bp.plot$NR,na.rm=T),5,ceiling)
       ySTEP <- (yMAX - yMIN) / 10
-
       p <-
         ggplot2::ggplot(Bp.plot) +
           ggplot2::geom_boxplot(ggplot2::aes(x = Method, y = NR),
@@ -589,7 +590,13 @@ SimOP <- R6::R6Class(
                                       limits = c(yMIN, yMAX),
                                       breaks = seq(yMIN, yMAX, ySTEP)) +
           ggplot2::scale_x_discrete(name = "Management Strategy", labels = mgmt_labels) +
-          ggplot2::theme_bw()
+          ggplot2::theme_bw() +
+          ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
+                         axis.title = ggplot2::element_text(size = 14))
+      if (any(Bp.plot$NR < 0)) {
+        p <- p +
+          ggplot2::geom_hline(yintercept = 0, color = "red", linetype = 2)
+      }
       if (SAVE) {
         ggplot2::ggsave(paste0(out_path, "/Outputs/NR/NRboxPlots/",
                                fieldname, "_avgNR_box_",
@@ -759,7 +766,9 @@ SimOP <- R6::R6Class(
                              ggplot2::aes(x = Method, y = MeanNR, label = round(MeanNR, 2)),
                       hjust = 1.15,
                       vjust = 1.25) +
-          ggplot2::theme_bw()
+          ggplot2::theme_bw() +
+          ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
+                         axis.title = ggplot2::element_text(size = 14))
       if (SAVE) {
         ggplot2::ggsave(paste0(out_path, "/Outputs/NR/NRbarPlots/",
                                fieldname, "_avgNR_bar_",
@@ -839,6 +848,8 @@ SimOP <- R6::R6Class(
                              ggplot2::aes(x = Method, y = EXP, label = round(EXP, 2)),
                     vjust = -.25) +
           ggplot2::theme_bw() +
+          ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
+                         axis.title = ggplot2::element_text(size = 14)) +
           ggplot2::ggtitle(gg_title, subtitle = txt)
       if (SAVE) {
         ggplot2::ggsave(paste0(out_path, "/Outputs/EXP/EXPapplied/",
@@ -892,7 +903,6 @@ SimOP <- R6::R6Class(
                            " lbs/acre, SD = ",
                            round(sd(NRopt[, "EXP.rate.ssopt"], na.rm = TRUE), 2),
                            " lbs/acre")
-
       if (TF4[which(TF4$Method == "EXP.ssopt"), "EXP"] == 0) {
         p <-
           ggplot2::ggplot(NRplot) +
@@ -903,7 +913,9 @@ SimOP <- R6::R6Class(
                            na.rm = TRUE) +
             ggplot2::labs(x = "lbs/acre") +
             ggplot2::theme_bw() +
-            ggplot2::ggtitle(gg_title, subtitle = sub_title)
+            ggplot2::ggtitle(gg_title, subtitle = sub_title) +
+            ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
+                           axis.title = ggplot2::element_text(size = 14))
       } else {
         bin_num <- DescTools::RoundTo(max(NRplot$EXP.rate.ssopt,
                                           na.rm = TRUE), 5, ceiling) / 5
@@ -924,7 +936,9 @@ SimOP <- R6::R6Class(
                                breaks = seq(xMIN, xMAX, xSTEP),
                                oob = scales::squish) +
             ggplot2::theme_bw() +
-            ggplot2::ggtitle(gg_title, subtitle = sub_title)
+            ggplot2::ggtitle(gg_title, subtitle = sub_title) +
+            ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
+                           axis.title = ggplot2::element_text(size = 14))
       }
       yMIN <- 0
       yMAX <- DescTools::RoundTo(max(ggplot2::ggplot_build(p)$data[[1]]$count), 5, ceiling)
@@ -1003,7 +1017,9 @@ SimOP <- R6::R6Class(
                            na.rm=TRUE) +
             ggplot2::labs(x=x_lab) +
             ggplot2::theme_bw() +
-            ggplot2::ggtitle(gg_title, subtitle=sub_title)
+            ggplot2::ggtitle(gg_title, subtitle=sub_title) +
+            ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
+                           axis.title = ggplot2::element_text(size = 14))
       } else {
         bin_num <- DescTools::RoundTo(max(Bp.var$ffopt.EXPrate,
                                           na.rm = TRUE), 5, ceiling) / 5
@@ -1024,8 +1040,9 @@ SimOP <- R6::R6Class(
                                       breaks = seq(xMIN, xMAX, xSTEP),
                                       oob = scales::squish) +
           ggplot2::theme_bw() +
-          ggplot2::ggtitle(gg_title,
-                           subtitle = sub_title)
+          ggplot2::ggtitle(gg_title, subtitle = sub_title) +
+          ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
+                         axis.title = ggplot2::element_text(size = 14))
       }
       yMIN <- DescTools::RoundTo(min(ggplot2::ggplot_build(p)$data[[1]]$count), 5, floor)
       yMAX <- DescTools::RoundTo(max(ggplot2::ggplot_build(p)$data[[1]]$count), 5, ceiling)
@@ -1183,7 +1200,7 @@ SimOP <- R6::R6Class(
         for (i in 1:length(miss_resp)) {
           miss_index <- grep(miss_resp[i], respvar)
           dat$pred <- modClass$mod_list[[miss_index]]$predResps(
-            dat, modClass$mod_list[[miss_index]]$mod
+            dat, modClass$mod_list[[miss_index]]$m
           )
           names(dat)[grep("^pred$", names(dat))] <- respvar[miss_index]
         }
@@ -1362,7 +1379,13 @@ SimOP <- R6::R6Class(
                                     breaks = seq(yMIN, yMAX, ySTEP)) +
         ggplot2::scale_x_continuous(limits = c(xMIN, xMAX),
                                     breaks = seq(xMIN, xMAX, xSTEP)) +
-        ggplot2::theme_bw()
+        ggplot2::theme_bw() +
+        ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
+                       axis.title = ggplot2::element_text(size = 14))
+      if (any(DNR$var < 0)) {
+        var_plot <- var_plot +
+          ggplot2::geom_hline(yintercept = 0, color = "red", linetype = 2)
+      }
       return(var_plot)
     }
   )

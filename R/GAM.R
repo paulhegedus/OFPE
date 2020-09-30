@@ -44,8 +44,8 @@ GAM <- R6::R6Class(
     #' (yld/pro). This is for the data specified from the analysis data inputs (grid specific).
     num_means = NULL,
 
-    #' @field mod Fitted GAM.
-    mod = NULL,
+    #' @field m Fitted GAM.
+    m = NULL,
     #' @field form Final GAM formula.
     form = NULL,
     #' @field parm_df Data frame of parameter names, starting k for the GAM, and a column
@@ -78,7 +78,7 @@ GAM <- R6::R6Class(
     #' automatically 50. K is the the dimension of the basis used to represent the smooth term.
     #' Multiple k values will be tested, consider this the upper limit and starting place.
     #' @return A instantiated 'GAM' object.
-    initialize = function(dat, respvar, expvar, num_means , init_k = 10) {
+    initialize = function(dat, respvar, expvar, num_means , init_k = 100) {
       stopifnot(any(grepl("trn", names(dat)), grepl("val", names(dat))),
                 is.character(respvar),
                 is.character(expvar),
@@ -130,32 +130,26 @@ GAM <- R6::R6Class(
     #' @return A fitted GAM.
     fitMod = function() {
       self$parm_df <- OFPE::findBadParms(self$parm_df, self$dat$trn)
-      #private$.findK()
+      private$.findK()
       self$form <- private$.makeFormula()
-      tryCatch({
-        self$mod <- mgcv::bam(as.formula(self$form), data = self$dat$trn)
-        }, warning = function(w) {},
-        error = function(e) {
-          private$.findK()
-          self$form <- private$.makeFormula()
-          self$mod <- mgcv::bam(as.formula(self$form), data = self$dat$trn)
-      })
-      self$dat$val$pred <- self$predResps(self$dat$val, self$mod)
+      self$m <- mgcv::bam(as.formula(self$form), data = self$dat$trn)
+
+      self$dat$val$pred <- self$predResps(self$dat$val, self$m)
       self$dat$val <- OFPE::valPrep(self$dat$val,
                                     self$respvar,
                                     self$expvar,
                                     self$num_means)
       self$fieldname <- OFPE::uniqueFieldname(self$dat$val)
-      return(self$mod)
+      return(self$m)
     },
     #' @description
     #' Method for predicting response variables using data and a model.
     #' @param dat Data for predicting response variables for.
-    #' @param mod The fitted model to use for predicting the response
+    #' @param m The fitted model to use for predicting the response
     #' variable for each observation in 'dat'.
     #' @return Vector of predicted values for each location in 'dat'.
-    predResps = function(dat, mod) {
-      pred <- mgcv::predict.bam(mod, dat) %>% as.numeric()
+    predResps = function(dat, m) {
+      pred <- mgcv::predict.bam(m, dat) %>% as.numeric()
       return(pred)
     },
     #' @description
@@ -172,7 +166,7 @@ GAM <- R6::R6Class(
                    self$fieldname, "_GAM_diagnostics.png"),
             width = 10, height = 10, units = 'in', res = 100)
         par(mfrow = c(2, 2))
-        mgcv::gam.check(self$mod)
+          mgcv::gam.check(self$m)
         dev.off()
       }
     }
@@ -180,11 +174,9 @@ GAM <- R6::R6Class(
   private = list(
     .findK = function() {
       ## brute force method for finding a reasonable 'k' estimate.
-      potentially_bad <- c("prev_pro", "prev_aa_n", "ssm_cy", "ssm_py", "susm_cy",
-                           "susm_py", "prec_cy", "prec_py", "gdd_cy",
-                           "gdd_py", "veg_cy", "veg_py", "veg_2py")
-      for (i in 1:length(potentially_bad)) {
-        trgtK <- self$parm_df[grep(potentially_bad[i], self$parm_df$parms), "k"]
+      good_parms <- self$parm_df[!self$parm_df$bad_parms, "parms"]
+      for (i in 1:length(good_parms)) {
+        trgtK <- self$parm_df[grep(good_parms[i], self$parm_df$parms), "k"]
         tryK <- c(trgtK,
                   ifelse(round(trgtK / 2) > 20,
                          round(trgtK / 2),
@@ -205,25 +197,27 @@ GAM <- R6::R6Class(
           # if foundK  = FALSE (have not found a k that fits, keep trying)
           if (!foundK) {
             # set the k in the paramter table to the k estimate
-            self$parm_df[grep(potentially_bad[i], self$parm_df$parms), "k"] <- tryK[j]
+            self$parm_df[grep(good_parms[i], self$parm_df$parms), "k"] <- tryK[j]
             # make the function statement
-            fxn <- private$.makeFormula()
+            fxn <- private$.makeFormula(
+              self$parm_df[grep(good_parms[i], self$parm_df$parms), "parms"],
+              self$parm_df[grep(good_parms[i], self$parm_df$parms), "k"]
+            )
             # fit model with the estimated k
-            #rand_rows <- runif(nrow(self$dat$trn) * 0.01, 1, nrow(self$dat$trn) + 1) %>% as.integer()
-            #[rand_rows, ]
-            foundK <- tryCatch(
-              {mod <- mgcv::bam(as.formula(fxn), data = self$dat$trn)
-              TRUE },
-              warning = function(w) { FALSE },
-              error = function(e) { FALSE })
+            rand_rows <- runif(nrow(self$dat$trn) * 0.25, 1, nrow(self$dat$trn) + 1) %>% as.integer()
+             tryCatch(
+              {mgcv::bam(as.formula(fxn), data = self$dat$trn[rand_rows, ])
+              foundK <- TRUE },
+              warning = function(w) {foundK <- FALSE },
+              error = function(e) {foundK <- FALSE })
             # if the model was fit then foundK = T & k in self$parm_df table
             # otherwise is FALSE and will try the next k
           }
         } # end tryK
         # if no k found
         if (!foundK) {
-          self$parm_df[grep(potentially_bad[i], self$parm_df$parms), "bad_parms"] <- TRUE
-          self$parm_df[grep(potentially_bad[i], self$parm_df$parms), "k"] <- NA
+          self$parm_df[grep(good_parms[i], self$parm_df$parms), "bad_parms"] <- TRUE
+          self$parm_df[grep(good_parms[i], self$parm_df$parms), "k"] <- NA
         }
         rm(foundK) # remove the indicator for the next var in loop
       } # end parms

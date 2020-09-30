@@ -1024,7 +1024,6 @@ RxClass <- R6::R6Class(
                           fieldname,
                           farmername,
                           utm_zone) {
-      color <- rev(colorRamps::matlab.like2(15))
       stopifnot(
         length(var_col_name) == length(var_label),
         length(var_col_name) == length(var_main_label),
@@ -1057,19 +1056,11 @@ RxClass <- R6::R6Class(
                                          lat = mean(sp::coordinates(as(utm, "Spatial"))[, 2])),
                             zoom = 14, maptype = "satellite", source = "google")
       dat <- sf::st_transform(dat, "epsg:4326")
-
       var_map <-
         ggmap::ggmap(map, extent  =  "panel") +
         ggplot2::coord_sf(crs = sf::st_crs(4326)) +
-        ggplot2::geom_sf(data = dat, ggplot2::aes(fill = exprate), inherit.aes = FALSE) +
-        ggplot2::scale_fill_gradientn(limits = c(floor(min(dat$exprate, na.rm = TRUE)),
-                                                 ceiling(max(dat$exprate, na.rm = TRUE))),
-                                      colours = color,
-                                      breaks = seq(as.integer(floor(min(dat$exprate, na.rm = TRUE))),
-                                                   as.integer(ceiling(max(dat$exprate, na.rm = TRUE))),
-                                                   by = (ceiling(max(dat$exprate, na.rm = TRUE)) -
-                                                           floor(min(dat$exprate, na.rm = TRUE))) / 5),
-                                      name = var_label) +
+
+
         ggplot2::scale_x_continuous(limits = c(e@xmin-0.002, e@xmax+0.002),
                                     expand = c(0, 0),
                                     breaks = c(e@xmin-0.002, e@xmax+0.002)) +
@@ -1089,6 +1080,32 @@ RxClass <- R6::R6Class(
                         arrow_length = .05,
                         arrow_distance = .02) %>%
         suppressMessages()
+      if (length(unique(dat$exprate)) > 10) {
+        color <- rev(colorRamps::matlab.like2(15))
+        var_map <- var_map +
+          ggplot2::geom_sf(data = dat, ggplot2::aes(fill = exprate), inherit.aes = FALSE) +
+          ggplot2::scale_fill_gradientn(limits = c(floor(min(dat$exprate, na.rm = TRUE)),
+                                                   ceiling(max(dat$exprate, na.rm = TRUE))),
+                                        colours = color,
+                                        breaks = seq(as.integer(floor(min(dat$exprate, na.rm = TRUE))),
+                                                     as.integer(ceiling(max(dat$exprate, na.rm = TRUE))),
+                                                     by = (ceiling(max(dat$exprate, na.rm = TRUE)) -
+                                                             floor(min(dat$exprate, na.rm = TRUE))) / 5),
+                                        name = var_label)
+      } else {
+        MIN <- floor(min(dat$exprate, na.rm = TRUE))
+        MAX <- ceiling(max(dat$exprate, na.rm = TRUE))
+        STEP <- (MAX - MIN) / 5
+        color <- rev(colorRamps::matlab.like2(length(unique(dat$exprate))))
+        dat$exprate <- round(dat$exprate)
+        dat$exprate_f <- factor(dat$exprate)
+        var_map <- var_map +
+          ggplot2::geom_sf(data = dat, ggplot2::aes(fill = exprate_f), inherit.aes = FALSE) +
+          ggplot2::scale_fill_manual(limits = levels(dat$exprate_f),
+                                        values = color,
+                                        breaks = levels(dat$exprate_f),
+                                        name = var_label)
+      }
       return(var_map)
     },
     .plotCellTypeMap = function(dat,
@@ -1121,7 +1138,6 @@ RxClass <- R6::R6Class(
                               ifelse(dat$cell_type == "exp", "Exp",
                                      ifelse(dat$cell_type == "check", "Check",
                                             dat$cell_type)))
-
       var_map <-
         ggmap::ggmap(map, extent  =  "panel") +
         ggplot2::coord_sf(crs = sf::st_crs(4326)) +

@@ -51,7 +51,7 @@ The resources below are strongly recommended as supplemental information regardi
 Again, it is assumed that the user has completed Vignette 1 and understands the database management methods described at this [site](https://paulhegedus.github.io/OFPE-Website/dat_import.html). A database is required to store your data.
 
 # Workflow
-The sections below describe the process of importing data collected on-farms to the OFPE formatted database. The initial section loads the required packages and connects to the database. The activity workflow for importing data and a more detailed description is described on [this page](https://paulhegedus.github.io/OFPE-Website/data_import.html), where a component diagram can also be found.
+The sections below describe the process of importing data collected on-farms to the OFPE formatted database. The initial section loads the required packages and connects to the database. The activity workflow for importing data and a more detailed description is described on [this page](https://paulhegedus.github.io/OFPE-Website/data_import.html), where a component diagram can also be found. The vignette examples with "FarmerB" use only that farmer's data and Google Earth Engine data for the farm boundary of "FarmerB" from 2015 - 2020. This will take about 5GB on your machine.
 
 ## Set-Up
 The below contains the packages used in the vignette and a demonstration of connecting to your database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette uses example data located in the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) R-package. This vignette downloads data from the OFPE package in order to demonstrate a realistic data workflow. 

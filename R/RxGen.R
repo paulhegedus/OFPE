@@ -462,8 +462,8 @@ RxGen <- R6::R6Class(
       self$var_label <- paste0(ifelse(self$expvar == "aa_n", "N", "Seed"), " Rate (lbs/ac)")
       self$var_main_label <- paste0(self$unique_fieldname, " Rx ",
                                     ifelse(self$expvar=="aa_n", "N", "Seed"),
-                                    " rates for ", self$rx_for_year, " for conditions
-                                    like ", unique_rx_years)
+                                    " rates for ", self$rx_for_year,
+                                    " for conditions like ", unique_rx_years)
       self$out_map_name <- paste0(self$out_path, "/Outputs/Rx/",
                                   self$unique_fieldname, "_", tolower(self$var),
                                   "_", self$mgmt_scen, "_RxMap_", unique_fxn, "_",

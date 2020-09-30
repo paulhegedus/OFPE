@@ -1532,7 +1532,7 @@ AggDat <- R6::R6Class(
               self$aggInputs$dbCon$db,
               paste0("DELETE FROM ",
                      self$aggInputs$farmername, "_a.temp temp
-                      WHERE temp.aa_sr = 0;
+                      WHERE temp.aa_sr = 0
                       OR temp.prev_aa_sr = 0;")
           ))
         }
