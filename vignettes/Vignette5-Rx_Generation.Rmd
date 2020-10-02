@@ -4,7 +4,7 @@ author: "Paul Hegedus"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette5-Rx_Generation}
+  %\VignetteIndexEntry{Vignette5 - Rx Generation}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

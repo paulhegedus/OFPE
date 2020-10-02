@@ -27,7 +27,7 @@ You can install the released version of OFPE from [GitHub](https://github.com) w
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("paulhegedus/OFPE")
+devtools::install_github("paulhegedus/OFPE", build_vignettes = TRUE)
 ```
 
 And you can install the released version of the OFPE data package from [GitHub](https://github.com) with:

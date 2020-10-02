@@ -173,7 +173,12 @@ ImportOF <- R6::R6Class(
           if (length(names(header)) < length(names(FILE))) {
             names(FILE) <- c(names(header), "utc_time", "y", "n", "x", "w")
           } else {
-            names(FILE) <- names(header)
+            if (any(grepl("X", names(header)))) {
+              real_names <- names(header)[1:(ncol(header) - 5)]
+              names(FILE) <- c(real_names, "utc_time", "y", "n", "x", "w")
+            } else {
+              names(FILE) <- names(header)
+            }
           }
           FILE$x <- ifelse(FILE$x > 0, FILE$x * -1, FILE$x)
         },

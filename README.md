@@ -8,7 +8,7 @@
 [![Project Status: Active – The project has reached a stable, usable
 state and is being actively
 developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
-[![Last-changedate](https://img.shields.io/badge/last%20change-2020--09--21-yellowgreen.svg)](/commits/master)
+[![Last-changedate](https://img.shields.io/badge/last%20change-2020--10--02-yellowgreen.svg)](/commits/master)
 [![R build
 status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
 [![Build
@@ -21,7 +21,7 @@ You can install the released version of OFPE from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("paulhegedus/OFPE")
+devtools::install_github("paulhegedus/OFPE", build_vignettes = TRUE)
 ```
 
 And you can install the released version of the OFPE data package from
