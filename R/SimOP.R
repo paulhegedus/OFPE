@@ -61,8 +61,6 @@ SimOP <- R6::R6Class(
     #' @return A folder created in the path for model output figures.
     initialize = function(simClass, create = TRUE) {
       stopifnot(
-        !is.null(simClass$sim_out),
-        !is.null(simClass$sim_list),
         is.logical(create)
       )
       self$simClass <- simClass
@@ -86,253 +84,213 @@ SimOP <- R6::R6Class(
     #' options for the entire class.
     #' @return Simulation outputs in the 'Outputs' folder.
     savePlots = function(SAVE = NULL) {
-      browser()
-
       if (is.null(SAVE)) {
         SAVE <- self$simClass$SAVE
       } else {
         stopifnot(is.logical(SAVE))
         self$simClass$SAVE <- SAVE
       }
+      stopifnot(!is.null(self$simClass$sim_list))
+      ## names in sim dat
       sim_list_names <- lapply(self$simClass$sim_list,
                                function(x) names(x[[1]]))
-      sim_years <- names(self$simClass$sim_list)
-      Bp_col <- grep(self$simClass$datClass$sys_type,
-                     names(self$simClass$econDat$Prc))
-      BpOpp_col <- grep(self$simClass$datClass$opp_sys_type,
-                        names(self$simClass$econDat$Prc))
-      cd <- list(
-        Bp = mean(
-          self$simClass$econDat$Prc[, Bp_col],
-          na.rm = TRUE
-        ),
-        CEXP = mean(
-          self$simClass$econDat$Prc[, "cost"],
-          na.rm = TRUE
-        ),
-        BpOpp = mean(
-          self$simClass$econDat$Prc[, BpOpp_col],
-          na.rm = TRUE
-        )
-      )
-      unique_fxn <- do.call(rbind, self$simClass$modClass$fxn)
-      unique_fxn <- paste0(row.names(unique_fxn), "-", unique_fxn[, 1]) %>%
-        paste(collapse = "--")
+      if (SAVE) {
+        for (i in 1:length(self$simClass$sim_years)) {
+          self$plotEstsVsExp( # plotEstsVsExp
+            self$simClass$sim_list[[i]],
+            self$simClass$AAmin,
+            self$simClass$datClass$respvar,
+            self$simClass$datClass$expvar,
+            self$simClass$AArateCutoff,
+            self$simClass$unique_fieldname,
+            self$simClass$unique_fxn,
+            self$simClass$sim_years[i],
+            SAVE,
+            self$simClass$out_path,
+            self$simClass$Bp,
+            self$simClass$CEXP
+          )
+          ## Bp.var plots
+          Bp.var <- data.table::fread(
+            paste0(self$simClass$dat_path,
+                   self$simClass$unique_fieldname, "_BpVar_",
+                   self$simClass$unique_fxn, "_",
+                   self$simClass$sim_years[i], "_",
+                   self$simClass$opt, ".csv")
+          )
 
-      for (i in 1:length(self$simClass$sim_out)) {
-        unique_fieldname <-
-          OFPE::uniqueFieldname(self$simClass$sim_out[[i]]$NRopt)
+          self$plotNRbox(
+            Bp.var,
+            self$simClass$unique_fieldname,
+            self$simClass$unique_fxn,
+            self$simClass$sim_years[i],
+            self$simClass$opt,
+            SAVE,
+            self$simClass$out_path
+          )
+          self$mgmtNRprobTable(
+            "NR.ssopt",
+            Bp.var,
+            1000,
+            self$simClass$unique_fieldname,
+            self$simClass$unique_fxn,
+            self$simClass$sim_years[i],
+            self$simClass$opt,
+            SAVE,
+            self$simClass$out_path
+          )
+          self$plotNRbar(
+            Bp.var,
+            self$simClass$unique_fieldname,
+            self$simClass$unique_fxn,
+            self$simClass$sim_years[i],
+            self$simClass$opt,
+            SAVE,
+            self$simClass$out_path
+          )
 
-        self$saveSimData(self$simClass$sim_out[[i]],
-                         unique_fieldname,
-                         unique_fxn,
-                         sim_years[i],
-                         self$simClass$opt,
-                         SAVE,
-                         self$simClass$out_path)
-        self$plotEstsVsExp( # plotEstsVsExp
-          self$simClass$sim_list[[i]],
-          cd,
-          self$simClass$econDat$B0pd,
-          self$simClass$econDat$B1pd,
-          self$simClass$econDat$B2pd,
-          self$simClass$econDat$FC,
-          self$simClass$fs,
-          self$simClass$econDat$ssAC,
-          self$simClass$AAmin,
-          self$simClass$datClass$respvar,
-          self$simClass$datClass$expvar,
-          sim_list_names[[i]],
-          self$simClass$AArateCutoff,
-          unique_fieldname,
-          unique_fxn,
-          sim_years[i],
-          SAVE,
-          self$simClass$out_path
-        )
-        self$plotNRbox(
-          self$simClass$sim_out[[i]]$Bp.var,
-          unique_fieldname,
-          unique_fxn,
-          sim_years[i],
-          self$simClass$opt,
-          SAVE,
-          self$simClass$out_path
-        )
-        self$mgmtNRprobTable( # saveProbability
-          "NR.ssopt",
-          self$simClass$sim_out[[i]]$Bp.var,
-          1000,
-          unique_fieldname,
-          unique_fxn,
-          sim_years[i],
-          self$simClass$opt,
-          SAVE,
-          self$simClass$out_path
-        )
-        self$plotNRbar( # plotAvNR()
-          self$simClass$sim_out[[i]]$Bp.var,
-          unique_fieldname,
-          unique_fxn,
-          sim_years[i],
-          self$simClass$opt,
-          SAVE,
-          self$simClass$out_path
-        )
-        NRdat <- private$.setupNRdat(simClass$sim_out[[i]]$NRopt,
-                                     simClass$sim_out[[i]]$NRffmax)
-        TF4 <- private$.getTF4(NRdat$NRopt,
-                               NRdat$NRffmax,
-                               self$simClass$fieldsize,
-                               self$simClass$fs)
-        self$plotTotExpAppl(
-          TF4,
-          self$simClass$datClass$expvar,
-          unique_fieldname,
-          unique_fxn,
-          sim_years[i],
-          self$simClass$opt,
-          SAVE,
-          self$simClass$out_path
-        )
-        self$plotSSOPThist(
-          NRdat$NRopt,
-          TF4,
-          self$simClass$datClass$expvar,
-          unique_fieldname,
-          unique_fxn,
-          sim_years[i],
-          self$simClass$opt,
-          SAVE,
-          self$simClass$out_path
-        )
-        self$plotFFOPThist(
-          self$simClass$sim_out[[i]]$Bp.var,
-          TF4,
-          self$simClass$datClass$expvar,
-          unique_fieldname,
-          unique_fxn,
-          sim_years[i],
-          self$simClass$opt,
-          SAVE,
-          self$simClass$out_path
-        )
-        # SSOPT map (avg all sim)
-        self$plotSimMaps(
-          NRdat$NRopt,
-          paste0("SSOPT_", ifelse(self$simClass$datClass$expvar == "aa_n", "N", "SR")),
-          "EXP.rate.ssopt",
-          paste0(ifelse(self$simClass$datClass$expvar=="aa_n", "N", "Seed Rate"), " Rate (lbs/ac)"),
-          paste0("SS.opt ",
-                 ifelse(self$simClass$datClass$expvar=="aa_n", "N", "Seed"),
-                 " rates for ", sim_years[i], " conditions"),
-          unique_fieldname,
-          sim_years[i],
-          unique_fxn,
-          self$simClass$opt,
-          SAVE,
-          self$simClass$datClass$farmername,
-          self$simClass$out_path
-        )
-        # SSOPT NR map
-        self$plotSimMaps(
-          NRdat$NRopt,
-          "SSOPTNR",
-          "NR.ssopt",
-          "Net Return ($/ac)",
-          paste0("SS.Opt NR for ", sim_years[i], "  conditions"),
-          unique_fieldname,
-          sim_years[i],
-          unique_fxn,
-          self$simClass$opt,
-          SAVE,
-          self$simClass$datClass$farmername,
-          self$simClass$out_path
-        )
-        # FFOPT NR map
-        self$plotSimMaps(
-          NRdat$NRopt,
-          "FFOPTNR",
-          "NR.ffopt",
-          "Net Return ($/ac)",
-          paste0("FF.Opt NR (", NRdat$NRopt$EXP.rate.ffopt[1],
-                 " lbs/ac) for ", sim_years[i],
-                 " conditions"),
-          unique_fieldname,
-          sim_years[i],
-          unique_fxn,
-          self$simClass$opt,
-          SAVE,
-          self$simClass$datClass$farmername,
-          self$simClass$out_path
-        )
-        # SSOPT Est. Yld map
-        self$plotSimMaps(
-          NRdat$NRopt,
-          "estYld",
-          "yld.opt",
-          "Yield (bu/ac)",
-          paste0("Predicted yield for ", sim_years[i], " conditions"),
-          unique_fieldname,
-          sim_years[i],
-          unique_fxn,
-          self$simClass$opt,
-          SAVE,
-          self$simClass$datClass$farmername,
-          self$simClass$out_path
-        )
-        if (any(grepl("pro", self$simClass$datClass$respvar))) {
-          # SSOPT Est. Pro map
+          ## get NRopt & NRffmax & make TF4
+          NRopt <- data.table::fread(
+            paste0(self$simClass$dat_path,
+                   self$simClass$unique_fieldname, "_NRopt_",
+                   self$simClass$unique_fxn, "_",
+                   self$simClass$sim_years[i], "_",
+                   self$simClass$opt, ".csv")
+          )
+          NRffmax <- data.table::fread(
+            paste0(self$simClass$dat_path,
+                   self$simClass$unique_fieldname, "_NRffMaxData_",
+                   self$simClass$unique_fxn, "_",
+                   self$simClass$sim_years[i], "_",
+                   self$simClass$opt, ".csv")
+          )
+          TF4 <- private$.getTF4(NRopt,
+                                 NRffmax,
+                                 self$simClass$fieldsize,
+                                 self$simClass$fs)
+          rm(NRffmax)
+          self$plotFFOPThist(
+            Bp.var,
+            TF4,
+            self$simClass$datClass$expvar,
+            self$simClass$unique_fieldname,
+            self$simClass$unique_fxn,
+            self$simClass$sim_years[i],
+            self$simClass$opt,
+            SAVE,
+            self$simClass$out_path
+          )
+          rm(Bp.var)
+          self$plotTotExpAppl(
+            TF4,
+            self$simClass$datClass$expvar,
+            self$simClass$unique_fieldname,
+            self$simClass$unique_fxn,
+            self$simClass$sim_years[i],
+            self$simClass$opt,
+            SAVE,
+            self$simClass$out_path
+          )
+          self$plotSSOPThist(
+            NRopt,
+            TF4,
+            self$simClass$datClass$expvar,
+            self$simClass$unique_fieldname,
+            self$simClass$unique_fxn,
+            self$simClass$sim_years[i],
+            self$simClass$opt,
+            SAVE,
+            self$simClass$out_path
+          )
+          # SSOPT map (avg all sim)
           self$plotSimMaps(
-            NRdat$NRopt,
-            "estPro",
-            "pro.opt",
-            "Protein (%)",
-            paste0("Predicted protein for ", sim_years[i], " conditions"),
-            unique_fieldname,
-            sim_years[i],
-            unique_fxn,
+            NRopt,
+            paste0("SSOPT_", ifelse(self$simClass$datClass$expvar == "aa_n", "N", "SR")),
+            "EXP.rate.ssopt",
+            paste0(ifelse(self$simClass$datClass$expvar=="aa_n", "N", "Seed Rate"), " Rate (lbs/ac)"),
+            paste0("SS.opt ",
+                   ifelse(self$simClass$datClass$expvar=="aa_n", "N", "Seed"),
+                   " rates for ", self$simClass$sim_years[i], " conditions"),
+            self$simClass$unique_fieldname,
+            self$simClass$sim_years[i],
+            self$simClass$unique_fxn,
             self$simClass$opt,
             SAVE,
             self$simClass$datClass$farmername,
             self$simClass$out_path
           )
+          # SSOPT NR map
+          self$plotSimMaps(
+            NRopt,
+            "SSOPTNR",
+            "NR.ssopt",
+            "Net Return ($/ac)",
+            paste0("SS.Opt NR for ", self$simClass$sim_years[i], " conditions"),
+            self$simClass$unique_fieldname,
+            self$simClass$sim_years[i],
+            self$simClass$unique_fxn,
+            self$simClass$opt,
+            SAVE,
+            self$simClass$datClass$farmername,
+            self$simClass$out_path
+          )
+          # FFOPT NR map
+          self$plotSimMaps(
+            NRopt,
+            "FFOPTNR",
+            "NR.ffopt",
+            "Net Return ($/ac)",
+            paste0("FF.Opt NR (", NRopt$EXP.rate.ffopt[1],
+                   " lbs/ac) for ", self$simClass$sim_years[i],
+                   " conditions"),
+            self$simClass$unique_fieldname,
+            self$simClass$sim_years[i],
+            self$simClass$unique_fxn,
+            self$simClass$opt,
+            SAVE,
+            self$simClass$datClass$farmername,
+            self$simClass$out_path
+          )
+          # SSOPT Est. Yld map
+          self$plotSimMaps(
+            NRopt,
+            "estYld",
+            "yld.opt",
+            "Yield (bu/ac)",
+            paste0("Predicted yield for ", self$simClass$sim_years[i], " conditions"),
+            self$simClass$unique_fieldname,
+            self$simClass$sim_years[i],
+            self$simClass$unique_fxn,
+            self$simClass$opt,
+            SAVE,
+            self$simClass$datClass$farmername,
+            self$simClass$out_path
+          )
+          if (any(grepl("pro", self$simClass$datClass$respvar))) {
+            # SSOPT Est. Pro map
+            self$plotSimMaps(
+              NRopt,
+              "estPro",
+              "pro.opt",
+              "Protein (%)",
+              paste0("Predicted protein for ", self$simClass$sim_years[i], " conditions"),
+              self$simClass$unique_fieldname,
+              self$simClass$sim_years[i],
+              self$simClass$unique_fxn,
+              self$simClass$opt,
+              SAVE,
+              self$simClass$datClass$farmername,
+              self$simClass$out_path
+            )
+          }
         }
-      }
-      # Actual NR (both years from mod fitting)
-      # Get all of the observed data (trn + val) from the more
-      # densely populated respvar.
-      index <- lapply(self$simClass$datClass$mod_dat, lapply, dim) %>%
-        lapply(function(x) do.call(rbind, x)) %>%
-        lapply(function(x) sum(x[, 1]))
-      index <- do.call(rbind, index)
-      index <- which(index[, 1] == max(index[, 1])) %>% as.numeric()
-      dat <- rbind(self$simClass$datClass$mod_dat[[index]]$trn,
-                   self$simClass$datClass$mod_dat[[index]]$val)
-      years <- unique(dat$year) %>% as.character()
-      # use the most recent economic years available
-      cd <- aggregate(.~Year, data = self$simClass$econDat$Prc, FUN = mean)
-      cd <- cd[cd$Year == max(cd$Year), ]
-      Bp <- cd[, grep(self$simClass$datClass$sys_type, names(cd))]
-      CEXP <- cd[, "cost"]
-      for (i in 1:length(years)) {
-        self$plotActNR(dat,
-                       years[i],
-                       Bp,
-                       self$simClass$econDat$B0pd,
-                       self$simClass$econDat$B1pd,
-                       self$simClass$econDat$B2pd,
-                       CEXP,
-                       self$simClass$econDat$FC,
-                       self$simClass$econDat$ssAC,
-                       self$simClass$datClass$respvar,
-                       self$simClass$datClass$expvar,
-                       self$simClass$modClass,
-                       unique_fieldname,
-                       self$simClass$datClass$farmername,
-                       unique_fxn,
-                       SAVE,
-                       self$simClass$out_path)
+        rm(NRopt, TF4)
+        # Actual NR (both years from mod fitting)
+        # Get all of the observed data (trn + val) from the more
+        # densely populated respvar.
+        private$.plotActNRFun(SAVE)
+      } else{
+        self$simClass$cleanUp()
       }
     },
     #' @description
@@ -400,28 +358,6 @@ SimOP <- R6::R6Class(
     #' mean response across rates is shown as a colored line.
     #' @param sim_list List for every rate simulated over with data.tables
     #' for every point in the simulation year.
-    #' @param cd Named list with the mean base price for the real and opposite
-    #' system types, and the mean cost of the experimental input. All are
-    #' calculated from the prices and cost for the economic conditions used in
-    #' the simulation.
-    #' @param B0pd Intercept for the protein premium/dockage model fit to protein premium/dockage
-    #' data. Used to calculate estimated net-return based off of predicted protein in the OFPE
-    #' Monte Carlo simulation.
-    #' @param B1pd Coefficient for observed protein in the protein premium/dockage model fit to
-    #' protein premium/dockage data. Used to calculate estimated net-return based off of predicted
-    #' protein in the OFPE Monte Carlo simulation.
-    #' @param B2pd Coefficient for the squared protein term in the protein premium/dockage model fit
-    #' to protein premium/dockage data. Used to calculate estimated net-return based off of predicted
-    #' protein in the OFPE Monte Carlo simulation.
-    #' @param FC Fixed costs ($/acre) associated with production, not including
-    #' the input of interest. This includes things like the cost of labor, fuel, etc.
-    #' @param fs Input the uniform as-applied rate the farmer would have applied
-    #' to the field if an experiment was not conducted (i.e. 70 lbs N or SR/acre).
-    #' fs = Farmer Selected.
-    #' @param ssAC The cost ($/acre) of using site-specific technology or variable rate
-    #' applications. For farmers that have variable rate technology this cost may be zero,
-    #' otherwise is the cost per acre to hire the equipment/operators with variable rate
-    #' technology.
     #' @param AAmin Minimum as-applied rate used in simulation of management
     #' outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).
     #' @param respvar Response variable(s) used to optimize experimental inputs based
@@ -431,7 +367,6 @@ SimOP <- R6::R6Class(
     #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
     #' input that was experimentally varied across the field as part of the
     #' on-farm experimentation.
-    #' @param sim_list_names Names of the columns in the simulated data.
     #' @param AArateCutoff The maximum as-applied rate to simulate management
     #' outcomues to (i.e. 200 lbs N or seed per acre).
     #' @param fieldname Unique field name corresponding to all fields used in the simulation.
@@ -441,57 +376,22 @@ SimOP <- R6::R6Class(
     #' @param SAVE Logical, whether to save figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
+    #' @param Bp The mean base price used to plot net-returns vs as-applied data.
+    #' @param CEXP The mean cost of the as-applied experimental input.
     #' @return Data saved in 'Outputs/Predictions'.
     plotEstsVsExp = function(sim_list,
-                               cd,
-                               B0pd,
-                               B1pd,
-                               B2pd,
-                               FC,
-                               fs,
-                               ssAC,
-                               AAmin,
-                               respvar,
-                               expvar,
-                               sim_list_names,
-                               AArateCutoff,
-                               fieldname,
-                               fxn,
-                               sim_year,
-                               SAVE,
-                               out_path) {
-      ## apply NRcalcCpp fxn to dnr with the cd econ scenario
-      Bp <- cd$Bp
-      CEXP <- cd$CEXP
-      BpOpp <- cd$BpOpp
-      rr <- nrow(sim_list[[1]])
-      ## Calc NR for every point for every EXP rate (calc NR0 and NRorg for N = 0)
-      sim_list <- lapply(sim_list, function(x) as.matrix(x) %>% `colnames<-`(NULL)) %>%
-        lapply(function(x) apply(x, 2, as.numeric)) %>%
-        lapply(OFPE::NRcalcCpp,
-               Bp,
-               B0pd,
-               B1pd,
-               B2pd,
-               CEXP,
-               BpOpp,
-               FC,
-               fs,
-               ssAC,
-               ifelse(any(respvar == "pro"), 1, 0),
-               rr,
-               grep(paste0("^", expvar, "$"), sim_list_names) - 1,
-               grep("pred_yld", sim_list_names) - 1,
-               grep("pred_pro", sim_list_names) - 1,
-               grep("^NR$", sim_list_names) - 1,
-               grep("NRmin", sim_list_names) - 1,
-               grep("NRopp", sim_list_names) - 1,
-               grep("NRfs", sim_list_names) - 1,
-               AAmin)
-      sim_list <- lapply(sim_list, function(x) data.table::as.data.table(x) %>%
-                           `names<-`(sim_list_names))
+                             AAmin,
+                             respvar,
+                             expvar,
+                             AArateCutoff,
+                             fieldname,
+                             fxn,
+                             sim_year,
+                             SAVE,
+                             out_path,
+                             Bp,
+                             CEXP) {
       DNR <- data.table::rbindlist(sim_list)
-
       nr_plot <- private$.estsVsExpPlot("NR",
                                        DNR,
                                        expvar,
@@ -893,19 +793,19 @@ SimOP <- R6::R6Class(
                              opt,
                              SAVE,
                              out_path) {
-      NRplot <- as.data.frame(NRopt)
+      NRopt <- as.data.frame(NRopt)
       gg_title <- paste0("Site-specific profit maximizing ",
                          ifelse(expvar=="aa_n", "nitrogen", "seed"), " rates")
       sub_title <-  paste0("Mean SS.Opt ",
                            ifelse(expvar == "aa_n", "N", "Seed"),
                            " Rate = ",
-                           round(mean(NRopt[, "EXP.rate.ssopt"], na.rm = TRUE), 2),
+                           round(mean(NRopt$EXP.rate.ssopt, na.rm = TRUE), 2),
                            " lbs/acre, SD = ",
-                           round(sd(NRopt[, "EXP.rate.ssopt"], na.rm = TRUE), 2),
+                           round(sd(NRopt$EXP.rate.ssopt, na.rm = TRUE), 2),
                            " lbs/acre")
       if (TF4[which(TF4$Method == "EXP.ssopt"), "EXP"] == 0) {
         p <-
-          ggplot2::ggplot(NRplot) +
+          ggplot2::ggplot(NRopt) +
             ggplot2::geom_histogram(ggplot2::aes(x = EXP.rate.ssopt + 1),
                            bins = 1,
                            col = "white",
@@ -917,15 +817,15 @@ SimOP <- R6::R6Class(
             ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
                            axis.title = ggplot2::element_text(size = 14))
       } else {
-        bin_num <- DescTools::RoundTo(max(NRplot$EXP.rate.ssopt,
+        bin_num <- DescTools::RoundTo(max(NRopt$EXP.rate.ssopt,
                                           na.rm = TRUE), 5, ceiling) / 5
-        xMIN <- DescTools::RoundTo(min(NRplot$EXP.rate.ssopt,
+        xMIN <- DescTools::RoundTo(min(NRopt$EXP.rate.ssopt,
                                        na.rm = TRUE), 5, floor)
-        xMAX <- DescTools::RoundTo(max(NRplot$EXP.rate.ssopt,
+        xMAX <- DescTools::RoundTo(max(NRopt$EXP.rate.ssopt,
                                        na.rm = TRUE), 5, ceiling)
         xSTEP <- (xMAX - xMIN) / 10
         p <-
-          ggplot2::ggplot(NRplot) +
+          ggplot2::ggplot(NRopt) +
             ggplot2::geom_histogram(ggplot2::aes(x = EXP.rate.ssopt + 1),
                                     bins = bin_num,
                                     col = "white",
@@ -944,7 +844,7 @@ SimOP <- R6::R6Class(
       yMAX <- DescTools::RoundTo(max(ggplot2::ggplot_build(p)$data[[1]]$count), 5, ceiling)
       ySTEP <- (yMAX - yMIN) / 10
       p <- p +
-        ggplot2::geom_point(ggplot2::aes(x = round(mean(NRopt[, "EXP.rate.ssopt"],
+        ggplot2::geom_point(ggplot2::aes(x = round(mean(NRopt$EXP.rate.ssopt,
                                                na.rm = TRUE), 0),
                                 y = yMIN + ySTEP),
                             col = "red",
@@ -1314,7 +1214,8 @@ SimOP <- R6::R6Class(
                                        fieldsize) / nrow(NRopt),
                         EXP.min = 0,
                         EXP.fs = fs * fieldsize,
-                        EXP.ffopt = NRffmax[, 'EXP.rate'] * fieldsize)
+                        EXP.ffopt = mean(NRffmax$EXP.rate, na.rm=T) *
+                          fieldsize)
       TF4 <- tidyr::pivot_longer(TF4,
                                  dplyr::everything(),
                                  names_to = "Method",
@@ -1387,6 +1288,40 @@ SimOP <- R6::R6Class(
           ggplot2::geom_hline(yintercept = 0, color = "red", linetype = 2)
       }
       return(var_plot)
+    },
+    .plotActNRFun = function(SAVE) {
+      index <- lapply(self$simClass$datClass$mod_dat, lapply, dim) %>%
+        lapply(function(x) do.call(rbind, x)) %>%
+        lapply(function(x) sum(x[, 1]))
+      index <- do.call(rbind, index)
+      index <- which(index[, 1] == max(index[, 1])) %>% as.numeric()
+      dat <- rbind(self$simClass$datClass$mod_dat[[index]]$trn,
+                   self$simClass$datClass$mod_dat[[index]]$val)
+      years <- unique(dat$year) %>% as.character()
+      # use the most recent economic years available
+      cd <- aggregate(.~Year, data = self$simClass$econDat$Prc, FUN = mean)
+      cd <- cd[cd$Year == max(cd$Year), ]
+      Bp <- cd[, grep(self$simClass$datClass$sys_type, names(cd))]
+      CEXP <- cd[, "cost"]
+      for (i in 1:length(years)) {
+        self$plotActNR(dat,
+                       years[i],
+                       Bp,
+                       self$simClass$econDat$B0pd,
+                       self$simClass$econDat$B1pd,
+                       self$simClass$econDat$B2pd,
+                       CEXP,
+                       self$simClass$econDat$FC,
+                       self$simClass$econDat$ssAC,
+                       self$simClass$datClass$respvar,
+                       self$simClass$datClass$expvar,
+                       self$simClass$modClass,
+                       self$simClass$unique_fieldname,
+                       self$simClass$datClass$farmername,
+                       self$simClass$unique_fxn,
+                       SAVE,
+                       self$simClass$out_path)
+      }
     }
   )
 )

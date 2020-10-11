@@ -132,7 +132,9 @@ GAM <- R6::R6Class(
       self$parm_df <- OFPE::findBadParms(self$parm_df, self$dat$trn)
       private$.findK()
       self$form <- private$.makeFormula()
-      self$m <- mgcv::bam(as.formula(self$form), data = self$dat$trn)
+      self$m <- mgcv::bam(as.formula(self$form),
+                          data = self$dat$trn,
+                          family = Gamma(link = "log"))
 
       self$dat$val$pred <- self$predResps(self$dat$val, self$m)
       self$dat$val <- OFPE::valPrep(self$dat$val,
@@ -150,6 +152,7 @@ GAM <- R6::R6Class(
     #' @return Vector of predicted values for each location in 'dat'.
     predResps = function(dat, m) {
       pred <- mgcv::predict.bam(m, dat) %>% as.numeric()
+      pred <- exp(pred)
       return(pred)
     },
     #' @description
@@ -206,7 +209,9 @@ GAM <- R6::R6Class(
             # fit model with the estimated k
             rand_rows <- runif(nrow(self$dat$trn) * 0.25, 1, nrow(self$dat$trn) + 1) %>% as.integer()
              tryCatch(
-              {mgcv::bam(as.formula(fxn), data = self$dat$trn[rand_rows, ])
+              {mgcv::bam(as.formula(fxn),
+                         data = self$dat$trn[rand_rows, ],
+                         family = Gamma(link = "log"))
               foundK <- TRUE },
               warning = function(w) {foundK <- FALSE },
               error = function(e) {foundK <- FALSE })
@@ -222,7 +227,7 @@ GAM <- R6::R6Class(
         rm(foundK) # remove the indicator for the next var in loop
       } # end parms
     },
-    .makeFormula = function(parms = NULL, K = NULL, BS = "cs", xyK = 10) {
+    .makeFormula = function(parms = NULL, K = NULL, BS = "cs", xyK = 20) {
       if (is.null(parms)) {
         parms <- self$parm_df$parms[!self$parm_df$bad_parms]
       }

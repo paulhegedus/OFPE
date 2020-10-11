@@ -113,9 +113,17 @@ for identifying the full field optimum rate.}
 \item{\code{fieldsize}}{The fieldsize, in acres, of the selected fields,
 gathered from the OFPE database.}
 
-\item{\code{sim_out}}{A list named for each user selected simulation year,
-each containing a named list containing every location in the field
-and associated net-returns and optimized rates for management scenarios.}
+\item{\code{unique_fieldname}}{Unique field name corresponding to all fields used in
+the simulation.}
+
+\item{\code{unique_fxn}}{The functional form of the models used for analysis.}
+
+\item{\code{dat_path}}{If SAVE is TRUE, is the path to the 'Outputs/SimData/'
+folder, else to the getwd().}
+
+\item{\code{Bp}}{Mean base price of the crop grown in the system type.}
+
+\item{\code{CEXP}}{Mean cost of the as-applied experimental input.}
 }
 \if{html}{\out{</div>}}
 }
@@ -126,6 +134,7 @@ and associated net-returns and optimized rates for management scenarios.}
 \item \href{#method-selectInputs}{\code{SimClass$selectInputs()}}
 \item \href{#method-setupSim}{\code{SimClass$setupSim()}}
 \item \href{#method-executeSim}{\code{SimClass$executeSim()}}
+\item \href{#method-cleanUp}{\code{SimClass$cleanUp()}}
 \item \href{#method-clone}{\code{SimClass$clone()}}
 }
 }
@@ -371,6 +380,27 @@ and setup methods.}
 \subsection{Returns}{
 A list of lists ('sim_out') with output from the simulation for each selected
 simulation year.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-cleanUp"></a>}}
+\if{latex}{\out{\hypertarget{method-cleanUp}{}}}
+\subsection{Method \code{cleanUp()}}{
+If the user has selected to not save anything, remove temporary files
+that could have been used by the SimOP class.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SimClass$cleanUp()}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{None}}{No arguments needed.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Any temporary files deleted.
 }
 }
 \if{html}{\out{<hr>}}

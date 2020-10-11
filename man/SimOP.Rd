@@ -191,23 +191,17 @@ mean response across rates is shown as a colored line.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{SimOP$plotEstsVsExp(
   sim_list,
-  cd,
-  B0pd,
-  B1pd,
-  B2pd,
-  FC,
-  fs,
-  ssAC,
   AAmin,
   respvar,
   expvar,
-  sim_list_names,
   AArateCutoff,
   fieldname,
   fxn,
   sim_year,
   SAVE,
-  out_path
+  out_path,
+  Bp,
+  CEXP
 )}\if{html}{\out{</div>}}
 }
 
@@ -216,35 +210,6 @@ mean response across rates is shown as a colored line.
 \describe{
 \item{\code{sim_list}}{List for every rate simulated over with data.tables
 for every point in the simulation year.}
-
-\item{\code{cd}}{Named list with the mean base price for the real and opposite
-system types, and the mean cost of the experimental input. All are
-calculated from the prices and cost for the economic conditions used in
-the simulation.}
-
-\item{\code{B0pd}}{Intercept for the protein premium/dockage model fit to protein premium/dockage
-data. Used to calculate estimated net-return based off of predicted protein in the OFPE
-Monte Carlo simulation.}
-
-\item{\code{B1pd}}{Coefficient for observed protein in the protein premium/dockage model fit to
-protein premium/dockage data. Used to calculate estimated net-return based off of predicted
-protein in the OFPE Monte Carlo simulation.}
-
-\item{\code{B2pd}}{Coefficient for the squared protein term in the protein premium/dockage model fit
-to protein premium/dockage data. Used to calculate estimated net-return based off of predicted
-protein in the OFPE Monte Carlo simulation.}
-
-\item{\code{FC}}{Fixed costs ($/acre) associated with production, not including
-the input of interest. This includes things like the cost of labor, fuel, etc.}
-
-\item{\code{fs}}{Input the uniform as-applied rate the farmer would have applied
-to the field if an experiment was not conducted (i.e. 70 lbs N or SR/acre).
-fs = Farmer Selected.}
-
-\item{\code{ssAC}}{The cost ($/acre) of using site-specific technology or variable rate
-applications. For farmers that have variable rate technology this cost may be zero,
-otherwise is the cost per acre to hire the equipment/operators with variable rate
-technology.}
 
 \item{\code{AAmin}}{Minimum as-applied rate used in simulation of management
 outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
@@ -257,8 +222,6 @@ availability.}
 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
 input that was experimentally varied across the field as part of the
 on-farm experimentation.}
-
-\item{\code{sim_list_names}}{Names of the columns in the simulated data.}
 
 \item{\code{AArateCutoff}}{The maximum as-applied rate to simulate management
 outcomues to (i.e. 200 lbs N or seed per acre).}
@@ -274,6 +237,10 @@ weather conditions used.}
 
 \item{\code{out_path}}{The path to the folder in which to store and
 save outputs from the simulation.}
+
+\item{\code{Bp}}{The mean base price used to plot net-returns vs as-applied data.}
+
+\item{\code{CEXP}}{The mean cost of the as-applied experimental input.}
 }
 \if{html}{\out{</div>}}
 }

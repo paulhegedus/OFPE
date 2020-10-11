@@ -50,9 +50,9 @@ converting centered data back to the original form. The centering process does n
 center three numerical variables; the x and y coordinates, and the response variable
 (yld/pro). This is for the data specified from the analysis data inputs (grid specific).}
 
-\item{\code{mod}}{Fitted non-linear logistic model.}
+\item{\code{m}}{Fitted non-linear logistic model.}
 
-\item{\code{mod0}}{Fitted non-linear logistic model with the minimum rates and locking beta,
+\item{\code{m0}}{Fitted non-linear logistic model with the minimum rates and locking beta,
 delta, and gamma.}
 
 \item{\code{form}}{Final non-linear logistic formula.}
@@ -167,7 +167,7 @@ A fitted logistic model.
 \subsection{Method \code{predResps()}}{
 Method for predicting response variables using data and a model.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{NonLinear_Logistic$predResps(dat, mod)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{NonLinear_Logistic$predResps(dat, m)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -175,7 +175,7 @@ Method for predicting response variables using data and a model.
 \describe{
 \item{\code{dat}}{Data for predicting response variables for.}
 
-\item{\code{mod}}{The fitted model to use for predicting the response
+\item{\code{m}}{The fitted model to use for predicting the response
 variable for each observation in 'dat'.}
 }
 \if{html}{\out{</div>}}

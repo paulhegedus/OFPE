@@ -49,7 +49,7 @@ converting centered data back to the original form. The centering process does n
 center three numerical variables; the x and y coordinates, and the response variable
 (yld/pro). This is for the data specified from the analysis data inputs (grid specific).}
 
-\item{\code{mod}}{Fitted GAM.}
+\item{\code{m}}{Fitted GAM.}
 
 \item{\code{form}}{Final GAM formula.}
 
@@ -85,7 +85,7 @@ the criteria to be omitted from the model, making it a 'bad_parm'. The criteria 
 this is over 30\% of data for a given year missing for a parameter or a standard
 deviation of zero, indicating singularity.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{GAM$new(dat, respvar, expvar, num_means, init_k = 10)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{GAM$new(dat, respvar, expvar, num_means, init_k = 100)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -161,7 +161,7 @@ A fitted GAM.
 \subsection{Method \code{predResps()}}{
 Method for predicting response variables using data and a model.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{GAM$predResps(dat, mod)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{GAM$predResps(dat, m)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -169,7 +169,7 @@ Method for predicting response variables using data and a model.
 \describe{
 \item{\code{dat}}{Data for predicting response variables for.}
 
-\item{\code{mod}}{The fitted model to use for predicting the response
+\item{\code{m}}{The fitted model to use for predicting the response
 variable for each observation in 'dat'.}
 }
 \if{html}{\out{</div>}}

@@ -71,9 +71,12 @@ plotMaps <- function(df,
     e <- raster::extent(llc[, c("x", "y")])
     rast <- raster::raster(ext = e, resolution = 0.00015)
     rastVar <- raster::rasterize(sp, rast, df[, var_col_name[i]], fun = mean, na.rm = TRUE)
-    map <- ggmap::get_map(location = c(lon = mean(sp::coordinates(as(utm, "Spatial"))[, 1]),
-                                       lat = mean(sp::coordinates(as(utm, "Spatial"))[, 2])),
-                          zoom = 14, maptype = "satellite", source = "google")
+    # map <- ggmap::get_map(location = c(lon = mean(sp::coordinates(as(utm, "Spatial"))[, 1]),
+    #                                    lat = mean(sp::coordinates(as(utm, "Spatial"))[, 2])),
+    #                       zoom = 14, maptype = "satellite", source = "google")
+    map <- ggmap::get_map(location = c(e@xmin-0.001, e@ymin-0.001,
+                                        e@xmax+0.001, e@ymax+0.001),
+                           maptype = "satellite", source = "google")
     rSpdf <- as(rastVar, "SpatialPixelsDataFrame")
     rDf <- as.data.frame(rSpdf)
 
@@ -98,11 +101,11 @@ plotMaps <- function(df,
                              floor(min(rDf[, 1], na.rm = TRUE))) / 5),
         name = colnames(rDf)[1]
       ) +
-      ggplot2::scale_x_continuous(limits = c(e@xmin-0.001, e@xmax+0.001),
-                                  expand = c(0, 0),
-                                  breaks = c(e@xmin-0.001, e@xmax+0.001)) +
-      ggplot2::scale_y_continuous(limits = c(e@ymin-0.001, e@ymax+0.001),
-                                  expand = c(0, 0)) +
+      # ggplot2::scale_x_continuous(limits = c(e@xmin-0.001, e@xmax+0.001),
+      #                             expand = c(0, 0),
+      #                             breaks = c(e@xmin-0.001, e@xmax+0.001)) +
+      # ggplot2::scale_y_continuous(limits = c(e@ymin-0.001, e@ymax+0.001),
+      #                             expand = c(0, 0)) +
       ggplot2::labs(title = paste0(main),
                     subtitle = paste0(fieldname, " ",  sub_main),
                     x = "",
@@ -112,16 +115,17 @@ plotMaps <- function(df,
                      axis.text.y = ggplot2::element_blank(),
                      legend.text = ggplot2::element_text(size = 12),
                      legend.title = ggplot2::element_text(size = 14),
-                     plot.title = ggplot2::element_text(size = 16)) +
-      OFPE::scale_bar(lon = e@xmin-0.0005,
-                      lat = e@ymin-0.0005,
-                      distance_lon = 0.2,
-                      distance_lat = .01,
-                      distance_legend = -.01,
-                      dist_unit = "km",
-                      orientation = TRUE,
-                      arrow_length = .05,
-                      arrow_distance = .02) %>%
+                     plot.title = ggplot2::element_text(size = 16)) %>%
+      # var_map <- var_map +
+      #   OFPE::scale_bar(lon = e@xmin-0.0025,
+      #                   lat = e@ymin-0.0025,
+      #                   distance_lon = 0.2,
+      #                   distance_lat = .01,
+      #                   distance_legend = -.01,
+      #                   dist_unit = "km",
+      #                   orientation = TRUE,
+      #                   arrow_length = .05,
+      #                   arrow_distance = .02) %>%
       suppressMessages()
     plot_list[[i]] <- var_map
   }

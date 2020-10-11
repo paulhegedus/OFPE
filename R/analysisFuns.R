@@ -26,11 +26,11 @@ findBadParms <- function(parm_df, dat) {
 
   # check for aliased vars
   resp <- ifelse(any(grepl("yld", names(dat))), "yld", "pro")
-  lm_form <- as.formula(
+  lm_form <- stats::as.formula(
     paste0(resp, " ~ ", paste(parm_df$parms, collapse = " + "))
   )
-  m0 <- lm(lm_form, data = dat) %>%
-    alias()
+  m0 <- stats::lm(lm_form, data = dat) %>%
+    stats::alias()
   if (!is.null(m0$Complete)) {
     parm_df[parm_df$parms %in% row.names(m0$Complete), "bad_parms"] <- TRUE
   }

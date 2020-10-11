@@ -677,13 +677,15 @@ DatClass <- R6::R6Class(
           )
         )
       )
+      # browser()
+
       ## TEMP - REMOVE!
-      set.seed(342134)
-      if (respvar == "yld") {
-        db_dat <- db_dat[runif(nrow(db_dat) * 0.01, 1, nrow(db_dat)), ]
-      } else {
-        db_dat <- db_dat[runif(nrow(db_dat) * 0.1, 1, nrow(db_dat)), ]
-      }
+      # set.seed(342134)
+      # if (respvar == "yld") {
+      #   db_dat <- db_dat[runif(nrow(db_dat) * 0.05, 1, nrow(db_dat)), ]
+      # } else {
+      #   db_dat <- db_dat[runif(nrow(db_dat) * 0.1, 1, nrow(db_dat)), ]
+      # }
       ## TEMP - REMOVE!
 
       return(db_dat)
