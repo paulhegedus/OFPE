@@ -135,6 +135,7 @@ folder, else to the getwd().}
 \item \href{#method-setupSim}{\code{SimClass$setupSim()}}
 \item \href{#method-executeSim}{\code{SimClass$executeSim()}}
 \item \href{#method-cleanUp}{\code{SimClass$cleanUp()}}
+\item \href{#method-plotEstsVsExp}{\code{SimClass$plotEstsVsExp()}}
 \item \href{#method-clone}{\code{SimClass$clone()}}
 }
 }
@@ -401,6 +402,79 @@ that could have been used by the SimOP class.
 }
 \subsection{Returns}{
 Any temporary files deleted.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-plotEstsVsExp"></a>}}
+\if{latex}{\out{\hypertarget{method-plotEstsVsExp}{}}}
+\subsection{Method \code{plotEstsVsExp()}}{
+Plot the average net-return, yield, and protein, of all points vs the
+experimental variable for the average price and experimental cost scenario
+from the Monte Carlo simulation. Calculates net-return for
+every point under every experimental rate in the user selected
+range under the average economic conditions from the simulation.
+
+Figure shows the selected response (net-return or predicted yield or
+predicted protein) for every point for every experimental rate. The
+mean response across rates is shown as a colored line.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SimClass$plotEstsVsExp(
+  sim_list,
+  AAmin,
+  respvar,
+  expvar,
+  AArateCutoff,
+  fieldname,
+  fxn,
+  sim_year,
+  SAVE,
+  out_path,
+  Bp,
+  CEXP
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{sim_list}}{List for every rate simulated over with data.tables
+for every point in the simulation year.}
+
+\item{\code{AAmin}}{Minimum as-applied rate used in simulation of management
+outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
+
+\item{\code{respvar}}{Response variable(s) used to optimize experimental inputs based
+off of. The user can select 'Yield' and/or 'Protein' based on data
+availability.}
+
+\item{\code{expvar}}{Experimental variable optimized, select/input
+'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
+input that was experimentally varied across the field as part of the
+on-farm experimentation.}
+
+\item{\code{AArateCutoff}}{The maximum as-applied rate to simulate management
+outcomues to (i.e. 200 lbs N or seed per acre).}
+
+\item{\code{fieldname}}{Unique field name corresponding to all fields used in the simulation.}
+
+\item{\code{fxn}}{The functional form of the models used for analysis.}
+
+\item{\code{sim_year}}{Year that the simulation was performed for. Indicates the
+weather conditions used.}
+
+\item{\code{SAVE}}{Logical, whether to save figure.}
+
+\item{\code{out_path}}{The path to the folder in which to store and
+save outputs from the simulation.}
+
+\item{\code{Bp}}{The mean base price used to plot net-returns vs as-applied data.}
+
+\item{\code{CEXP}}{The mean cost of the as-applied experimental input.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Data saved in 'Outputs/Predictions'.
 }
 }
 \if{html}{\out{<hr>}}

@@ -90,26 +90,8 @@ SimOP <- R6::R6Class(
         stopifnot(is.logical(SAVE))
         self$simClass$SAVE <- SAVE
       }
-      stopifnot(!is.null(self$simClass$sim_list))
-      ## names in sim dat
-      sim_list_names <- lapply(self$simClass$sim_list,
-                               function(x) names(x[[1]]))
       if (SAVE) {
         for (i in 1:length(self$simClass$sim_years)) {
-          self$plotEstsVsExp( # plotEstsVsExp
-            self$simClass$sim_list[[i]],
-            self$simClass$AAmin,
-            self$simClass$datClass$respvar,
-            self$simClass$datClass$expvar,
-            self$simClass$AArateCutoff,
-            self$simClass$unique_fieldname,
-            self$simClass$unique_fxn,
-            self$simClass$sim_years[i],
-            SAVE,
-            self$simClass$out_path,
-            self$simClass$Bp,
-            self$simClass$CEXP
-          )
           ## Bp.var plots
           Bp.var <- data.table::fread(
             paste0(self$simClass$dat_path,
@@ -118,7 +100,6 @@ SimOP <- R6::R6Class(
                    self$simClass$sim_years[i], "_",
                    self$simClass$opt, ".csv")
           )
-
           self$plotNRbox(
             Bp.var,
             self$simClass$unique_fieldname,
@@ -148,7 +129,6 @@ SimOP <- R6::R6Class(
             SAVE,
             self$simClass$out_path
           )
-
           ## get NRopt & NRffmax & make TF4
           NRopt <- data.table::fread(
             paste0(self$simClass$dat_path,
@@ -292,148 +272,6 @@ SimOP <- R6::R6Class(
       } else{
         self$simClass$cleanUp()
       }
-    },
-    #' @description
-    #' Method for saving the data from the Monte Carlo simulation for
-    #' a given simulation year. Saves data to the 'SimData' subfolder of
-    #' the 'Outputs' folder created for storing outputs from the model
-    #' fitting and/or the simulation. Note that these outputs can be
-    #' quite large depending on your field size, iterations selected
-    #' for the simulation, and number of simulation years.
-    #' @param out_list List of outputs generated from the Monte Carlo
-    #' simulation for a given simulation year. Includes 'Bp.var' for
-    #' the mean net-returns for each iteration of the simulation,
-    #' 'NRopt', which is a data.table for each observation for every
-    #' iteration of the simulation containing net-return and optimum
-    #' information, 'NRffmax' which is a data.table of the net-return
-    #' of the entire field and the full-field optimum rate for
-    #' each iteration of the simulation.
-    #' @param fieldname Unique field name corresponding to all fields used in the simulation.
-    #' @param fxn The functional form of the models used for analysis.
-    #' @param sim_year Year that the simulation was performed for. Indicates the
-    #' weather conditions used.
-    #' @param opt The optimization method used in the simulation.
-    #' @param SAVE Logical, whether to save figure.
-    #' @param out_path The path to the folder in which to store and
-    #' save outputs from the simulation.
-    #' @return Data saved in 'Outputs/SimData'.
-    saveSimData = function(out_list,
-                           fieldname,
-                           fxn,
-                           sim_year,
-                           opt,
-                           SAVE,
-                           out_path) {
-      data.table::fwrite(out_list$Bp.var,
-                         paste0(out_path,
-                                "/Outputs/SimData/",
-                                fieldname, "_BpVar_",
-                                fxn, "_",
-                                sim_year, "_",
-                                opt, ".csv"))
-      data.table::fwrite(out_list$NRopt,
-                         paste0(out_path,
-                                "/Outputs/SimData/",
-                                fieldname, "_NRopt_",
-                                fxn, "_",
-                                sim_year, "_",
-                                opt, ".csv"))
-      data.table::fwrite(out_list$NRffmax,
-                         paste0(out_path,
-                                "/Outputs/SimData/",
-                                fieldname, "_NRffMaxData_",
-                                fxn, "_",
-                                sim_year, "_",
-                                opt, ".csv"))
-    },
-    #' @description
-    #' Plot the average net-return, yield, and protein, of all points vs the
-    #' experimental variable for the average price and experimental cost scenario
-    #' from the Monte Carlo simulation. Calculates net-return for
-    #' every point under every experimental rate in the user selected
-    #' range under the average economic conditions from the simulation.
-    #'
-    #' Figure shows the selected response (net-return or predicted yield or
-    #' predicted protein) for every point for every experimental rate. The
-    #' mean response across rates is shown as a colored line.
-    #' @param sim_list List for every rate simulated over with data.tables
-    #' for every point in the simulation year.
-    #' @param AAmin Minimum as-applied rate used in simulation of management
-    #' outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).
-    #' @param respvar Response variable(s) used to optimize experimental inputs based
-    #' off of. The user can select 'Yield' and/or 'Protein' based on data
-    #' availability.
-    #' @param expvar Experimental variable optimized, select/input
-    #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
-    #' input that was experimentally varied across the field as part of the
-    #' on-farm experimentation.
-    #' @param AArateCutoff The maximum as-applied rate to simulate management
-    #' outcomues to (i.e. 200 lbs N or seed per acre).
-    #' @param fieldname Unique field name corresponding to all fields used in the simulation.
-    #' @param fxn The functional form of the models used for analysis.
-    #' @param sim_year Year that the simulation was performed for. Indicates the
-    #' weather conditions used.
-    #' @param SAVE Logical, whether to save figure.
-    #' @param out_path The path to the folder in which to store and
-    #' save outputs from the simulation.
-    #' @param Bp The mean base price used to plot net-returns vs as-applied data.
-    #' @param CEXP The mean cost of the as-applied experimental input.
-    #' @return Data saved in 'Outputs/Predictions'.
-    plotEstsVsExp = function(sim_list,
-                             AAmin,
-                             respvar,
-                             expvar,
-                             AArateCutoff,
-                             fieldname,
-                             fxn,
-                             sim_year,
-                             SAVE,
-                             out_path,
-                             Bp,
-                             CEXP) {
-      DNR <- data.table::rbindlist(sim_list)
-      nr_plot <- private$.estsVsExpPlot("NR",
-                                       DNR,
-                                       expvar,
-                                       fieldname,
-                                       sim_year,
-                                       Bp,
-                                       CEXP,
-                                       AAmin,
-                                       AArateCutoff,
-                                       fxn)
-      if (SAVE) {
-        ggplot2::ggsave(paste0(out_path, "/Outputs/Predictions/",
-                               fieldname, "_NRvs",
-                               ifelse(expvar == "aa_n","N","SR"),
-                               "_", fxn, "_", sim_year, ".png"),
-                        plot = nr_plot, device = "png", scale = 1,
-                        width = 7.5, height = 5, units = "in")
-      }
-      resp_plots <- lapply(respvar,
-                           private$.estsVsExpPlot,
-                           DNR,
-                           expvar,
-                           fieldname,
-                           sim_year,
-                           Bp,
-                           CEXP,
-                           AAmin,
-                           AArateCutoff,
-                           fxn)
-      if (SAVE) {
-        for (i in 1:length(resp_plots)) {
-          ggplot2::ggsave(paste0(out_path, "/Outputs/Predictions/",
-                                 fieldname, "_", toupper(respvar[i]), "vs",
-                                 ifelse(expvar == "aa_n","N","SR"),
-                                 "_", fxn, "_", sim_year, ".png"),
-                          plot = resp_plots[[i]], device = "png", scale = 1,
-                          width = 7.5, height = 5, units = "in")
-        }
-      }
-      resp_plots$nr <- nr_plot
-      big_plot <- cowplot::plot_grid(plotlist = resp_plots, nrow = 3, ncol = 1)
-      #return(big_plot)
     },
     #' @description
     #' Convert the Bp.var matrix to a dataframe for plotting. Reorder the levels
@@ -1146,7 +984,6 @@ SimOP <- R6::R6Class(
       cwd <- paste0(self$simClass$out_path, "/Outputs") # outputs working directory
       if (!file.exists(cwd)) {
         dir.create(cwd)
-        dir.create(paste0(cwd, "/", "Predictions"))
         dir.create(paste0(cwd, "/", "Maps"))
         #dir.create(paste0(cwd, "/", "Exploratory"))
         dir.create(paste0(cwd, "/", "EXP"))
@@ -1157,11 +994,7 @@ SimOP <- R6::R6Class(
         dir.create(paste0(cwd, "/", "NR/NRbarPlots"))
         dir.create(paste0(cwd, "/", "NR/NRboxPlots"))
         dir.create(paste0(cwd, "/", "NR/NRprobabilities"))
-        dir.create(paste0(cwd, "/", "SimData"))
       } else {
-        if (!file.exists(paste0(cwd, "/", "Predictions"))) {
-          dir.create(paste0(cwd, "/", "Predictions"))
-        }
         if (!file.exists(paste0(cwd, "/", "Maps"))) {
           dir.create(paste0(cwd, "/", "Maps"))
         }
@@ -1191,9 +1024,6 @@ SimOP <- R6::R6Class(
         }
         if (!file.exists(paste0(cwd, "/", "NR/NRprobabilities"))) {
           dir.create(paste0(cwd, "/", "NR/NRprobabilities"))
-        }
-        if (!file.exists(paste0(cwd, "/", "SimData"))) {
-          dir.create(paste0(cwd, "/", "SimData"))
         }
       }
     },
@@ -1227,67 +1057,6 @@ SimOP <- R6::R6Class(
                       grep("EXP.ffopt", levels(TF4$Method)))
       TF4$Method <- factor(TF4$Method, levels(TF4$Method)[mgmt_order])
       return(TF4)
-    },
-    .estsVsExpPlot = function(var, # NR, pred_yld, pred_pro
-                              DNR,
-                              expvar,
-                              fieldname,
-                              sim_year,
-                              Bp,
-                              CEXP,
-                              AAmin,
-                              AArateCutoff,
-                              fxn) {
-      stopifnot(any(grepl("NR|yld|pro", var)))
-      if (grepl("NR", var)) {
-        names(DNR)[grep(paste0("^", var, "$"), names(DNR))] <- "var"
-      } else {
-        names(DNR)[grep(paste0("^pred_", var, "$"), names(DNR))] <- "var"
-      }
-      xMIN <- AAmin
-      xMAX  <- AArateCutoff
-      xSTEP <- (AArateCutoff - AAmin) / 10
-      if (grepl("pro", var)) {
-        yMIN <- DescTools::RoundTo(min(DNR$var, na.rm = T), 5, floor)
-        yMAX <- DescTools::RoundTo(max(DNR$var, na.rm = T), 5, ceiling)
-        ySTEP <- (yMAX - yMIN) / 5
-      } else {
-        yMIN <- DescTools::RoundTo(min(DNR$var, na.rm = T), 10, floor)
-        yMAX <- DescTools::RoundTo(max(DNR$var, na.rm = T), 10, ceiling)
-        ySTEP <- (yMAX - yMIN) / 10
-      }
-      names(DNR)[grep(expvar, names(DNR))] <- "exp"
-      var_color <- ifelse(grepl("NR", var), "green",
-                          ifelse(grepl("yld", var), "red",
-                                 "cyan"))
-      y_lab <- ifelse(grepl("NR", var), "Estimated Net-Return ($)",
-                      ifelse(grepl("yld", var), "Predicted Yield (bu/ac)",
-                             "Predicted Grain Protein %"))
-      x_lab <- paste0(ifelse(expvar == "aa_n", "Nitrogen",  "Seed"), " (lbs/ac)")
-      sub_title <-  paste0(fxn, " : Base Price = $",
-                           round(Bp, 2), ", ",
-                           ifelse(expvar == "aa_n", "N", "Seed"),
-                           " Cost = $", round(CEXP, 2))
-      var_plot <-
-        ggplot2::ggplot(DNR, ggplot2::aes(x = exp, y = var)) +
-        ggplot2::geom_point(shape = 1) +
-        ggplot2::geom_smooth(color = var_color) +
-        ggplot2::labs(y = y_lab,
-                      x =x_lab) +
-        ggplot2::ggtitle(paste0(fieldname, " ", sim_year),
-                         subtitle = sub_title) +
-        ggplot2::scale_y_continuous(limits = c(yMIN, yMAX),
-                                    breaks = seq(yMIN, yMAX, ySTEP)) +
-        ggplot2::scale_x_continuous(limits = c(xMIN, xMAX),
-                                    breaks = seq(xMIN, xMAX, xSTEP)) +
-        ggplot2::theme_bw() +
-        ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
-                       axis.title = ggplot2::element_text(size = 14))
-      if (any(DNR$var < 0)) {
-        var_plot <- var_plot +
-          ggplot2::geom_hline(yintercept = 0, color = "red", linetype = 2)
-      }
-      return(var_plot)
     },
     .plotActNRFun = function(SAVE) {
       index <- lapply(self$simClass$datClass$mod_dat, lapply, dim) %>%

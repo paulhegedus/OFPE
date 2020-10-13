@@ -44,8 +44,6 @@ simulation.}
 \itemize{
 \item \href{#method-new}{\code{SimOP$new()}}
 \item \href{#method-savePlots}{\code{SimOP$savePlots()}}
-\item \href{#method-saveSimData}{\code{SimOP$saveSimData()}}
-\item \href{#method-plotEstsVsExp}{\code{SimOP$plotEstsVsExp()}}
 \item \href{#method-plotNRbox}{\code{SimOP$plotNRbox()}}
 \item \href{#method-mgmtNRprobTable}{\code{SimOP$mgmtNRprobTable()}}
 \item \href{#method-plotNRbar}{\code{SimOP$plotNRbar()}}
@@ -127,125 +125,6 @@ options for the entire class.}
 }
 \subsection{Returns}{
 Simulation outputs in the 'Outputs' folder.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-saveSimData"></a>}}
-\if{latex}{\out{\hypertarget{method-saveSimData}{}}}
-\subsection{Method \code{saveSimData()}}{
-Method for saving the data from the Monte Carlo simulation for
-a given simulation year. Saves data to the 'SimData' subfolder of
-the 'Outputs' folder created for storing outputs from the model
-fitting and/or the simulation. Note that these outputs can be
-quite large depending on your field size, iterations selected
-for the simulation, and number of simulation years.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SimOP$saveSimData(out_list, fieldname, fxn, sim_year, opt, SAVE, out_path)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{out_list}}{List of outputs generated from the Monte Carlo
-simulation for a given simulation year. Includes 'Bp.var' for
-the mean net-returns for each iteration of the simulation,
-'NRopt', which is a data.table for each observation for every
-iteration of the simulation containing net-return and optimum
-information, 'NRffmax' which is a data.table of the net-return
-of the entire field and the full-field optimum rate for
-each iteration of the simulation.}
-
-\item{\code{fieldname}}{Unique field name corresponding to all fields used in the simulation.}
-
-\item{\code{fxn}}{The functional form of the models used for analysis.}
-
-\item{\code{sim_year}}{Year that the simulation was performed for. Indicates the
-weather conditions used.}
-
-\item{\code{opt}}{The optimization method used in the simulation.}
-
-\item{\code{SAVE}}{Logical, whether to save figure.}
-
-\item{\code{out_path}}{The path to the folder in which to store and
-save outputs from the simulation.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Data saved in 'Outputs/SimData'.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plotEstsVsExp"></a>}}
-\if{latex}{\out{\hypertarget{method-plotEstsVsExp}{}}}
-\subsection{Method \code{plotEstsVsExp()}}{
-Plot the average net-return, yield, and protein, of all points vs the
-experimental variable for the average price and experimental cost scenario
-from the Monte Carlo simulation. Calculates net-return for
-every point under every experimental rate in the user selected
-range under the average economic conditions from the simulation.
-
-Figure shows the selected response (net-return or predicted yield or
-predicted protein) for every point for every experimental rate. The
-mean response across rates is shown as a colored line.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SimOP$plotEstsVsExp(
-  sim_list,
-  AAmin,
-  respvar,
-  expvar,
-  AArateCutoff,
-  fieldname,
-  fxn,
-  sim_year,
-  SAVE,
-  out_path,
-  Bp,
-  CEXP
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{sim_list}}{List for every rate simulated over with data.tables
-for every point in the simulation year.}
-
-\item{\code{AAmin}}{Minimum as-applied rate used in simulation of management
-outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
-
-\item{\code{respvar}}{Response variable(s) used to optimize experimental inputs based
-off of. The user can select 'Yield' and/or 'Protein' based on data
-availability.}
-
-\item{\code{expvar}}{Experimental variable optimized, select/input
-'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
-input that was experimentally varied across the field as part of the
-on-farm experimentation.}
-
-\item{\code{AArateCutoff}}{The maximum as-applied rate to simulate management
-outcomues to (i.e. 200 lbs N or seed per acre).}
-
-\item{\code{fieldname}}{Unique field name corresponding to all fields used in the simulation.}
-
-\item{\code{fxn}}{The functional form of the models used for analysis.}
-
-\item{\code{sim_year}}{Year that the simulation was performed for. Indicates the
-weather conditions used.}
-
-\item{\code{SAVE}}{Logical, whether to save figure.}
-
-\item{\code{out_path}}{The path to the folder in which to store and
-save outputs from the simulation.}
-
-\item{\code{Bp}}{The mean base price used to plot net-returns vs as-applied data.}
-
-\item{\code{CEXP}}{The mean cost of the as-applied experimental input.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Data saved in 'Outputs/Predictions'.
 }
 }
 \if{html}{\out{<hr>}}
