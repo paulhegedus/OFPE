@@ -24,17 +24,6 @@ findBadParms <- function(parm_df, dat) {
             any(grepl("means", names(parm_df))),
             any(grepl("sd", names(parm_df))))
 
-  # check for aliased vars
-  resp <- ifelse(any(grepl("yld", names(dat))), "yld", "pro")
-  lm_form <- stats::as.formula(
-    paste0(resp, " ~ ", paste(parm_df$parms, collapse = " + "))
-  )
-  m0 <- stats::lm(lm_form, data = dat) %>%
-    stats::alias()
-  if (!is.null(m0$Complete)) {
-    parm_df[parm_df$parms %in% row.names(m0$Complete), "bad_parms"] <- TRUE
-  }
-
   # check each var
   obs_num <- by(dat, dat$year, nrow) %>%
     lapply(as.numeric) %>%
@@ -89,6 +78,18 @@ findBadParms <- function(parm_df, dat) {
       }
     }
   }
+  # check for aliased vars
+  resp <- ifelse(any(grepl("yld", names(dat))), "yld", "pro")
+  lm_form <- stats::as.formula(
+    paste0(resp, " ~ ", paste(parm_df[!parm_df$bad_parms, "parms"],
+                              collapse = " + "))
+  )
+  m0 <- stats::lm(lm_form, data = dat) %>%
+    stats::alias()
+  if (!is.null(m0$Complete)) {
+    parm_df[parm_df$parms %in% row.names(m0$Complete), "bad_parms"] <- TRUE
+  }
+
   return(parm_df)
 }
 #' @title Prepare validation data for plotting.
