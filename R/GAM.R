@@ -203,8 +203,8 @@ GAM <- R6::R6Class(
             self$parm_df[grep(good_parms[i], self$parm_df$parms), "k"] <- tryK[j]
             # make the function statement
             fxn <- private$.makeFormula(
-              self$parm_df[grep(good_parms[i], self$parm_df$parms), "parms"],
-              self$parm_df[grep(good_parms[i], self$parm_df$parms), "k"]
+              self$parm_df[grep(paste0("^", good_parms[i], "$"), self$parm_df$parms), "parms"],
+              self$parm_df[grep(paste0("^", good_parms[i], "$"), self$parm_df$parms), "k"]
             )
             # fit model with the estimated k
             rand_rows <- runif(nrow(self$dat$trn) * 0.25, 1, nrow(self$dat$trn) + 1) %>% as.integer()
@@ -221,8 +221,13 @@ GAM <- R6::R6Class(
         } # end tryK
         # if no k found
         if (!foundK) {
-          self$parm_df[grep(good_parms[i], self$parm_df$parms), "bad_parms"] <- TRUE
-          self$parm_df[grep(good_parms[i], self$parm_df$parms), "k"] <- NA
+          if (i == 1) {
+            self$parm_df[grep(good_parms[i], self$parm_df$parms), "bad_parms"] <- FALSE
+            self$parm_df[grep(good_parms[i], self$parm_df$parms), "k"] <- 5
+          } else {
+            self$parm_df[grep(good_parms[i], self$parm_df$parms), "bad_parms"] <- TRUE
+            self$parm_df[grep(good_parms[i], self$parm_df$parms), "k"] <- NA
+          }
         }
         rm(foundK) # remove the indicator for the next var in loop
       } # end parms
