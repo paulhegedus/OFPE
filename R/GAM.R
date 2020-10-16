@@ -95,6 +95,9 @@ GAM <- R6::R6Class(
       self$expvar <- expvar
       self$num_means <- num_means
 
+      init_k <- ifelse(nrow(self$dat$trn) < 1000 | nrow(self$dat$val) < 1000,
+                       50,
+                       init_k)
       self$parm_df <- data.frame(
         parms = c(expvar, num_names[-which(num_names %in% expvar)]),
         k = init_k,
