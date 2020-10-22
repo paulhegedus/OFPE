@@ -24,6 +24,11 @@ findBadParms <- function(parm_df, dat) {
             any(grepl("means", names(parm_df))),
             any(grepl("sd", names(parm_df))))
 
+  ## TEMP - REMOVING PARMS THAT NOT ALWAYS PRESENT
+  parm_df[grep("prev_", parm_df$parms), "bad_parms"] <- TRUE
+  parm_df[grep("ssm_", parm_df$parms), "bad_parms"] <- TRUE
+  parm_df[grep("susm_", parm_df$parms), "bad_parms"] <- TRUE
+
   # check each var
   obs_num <- by(dat, dat$year, nrow) %>%
     lapply(as.numeric) %>%

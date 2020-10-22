@@ -677,7 +677,6 @@ DatClass <- R6::R6Class(
           )
         )
       )
-      # browser()
 
       ## TEMP - REMOVE!
       # set.seed(342134)

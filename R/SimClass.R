@@ -651,30 +651,46 @@ SimClass <- R6::R6Class(
       return(dat)
     },
     .yearSim = function(sim_dat, sim_year, EXPvec) {
-      sim_list <-
-        ## make list with df's for each N rate
-        rep(list(sim_dat), length(EXPvec)) %>%
-        private$.setupSimDat(EXPvec) %>%
-        ## for each location for each rate for each sim year predict repsonses
-        private$.simResponses(self$datClass$respvar)  %>%
-        ## do simulation & find opt. etc. for each sim_year save to written files
-        ## returns the sim_list simOP$plotEstsVsExp() for each pred year
-        private$.runSim(sim_year)
+      sim_list <- NA
+      tryCatch({
+        sim_list <-
+          ## make list with df's for each N rate
+          rep(list(sim_dat), length(EXPvec)) %>%
+          private$.setupSimDat(EXPvec) %>%
+          ## for each location for each rate for each sim year predict repsonses
+          private$.simResponses(self$datClass$respvar)  %>%
+          ## do simulation & find opt. etc. for each sim_year save to written files
+          ## returns the sim_list simOP$plotEstsVsExp() for each pred year
+          private$.runSim(sim_year)
+        },
+        error = function(e) {
+          print(paste0("ERROR SIMULATING ",
+                       sim_year, " FOR ",
+                       self$unique_fieldname, "!!!"))
+      })
       if (self$SAVE) {
-        self$plotEstsVsExp( # plotEstsVsExp
-          sim_list,
-          self$AAmin,
-          self$datClass$respvar,
-          self$datClass$expvar,
-          self$AArateCutoff,
-          self$unique_fieldname,
-          self$unique_fxn,
-          sim_year,
-          self$SAVE,
-          self$out_path,
-          self$Bp,
-          self$CEXP
-        )
+        tryCatch({
+            self$plotEstsVsExp( # plotEstsVsExp
+              sim_list,
+              self$AAmin,
+              self$datClass$respvar,
+              self$datClass$expvar,
+              self$AArateCutoff,
+              self$unique_fieldname,
+              self$unique_fxn,
+              sim_year,
+              self$SAVE,
+              self$out_path,
+              self$Bp,
+              self$CEXP
+            )
+          },
+          error = function(e) {
+            print(paste0("ERROR PLOTTING SIMULATED ",
+                         sim_year, " RESPS VS EXP ",
+                         " FOR ", self$unique_fieldname, "!!!"))
+          })
+
       }
       return(invisible())
     },
@@ -899,14 +915,12 @@ SimClass <- R6::R6Class(
                   append = TRUE,
                   sep = ",")
           }
-          ## if last iteration, close connections
-          if (bp == self$sPr) {
-            close(Bp.var_con)
-            close(NRffmax_con)
-            close(NRopt_con)
-          }
         }
       }
+      ## close connections
+      close(Bp.var_con)
+      close(NRffmax_con)
+      close(NRopt_con)
       ## calculate NR with mean prices for plotEstsVsExp()
       sim_list <- private$.meanSimList(sim_list, sim_list_names)
       return(sim_list)
@@ -1126,15 +1140,10 @@ SimClass <- R6::R6Class(
       xMIN <- AAmin
       xMAX  <- AArateCutoff
       xSTEP <- (AArateCutoff - AAmin) / 10
-      if (grepl("pro", var)) {
-        yMIN <- DescTools::RoundTo(min(DNR$var, na.rm = T), 5, floor)
-        yMAX <- DescTools::RoundTo(max(DNR$var, na.rm = T), 5, ceiling)
-        ySTEP <- (yMAX - yMIN) / 5
-      } else {
-        yMIN <- DescTools::RoundTo(min(DNR$var, na.rm = T), 10, floor)
-        yMAX <- DescTools::RoundTo(max(DNR$var, na.rm = T), 10, ceiling)
-        ySTEP <- (yMAX - yMIN) / 10
-      }
+      step_by <- ifelse(grepl("yld", var), 10, 5)
+      yMIN <- DescTools::RoundTo(min(DNR$var, na.rm = T), step_by, floor)
+      yMAX <- DescTools::RoundTo(max(DNR$var, na.rm = T), step_by, ceiling)
+      ySTEP <- (yMAX - yMIN) / step_by
       names(DNR)[grep(expvar, names(DNR))] <- "exp"
       var_color <- ifelse(grepl("NR", var), "green",
                           ifelse(grepl("yld", var), "red",
@@ -1162,7 +1171,7 @@ SimClass <- R6::R6Class(
         ggplot2::theme_bw() +
         ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
                        axis.title = ggplot2::element_text(size = 14))
-      if (any(DNR$var < 0)) {
+      if (any(DNR$var < 0, na.rm = T)) {
         var_plot <- var_plot +
           ggplot2::geom_hline(yintercept = 0, color = "red", linetype = 2)
       }

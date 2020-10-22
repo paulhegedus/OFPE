@@ -182,7 +182,8 @@ GAM <- R6::R6Class(
       ## brute force method for finding a reasonable 'k' estimate.
       good_parms <- self$parm_df[!self$parm_df$bad_parms, "parms"]
       for (i in 1:length(good_parms)) {
-        trgtK <- self$parm_df[grep(good_parms[i], self$parm_df$parms), "k"]
+        trgtK <- self$parm_df[grep(paste0("^", good_parms[i], "$"),
+                                   self$parm_df$parms), "k"]
         tryK <- c(trgtK,
                   ifelse(round(trgtK / 2) > 20,
                          round(trgtK / 2),
@@ -203,14 +204,18 @@ GAM <- R6::R6Class(
           # if foundK  = FALSE (have not found a k that fits, keep trying)
           if (!foundK) {
             # set the k in the paramter table to the k estimate
-            self$parm_df[grep(good_parms[i], self$parm_df$parms), "k"] <- tryK[j]
+            self$parm_df[grep(paste0("^", good_parms[i], "$"),
+                              self$parm_df$parms), "k"] <- tryK[j]
             # make the function statement
             fxn <- private$.makeFormula(
-              self$parm_df[grep(paste0("^", good_parms[i], "$"), self$parm_df$parms), "parms"],
-              self$parm_df[grep(paste0("^", good_parms[i], "$"), self$parm_df$parms), "k"]
+              self$parm_df[grep(paste0("^", good_parms[i], "$"),
+                                self$parm_df$parms), "parms"],
+              self$parm_df[grep(paste0("^", good_parms[i], "$"),
+                                self$parm_df$parms), "k"]
             )
             # fit model with the estimated k
-            rand_rows <- runif(nrow(self$dat$trn) * 0.25, 1, nrow(self$dat$trn) + 1) %>% as.integer()
+            rand_rows <- runif(nrow(self$dat$trn) * 0.25, 1, nrow(self$dat$trn) + 1) %>%
+              as.integer()
              tryCatch(
               {mgcv::bam(as.formula(fxn),
                          data = self$dat$trn[rand_rows, ],
@@ -224,12 +229,17 @@ GAM <- R6::R6Class(
         } # end tryK
         # if no k found
         if (!foundK) {
-          if (i == 1) {
-            self$parm_df[grep(good_parms[i], self$parm_df$parms), "bad_parms"] <- FALSE
-            self$parm_df[grep(good_parms[i], self$parm_df$parms), "k"] <- 5
+          if (grepl("^aa_n$", self$parm_df$parms[i]) |
+              grepl("^aa_sr$", self$parm_df$parms[i])) {
+            self$parm_df[grep(paste0("^", good_parms[i], "$"),
+                              self$parm_df$parms), "bad_parms"] <- FALSE
+            self$parm_df[grep(paste0("^", good_parms[i], "$"),
+                              self$parm_df$parms), "k"] <- 5
           } else {
-            self$parm_df[grep(good_parms[i], self$parm_df$parms), "bad_parms"] <- TRUE
-            self$parm_df[grep(good_parms[i], self$parm_df$parms), "k"] <- NA
+            self$parm_df[grep(paste0("^", good_parms[i], "$"),
+                              self$parm_df$parms), "bad_parms"] <- TRUE
+            self$parm_df[grep(paste0("^", good_parms[i], "$"),
+                              self$parm_df$parms), "k"] <- NA
           }
         }
         rm(foundK) # remove the indicator for the next var in loop

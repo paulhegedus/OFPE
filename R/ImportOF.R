@@ -227,23 +227,26 @@ ImportOF <- R6::R6Class(
             FILE$X <- FILE$x
             FILE$Y <- FILE$y
             FILE <- FILE[!is.na(FILE$X) & !is.na(FILE$Y), ]
-            ## put correct sign on lat long
-            x_dir <- grep("^x$", names(FILE)) + 1
-            x_dir <- unique(na.omit(FILE[, x_dir]))
-            x_dir <- x_dir[grep("W|E", x_dir)]
-            y_dir <- grep("^y$", names(FILE)) + 1
-            y_dir <- unique(na.omit(FILE[, y_dir]))
-            y_dir <- y_dir[grep("N|S", y_dir)]
-            if (x_dir == "W") {
-              FILE$X <- ifelse(FILE$X < 0,
-                               FILE$X,
-                               FILE$X * -1)
+            if (ncol(FILE) > 12) {
+              ## put correct sign on lat long
+              x_dir <- grep("^x$", names(FILE)) + 1
+              x_dir <- unique(na.omit(FILE[, x_dir]))
+              x_dir <- x_dir[grep("W|E", x_dir)]
+              y_dir <- grep("^y$", names(FILE)) + 1
+              y_dir <- unique(na.omit(FILE[, y_dir]))
+              y_dir <- y_dir[grep("N|S", y_dir)]
+              if (x_dir == "W") {
+                FILE$X <- ifelse(FILE$X < 0,
+                                 FILE$X,
+                                 FILE$X * -1)
+              }
+              if (y_dir == "S") {
+                FILE$X <- ifelse(FILE$Y < 0,
+                                 FILE$Y,
+                                 FILE$Y * -1)
+              }
             }
-            if (y_dir == "S") {
-              FILE$X <- ifelse(FILE$Y < 0,
-                               FILE$Y,
-                               FILE$Y * -1)
-            }
+
             sp::coordinates(FILE) <- c("X", "Y") # makes spatial points df
             sp::proj4string(FILE) <- sp::CRS("+proj=longlat +datum=WGS84")
             FILE <- sf::st_as_sf(FILE)
