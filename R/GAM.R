@@ -167,6 +167,7 @@ GAM <- R6::R6Class(
     #' @return Diagnostic plots.
     saveDiagnostics = function(out_path, SAVE) {
       if (SAVE) {
+        try({dev.off()}, silent = TRUE)
         ## general diagnostics
         png(paste0(out_path, "/Outputs/Diagnostics/", self$respvar, "_",
                    self$fieldname, "_GAM_diagnostics.png"),

@@ -31,6 +31,17 @@ SimOP <- R6::R6Class(
     #' to produce the output figures, maps, and tables from the Monte Carlo
     #' simulation.
     simClass = NULL,
+    #' @field input_list Optional, list of inputs required for generating the
+    #' output figures. Recreation of relevant info from a SimClass object. Only
+    #' needed if a SimClass object is not passed into class.
+    input_list = NULL,
+    #' @field out_path Output path to create folder for outputs. Taken from either
+    #' a SimClass object or an optional 'input_list' field upon initialization.
+    out_path = NULL,
+    #' @field SAVE Whether to save simulation outputs If NULL uses the user selected
+    #' choice. If not NULL and is logical, argument replaces previously set SAVE
+    #' options for the entire class.
+    SAVE = NULL,
 
     #' @description
     #' Pass in a SimClass R6 object that has results from an executed simulation.
@@ -51,23 +62,52 @@ SimOP <- R6::R6Class(
     #' and 'NRprobabilities'. The two former contain figures, and the latter contains
     #' a table with the probability that the SSOPT strategy yields a higher net-return
     #' than each of the other management strategies.
-    #' @param simClass SimClass R6 object that has been initialized and the OFPE
+    #' @param simClass Optional, SimClass R6 object that has been initialized and the OFPE
     #' simulation has been executed. This class holds the information necessary
     #' to produce the output figures, maps, and tables from the Monte Carlo
     #' simulation.
+    #' @param input_list Optional, list of inputs required for generating the
+    #' output figures. Recreation of relevant info from a SimClass object. Only
+    #' needed if a SimClass object is not passed into class.
     #' @param create create Logical, whether to create the 'Output' folder and save
     #' figures, maps, and tables. Default is TRUE, pass FALSE to skip output folder
     #' step and prevent any output generation.
     #' @return A folder created in the path for model output figures.
-    initialize = function(simClass, create = TRUE) {
+    initialize = function(simClass = NULL,
+                          input_list = NULL,
+                          create = TRUE) {
       stopifnot(
         is.logical(create)
       )
-      self$simClass <- simClass
+      if (!is.null(simClass)) {
+        self$simClass <- simClass
+        self$out_path <- self$simClass$out_path
+        self$SAVE <- self$simClass$SAVE
+      }
+      if (!is.null(input_list)) {
+        ## TODO
+        stopifnot(
+          !is.null(input_list$dat_path),
+          !is.null(input_list$unique_fieldname),
+          !is.null(input_list$unique_fxn),
+          !is.null(input_list$sim_years),
+          !is.null(input_list$opt),
+          !is.null(input_list$fieldsize),
+          !is.null(input_list$fs),
+          !is.null(input_list$expvar),
+          !is.null(input_list$farmername),
+          !is.null(input_list$respvar),
+          !is.null(input_list$db),
+          !is.null(input_list$utm_fieldname)
+        )
+        self$input_list <- input_list
+        stopifnot(!is.null(input_list$out_path))
+        self$out_path <- input_list$out_path
+      }
       if (create) {
         private$.setupOP()
       } else {
-        self$simClass$SAVE <- FALSE
+        self$SAVE <- FALSE
       }
     },
     #' @description
@@ -84,120 +124,162 @@ SimOP <- R6::R6Class(
     #' options for the entire class.
     #' @return Simulation outputs in the 'Outputs' folder.
     savePlots = function(SAVE = NULL) {
+      #browser()
+
+      stopifnot(
+        !is.null(self$simClass) | !is.null(self$input_list)
+      )
       if (is.null(SAVE)) {
-        SAVE <- self$simClass$SAVE
+        SAVE <- self$SAVE
+        if (is.null(SAVE)) {
+          SAVE <- FALSE
+        }
       } else {
         stopifnot(is.logical(SAVE))
-        self$simClass$SAVE <- SAVE
+        self$SAVE <- SAVE
       }
+
+      if (!is.null(self$simClass)) {
+        dat_path <- self$simClass$dat_path
+        unique_fieldname <- self$simClass$unique_fieldname
+        unique_fxn <- self$simClass$unique_fxn
+        sim_years <- self$simClass$sim_years
+        opt <- self$simClass$opt
+        fieldsize <- self$simClass$fieldsize
+        fs <- self$simClass$fs
+        expvar <- self$simClass$datClass$expvar
+        farmername <- self$simClass$datClass$farmername
+        respvar <- self$simClass$datClass$respvar
+        db <- self$simClass$dbCon$db
+        utm_fieldname <- self$simClass$datClass$fieldname[1]
+      } else {
+        dat_path <- self$input_list$dat_path
+        unique_fieldname <- self$input_list$unique_fieldname
+        unique_fxn <- self$input_list$unique_fxn
+        sim_years <- self$input_list$sim_years
+        opt <- self$input_list$opt
+        fieldsize <- self$input_list$fieldsize
+        fs <- self$input_list$fs
+        expvar <- self$input_list$expvar
+        farmername <- self$input_list$farmername
+        respvar <- self$input_list$respvar
+        db <- self$input_list$db
+        utm_fieldname <- self$input_list$fieldname
+      }
+
       if (SAVE) {
-        for (i in 1:length(self$simClass$sim_years)) {
+        for (i in 1:length(sim_years)) {
           ## Bp.var plots
           Bp.var <- data.table::fread(
-            paste0(self$simClass$dat_path,
-                   self$simClass$unique_fieldname, "_BpVar_",
-                   self$simClass$unique_fxn, "_",
-                   self$simClass$sim_years[i], "_",
-                   self$simClass$opt, ".csv")
+            paste0(dat_path,
+                   unique_fieldname, "_BpVar_",
+                   unique_fxn, "_",
+                   sim_years[i], "_",
+                   opt, ".csv")
           )
           self$plotNRbox(
             Bp.var,
-            self$simClass$unique_fieldname,
-            self$simClass$unique_fxn,
-            self$simClass$sim_years[i],
-            self$simClass$opt,
+            unique_fieldname,
+            unique_fxn,
+            sim_years[i],
+            opt,
             SAVE,
-            self$simClass$out_path
+            self$out_path
           )
           self$mgmtNRprobTable(
             "NR.ssopt",
             Bp.var,
             1000,
-            self$simClass$unique_fieldname,
-            self$simClass$unique_fxn,
-            self$simClass$sim_years[i],
-            self$simClass$opt,
+            unique_fieldname,
+            unique_fxn,
+            sim_years[i],
+            opt,
             SAVE,
-            self$simClass$out_path
+            self$out_path
           )
           self$plotNRbar(
             Bp.var,
-            self$simClass$unique_fieldname,
-            self$simClass$unique_fxn,
-            self$simClass$sim_years[i],
-            self$simClass$opt,
+            unique_fieldname,
+            unique_fxn,
+            sim_years[i],
+            opt,
             SAVE,
-            self$simClass$out_path
+            self$out_path
           )
           ## get NRopt & NRffmax & make TF4
+          ## TODO: FIX THIS
           NRopt <- data.table::fread(
-            paste0(self$simClass$dat_path,
-                   self$simClass$unique_fieldname, "_NRopt_",
-                   self$simClass$unique_fxn, "_",
-                   self$simClass$sim_years[i], "_",
-                   self$simClass$opt, ".csv")
+            paste0(dat_path,
+                   unique_fieldname, "_NRopt_",
+                   unique_fxn, "_",
+                   sim_years[i], "_",
+                   opt, ".csv")
           )
           NRffmax <- data.table::fread(
-            paste0(self$simClass$dat_path,
-                   self$simClass$unique_fieldname, "_NRffMaxData_",
-                   self$simClass$unique_fxn, "_",
-                   self$simClass$sim_years[i], "_",
-                   self$simClass$opt, ".csv")
+            paste0(dat_path,
+                   unique_fieldname, "_NRffMaxData_",
+                   unique_fxn, "_",
+                   sim_years[i], "_",
+                   opt, ".csv")
           )
           TF4 <- private$.getTF4(NRopt,
                                  NRffmax,
-                                 self$simClass$fieldsize,
-                                 self$simClass$fs)
+                                 fieldsize,
+                                 fs)
           rm(NRffmax)
+          ## TODO: FIX ABOVE ^
+
           self$plotFFOPThist(
             Bp.var,
             TF4,
-            self$simClass$datClass$expvar,
-            self$simClass$unique_fieldname,
-            self$simClass$unique_fxn,
-            self$simClass$sim_years[i],
-            self$simClass$opt,
+            expvar,
+            unique_fieldname,
+            unique_fxn,
+            sim_years[i],
+            opt,
             SAVE,
-            self$simClass$out_path
+            self$out_path
           )
           rm(Bp.var)
           self$plotTotExpAppl(
             TF4,
-            self$simClass$datClass$expvar,
-            self$simClass$unique_fieldname,
-            self$simClass$unique_fxn,
-            self$simClass$sim_years[i],
-            self$simClass$opt,
+            expvar,
+            unique_fieldname,
+            unique_fxn,
+            sim_years[i],
+            opt,
             SAVE,
-            self$simClass$out_path
+            self$out_path
           )
           self$plotSSOPThist(
             NRopt,
             TF4,
-            self$simClass$datClass$expvar,
-            self$simClass$unique_fieldname,
-            self$simClass$unique_fxn,
-            self$simClass$sim_years[i],
-            self$simClass$opt,
+            expvar,
+            unique_fieldname,
+            unique_fxn,
+            sim_years[i],
+            opt,
             SAVE,
-            self$simClass$out_path
+            self$out_path
           )
           # SSOPT map (avg all sim)
           self$plotSimMaps(
             NRopt,
-            paste0("SSOPT_", ifelse(self$simClass$datClass$expvar == "aa_n", "N", "SR")),
+            paste0("SSOPT_", ifelse(expvar == "aa_n", "N", "SR")),
             "EXP.rate.ssopt",
-            paste0(ifelse(self$simClass$datClass$expvar=="aa_n", "N", "Seed Rate"), " Rate (lbs/ac)"),
+            paste0(ifelse(expvar == "aa_n", "N", "Seed Rate"), " Rate (lbs/ac)"),
             paste0("SS.opt ",
-                   ifelse(self$simClass$datClass$expvar=="aa_n", "N", "Seed"),
-                   " rates for ", self$simClass$sim_years[i], " conditions"),
-            self$simClass$unique_fieldname,
-            self$simClass$sim_years[i],
-            self$simClass$unique_fxn,
-            self$simClass$opt,
+                   ifelse(expvar == "aa_n", "N", "Seed"),
+                   " rates for ", sim_years[i], " conditions"),
+            unique_fieldname,
+            sim_years[i],
+            unique_fxn,
+            opt,
             SAVE,
-            self$simClass$datClass$farmername,
-            self$simClass$out_path
+            farmername,
+            self$out_path,
+            db,
+            utm_fieldname
           )
           # SSOPT NR map
           self$plotSimMaps(
@@ -205,14 +287,16 @@ SimOP <- R6::R6Class(
             "SSOPTNR",
             "NR.ssopt",
             "Net Return ($/ac)",
-            paste0("SS.Opt NR for ", self$simClass$sim_years[i], " conditions"),
-            self$simClass$unique_fieldname,
-            self$simClass$sim_years[i],
-            self$simClass$unique_fxn,
-            self$simClass$opt,
+            paste0("SS.Opt NR for ", sim_years[i], " conditions"),
+            unique_fieldname,
+            sim_years[i],
+            unique_fxn,
+            opt,
             SAVE,
-            self$simClass$datClass$farmername,
-            self$simClass$out_path
+            farmername,
+            self$out_path,
+            db,
+            utm_fieldname
           )
           # FFOPT NR map
           self$plotSimMaps(
@@ -221,15 +305,17 @@ SimOP <- R6::R6Class(
             "NR.ffopt",
             "Net Return ($/ac)",
             paste0("FF.Opt NR (", NRopt$EXP.rate.ffopt[1],
-                   " lbs/ac) for ", self$simClass$sim_years[i],
+                   " lbs/ac) for ", sim_years[i],
                    " conditions"),
-            self$simClass$unique_fieldname,
-            self$simClass$sim_years[i],
-            self$simClass$unique_fxn,
-            self$simClass$opt,
+            unique_fieldname,
+            sim_years[i],
+            unique_fxn,
+            opt,
             SAVE,
-            self$simClass$datClass$farmername,
-            self$simClass$out_path
+            farmername,
+            self$out_path,
+            db,
+            utm_fieldname
           )
           # SSOPT Est. Yld map
           self$plotSimMaps(
@@ -237,40 +323,42 @@ SimOP <- R6::R6Class(
             "estYld",
             "yld.opt",
             "Yield (bu/ac)",
-            paste0("Predicted yield for ", self$simClass$sim_years[i], " conditions"),
-            self$simClass$unique_fieldname,
-            self$simClass$sim_years[i],
-            self$simClass$unique_fxn,
-            self$simClass$opt,
+            paste0("Predicted yield for ", sim_years[i], " conditions"),
+            unique_fieldname,
+            sim_years[i],
+            unique_fxn,
+            opt,
             SAVE,
-            self$simClass$datClass$farmername,
-            self$simClass$out_path
+            farmername,
+            self$out_path,
+            db,
+            utm_fieldname
           )
-          if (any(grepl("pro", self$simClass$datClass$respvar))) {
+          if (any(grepl("pro", respvar))) {
             # SSOPT Est. Pro map
             self$plotSimMaps(
               NRopt,
               "estPro",
               "pro.opt",
               "Protein (%)",
-              paste0("Predicted protein for ", self$simClass$sim_years[i], " conditions"),
-              self$simClass$unique_fieldname,
-              self$simClass$sim_years[i],
-              self$simClass$unique_fxn,
-              self$simClass$opt,
+              paste0("Predicted protein for ", sim_years[i], " conditions"),
+              unique_fieldname,
+              sim_years[i],
+              unique_fxn,
+              opt,
               SAVE,
-              self$simClass$datClass$farmername,
-              self$simClass$out_path
+              farmername,
+              self$out_path,
+              db,
+              utm_fieldname
             )
           }
         }
         rm(NRopt, TF4)
-        # Actual NR (both years from mod fitting)
-        # Get all of the observed data (trn + val) from the more
-        # densely populated respvar.
-        private$.plotActNRFun(SAVE)
       } else{
-        self$simClass$cleanUp()
+        if (!is.null(self$simClass)) {
+          self$simClass$cleanUp()
+        }
       }
     },
     #' @description
@@ -826,6 +914,8 @@ SimOP <- R6::R6Class(
     #' @param farmername The name of the farmer that manages the field.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
+    #' @param db Connection to the OFPE database to identify UTM zone.
+    #' @param utm_fieldname Name of the field for identifying the UTM zone.
     #' @return Maps saved in 'Outputs/Maps'.
     plotSimMaps = function(dat,
                            var,
@@ -838,9 +928,11 @@ SimOP <- R6::R6Class(
                            opt = NULL,
                            SAVE = TRUE,
                            farmername,
-                           out_path) {
-      utm_zone <- OFPE::findUTMzone(self$simClass$dbCon$db,
-                                    fieldname = self$simClass$datClass$fieldname[1])
+                           out_path,
+                           db,
+                           utm_fieldname) {
+      utm_zone <- OFPE::findUTMzone(db,
+                                    fieldname = utm_fieldname)
       p <- OFPE::plotMaps(dat,
                           var_col_name,
                           var_label,
@@ -860,131 +952,13 @@ SimOP <- R6::R6Class(
         )
       }
       #return(p)
-    },
-    #' @description
-    #' Function for creating a map of the actual net-return observed in the
-    #' field for a selected year available in the data the user specified
-    #' for fitting the models (i.e. if you used multiple years to fit a model
-    #' you can map the net-return for either year).
-    #'
-    #' This function uses the observed data for the specified year and if
-    #' there is multiple response variables, predicts them to the yield
-    #' dataset because this is more spatially dense. This uses the model
-    #' fit in the analysis step that was used in the simulation. After
-    #' both responses are in the same dataset, net-return is calculated
-    #' based on the actual as-applied experimental input and mapped across
-    #' the field.
-    #' @param dat Data.table or data.frame to use for calculating net-return.
-    #' Must include all covariates used in the model fitting processes. These
-    #' are the locations actual net-return is calculated for.
-    #' @param year A single year, present in 'dat', for which to calculate and
-    #' map the actual net-return.
-    #' @param Bp The base price corresponding to the price for the system
-    #' type selected by the user (i.e. conventional or organic).
-    #' @param B0pd The intercept for the protein premium/dockage equation.
-    #' @param B1pd The coefficient for protein in the protein premium/dockage
-    #' equation.
-    #' @param B2pd The coefficient for protein squared for the protein
-    #' premium/dockage equation.
-    #' @param CEXP The cost of the experimental input.
-    #' @param FC Fixed costs ($/acre) associated with production, not including
-    #' the input of interest. This includes things like the cost of labor, fuel, etc.
-    #' @param ssAC The cost ($/acre) of using site-specific technology or variable rate
-    #' applications. For farmers that have variable rate technology this cost may be zero,
-    #' otherwise is the cost per acre to hire the equipment/operators with variable rate
-    #' technology.
-    #' @param respvar Response variable(s) used to optimize experimental inputs based
-    #' off of. The user can select 'Yield' and/or 'Protein' based on data
-    #' availability.
-    #' @param expvar Experimental variable optimized, select/input
-    #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
-    #' input that was experimentally varied across the field as part of the
-    #' on-farm experimentation.
-    #' @param modClass ModClass R6 object that has been initialized and with
-    #' fitted models. The fitted models in this object are used to predict
-    #' crop responses at each location in the simulation data for all
-    #' experimental rates in the user specified range.
-    #' @param fieldname Unique field name corresponding to all fields used in the simulation.
-    #' @param farmername The name of the farmer that manages the field.
-    #' @param fxn The functional form of the models used for analysis.
-    #' @param SAVE Logical, whether to save figure.
-    #' @param out_path The path to the folder in which to store and
-    #' save outputs from the simulation.
-    #' @return Map of the actual net-return from a given year in 'Outputs/Maps'.
-    plotActNR = function(dat,
-                         year,
-                         Bp,
-                         B0pd,
-                         B1pd,
-                         B2pd,
-                         CEXP,
-                         FC,
-                         ssAC,
-                         respvar,
-                         expvar,
-                         modClass,
-                         fieldname,
-                         farmername,
-                         fxn,
-                         SAVE,
-                         out_path) {
-      dat <- dat[which(dat$year == year), ]
-
-      # if respvar > 1 and all(respvar ! in names(dat))
-      # -> predict other respvar to data
-      if (length(respvar > 1)) {
-        miss_resp <- respvar[which(!respvar %in% names(dat))]
-        # predict for all missing respvars (i.e. protein)
-        for (i in 1:length(miss_resp)) {
-          miss_index <- grep(miss_resp[i], respvar)
-          dat$pred <- modClass$mod_list[[miss_index]]$predResps(
-            dat, modClass$mod_list[[miss_index]]$m
-          )
-          names(dat)[grep("^pred$", names(dat))] <- respvar[miss_index]
-        }
-      }
-      # calculate NR for each point
-      names(dat)[grep(expvar, names(dat))] <- "exp"
-      predInd <- ifelse(any(respvar == "pro"), 1, 0)
-      if (predInd == 1) {
-        P <- Bp + (B0pd + B1pd * dat$pro + B2pd * dat$pro^2);
-        dat$NR <- (dat$yld * P) - CEXP * dat$exp - FC - ssAC;
-      } else {
-        dat$NR <- (dat$yld * (Bp + B0pd)) - CEXP * dat$exp - FC - ssAC;
-      }
-      # pass to plot sim maps
-      var_col_name <- "NR"
-      var_label <- "Net-return ($/ac)"
-      var_main_label <- paste0("Observed net-return in ", year)
-      utm_zone <- OFPE::findUTMzone(self$simClass$dbCon$db,
-                                    fieldname = self$simClass$datClass$fieldname[1])
-      p <- OFPE::plotMaps(dat,
-                          var_col_name,
-                          var_label,
-                          var_main_label,
-                          fieldname,
-                          farmername,
-                          utm_zone) %>%
-        suppressMessages() %>%
-        suppressWarnings()
-      if (SAVE) {
-        ggplot2::ggsave(
-          file = paste0(out_path, "/Outputs/Maps/",
-                        fieldname, "_observed_NR",
-                        "_map_", year, "_", fxn, ".png"),
-          plot = p, device = "png",
-          width = 7.5, height = 7.5, units = "in"
-        )
-      }
-      #return(p)
     }
   ),
   private = list(
     .setupOP = function() {
-      cwd <- paste0(self$simClass$out_path, "/Outputs") # outputs working directory
+      cwd <- paste0(self$out_path, "/Outputs") # outputs working directory
       if (!file.exists(cwd)) {
         dir.create(cwd)
-        dir.create(paste0(cwd, "/", "Maps"))
         #dir.create(paste0(cwd, "/", "Exploratory"))
         dir.create(paste0(cwd, "/", "EXP"))
         dir.create(paste0(cwd, "/", "EXP/ffoptEXP"))
@@ -995,9 +969,6 @@ SimOP <- R6::R6Class(
         dir.create(paste0(cwd, "/", "NR/NRboxPlots"))
         dir.create(paste0(cwd, "/", "NR/NRprobabilities"))
       } else {
-        if (!file.exists(paste0(cwd, "/", "Maps"))) {
-          dir.create(paste0(cwd, "/", "Maps"))
-        }
         # if (!file.exists(paste0(cwd, "/", "Exploratory"))) {
         #   dir.create(paste0(cwd, "/", "Exploratory"))
         # }
@@ -1057,40 +1028,6 @@ SimOP <- R6::R6Class(
                       grep("EXP.ffopt", levels(TF4$Method)))
       TF4$Method <- factor(TF4$Method, levels(TF4$Method)[mgmt_order])
       return(TF4)
-    },
-    .plotActNRFun = function(SAVE) {
-      index <- lapply(self$simClass$datClass$mod_dat, lapply, dim) %>%
-        lapply(function(x) do.call(rbind, x)) %>%
-        lapply(function(x) sum(x[, 1]))
-      index <- do.call(rbind, index)
-      index <- which(index[, 1] == max(index[, 1])) %>% as.numeric()
-      dat <- rbind(self$simClass$datClass$mod_dat[[index]]$trn,
-                   self$simClass$datClass$mod_dat[[index]]$val)
-      years <- unique(dat$year) %>% as.character()
-      # use the most recent economic years available
-      cd <- aggregate(.~Year, data = self$simClass$econDat$Prc, FUN = mean)
-      cd <- cd[cd$Year == max(cd$Year), ]
-      Bp <- cd[, grep(self$simClass$datClass$sys_type, names(cd))]
-      CEXP <- cd[, "cost"]
-      for (i in 1:length(years)) {
-        self$plotActNR(dat,
-                       years[i],
-                       Bp,
-                       self$simClass$econDat$B0pd,
-                       self$simClass$econDat$B1pd,
-                       self$simClass$econDat$B2pd,
-                       CEXP,
-                       self$simClass$econDat$FC,
-                       self$simClass$econDat$ssAC,
-                       self$simClass$datClass$respvar,
-                       self$simClass$datClass$expvar,
-                       self$simClass$modClass,
-                       self$simClass$unique_fieldname,
-                       self$simClass$datClass$farmername,
-                       self$simClass$unique_fxn,
-                       SAVE,
-                       self$simClass$out_path)
-      }
     }
   )
 )

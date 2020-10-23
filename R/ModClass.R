@@ -331,6 +331,7 @@ ModClass <- R6::R6Class(
         ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
                        axis.title = ggplot2::element_text(size = 14))
       if (SAVE) {
+        try({dev.off()}, silent = TRUE)
         ggplot2::ggsave(paste0(out_path, "/Outputs/Validation/",
                       m$fieldname, "_", m$mod_type, "_pred&Obs_", m$respvar, "_vs_",
                       ifelse(m$expvar == "aa_n", "N", "SR"), ".png"),
@@ -367,6 +368,7 @@ ModClass <- R6::R6Class(
         ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
                        axis.title = ggplot2::element_text(size = 14))
       if (SAVE) {
+        try({dev.off()}, silent = TRUE)
         ggplot2::ggsave(paste0(out_path, "/Outputs/Validation/",
                       m$fieldname, "_", m$mod_type, "_predVSobs_", m$respvar, ".png"),
                plot = p, device = "png", scale = 1, width = 7.5, height = 5, units = "in"

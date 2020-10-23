@@ -36,6 +36,17 @@ simulation and provides the data for saving and plotting in this class.
 simulation has been executed. This class holds the information necessary
 to produce the output figures, maps, and tables from the Monte Carlo
 simulation.}
+
+\item{\code{input_list}}{Optional, list of inputs required for generating the
+output figures. Recreation of relevant info from a SimClass object. Only
+needed if a SimClass object is not passed into class.}
+
+\item{\code{out_path}}{Output path to create folder for outputs. Taken from either
+a SimClass object or an optional 'input_list' field upon initialization.}
+
+\item{\code{SAVE}}{Whether to save simulation outputs If NULL uses the user selected
+choice. If not NULL and is logical, argument replaces previously set SAVE
+options for the entire class.}
 }
 \if{html}{\out{</div>}}
 }
@@ -51,7 +62,6 @@ simulation.}
 \item \href{#method-plotSSOPThist}{\code{SimOP$plotSSOPThist()}}
 \item \href{#method-plotFFOPThist}{\code{SimOP$plotFFOPThist()}}
 \item \href{#method-plotSimMaps}{\code{SimOP$plotSimMaps()}}
-\item \href{#method-plotActNR}{\code{SimOP$plotActNR()}}
 \item \href{#method-clone}{\code{SimOP$clone()}}
 }
 }
@@ -78,16 +88,20 @@ and 'NRprobabilities'. The two former contain figures, and the latter contains
 a table with the probability that the SSOPT strategy yields a higher net-return
 than each of the other management strategies.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SimOP$new(simClass, create = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{SimOP$new(simClass = NULL, input_list = NULL, create = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{simClass}}{SimClass R6 object that has been initialized and the OFPE
+\item{\code{simClass}}{Optional, SimClass R6 object that has been initialized and the OFPE
 simulation has been executed. This class holds the information necessary
 to produce the output figures, maps, and tables from the Monte Carlo
 simulation.}
+
+\item{\code{input_list}}{Optional, list of inputs required for generating the
+output figures. Recreation of relevant info from a SimClass object. Only
+needed if a SimClass object is not passed into class.}
 
 \item{\code{create}}{create Logical, whether to create the 'Output' folder and save
 figures, maps, and tables. Default is TRUE, pass FALSE to skip output folder
@@ -444,7 +458,9 @@ responses, and optimized rates. Is a wrapper to OFPE::plotMaps().
   opt = NULL,
   SAVE = TRUE,
   farmername,
-  out_path
+  out_path,
+  db,
+  utm_fieldname
 )}\if{html}{\out{</div>}}
 }
 
@@ -479,111 +495,15 @@ weather conditions used.}
 
 \item{\code{out_path}}{The path to the folder in which to store and
 save outputs from the simulation.}
+
+\item{\code{db}}{Connection to the OFPE database to identify UTM zone.}
+
+\item{\code{utm_fieldname}}{Name of the field for identifying the UTM zone.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 Maps saved in 'Outputs/Maps'.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plotActNR"></a>}}
-\if{latex}{\out{\hypertarget{method-plotActNR}{}}}
-\subsection{Method \code{plotActNR()}}{
-Function for creating a map of the actual net-return observed in the
-field for a selected year available in the data the user specified
-for fitting the models (i.e. if you used multiple years to fit a model
-you can map the net-return for either year).
-
-This function uses the observed data for the specified year and if
-there is multiple response variables, predicts them to the yield
-dataset because this is more spatially dense. This uses the model
-fit in the analysis step that was used in the simulation. After
-both responses are in the same dataset, net-return is calculated
-based on the actual as-applied experimental input and mapped across
-the field.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SimOP$plotActNR(
-  dat,
-  year,
-  Bp,
-  B0pd,
-  B1pd,
-  B2pd,
-  CEXP,
-  FC,
-  ssAC,
-  respvar,
-  expvar,
-  modClass,
-  fieldname,
-  farmername,
-  fxn,
-  SAVE,
-  out_path
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{dat}}{Data.table or data.frame to use for calculating net-return.
-Must include all covariates used in the model fitting processes. These
-are the locations actual net-return is calculated for.}
-
-\item{\code{year}}{A single year, present in 'dat', for which to calculate and
-map the actual net-return.}
-
-\item{\code{Bp}}{The base price corresponding to the price for the system
-type selected by the user (i.e. conventional or organic).}
-
-\item{\code{B0pd}}{The intercept for the protein premium/dockage equation.}
-
-\item{\code{B1pd}}{The coefficient for protein in the protein premium/dockage
-equation.}
-
-\item{\code{B2pd}}{The coefficient for protein squared for the protein
-premium/dockage equation.}
-
-\item{\code{CEXP}}{The cost of the experimental input.}
-
-\item{\code{FC}}{Fixed costs ($/acre) associated with production, not including
-the input of interest. This includes things like the cost of labor, fuel, etc.}
-
-\item{\code{ssAC}}{The cost ($/acre) of using site-specific technology or variable rate
-applications. For farmers that have variable rate technology this cost may be zero,
-otherwise is the cost per acre to hire the equipment/operators with variable rate
-technology.}
-
-\item{\code{respvar}}{Response variable(s) used to optimize experimental inputs based
-off of. The user can select 'Yield' and/or 'Protein' based on data
-availability.}
-
-\item{\code{expvar}}{Experimental variable optimized, select/input
-'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
-input that was experimentally varied across the field as part of the
-on-farm experimentation.}
-
-\item{\code{modClass}}{ModClass R6 object that has been initialized and with
-fitted models. The fitted models in this object are used to predict
-crop responses at each location in the simulation data for all
-experimental rates in the user specified range.}
-
-\item{\code{fieldname}}{Unique field name corresponding to all fields used in the simulation.}
-
-\item{\code{farmername}}{The name of the farmer that manages the field.}
-
-\item{\code{fxn}}{The functional form of the models used for analysis.}
-
-\item{\code{SAVE}}{Logical, whether to save figure.}
-
-\item{\code{out_path}}{The path to the folder in which to store and
-save outputs from the simulation.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Map of the actual net-return from a given year in 'Outputs/Maps'.
 }
 }
 \if{html}{\out{<hr>}}

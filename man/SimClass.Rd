@@ -136,6 +136,7 @@ folder, else to the getwd().}
 \item \href{#method-executeSim}{\code{SimClass$executeSim()}}
 \item \href{#method-cleanUp}{\code{SimClass$cleanUp()}}
 \item \href{#method-plotEstsVsExp}{\code{SimClass$plotEstsVsExp()}}
+\item \href{#method-plotActNR}{\code{SimClass$plotActNR()}}
 \item \href{#method-clone}{\code{SimClass$clone()}}
 }
 }
@@ -475,6 +476,112 @@ save outputs from the simulation.}
 }
 \subsection{Returns}{
 Data saved in 'Outputs/Predictions'.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-plotActNR"></a>}}
+\if{latex}{\out{\hypertarget{method-plotActNR}{}}}
+\subsection{Method \code{plotActNR()}}{
+Function for creating a map of the actual net-return observed in the
+field for a selected year available in the data the user specified
+for fitting the models (i.e. if you used multiple years to fit a model
+you can map the net-return for either year).
+
+This function uses the observed data for the specified year and if
+there is multiple response variables, predicts them to the yield
+dataset because this is more spatially dense. This uses the model
+fit in the analysis step that was used in the simulation. After
+both responses are in the same dataset, net-return is calculated
+based on the actual as-applied experimental input and mapped across
+the field.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SimClass$plotActNR(
+  dat,
+  year,
+  Bp,
+  B0pd,
+  B1pd,
+  B2pd,
+  CEXP,
+  FC,
+  ssAC,
+  respvar,
+  expvar,
+  modClass,
+  fieldname,
+  farmername,
+  fxn,
+  SAVE,
+  out_path,
+  db,
+  utm_fieldname
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{dat}}{Data.table or data.frame to use for calculating net-return.
+Must include all covariates used in the model fitting processes. These
+are the locations actual net-return is calculated for.}
+
+\item{\code{year}}{A single year, present in 'dat', for which to calculate and
+map the actual net-return.}
+
+\item{\code{Bp}}{The base price corresponding to the price for the system
+type selected by the user (i.e. conventional or organic).}
+
+\item{\code{B0pd}}{The intercept for the protein premium/dockage equation.}
+
+\item{\code{B1pd}}{The coefficient for protein in the protein premium/dockage
+equation.}
+
+\item{\code{B2pd}}{The coefficient for protein squared for the protein
+premium/dockage equation.}
+
+\item{\code{CEXP}}{The cost of the experimental input.}
+
+\item{\code{FC}}{Fixed costs ($/acre) associated with production, not including
+the input of interest. This includes things like the cost of labor, fuel, etc.}
+
+\item{\code{ssAC}}{The cost ($/acre) of using site-specific technology or variable rate
+applications. For farmers that have variable rate technology this cost may be zero,
+otherwise is the cost per acre to hire the equipment/operators with variable rate
+technology.}
+
+\item{\code{respvar}}{Response variable(s) used to optimize experimental inputs based
+off of. The user can select 'Yield' and/or 'Protein' based on data
+availability.}
+
+\item{\code{expvar}}{Experimental variable optimized, select/input
+'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
+input that was experimentally varied across the field as part of the
+on-farm experimentation.}
+
+\item{\code{modClass}}{ModClass R6 object that has been initialized and with
+fitted models. The fitted models in this object are used to predict
+crop responses at each location in the simulation data for all
+experimental rates in the user specified range.}
+
+\item{\code{fieldname}}{Unique field name corresponding to all fields used in the simulation.}
+
+\item{\code{farmername}}{The name of the farmer that manages the field.}
+
+\item{\code{fxn}}{The functional form of the models used for analysis.}
+
+\item{\code{SAVE}}{Logical, whether to save figure.}
+
+\item{\code{out_path}}{The path to the folder in which to store and
+save outputs from the simulation.}
+
+\item{\code{db}}{Connection to the OFPE database to identify UTM zone.}
+
+\item{\code{utm_fieldname}}{Name of the field for identifying the UTM zone.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Map of the actual net-return from a given year in 'Outputs/Maps'.
 }
 }
 \if{html}{\out{<hr>}}

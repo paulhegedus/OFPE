@@ -395,6 +395,16 @@ SimClass <- R6::R6Class(
                 self$sim_years,
                 MoreArgs = list(EXPvec = EXPvec),
                 SIMPLIFY = FALSE))
+      tryCatch({
+        # Actual NR (both years from mod fitting)
+        # Get all of the observed data (trn + val) from the more
+        # densely populated respvar.
+        private$.plotActNRFun()
+      },
+      error = function(e) {
+        print(paste0("ERROR PLOTTING 'ACTUAL' NR FOR ",
+                     self$unique_fieldname, "!!!"))
+      })
     },
     #' @description
     #' If the user has selected to not save anything, remove temporary files
@@ -477,6 +487,7 @@ SimClass <- R6::R6Class(
                                         AArateCutoff,
                                         fxn)
       if (SAVE) {
+        try({dev.off()}, silent = TRUE)
         ggplot2::ggsave(paste0(out_path, "/Outputs/Predictions/",
                                fieldname, "_NRvs",
                                ifelse(expvar == "aa_n","N","SR"),
@@ -497,6 +508,7 @@ SimClass <- R6::R6Class(
                            fxn)
       if (SAVE) {
         for (i in 1:length(resp_plots)) {
+          try({dev.off()}, silent = TRUE)
           ggplot2::ggsave(paste0(out_path, "/Outputs/Predictions/",
                                  fieldname, "_", toupper(respvar[i]), "vs",
                                  ifelse(expvar == "aa_n","N","SR"),
@@ -508,6 +520,126 @@ SimClass <- R6::R6Class(
       resp_plots$nr <- nr_plot
       big_plot <- cowplot::plot_grid(plotlist = resp_plots, nrow = 3, ncol = 1)
       #return(big_plot)
+    },
+    #' @description
+    #' Function for creating a map of the actual net-return observed in the
+    #' field for a selected year available in the data the user specified
+    #' for fitting the models (i.e. if you used multiple years to fit a model
+    #' you can map the net-return for either year).
+    #'
+    #' This function uses the observed data for the specified year and if
+    #' there is multiple response variables, predicts them to the yield
+    #' dataset because this is more spatially dense. This uses the model
+    #' fit in the analysis step that was used in the simulation. After
+    #' both responses are in the same dataset, net-return is calculated
+    #' based on the actual as-applied experimental input and mapped across
+    #' the field.
+    #' @param dat Data.table or data.frame to use for calculating net-return.
+    #' Must include all covariates used in the model fitting processes. These
+    #' are the locations actual net-return is calculated for.
+    #' @param year A single year, present in 'dat', for which to calculate and
+    #' map the actual net-return.
+    #' @param Bp The base price corresponding to the price for the system
+    #' type selected by the user (i.e. conventional or organic).
+    #' @param B0pd The intercept for the protein premium/dockage equation.
+    #' @param B1pd The coefficient for protein in the protein premium/dockage
+    #' equation.
+    #' @param B2pd The coefficient for protein squared for the protein
+    #' premium/dockage equation.
+    #' @param CEXP The cost of the experimental input.
+    #' @param FC Fixed costs ($/acre) associated with production, not including
+    #' the input of interest. This includes things like the cost of labor, fuel, etc.
+    #' @param ssAC The cost ($/acre) of using site-specific technology or variable rate
+    #' applications. For farmers that have variable rate technology this cost may be zero,
+    #' otherwise is the cost per acre to hire the equipment/operators with variable rate
+    #' technology.
+    #' @param respvar Response variable(s) used to optimize experimental inputs based
+    #' off of. The user can select 'Yield' and/or 'Protein' based on data
+    #' availability.
+    #' @param expvar Experimental variable optimized, select/input
+    #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
+    #' input that was experimentally varied across the field as part of the
+    #' on-farm experimentation.
+    #' @param modClass ModClass R6 object that has been initialized and with
+    #' fitted models. The fitted models in this object are used to predict
+    #' crop responses at each location in the simulation data for all
+    #' experimental rates in the user specified range.
+    #' @param fieldname Unique field name corresponding to all fields used in the simulation.
+    #' @param farmername The name of the farmer that manages the field.
+    #' @param fxn The functional form of the models used for analysis.
+    #' @param SAVE Logical, whether to save figure.
+    #' @param out_path The path to the folder in which to store and
+    #' save outputs from the simulation.
+    #' @param db Connection to the OFPE database to identify UTM zone.
+    #' @param utm_fieldname Name of the field for identifying the UTM zone.
+    #' @return Map of the actual net-return from a given year in 'Outputs/Maps'.
+    plotActNR = function(dat,
+                         year,
+                         Bp,
+                         B0pd,
+                         B1pd,
+                         B2pd,
+                         CEXP,
+                         FC,
+                         ssAC,
+                         respvar,
+                         expvar,
+                         modClass,
+                         fieldname,
+                         farmername,
+                         fxn,
+                         SAVE,
+                         out_path,
+                         db,
+                         utm_fieldname) {
+      dat <- dat[which(dat$year == year), ]
+
+      # if respvar > 1 and all(respvar ! in names(dat))
+      # -> predict other respvar to data
+      if (length(respvar > 1)) {
+        miss_resp <- respvar[which(!respvar %in% names(dat))]
+        # predict for all missing respvars (i.e. protein)
+        for (i in 1:length(miss_resp)) {
+          miss_index <- grep(miss_resp[i], respvar)
+          dat$pred <- modClass$mod_list[[miss_index]]$predResps(
+            dat, modClass$mod_list[[miss_index]]$m
+          )
+          names(dat)[grep("^pred$", names(dat))] <- respvar[miss_index]
+        }
+      }
+      # calculate NR for each point
+      names(dat)[grep(expvar, names(dat))] <- "exp"
+      if (any(respvar == "pro")) {
+        P <- Bp + (B0pd + B1pd * dat$pro + B2pd * dat$pro^2)
+        dat$NR <- (dat$yld * P) - CEXP * dat$exp - FC - ssAC
+      } else {
+        dat$NR <- (dat$yld * (Bp + B0pd)) - CEXP * dat$exp - FC - ssAC
+      }
+      # pass to plot sim maps
+      var_col_name <- "NR"
+      var_label <- "Net-return ($/ac)"
+      var_main_label <- paste0("Observed net-return in ", year)
+      utm_zone <- OFPE::findUTMzone(db, fieldname = utm_fieldname)
+      p <- OFPE::plotMaps(dat,
+                          var_col_name,
+                          var_label,
+                          var_main_label,
+                          fieldname,
+                          farmername,
+                          utm_zone) %>%
+        suppressMessages() %>%
+        suppressWarnings()
+      if (SAVE) {
+        try({dev.off()}, silent = TRUE)
+        ggplot2::ggsave(
+          file = paste0(out_path, "Outputs/Maps/",
+                        fieldname, "_observed_NR",
+                        "_map_", year, "_", fxn, ".png"),
+          plot = p, device = "png",
+          width = 7.5, height = 7.5, units = "in"
+        )
+      }
+      #return(p)
     }
   ),
   private = list(
@@ -517,12 +649,16 @@ SimClass <- R6::R6Class(
         dir.create(cwd)
         dir.create(paste0(cwd, "/", "Predictions"))
         dir.create(paste0(cwd, "/", "SimData"))
+        dir.create(paste0(cwd, "/", "Maps"))
       } else {
         if (!file.exists(paste0(cwd, "/", "Predictions"))) {
           dir.create(paste0(cwd, "/", "Predictions"))
         }
         if (!file.exists(paste0(cwd, "/", "SimData"))) {
           dir.create(paste0(cwd, "/", "SimData"))
+        }
+        if (!file.exists(paste0(cwd, "/", "Maps"))) {
+          dir.create(paste0(cwd, "/", "Maps"))
         }
       }
     },
@@ -660,7 +796,7 @@ SimClass <- R6::R6Class(
           ## for each location for each rate for each sim year predict repsonses
           private$.simResponses(self$datClass$respvar)  %>%
           ## do simulation & find opt. etc. for each sim_year save to written files
-          ## returns the sim_list simOP$plotEstsVsExp() for each pred year
+          ## returns the sim_list for plotEstsVsExp() for each pred year
           private$.runSim(sim_year)
         },
         error = function(e) {
@@ -690,7 +826,6 @@ SimClass <- R6::R6Class(
                          sim_year, " RESPS VS EXP ",
                          " FOR ", self$unique_fieldname, "!!!"))
           })
-
       }
       return(invisible())
     },
@@ -1176,6 +1311,42 @@ SimClass <- R6::R6Class(
           ggplot2::geom_hline(yintercept = 0, color = "red", linetype = 2)
       }
       return(var_plot)
+    },
+    .plotActNRFun = function() {
+      index <- lapply(self$datClass$mod_dat, lapply, dim) %>%
+        lapply(function(x) do.call(rbind, x)) %>%
+        lapply(function(x) sum(x[, 1]))
+      index <- do.call(rbind, index)
+      index <- which(index[, 1] == max(index[, 1])) %>% as.numeric()
+      dat <- rbind(self$datClass$mod_dat[[index]]$trn,
+                   self$datClass$mod_dat[[index]]$val)
+      years <- unique(dat$year) %>% as.character()
+      # use the most recent economic years available
+      cd <- aggregate(.~Year, data = self$econDat$Prc, FUN = mean)
+      cd <- cd[cd$Year == max(cd$Year), ]
+      Bp <- cd[, grep(self$datClass$sys_type, names(cd))]
+      CEXP <- cd[, "cost"]
+      for (i in 1:length(years)) {
+        self$plotActNR(dat,
+                       years[i],
+                       Bp,
+                       self$econDat$B0pd,
+                       self$econDat$B1pd,
+                       self$econDat$B2pd,
+                       CEXP,
+                       self$econDat$FC,
+                       self$econDat$ssAC,
+                       self$datClass$respvar,
+                       self$datClass$expvar,
+                       self$modClass,
+                       self$unique_fieldname,
+                       self$datClass$farmername,
+                       self$unique_fxn,
+                       self$SAVE,
+                       self$out_path,
+                       self$dbCon$db,
+                       self$datClass$fieldname[1])
+      }
     }
   )
 )

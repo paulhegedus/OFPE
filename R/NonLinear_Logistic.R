@@ -195,6 +195,7 @@ NonLinear_Logistic <- R6::R6Class(
     #' @return Diagnostic plots.
     saveDiagnostics = function(out_path, SAVE) {
       if (SAVE) {
+        try({dev.off()}, silent = TRUE)
         ## Save main diagnostics
         std_res <- self$m$m$resid()/sigma(self$m)
         png(paste0(out_path, "/Outputs/Diagnostics/", self$respvar, "_",
