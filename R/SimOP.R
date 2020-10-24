@@ -85,7 +85,6 @@ SimOP <- R6::R6Class(
         self$SAVE <- self$simClass$SAVE
       }
       if (!is.null(input_list)) {
-        ## TODO
         stopifnot(
           !is.null(input_list$dat_path),
           !is.null(input_list$unique_fieldname),
@@ -124,8 +123,6 @@ SimOP <- R6::R6Class(
     #' options for the entire class.
     #' @return Simulation outputs in the 'Outputs' folder.
     savePlots = function(SAVE = NULL) {
-      #browser()
-
       stopifnot(
         !is.null(self$simClass) | !is.null(self$input_list)
       )
@@ -164,12 +161,12 @@ SimOP <- R6::R6Class(
         farmername <- self$input_list$farmername
         respvar <- self$input_list$respvar
         db <- self$input_list$db
-        utm_fieldname <- self$input_list$fieldname
+        utm_fieldname <- self$input_list$utm_fieldname
       }
 
       if (SAVE) {
         for (i in 1:length(sim_years)) {
-          ## Bp.var plots
+          #### Bp.var plots ####
           Bp.var <- data.table::fread(
             paste0(dat_path,
                    unique_fieldname, "_BpVar_",
@@ -206,15 +203,13 @@ SimOP <- R6::R6Class(
             SAVE,
             self$out_path
           )
-          ## get NRopt & NRffmax & make TF4
-          ## TODO: FIX THIS
-          NRopt <- data.table::fread(
-            paste0(dat_path,
-                   unique_fieldname, "_NRopt_",
-                   unique_fxn, "_",
-                   sim_years[i], "_",
-                   opt, ".csv")
-          )
+          #### Get NRopt & NRffmax & make TF4 ####
+          ## gets a subset of all points for all rates and iterations
+          NRopt <- private$.loadNRopt(dat_path,
+                                      unique_fieldname,
+                                      unique_fxn,
+                                      sim_years[i],
+                                      opt)
           NRffmax <- data.table::fread(
             paste0(dat_path,
                    unique_fieldname, "_NRffMaxData_",
@@ -222,13 +217,13 @@ SimOP <- R6::R6Class(
                    sim_years[i], "_",
                    opt, ".csv")
           )
+          #NRdat <- private$.setupNRdat(NRopt, NRffmax)
           TF4 <- private$.getTF4(NRopt,
                                  NRffmax,
                                  fieldsize,
                                  fs)
           rm(NRffmax)
-          ## TODO: FIX ABOVE ^
-
+          #### NRopt & NRffmax plots ####
           self$plotFFOPThist(
             Bp.var,
             TF4,
@@ -241,6 +236,7 @@ SimOP <- R6::R6Class(
             self$out_path
           )
           rm(Bp.var)
+          #### End Bp.var Plots ####
           self$plotTotExpAppl(
             TF4,
             expvar,
@@ -262,7 +258,8 @@ SimOP <- R6::R6Class(
             SAVE,
             self$out_path
           )
-          # SSOPT map (avg all sim)
+          #### Maps ####
+          ## SSOPT map (avg all sim)
           self$plotSimMaps(
             NRopt,
             paste0("SSOPT_", ifelse(expvar == "aa_n", "N", "SR")),
@@ -424,6 +421,7 @@ SimOP <- R6::R6Class(
           ggplot2::geom_hline(yintercept = 0, color = "red", linetype = 2)
       }
       if (SAVE) {
+        try({dev.off()}, silent = TRUE)
         ggplot2::ggsave(paste0(out_path, "/Outputs/NR/NRboxPlots/",
                                fieldname, "_avgNR_box_",
                                fxn, "_", sim_year, "_", opt, ".png"),
@@ -596,6 +594,7 @@ SimOP <- R6::R6Class(
           ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
                          axis.title = ggplot2::element_text(size = 14))
       if (SAVE) {
+        try({dev.off()}, silent = TRUE)
         ggplot2::ggsave(paste0(out_path, "/Outputs/NR/NRbarPlots/",
                                fieldname, "_avgNR_bar_",
                                fxn, "_", sim_year, "_", opt, ".png"),
@@ -678,6 +677,7 @@ SimOP <- R6::R6Class(
                          axis.title = ggplot2::element_text(size = 14)) +
           ggplot2::ggtitle(gg_title, subtitle = txt)
       if (SAVE) {
+        try({dev.off()}, silent = TRUE)
         ggplot2::ggsave(paste0(out_path, "/Outputs/EXP/EXPapplied/",
                                fieldname, "_tot",
                                ifelse(expvar == "aa_n", "N", "SR"),
@@ -770,15 +770,15 @@ SimOP <- R6::R6Class(
       yMAX <- DescTools::RoundTo(max(ggplot2::ggplot_build(p)$data[[1]]$count), 5, ceiling)
       ySTEP <- (yMAX - yMIN) / 10
       p <- p +
-        ggplot2::geom_point(ggplot2::aes(x = round(mean(NRopt$EXP.rate.ssopt,
-                                               na.rm = TRUE), 0),
-                                y = yMIN + ySTEP),
+        ggplot2::geom_vline(ggplot2::aes(xintercept = round(mean(NRopt$EXP.rate.ssopt,
+                                                        na.rm = TRUE), 0)),
                             col = "red",
-                            cex = 2) +
+                            linetype = 2) +
         ggplot2::scale_y_continuous(name = "Frequency",
                                     limits = c(yMIN, yMAX),
                                     breaks = seq(yMIN, yMAX, ySTEP))
       if (SAVE) {
+        try({dev.off()}, silent = TRUE)
         ggplot2::ggsave(paste0(out_path, "/Outputs/EXP/ssoptEXP/",
                                fieldname, "_ssopt",
                                ifelse(expvar == "aa_n", "N", "SR"),
@@ -874,15 +874,15 @@ SimOP <- R6::R6Class(
       yMAX <- DescTools::RoundTo(max(ggplot2::ggplot_build(p)$data[[1]]$count), 5, ceiling)
       ySTEP <- (yMAX - yMIN) / 10
       p <- p +
-        ggplot2::geom_point(ggplot2::aes(x = round(mean(Bp.var[, "ffopt.EXPrate"],
-                                               na.rm = TRUE), 0),
-                                y = yMIN + ySTEP),
+        ggplot2::geom_vline(ggplot2::aes(xintercept = round(mean(Bp.var[, "ffopt.EXPrate"],
+                                                        na.rm = TRUE), 0)),
                             col = "red",
-                            cex = 2) +
+                            linetype = 2) +
         ggplot2::scale_y_continuous(name = "Frequency",
                                     limits = c(yMIN, yMAX),
                                     breaks = seq(yMIN, yMAX, ySTEP))
       if (SAVE) {
+        try({dev.off()}, silent = TRUE)
         ggplot2::ggsave(paste0(out_path, "/Outputs/EXP/ffoptEXP/",
                                fieldname, "_ffopt",
                                ifelse(expvar == "aa_n", "N", "SR"),
@@ -943,6 +943,7 @@ SimOP <- R6::R6Class(
         suppressMessages() %>%
         suppressWarnings()
       if (SAVE) {
+        try({dev.off()}, silent = TRUE)
         ggplot2::ggsave(
           file = paste0(out_path, "/Outputs/Maps/",
                       fieldname, "_", tolower(var),
@@ -960,6 +961,7 @@ SimOP <- R6::R6Class(
       if (!file.exists(cwd)) {
         dir.create(cwd)
         #dir.create(paste0(cwd, "/", "Exploratory"))
+        dir.create(paste0(cwd, "/", "Maps"))
         dir.create(paste0(cwd, "/", "EXP"))
         dir.create(paste0(cwd, "/", "EXP/ffoptEXP"))
         dir.create(paste0(cwd, "/", "EXP/ssoptEXP"))
@@ -972,6 +974,9 @@ SimOP <- R6::R6Class(
         # if (!file.exists(paste0(cwd, "/", "Exploratory"))) {
         #   dir.create(paste0(cwd, "/", "Exploratory"))
         # }
+        if (!file.exists(paste0(cwd, "/", "Maps"))) {
+          dir.create(paste0(cwd, "/", "Maps"))
+        }
         if (!file.exists(paste0(cwd, "/", "EXP"))) {
           dir.create(paste0(cwd, "/", "EXP"))
         }
@@ -998,25 +1003,26 @@ SimOP <- R6::R6Class(
         }
       }
     },
-    .setupNRdat = function(NRopt, NRffmax) {
-      NRopt$field <- match(NRopt$field, self$simClass$datClass$fieldname_codes$field)
-      NRopt <- aggregate(NRopt, list(NRopt$x, NRopt$y), mean, na.rm = TRUE)
-      NRopt$field <-
-        self$simClass$datClass$fieldname_codes[match(NRopt$field,
-                                                     self$simClass$datClass$fieldname_codes$field_code),
-                                               "field"]
-      NRffmax <- sapply(NRffmax, mean) %>% as.matrix() %>% t() %>% as.data.frame()
-      NRdat <- list(NRopt = NRopt,
-                    NRffmax = NRffmax)
-      return(NRdat)
-    },
+    # .setupNRdat = function(NRopt, NRffmax) {
+    #   browser()
+    #
+    #   NRopt$field <- match(NRopt$field, self$simClass$datClass$fieldname_codes$field)
+    #   NRopt <- aggregate(NRopt, list(NRopt$x, NRopt$y), mean, na.rm = TRUE)
+    #   NRopt$field <-
+    #     self$simClass$datClass$fieldname_codes[match(NRopt$field,
+    #                                                  self$simClass$datClass$fieldname_codes$field_code),
+    #                                            "field"]
+    #   NRffmax2 <- sapply(NRffmax, mean) %>% as.matrix() %>% t() %>% as.data.frame()
+    #   NRdat <- list(NRopt = NRopt,
+    #                 NRffmax = NRffmax)
+    #   return(NRdat)
+    # },
     .getTF4 = function(NRopt, NRffmax, fieldsize, fs) {
-      TF4 <- data.frame(EXP.ssopt = (sum(NRopt[,'EXP.rate.ssopt'], na.rm=T) *
+      TF4 <- data.frame(EXP.ssopt = (sum(NRopt[,'EXP.rate.ssopt'], na.rm = T) *
                                        fieldsize) / nrow(NRopt),
                         EXP.min = 0,
                         EXP.fs = fs * fieldsize,
-                        EXP.ffopt = mean(NRffmax$EXP.rate, na.rm=T) *
-                          fieldsize)
+                        EXP.ffopt = mean(NRffmax$EXP.rate, na.rm = T) * fieldsize)
       TF4 <- tidyr::pivot_longer(TF4,
                                  dplyr::everything(),
                                  names_to = "Method",
@@ -1028,6 +1034,43 @@ SimOP <- R6::R6Class(
                       grep("EXP.ffopt", levels(TF4$Method)))
       TF4$Method <- factor(TF4$Method, levels(TF4$Method)[mgmt_order])
       return(TF4)
+    },
+    .loadNRopt = function(dat_path, unique_fieldname,
+                          unique_fxn, sim_year, opt) {
+      on.exit(closeAllConnections())
+      ## get col names
+      NRopt_names <- read.csv(file = paste0(dat_path,
+                                            unique_fieldname, "_NRopt_",
+                                            unique_fxn, "_",
+                                            sim_year, "_",
+                                            opt, ".csv"),
+                              nrows = 1,
+                              header = TRUE) %>%
+        names()
+      ## average all cols by x and y
+      NRopt_names <- NRopt_names[!1:length(NRopt_names) %in%
+                                          grep("^x$|^y$|^field$", NRopt_names)]
+      avg_query <- paste0("AVG([", NRopt_names, "])") %>%
+        paste(collapse = ", ")
+      NRopt <- sqldf::read.csv.sql(
+        paste0(dat_path,
+               unique_fieldname, "_NRopt_",
+               unique_fxn, "_",
+               sim_year, "_",
+               opt, ".csv"),
+        sql = paste0("SELECT x, y, field, ", avg_query,
+                     "FROM file GROUP BY x, y")
+      ) %>%
+        `names<-`(c("x", "y", "field", NRopt_names))
+      ## ORIGINAL LOAD ALL ROWS
+      # NRopt2 <- data.table::fread(
+      #   paste0(dat_path,
+      #          unique_fieldname, "_NRopt_",
+      #          unique_fxn, "_",
+      #          sim_year, "_",
+      #          opt, ".csv"))
+      # NRopt2 <- aggregate(NRopt2, list(NRopt2$x, NRopt2$y), mean, na.rm = TRUE)
+      return(NRopt)
     }
   )
 )
