@@ -174,6 +174,7 @@ SimOP <- R6::R6Class(
                    sim_years[i], "_",
                    opt, ".csv")
           )
+
           self$plotNRbox(
             Bp.var,
             unique_fieldname,
@@ -1062,6 +1063,12 @@ SimOP <- R6::R6Class(
                      "FROM file GROUP BY x, y")
       ) %>%
         `names<-`(c("x", "y", "field", NRopt_names))
+      NRcols <- grep("NR", names(NRopt))
+      for (i in 1:length(NRcols)) {
+        NRopt <- NRopt[NRopt[, NRcols[i]] > -50000 &
+                         NRopt[, NRcols[i]] < 50000, ]
+      }
+
       ## ORIGINAL LOAD ALL ROWS
       # NRopt2 <- data.table::fread(
       #   paste0(dat_path,

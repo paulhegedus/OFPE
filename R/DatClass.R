@@ -811,7 +811,7 @@ DatClass <- R6::R6Class(
             lapply(`attributes<-`, NULL) %>%
             lapply(t) %>%
             lapply(data.table::as.data.table) %>%
-            data.table::rbindlist()
+            data.table::rbindlist(fill = TRUE)
           cov_miss <- apply(cov_sumry, 1, function(x) all(is.na(x)))
           if (all(cov_miss)) {
             df[, na_cols[i]] <- NA
@@ -828,17 +828,25 @@ DatClass <- R6::R6Class(
             imp_dat[[1]] <- imp_dat[[1]] + uncenter_val
             means <- by(eval(parse(text = paste0("imp_dat$", dat_name))),
                         imp_dat$field,
-                        mean)
+                        mean,
+                        na.rm = TRUE)
             sds <- by(eval(parse(text = paste0("imp_dat$", dat_name))),
                       imp_dat$field,
-                      sd)
+                      sd,
+                      na.rm = TRUE)
             imp_tab <- data.frame(field = levels(imp_dat$field),
                                   means = as.numeric(means),
                                   sds = as.numeric(sds))
             for (j in 1:nrow(imp_tab)) {
-              obs <- nrow(df[df$field == imp_tab[j, 1], ])
-              df[df$field == imp_tab[j, 1], as.numeric(na_cols[i])] <-
-                rnorm(obs, imp_tab[j, 2], imp_tab[j, 3])
+              if (!is.na(imp_tab[j, "means"]) |
+                  !is.na(imp_tab[j, "sds"])) {
+                if (!is.nan(imp_tab[j, "means"]) |
+                    !is.nan(imp_tab[j, "sds"])) {
+                  obs <- nrow(df[df$field == imp_tab[j, 1], ])
+                  df[df$field == imp_tab[j, 1], as.numeric(na_cols[i])] <-
+                    rnorm(obs, imp_tab[j, 2], imp_tab[j, 3])
+                }
+              }
             }
           }
         }
