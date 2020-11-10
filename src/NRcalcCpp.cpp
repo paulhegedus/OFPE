@@ -83,7 +83,7 @@ arma::mat NRcalcCpp(arma::mat df,
       P = Bp + (B0pd + B1pd * df(ii, proCol) + B2pd * prosq);
       df(ii, NRcol) = (df(ii, yldCol) * P) - CEXP * df(ii, expCol) - FC;
     } else {
-      df(ii, NRcol) = (df(ii, yldCol) * (Bp + B0pd)) - CEXP * df(ii, expCol) - FC;
+      df(ii, NRcol) = (df(ii, yldCol) * Bp) - CEXP * df(ii, expCol) - FC;
     }
     if (df(ii, expCol) == AAmin) {
       df(ii, NRminCol) = df(ii, NRcol);
