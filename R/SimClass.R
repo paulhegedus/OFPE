@@ -1007,6 +1007,9 @@ SimClass <- R6::R6Class(
           } # else some other opt method (i.e. not max or deriv)
         }
         ffopt_rate <- NRffmax[1, "EXP.rate"]
+        invisible(ifelse(self$datClass$sys_type == "conv",
+                         NR.opp <- self$sim_list[[1]]$NRopp,
+                         NR.opp <- self$sim_list[[self$fs + 1]]$NRopp))
         NRopt <- data.frame(BaseP = rep(Bp, rr),
                             EXP.cost = rep(CEXP, rr),
                             x = self$sim_list[[1]]$x,
@@ -1017,9 +1020,7 @@ SimClass <- R6::R6Class(
                             EXP.rate.ssopt = NA,
                             NR.ssopt = NA,
                             NR.min = self$sim_list[[1]]$NRmin,
-                            NR.opp = ifelse(self$datClass$sys_type == "conv",
-                                            self$sim_list[[1]]$NRopp,
-                                            self$sim_list[[self$fs + 1]]$NRopp),
+                            NR.opp = NR.opp,
                             NR.fs = self$sim_list[[self$fs + 1]]$NRfs,
                             yld.opt = NA,
                             yld.min = self$sim_list[[1]]$pred_yld,

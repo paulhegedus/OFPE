@@ -384,7 +384,7 @@ SimOP <- R6::R6Class(
                          out_path) {
       Bp.plot <- as.data.frame(Bp.var)
       Bp.plot <- tidyr::pivot_longer(Bp.plot,
-                                     -c("BaseP", "ffopt.EXPrate", "EXP.cost"),
+                                     -c("BaseP", "ffopt.EXPrate", "EXP.cost", "sim"),
                                      names_to = "Method",
                                      values_to = "NR")
       Bp.plot$Method <- factor(Bp.plot$Method)
