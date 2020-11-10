@@ -119,7 +119,7 @@ EconDat <- R6::R6Class(
         } else {
           Prc <- as.data.frame(Prc)
           stopifnot(is.data.frame(Prc),
-                    any(names(Prc) == "year"),
+                    any(names(Prc) == "Year"),
                     any(names(Prc) == "org"),
                     any(names(Prc) == "conv"),
                     any(names(Prc) == "cost"))
