@@ -271,7 +271,7 @@ different price years.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{SimOP$plotNRbox(
   Bp.var,
-  fieldname = self$fieldname,
+  fieldname = self$unique_fieldname,
   fxn = self$unique_fxn,
   sim_year,
   opt = self$opt,
@@ -657,7 +657,7 @@ saved from the simulation.
   unique_fieldname = self$unique_fieldname,
   unique_fxn = self$unique_fxn,
   sim_year,
-  opt = self$unique_fxn
+  opt = self$opt
 )}\if{html}{\out{</div>}}
 }
 

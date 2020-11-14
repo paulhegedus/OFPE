@@ -952,7 +952,7 @@ SimClass <- R6::R6Class(
     },
     .simFunIter = function(bp, rr, sim_list_names, sim_year,
                            Bp.var_con, NRffmax_con, NRopt_con) {
-      #tryCatch({
+      tryCatch({
         Bp.var <- matrix(0, nrow = 1, ncol = 10)
         colnames(Bp.var) <- c("BaseP", "EXP.cost", "NR.ssopt", "NR.min", "NR.fs",
                               "ffopt.EXPrate", "NR.ffopt", "NR.act", "NR.opp", "sim")
@@ -987,7 +987,7 @@ SimClass <- R6::R6Class(
                  grep("NRfs", sim_list_names) - 1,
                  self$AAmin)
         self$sim_list <- lapply(self$sim_list, function(x) data.table::as.data.table(x) %>%
-                             `names<-`(sim_list_names)) %>%
+                                  `names<-`(sim_list_names)) %>%
           lapply(private$.cleanNRdat)
         NRff <- data.frame(EXP.rate = self$AAmin:self$AArateCutoff, NR.ff = NA)
         NRff$NR.ff <- lapply(self$sim_list, function(x) sum(x$NR, na.rm = TRUE))
@@ -1074,9 +1074,9 @@ SimClass <- R6::R6Class(
                 append = TRUE,
                 sep = ",")
         }
-      # },
-      # warning = function(w) {return(print(paste0("warning at ", sim_year, " bp = ", bp)))},
-      # error = function(e) {return(print(paste0("error at ", sim_year, " bp = ", bp)))})
+      },
+      warning = function(w) {return(print(paste0("warning at ", sim_year, " bp = ", bp)))},
+      error = function(e) {return(print(paste0("error at ", sim_year, " bp = ", bp)))})
     },
     .getNRopt = function(CEXP) {
       NRoptDat <- data.frame(EXP.rate.ssopt = rep(NA, nrow(self$sim_list[[1]])),
@@ -1130,6 +1130,8 @@ SimClass <- R6::R6Class(
       ## sim year. B/c sim year is not always an observed year we have
       ## to predict yld and pro and count as 'actual' yld and pro to
       ## return the 'actual' NR (NR.act)
+
+      # browser()
 
       ## this fun is clunky AF
       ## get observed data
@@ -1261,7 +1263,7 @@ SimClass <- R6::R6Class(
           respcol <- grep(paste0("pred_", self$datClass$respvar[j]),
                           names(sim_dat_list[[i]]))
           NRopt_list[[i]]$pred <- sim_dat_list[[i]][
-            match(NRopt_list[[i]]$cell_id, sim_dat_list[[i]]$cell_id), respcol
+            match(NRopt_list[[i]]$cell_id, sim_dat_list[[i]]$cell_id), ..respcol
           ]
           names(NRopt_list[[i]])[grep("^pred$", names(NRopt_list[[i]]))] <-
             paste0(self$datClass$respvar[j], ".act")
