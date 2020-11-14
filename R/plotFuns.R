@@ -74,9 +74,10 @@ plotMaps <- function(df,
     # map <- ggmap::get_map(location = c(lon = mean(sp::coordinates(as(utm, "Spatial"))[, 1]),
     #                                    lat = mean(sp::coordinates(as(utm, "Spatial"))[, 2])),
     #                       zoom = 14, maptype = "satellite", source = "google")
-    map <- ggmap::get_map(location = c(e@xmin-0.001, e@ymin-0.001,
-                                        e@xmax+0.001, e@ymax+0.001),
-                           maptype = "satellite", source = "google")
+    map <- ggmap::get_map(location = c(e@xmin, e@ymin,
+                                        e@xmax, e@ymax),
+                           maptype = "satellite", source = "google", zoom = 15
+                          )
     rSpdf <- as(rastVar, "SpatialPixelsDataFrame")
     rDf <- as.data.frame(rSpdf)
 
@@ -92,7 +93,7 @@ plotMaps <- function(df,
       ggmap::ggmap(map, extent  =  "panel") +
       ggplot2::geom_tile(data = rDf, ggplot2::aes(x = x, y = y, fill = rDf[, 1])) +
       ggplot2::scale_fill_gradientn(
-        limits = c(floor(min(rDf[, 1], na.m = TRUE)),
+        limits = c(floor(min(rDf[, 1], na.rm = TRUE)),
                    ceiling(max(rDf[, 1], na.rm = TRUE))),
         colours = color,
         breaks = seq(as.integer(floor(min(rDf[, 1], na.rm = TRUE))),
@@ -145,31 +146,31 @@ plotMaps <- function(df,
 #' @return Color ramp appropriate for variable.
 #' @export
 getColorRamp <- function(var) {
-  if(any(grepl("pro", var, ignore.case = T))){
-    color <- rev(colorRamps::cyan2yellow(15))
-  }else{
-    if(any(grepl("yld", var, ignore.case = T))){
-      color <- rev(colorRamps::green2red(15)) #color <- rev(grDevices::heat.colors(15))
-    }else{
-      if(any(grepl("NR", var))){
-        color <- rev(topo.colors(15))
-      }else{
-        if(any(grepl("aa_n", var))|
+  if (any(grepl("pro", var, ignore.case = T))) {
+    color <- RColorBrewer::brewer.pal(15, "RdYlGn")
+  } else {
+    if (any(grepl("yld", var, ignore.case = T))) {
+      color <- RColorBrewer::brewer.pal(15, "RdYlGn") # rev(colorRamps::green2red(15))
+    } else {
+      if (any(grepl("NR", var))) {
+        color <- RColorBrewer::brewer.pal(15, "RdYlGn")
+      } else {
+        if (any(grepl("aa_n", var))|
            any(grepl("ndist", var))|
            any(grepl("aa_sr", var))|
-           any(grepl("rate", var))){
-          color <- rev(colorRamps::matlab.like2(15))
-        }else{
-          if(any(grepl("prec", var))){
-            color <- rev(colorRamps::blue2green(15))
-          }else{
-            if(any(grepl("gdd", var))){
-              color <- rev(grDevices::terrain.colors(15))
-            }else{
-              if(any(grepl("ndvi", var))|any(grepl("ndre", var))|any(grepl("cire", var))){
-                color <- rev(colorRamps::green2red(15))
-              }else{
-                color <- rev(grDevices::topo.colors(15))
+           any(grepl("rate", var))) {
+          color <- RColorBrewer::brewer.pal(15, "RdYlGn")
+        } else {
+          if (any(grepl("prec", var))) {
+            color <- RColorBrewer::brewer.pal(15, "Blues")
+          } else {
+            if (any(grepl("gdd", var))) {
+              color <- RColorBrewer::brewer.pal(15, "YlOrRd")
+            } else {
+              if (any(grepl("ndvi", var))|any(grepl("ndre", var))|any(grepl("cire", var))) {
+                color <- RColorBrewer::brewer.pal(15, "RdYlGn")
+              } else {
+                color <- RColorBrewer::brewer.pal(15, "BrBG")
               }
             }
           }

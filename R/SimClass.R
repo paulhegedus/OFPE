@@ -938,8 +938,8 @@ SimClass <- R6::R6Class(
       }
       x <- c("BaseP", "EXP.cost", "x", "y", "row", "col", "field", "EXP.rate.ssopt",
              "NR.ssopt", "NR.min", "NR.opp", "NR.fs", "yld.opt", "yld.min", "yld.fs",
-             "pro.opt", "pro.min", "pro.fs", "NR.ffopt", "EXP.rate.ffopt", "NR.act",
-             "sim")
+             "pro.opt", "pro.min", "pro.fs", "NR.ffopt", "yld.ffopt", "pro.ffopt",
+             "EXP.rate.ffopt", "NR.act", "yld.act", "pro.act", "sim")
       df <- as.data.frame(matrix(vector(), 0, length(x)))
       names(df) <- x
       write.csv(df,
@@ -952,7 +952,7 @@ SimClass <- R6::R6Class(
     },
     .simFunIter = function(bp, rr, sim_list_names, sim_year,
                            Bp.var_con, NRffmax_con, NRopt_con) {
-      tryCatch({
+      #tryCatch({
         Bp.var <- matrix(0, nrow = 1, ncol = 10)
         colnames(Bp.var) <- c("BaseP", "EXP.cost", "NR.ssopt", "NR.min", "NR.fs",
                               "ffopt.EXPrate", "NR.ffopt", "NR.act", "NR.opp", "sim")
@@ -1029,6 +1029,8 @@ SimClass <- R6::R6Class(
                             pro.min = self$sim_list[[1]]$pred_pro,
                             pro.fs = self$sim_list[[self$fs + 1]]$pred_pro,
                             NR.ffopt = self$sim_list[[ffopt_rate + 1]]$NR,
+                            yld.ffopt = self$sim_list[[ffopt_rate + 1]]$pred_yld,
+                            pro.ffopt = self$sim_list[[ffopt_rate + 1]]$pred_pro,
                             EXP.rate.ffopt = ffopt_rate)
         NRopt[,c("EXP.rate.ssopt", "NR.ssopt", "yld.opt", "pro.opt")] <-
           private$.getNRopt(CEXP)
@@ -1049,9 +1051,9 @@ SimClass <- R6::R6Class(
         # fill out rest
         NRopt <- data.table::as.data.table(NRopt)
         NRopt$field <-
-          self$datClass$fieldname_codes[match(NRopt$field,
-                                              self$datClass$fieldname_codes$field_code),
-                                        "field"]
+          self$datClass$fieldname_codes[
+            match(NRopt$field, self$datClass$fieldname_codes$field_code),
+            "field"]
         NRopt$sim <- bp
         NRffmax$sim <- bp
         ## save data & append to tables
@@ -1072,9 +1074,9 @@ SimClass <- R6::R6Class(
                 append = TRUE,
                 sep = ",")
         }
-      },
-      warning = function(w) {return(print(paste0("warning at ", sim_year, " bp = ", bp)))},
-      error = function(e) {return(print(paste0("error at ", sim_year, " bp = ", bp)))})
+      # },
+      # warning = function(w) {return(print(paste0("warning at ", sim_year, " bp = ", bp)))},
+      # error = function(e) {return(print(paste0("error at ", sim_year, " bp = ", bp)))})
     },
     .getNRopt = function(CEXP) {
       NRoptDat <- data.frame(EXP.rate.ssopt = rep(NA, nrow(self$sim_list[[1]])),
@@ -1123,78 +1125,124 @@ SimClass <- R6::R6Class(
       return(NRcol)
     },
     .calcNRact = function(NRopt, year, Bp, CEXP) {
-      dat_index <- grep(year, names(self$datClass$sim_dat))
-      dat <- self$datClass$sim_dat[[dat_index]]
-      dat$cell_id <- paste0(dat$row, "_", dat$col)
-      dat$field <-
-        self$datClass$fieldname_codes[match(dat$field,
-                                            self$datClass$fieldname_codes$field_code),
-          "field"]
-      # use data from yield if possible, else, use protein
-      dat_index <- ifelse(any(grepl("yld", names(self$datClass$mod_dat))),
+      ## calculates the NR for the sim year if the experiment from
+      ## the most recent year in the observed data were applied in the
+      ## sim year. B/c sim year is not always an observed year we have
+      ## to predict yld and pro and count as 'actual' yld and pro to
+      ## return the 'actual' NR (NR.act)
+
+      ## this fun is clunky AF
+      ## get observed data
+      ## temp table? - extract observed aa_n to NRopt locations
+      ## temp table? - extract observed yld to NRopt locations (nn?)
+      ## temp table? - extract observed pro/krige pro to NRopt locations
+      ## predict 'actual' yld and pro for NRopt locations
+      ## calculate 'actual' and 'nn' NR
+      ## report ylds, pro, NR, (6 cols) to NRopt TODO: add to NRopt
+
+      ## get the location of the year's data in the sim_dat
+      sim_dat_index <- grep(year, names(self$datClass$sim_dat))
+      ## subset data from the simulation data
+      sim_dat <- self$datClass$sim_dat[[sim_dat_index]]
+      ## make the cell_id column
+      sim_dat$cell_id <- paste0(sim_dat$row, "_", sim_dat$col)
+      ## change field codes to field names (useful if multiple fields)
+      sim_dat$field <-
+        self$datClass$fieldname_codes[match(
+            sim_dat$field, self$datClass$fieldname_codes$field_code
+          ), "field"]
+      ## will use data from yield if possible, else, use protein.
+      ## b/c spatial resolution
+      sim_dat_index <- ifelse(any(grepl("yld", names(self$datClass$mod_dat))),
                           "yld",
                           "pro")
-      dat_index <- grep(dat_index, names(self$datClass$mod_dat))
-      obs_dat <- self$datClass$mod_dat[[dat_index]]
+      ## get yield or protein observed data that was used to fit the model
+      sim_dat_index <- grep(sim_dat_index, names(self$datClass$mod_dat))
+      ## get the observed data
+      obs_dat <- self$datClass$mod_dat[[sim_dat_index]]
+      ## bind training and validation for full dataset
       obs_dat <- data.table::rbindlist(obs_dat)
+      obs_dat$year <- as.numeric(as.character(obs_dat$year))
+
+      ## for all unique field and year combos,
       year_index <- by(obs_dat$year, obs_dat$field, unique) %>%
+        ## do some conversions to get it out of the 'by' output format
         lapply(as.character) %>%
         lapply(as.numeric) %>%
+        ## only take the most recent year that data was used to fit model
         lapply(max)
+      ## make the list a data frame with each unique field and the most
+      ## recent year's data used to fit the model for that field
       year_index <- data.frame(field = names(year_index),
                                year = do.call(rbind, year_index))
 
+      ## make lists to hold stuff
       temp_list <- rep(list(NA), nrow(year_index))
-      dat_list <- rep(list(NA), nrow(year_index))
+      sim_dat_list <- rep(list(NA), nrow(year_index))
       NRopt_list <- rep(list(NA), nrow(year_index))
 
+      ## get your net-return data from the simulation from every point
       NRopt <- data.table::as.data.table(NRopt)
       NRopt$cell_id <- paste0(NRopt$row, "_", NRopt$col)
 
       for (i in 1:length(temp_list)) {
-        ## fill lists and trim some memory used
-        NRopt_list[[i]] <- NRopt[which(NRopt$field ==
-                                         self$datClass$fieldname_codes[i, "field_code"]), ]
+        ## fill NRopt_list with the ith field's data
+        NRopt_list[[i]] <-
+          NRopt[which(NRopt$field ==
+                        self$datClass$fieldname_codes[i, "field_code"]), ]
+        ## remove the ith field's data from the NRopt table
         NRopt <- NRopt[-which(NRopt$field ==
-                               self$datClass$fieldname_codes[i, "field_code"]), ]
-        dat_list[[i]] <- dat[which(dat$field == year_index[i, "field"]), ]
-        dat <- dat[-which(dat$field == year_index[i, "field"]), ]
+                                self$datClass$fieldname_codes[i, "field_code"]), ]
+        ## get the ith field data from the simulation data table
+        sim_dat_list[[i]] <- sim_dat[which(sim_dat$field == year_index[i, "field"]), ]
+        ## remove the ith field's data from the simulation data table
+        sim_dat <- sim_dat[-which(sim_dat$field == year_index[i, "field"]), ]
+        ## put obs data from same field and year in the temp list
         temp_list[[i]] <-
           obs_dat[which(obs_dat$year == year_index[i, "year"] &
                           obs_dat$field == year_index[i, "field"]), ]
+        ## remove from observed dat
         obs_dat <-
           obs_dat[-which(obs_dat$year == year_index[i, "year"] &
                           obs_dat$field == year_index[i, "field"]), ]
-        ## get exp rates
+        ## get exp input column
         exp_index <- grep(paste0("^", self$datClass$expvar, "$"),
                           names(temp_list[[i]]))
+        ## take median by cell id in temp list
         temp_list[[i]] <-
           by(temp_list[[i]][, exp_index, with = FALSE][[1]],
              temp_list[[i]]$cell_id,
              median,
              na.rm = TRUE)
+        ## make table with cell id and experimental rates
         temp_list[[i]] <-
           data.frame(cell_id = row.names(temp_list[[i]]),
                      exp = as.numeric(temp_list[[i]]))
+        ## change field to real name
         temp_list[[i]]$field <- year_index[i, "field"]
-        dat_list[[i]]$exp <-
-          temp_list[[i]][match(dat_list[[i]]$cell_id,
+        ## put observed rates in the sim dat by cell id
+        sim_dat_list[[i]]$exp <-
+          temp_list[[i]][match(sim_dat_list[[i]]$cell_id,
                                temp_list[[i]]$cell_id), "exp"]
-
-        names(dat_list[[i]])[grep("exp", names(dat_list[[i]]))] <-
+        ## change the exp col to the actual expvar name (aa_n or aa_sr)
+        names(sim_dat_list[[i]])[grep("exp", names(sim_dat_list[[i]]))] <-
           self$datClass$expvar
+        ## for all response variables, predict yield and protein for all points
         for (j in 1:length(self$datClass$respvar)) {
-          dat_list[[i]]$pred <- stats::predict(self$modClass$mod_list[[j]]$m,
-                                               dat_list[[i]]) %>%
+          sim_dat_list[[i]]$pred <- stats::predict(self$modClass$mod_list[[j]]$m,
+                                               sim_dat_list[[i]]) %>%
             as.numeric()
-          dat_list[[i]]$pred <- exp(dat_list[[i]]$pred)
+          sim_dat_list[[i]]$pred <- exp(sim_dat_list[[i]]$pred)
 
-          names(dat_list[[i]])[grep("^pred$", names(dat_list[[i]]))] <-
+          names(sim_dat_list[[i]])[grep("^pred$", names(sim_dat_list[[i]]))] <-
             paste0("pred_", self$datClass$respvar[j])
         }
-        names(dat_list[[i]])[grep(self$datClass$expvar,
-                                  names(dat_list[[i]]))] <- "exp"
-        dat_list[[i]] <- private$.NRcalc(dat_list[[i]],
+        ## change col name from the name needed for the model back to 'exp'
+        names(sim_dat_list[[i]])[grep(self$datClass$expvar,
+                                  names(sim_dat_list[[i]]))] <- "exp"
+        ## calculate 'actual' NR based on the predicted yield and protein with
+        ## observed as-applied rates in the given simulation year
+        sim_dat_list[[i]] <- private$.NRcalc(sim_dat_list[[i]],
                                ifelse(any(self$datClass$respvar == "pro"), 1, 0),
                                Bp,
                                self$econDat$B0pd,
@@ -1203,11 +1251,30 @@ SimClass <- R6::R6Class(
                                CEXP,
                                self$econDat$FC,
                                self$econDat$ssAC)
-        NRopt_list[[i]]$NR.act <- dat_list[[i]][
-          match(NRopt_list[[i]]$cell_id, dat_list[[i]]$cell_id), "NR"
+        ## put NR in the NRopt data for export
+        NRopt_list[[i]]$NR.act <- sim_dat_list[[i]][
+          match(NRopt_list[[i]]$cell_id, sim_dat_list[[i]]$cell_id), "NR"
         ] - self$econDat$ssAC
+
+        ## add 'actual' yield and protein to NRopt
+        for (j in 1:length(self$datClass$respvar)) {
+          respcol <- grep(paste0("pred_", self$datClass$respvar[j]),
+                          names(sim_dat_list[[i]]))
+          NRopt_list[[i]]$pred <- sim_dat_list[[i]][
+            match(NRopt_list[[i]]$cell_id, sim_dat_list[[i]]$cell_id), respcol
+          ]
+          names(NRopt_list[[i]])[grep("^pred$", names(NRopt_list[[i]]))] <-
+            paste0(self$datClass$respvar[j], ".act")
+        }
+        if (!any(grepl("yld.act", names(NRopt_list[[i]])))) {
+          NRopt_list[[i]]$yld.act <- NA
+        }
+        if (!any(grepl("pro.act", names(NRopt_list[[i]])))) {
+          NRopt_list[[i]]$pro.act <- NA
+        }
         NRopt_list[[i]]$cell_id <- NULL
       }
+      ## recompile the NRoptlist to combine the unique field and years
       NRopt <- data.table::rbindlist(NRopt_list) %>%
         as.matrix() %>%
         apply(2, as.numeric)

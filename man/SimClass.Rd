@@ -420,7 +420,6 @@ predicted protein) for every point for every experimental rate. The
 mean response across rates is shown as a colored line.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{SimClass$plotEstsVsExp(
-  sim_list,
   AAmin,
   respvar,
   expvar,
@@ -438,9 +437,6 @@ mean response across rates is shown as a colored line.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{sim_list}}{List for every rate simulated over with data.tables
-for every point in the simulation year.}
-
 \item{\code{AAmin}}{Minimum as-applied rate used in simulation of management
 outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
 
@@ -471,6 +467,9 @@ save outputs from the simulation.}
 \item{\code{Bp}}{The mean base price used to plot net-returns vs as-applied data.}
 
 \item{\code{CEXP}}{The mean cost of the as-applied experimental input.}
+
+\item{\code{sim_list}}{List for every rate simulated over with data.tables
+for every point in the simulation year.}
 }
 \if{html}{\out{</div>}}
 }
