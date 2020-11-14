@@ -216,9 +216,11 @@ SimOP <- R6::R6Class(
         self$unique_fxn <- ifelse(!is.null(self$simClass),
                                   self$simClass$unique_fxn,
                                   self$input_list$unique_fxn)
-        self$sim_years <- ifelse(!is.null(self$simClass),
-                                 self$simClass$sim_years,
-                                 self$input_list$sim_years)
+        if (!is.null(self$simClass)) {
+          self$sim_years <- self$simClass$sim_years
+        } else {
+          self$sim_years <- self$input_list$sim_years
+        }
         self$opt <- ifelse(!is.null(self$simClass),
                            self$simClass$opt,
                            self$input_list$opt)
@@ -234,9 +236,11 @@ SimOP <- R6::R6Class(
         self$farmername <- ifelse(!is.null(self$simClass),
                                   self$simClass$datClass$farmername,
                                   self$input_list$farmername)
-        self$respvar <- ifelse(!is.null(self$simClass),
-                               self$simClass$datClass$respvar,
-                               self$input_list$respvar)
+        if (!is.null(self$simClass)) {
+          self$respvar <- self$simClass$datClass$respvar
+        } else {
+          self$respvar <- self$input_list$respvar
+        }
         if (!is.null(self$simClass)) {
           self$db <- self$simClass$dbCon$db
         } else {
@@ -453,7 +457,8 @@ SimOP <- R6::R6Class(
             var_main_label =  paste0("Yield with uniform minimum rate in ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
-          if (any(grepl("pro", respvar))) {
+
+          if (any(grepl("pro", self$respvar))) {
             # SSOPT Est. Pro map
             temp_plot <- self$plotSimMaps(
               dat = NRopt,
