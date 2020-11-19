@@ -770,8 +770,13 @@ AggInputs <- R6::R6Class(
             db,
             paste0("CREATE TABLE all_farms.temp AS
                    SELECT * FROM all_farms.fields fields
-                   WHERE fields.fieldname = '", self$fieldname, "';
-                   ALTER TABLE all_farms.temp
+                   WHERE fields.fieldname = '", self$fieldname, "';")
+          )
+        )
+        invisible(
+          DBI::dbSendQuery(
+            db,
+            paste0("ALTER TABLE all_farms.temp
                    RENAME COLUMN geom TO geometry;")
           )
         )

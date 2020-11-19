@@ -24,7 +24,7 @@ DBCon <- R6::R6Class(
     #' unless user is connecting to a non-local database.
     #' @param port The port number of the database.
     #' @return An open database connection.
-    initialize = function(drv = RPostgres::Postgres(), # original - RPostgreSQL::PostgreSQL(),
+    initialize = function(drv = RPostgreSQL::PostgreSQL(), # new fix for sasha -> RPostgres::Postgres(),
                           user = NA,
                           password = NA,
                           dbname = NA,

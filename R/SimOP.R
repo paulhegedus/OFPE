@@ -136,7 +136,6 @@ SimOP <- R6::R6Class(
     #' their UTM code will be the same.
     utm_fieldname = NULL,
 
-
     #' @description
     #' Use this class to save figures and tables from simulations performed using
     #' the 'SimClass' R6 object. This class can be initialized with an executed
@@ -1315,19 +1314,5 @@ SimOP <- R6::R6Class(
         }
       }
     }
-    # .setupNRdat = function(NRopt, NRffmax) {
-    #   browser()
-    #
-    #   NRopt$field <- match(NRopt$field, self$simClass$datClass$fieldname_codes$field)
-    #   NRopt <- aggregate(NRopt, list(NRopt$x, NRopt$y), mean, na.rm = TRUE)
-    #   NRopt$field <-
-    #     self$simClass$datClass$fieldname_codes[match(NRopt$field,
-    #                                                  self$simClass$datClass$fieldname_codes$field_code),
-    #                                            "field"]
-    #   NRffmax2 <- sapply(NRffmax, mean) %>% as.matrix() %>% t() %>% as.data.frame()
-    #   NRdat <- list(NRopt = NRopt,
-    #                 NRffmax = NRffmax)
-    #   return(NRdat)
-    # },
   )
 )

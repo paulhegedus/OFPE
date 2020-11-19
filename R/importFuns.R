@@ -64,8 +64,11 @@ convPolyToMulti = function(db, dat, schema, dtype) {
       invisible(DBI::dbGetQuery(
         db,
         paste0("ALTER TABLE ", schema, ".", dtype, " ALTER COLUMN geometry
-               SET DATA TYPE geometry;
-               ALTER TABLE ", schema, ".", dtype, "
+               SET DATA TYPE geometry;")
+      ))
+      invisible(DBI::dbGetQuery(
+        db,
+        paste0("ALTER TABLE ", schema, ".", dtype, "
                ALTER COLUMN geometry TYPE geometry(MultiPolygon, 4326)
                USING ST_Multi(geometry)")
       ))

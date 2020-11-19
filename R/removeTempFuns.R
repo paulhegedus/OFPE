@@ -20,7 +20,7 @@ removeTempTables <- function(db) {
   )
   if(geom_temp_exist){
     invisible(
-      DBI::dbGetQuery(
+      DBI::dbSendQuery(
         db,
         paste0("DROP TABLE all_farms.temp")
       )
@@ -39,7 +39,7 @@ removeTempTables <- function(db) {
   )
   if(grid_temp_exist){
     invisible(
-      DBI::dbGetQuery(
+      DBI::dbSendQuery(
         db,
         paste0("DROP TABLE all_farms.gridtemp")
       )
@@ -56,7 +56,7 @@ removeTempTables <- function(db) {
   )
   if(rxgrid_temp_exist){
     invisible(
-      DBI::dbGetQuery(
+      DBI::dbSendQuery(
         db,
         paste0("DROP TABLE all_farms.rxgridtemp")
       )
@@ -74,7 +74,7 @@ removeTempTables <- function(db) {
   )
   if(gee_temp_exist){
     invisible(
-      DBI::dbGetQuery(
+      DBI::dbSendQuery(
         db,
         paste0("DROP TABLE all_farms.geetemp")
       )

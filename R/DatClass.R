@@ -655,9 +655,15 @@ DatClass <- R6::R6Class(
             WHERE field = '", fieldname, "'
             AND year = '", year, "'
             AND grid = '", GRID, "'
-            AND datused = '", self$dat_used,"');
-
-            ALTER TABLE ",
+            AND datused = '", self$dat_used,"');"
+          )
+        )
+      )
+      invisible(
+        DBI::dbSendQuery(
+          self$dbCon$db,
+          paste0(
+            "ALTER TABLE ",
             self$farmername, "_a.temp
             DROP COLUMN geometry;"
           )

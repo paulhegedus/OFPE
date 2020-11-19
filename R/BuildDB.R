@@ -63,8 +63,8 @@ BuildDB <- R6::R6Class(
 
       if (as.numeric(postgis_version) >= 3) {
         if (!any(grepl("postgis", extensions$extname))) {
-          DBI::dbSendQuery(db, paste0("CREATE EXTENSION postgis;
-                               CREATE EXTENSION postgis_raster;"))
+          DBI::dbSendQuery(db, paste0("CREATE EXTENSION postgis;"))
+          DBI::dbSendQuery(db, paste0("CREATE EXTENSION postgis_raster;"))
         } else {
           if (!any(grepl("postgis_raster", extensions$extname))) {
             DBI::dbSendQuery(db,
@@ -149,19 +149,28 @@ BuildDB <- R6::R6Class(
         "CREATE TABLE all_farms.farmers (
            farmeridx SERIAL PRIMARY KEY,
            farmer VARCHAR(100) NOT NULL,
-           CONSTRAINT norepfarmers UNIQUE (farmer));
-        CREATE TABLE all_farms.farms (
+           CONSTRAINT norepfarmers UNIQUE (farmer));"
+      )
+      DBI::dbSendQuery(
+        db,
+        "CREATE TABLE all_farms.farms (
            farmidx SERIAL PRIMARY KEY,
            farm VARCHAR(100) NOT NULL,
            farmeridx INTEGER REFERENCES all_farms.farmers(farmeridx),
            area DOUBLE PRECISION,
            utm_epsg INTEGER,
-           CONSTRAINT norepfarms UNIQUE (farm, farmeridx));
-        CREATE TABLE all_farms.field_ids (
+           CONSTRAINT norepfarms UNIQUE (farm, farmeridx));"
+      )
+      DBI::dbSendQuery(
+        db,
+        "CREATE TABLE all_farms.field_ids (
            fieldidx SERIAL PRIMARY KEY,
            fieldname VARCHAR(100) NOT NULL,
-           CONSTRAINT norepfieldids UNIQUE (fieldname));
-        CREATE TABLE all_farms.fields (
+           CONSTRAINT norepfieldids UNIQUE (fieldname));"
+      )
+      DBI::dbSendQuery(
+        db,
+        "CREATE TABLE all_farms.fields (
           fieldidx INTEGER REFERENCES all_farms.field_ids(fieldidx),
           wfid INTEGER NOT NULL,
           farmidx INTEGER REFERENCES all_farms.farms(farmidx),
@@ -191,8 +200,11 @@ BuildDB <- R6::R6Class(
         db,
         "CREATE INDEX farms_geom_idx
           ON all_farms.farms
-          USING GIST (geom);
-        CREATE INDEX fields_geom_idx
+          USING GIST (geom);"
+      )
+      DBI::dbSendQuery(
+        db,
+        "CREATE INDEX fields_geom_idx
           ON all_farms.fields
           USING GIST (geom);"
       )

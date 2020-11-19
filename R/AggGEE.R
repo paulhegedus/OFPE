@@ -225,18 +225,26 @@ AggGEE <- R6::R6Class(
           DBI::dbSendQuery(
             db,
             paste0("ALTER TABLE all_farms.geetemp
-                    ADD COLUMN id SERIAL;
-
-                    DELETE FROM all_farms.geetemp AS geetemp
+                    ADD COLUMN id SERIAL;")
+          )
+        )
+        invisible(
+          DBI::dbSendQuery(
+            db,
+            paste0("DELETE FROM all_farms.geetemp AS geetemp
                     WHERE geetemp.id IN (
                       SELECT a.id
                       FROM all_farms.geetemp a, (
                         SELECT ST_Union(geometry) As geometry FROM all_farms.temp
                       ) b
                     WHERE NOT ST_Intersects(a.rast, b.geometry)
-                    );
-
-                    ALTER TABLE all_farms.geetemp
+                    );")
+          )
+        )
+        invisible(
+          DBI::dbSendQuery(
+            db,
+            paste0("ALTER TABLE all_farms.geetemp
                     DROP COLUMN id;")
           )
         )

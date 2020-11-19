@@ -74,8 +74,11 @@ getRxGrid <- function(db,
   invisible(DBI::dbSendQuery(
     db,
     paste0("ALTER TABLE ", farmername, "_a.temp
-          ADD COLUMN cell_id VARCHAR;
-          UPDATE ", farmername, "_a.temp temp
+          ADD COLUMN cell_id VARCHAR;")
+  ))
+  invisible(DBI::dbSendQuery(
+    db,
+    paste0("UPDATE ", farmername, "_a.temp temp
           SET cell_id = rxgridtemp.cell_id
           FROM all_farms.rxgridtemp
           WHERE ST_Within(temp.geometry, rxgridtemp.geom);")
@@ -86,9 +89,11 @@ getRxGrid <- function(db,
     db,
     paste0("ALTER TABLE all_farms.rxgridtemp
           ADD COLUMN expRate REAL,
-          ADD COLUMN applRate REAL;
-
-          WITH vtemp AS (
+          ADD COLUMN applRate REAL;")
+  ))
+  invisible(DBI::dbSendQuery(
+    db,
+    paste0("WITH vtemp AS (
           SELECT
             b.cell_id,
             to_char(
@@ -111,18 +116,22 @@ getRxGrid <- function(db,
   invisible(DBI::dbSendQuery(
     db,
     paste0( "ALTER TABLE all_farms.rxgridtemp
-          ADD COLUMN id SERIAL;
-
-          DELETE FROM all_farms.rxgridtemp  AS rxgridtemp
+          ADD COLUMN id SERIAL;")
+  ))
+  invisible(DBI::dbSendQuery(
+    db,
+    paste0( "DELETE FROM all_farms.rxgridtemp  AS rxgridtemp
           WHERE rxgridtemp.id IN (
             SELECT a.id
             FROM all_farms.rxgridtemp  a, (
               SELECT ST_Union(geometry) As geometry FROM all_farms.temp
             ) b
           WHERE NOT ST_Within(a.geom, b.geometry)
-          );
-
-          ALTER TABLE all_farms.rxgridtemp
+          );")
+  ))
+  invisible(DBI::dbSendQuery(
+    db,
+    paste0( "ALTER TABLE all_farms.rxgridtemp
           DROP COLUMN id;")
   ))
   rx_sdt <- sf::st_read(
@@ -168,8 +177,11 @@ makeTempBound <- function(db, fieldname, farmername) {
   invisible(DBI::dbSendQuery(
     db,
     paste0("ALTER TABLE all_farms.temp
-          RENAME COLUMN geom TO geometry;
-          ALTER TABLE all_farms.temp
+          RENAME COLUMN geom TO geometry;")
+  ))
+  invisible(DBI::dbSendQuery(
+    db,
+    paste0("ALTER TABLE all_farms.temp
           ALTER COLUMN geometry TYPE geometry(POLYGON, ", utm_epsg, ")
           USING ST_Transform(geometry, ", utm_epsg, ");")
   ))
@@ -269,33 +281,54 @@ makeRXGrid <- function(db,
       db,
       paste0("CREATE TABLE all_farms.rxgridtemp AS
                SELECT *
-               FROM ST_CreateFishnet (", NROW, ", ", NCOL, ", ", boom_width, ", ", trt_length, ", ", BBOX["x", "min"], ", ", BBOX["y", "min"], ") AS cells;
-               ALTER TABLE all_farms.rxgridtemp
+               FROM ST_CreateFishnet (", NROW, ", ", NCOL, ", ", boom_width, ", ", trt_length, ", ", BBOX["x", "min"], ", ", BBOX["y", "min"], ") AS cells;")
+    ))
+    invisible(DBI::dbSendQuery(
+      db,
+      paste0("ALTER TABLE all_farms.rxgridtemp
                ADD COLUMN cell_id VARCHAR,
                ADD COLUMN field VARCHAR,
                ADD COLUMN size VARCHAR,
                ADD COLUMN length double precision,
                ADD COLUMN width double precision,
                ADD COLUMN cell_type VARCHAR,
-               ADD COLUMN mgmt_scen VARCHAR;
-               UPDATE all_farms.rxgridtemp SET
+               ADD COLUMN mgmt_scen VARCHAR;")
+    ))
+    invisible(DBI::dbSendQuery(
+      db,
+      paste0("UPDATE all_farms.rxgridtemp SET
                cell_id = row::text ||'_'|| col::text,
                field = '", unique_fieldname, "',
                size = '", size, "',
                length = ", trt_length, ",
                width = ", boom_width, ",
                cell_type = '", mgmt_scen, "',
-               mgmt_scen = '", ifelse(mgmt_scen == "base", "exp", mgmt_scen), "';
-               UPDATE all_farms.rxgridtemp SET geom = ST_SetSRID (geom, ", utm_epsg, ");
-               ALTER TABLE all_farms.rxgridtemp
+               mgmt_scen = '", ifelse(mgmt_scen == "base", "exp", mgmt_scen), "';")
+    ))
+    invisible(DBI::dbSendQuery(
+      db,
+      paste0("UPDATE all_farms.rxgridtemp SET geom = ST_SetSRID (geom, ", utm_epsg, ");")
+    ))
+    invisible(DBI::dbSendQuery(
+      db,
+      paste0("ALTER TABLE all_farms.rxgridtemp
                ADD COLUMN x double precision,
-               ADD COLUMN y double precision;
-               UPDATE all_farms.rxgridtemp SET
+               ADD COLUMN y double precision;")
+    ))
+    invisible(DBI::dbSendQuery(
+      db,
+      paste0("UPDATE all_farms.rxgridtemp SET
                x = ST_X(ST_Centroid(geom)),
-               y = ST_Y(ST_Centroid(geom));
-               ALTER TABLE all_farms.rxgridtemp
-               ADD PRIMARY KEY (cell_id, field);
-               CREATE INDEX rxgridtemp_geom_idx
+               y = ST_Y(ST_Centroid(geom));")
+    ))
+    invisible(DBI::dbSendQuery(
+      db,
+      paste0("ALTER TABLE all_farms.rxgridtemp
+               ADD PRIMARY KEY (cell_id, field);")
+    ))
+    invisible(DBI::dbSendQuery(
+      db,
+      paste0("CREATE INDEX rxgridtemp_geom_idx
                ON all_farms.rxgridtemp
                USING gist (geom);")
     ))
