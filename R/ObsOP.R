@@ -336,10 +336,14 @@ ObsOP <- R6::R6Class(
                           utm_zone) %>%
         suppressMessages() %>%
         suppressWarnings()
+
+      ## TODO: need to specify ObsMaps folder?? or leave up
+      ## to user
+
       if (SAVE) {
         try({dev.off()}, silent = TRUE)
         ggplot2::ggsave(
-          file = paste0(out_path, "/Outputs/ObsMaps/",
+          file = paste0(out_path,
                         fieldname, "_", tolower(var),
                         "_map_", year, ".png"),
           plot = p, device = "png",
