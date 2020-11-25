@@ -96,9 +96,14 @@ ManageFarms <- R6::R6Class(
         farm <- sf::st_as_sf(farm) %>%
           sf::st_cast()
       }
-      farm <- farm %>%
-        sf::st_set_crs(4326) %>%
-        sf::st_transform(4326)
+      if (is.na(sf::st_crs(farm))) {
+        farm <- farm %>%
+          sf::st_set_crs(4326) %>%
+          sf::st_transform(4326)
+      } else {
+        farm <- farm %>%
+          sf::st_transform(4326)
+      }
       farm$utm_epsg <- OFPE::calcUTMzone(farm)
       return(farm)
     },

@@ -104,9 +104,14 @@ ManageFields <- R6::R6Class(
         field <- sf::st_as_sf(field) %>%
           sf::st_cast()
       }
-      field <- field %>%
-        sf::st_set_crs(4326) %>%
-        sf::st_transform(4326)
+      if (is.na(sf::st_crs(field))) {
+        field <- field %>%
+          sf::st_set_crs(4326) %>%
+          sf::st_transform(4326)
+      } else {
+        field <- field %>%
+          sf::st_transform(4326)
+      }
       return(field)
     },
     #' @description
