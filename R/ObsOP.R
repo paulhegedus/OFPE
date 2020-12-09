@@ -260,7 +260,8 @@ ObsOP <- R6::R6Class(
       dat_list <- list(source = source_dat,
                        target = target_dat) %>%
         lapply(as.data.frame) %>%
-        lapply(function(x) {x$X <- x$x; x$Y <- x$y; sp::coordinates(x) <- ~X+Y; return(x)})
+        lapply(function(x) {x$X <- x$x; x$Y <- x$y; sp::coordinates(x) <- ~X+Y; return(x)}) %>%
+        lapply(private$.removeDupPts)
 
 
       krige_formula <- as.formula(paste0(var, " ~ x + y"))
@@ -273,6 +274,7 @@ ObsOP <- R6::R6Class(
                                           "Hol","Log","Spl")))
       )
       #plot(dpVgm, dpVgmFit)
+
       krigVal <- gstat::krige(eval(krige_formula),
                               dat_list$source,
                               dat_list$target,
@@ -449,6 +451,13 @@ ObsOP <- R6::R6Class(
         )
       )
       return(db_dat)
+    },
+    .removeDupPts = function(x) {
+      zd <- sp::zerodist(x)
+      if (nrow(zd) != 0) {
+        x <- x[-sp::zerodist(x)[,1], ]
+      }
+      return(x)
     }
   )
 )

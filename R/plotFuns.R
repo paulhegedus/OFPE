@@ -150,7 +150,7 @@ getColorRamp <- function(var) {
     color <- RColorBrewer::brewer.pal(15, "RdYlGn")
   } else {
     if (any(grepl("yld", var, ignore.case = T))) {
-      color <- RColorBrewer::brewer.pal(15, "RdYlGn") # rev(colorRamps::green2red(15))
+      color <- RColorBrewer::brewer.pal(15, "RdYlGn")
     } else {
       if (any(grepl("NR", var))) {
         color <- RColorBrewer::brewer.pal(15, "RdYlGn")
