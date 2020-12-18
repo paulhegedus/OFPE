@@ -17,7 +17,7 @@
 #' data is gathered from the year of interest and the year in which a crop was
 #' previously grown. These data are all cleaned in the same process. Across the
 #' whole field, data are removed when exceeding 5SD from the mean, and within
-#' each 10m grid cell, data are removed when exceeding 1SD from the cell mean.
+#' each 10m grid cell, data are removed when exceeding 2SD from the cell mean.
 #' This occurs regardless of whether 'Grid' or 'Observed' is selected. Then,
 #' data from remotely sensed sources are gathered. The data selected is dependent
 #' on the 'dat_used' variable, which indicates whether to use data from Jan 1 to
@@ -156,7 +156,8 @@ AggDat <- R6::R6Class(
               self$aggInputs$dbCon$db,
               paste0("ALTER TABLE ",
                      self$aggInputs$farmername, "_a.temp
-                     ADD COLUMN ", self$aggInputs$respvar, " REAL;")
+                     ADD COLUMN ", self$aggInputs$respvar, " REAL,
+                     ADD COLUMN var_", self$aggInputs$respvar, " REAL ;")
             )
           )
         }
@@ -188,7 +189,8 @@ AggDat <- R6::R6Class(
             self$aggInputs$dbCon$db,
             paste0("ALTER TABLE ",
                    self$aggInputs$farmername, "_a.temp
-                     ADD COLUMN prev_", self$aggInputs$respvar, " REAL;")
+                     ADD COLUMN prev_", self$aggInputs$respvar, " REAL,
+                   ADD COLUMN var_prev_", self$aggInputs$respvar, " REAL;")
           ))
         }
         # clean exp data (CY) & aggregate exp data (CY)
@@ -220,7 +222,8 @@ AggDat <- R6::R6Class(
           invisible(DBI::dbSendQuery(
             self$aggInputs$dbCon$db,
             paste0("ALTER TABLE ", self$aggInputs$farmername, "_a.temp
-                     ADD COLUMN ", self$aggInputs$expvar, " REAL;")
+                     ADD COLUMN ", self$aggInputs$expvar, " REAL,
+                   ADD COLUMN var_", self$aggInputs$expvar, " REAL;")
           ))
           if (self$aggInputs$farmername == "merja" &
               self$aggInputs$cy_exp == "2019") {
@@ -261,7 +264,8 @@ AggDat <- R6::R6Class(
           invisible(DBI::dbSendQuery(
             self$aggInputs$dbCon$db,
             paste0("ALTER TABLE ", self$aggInputs$farmername, "_a.temp
-                       ADD COLUMN prev_", self$aggInputs$expvar, " REAL;")
+                       ADD COLUMN prev_", self$aggInputs$expvar, " REAL,
+                   ADD COLUMN var_prev_", self$aggInputs$expvar, " REAL;")
           ))
           if (self$aggInputs$farmername == "merja" &
               self$aggInputs$py_exp == "2019") {
@@ -277,6 +281,7 @@ AggDat <- R6::R6Class(
       # clip to field boundary
       self$.clipAggDat()
       private$.idFarm()
+
       # remote sensing data
       aggGEE <- OFPE::AggGEE$new(self$aggInputs,
                                  self$farmidx,
@@ -676,19 +681,19 @@ AggDat <- R6::R6Class(
                  farmername,
                  "_r.temp")
       ))
-      ## Calculate the mean and 5SD for the response and distance variable if present by the orig_file.
+      ## Calculate the mean and 4SD for the response and distance variable if present by the orig_file.
       means_sd <- DBI::dbGetQuery(
         db,
         paste0("SELECT AVG(resp) mean_resp, STDDEV(resp) sd_resp, AVG(dist) mean_dist, STDDEV(dist) sd_dist, orig_file
                 FROM ", farmername, "_r.temp
                 GROUP BY temp.orig_file;")
       )
-      means_sd$max_resp <- means_sd$mean_resp + (5 * means_sd$sd_resp)
-      means_sd$max_dist <- means_sd$mean_dist + (5 * means_sd$sd_dist)
+      means_sd$max_resp <- means_sd$mean_resp + (4 * means_sd$sd_resp)
+      means_sd$max_dist <- means_sd$mean_dist + (4 * means_sd$sd_dist)
       means_sd$min_resp <- 0
-      means_sd$min_dist <- ifelse((means_sd$mean_dist - (5 * means_sd$sd_dist)) < 0,
+      means_sd$min_dist <- ifelse((means_sd$mean_dist - (4 * means_sd$sd_dist)) < 0,
                                   0,
-                                  (means_sd$mean_dist - (5 * means_sd$sd_dist)))
+                                  (means_sd$mean_dist - (4 * means_sd$sd_dist)))
       for (i in 1:nrow(means_sd)) {
         if (is.na(means_sd[i, "mean_dist"]) | is.na(means_sd[i, "sd_dist"])) {
           means_sd[i, "max_dist"] <- 10000
@@ -798,7 +803,7 @@ AggDat <- R6::R6Class(
                   AND gridtemp.size = ", size, "
                   AND ST_Within(temp.geometry, gridtemp.geom);")
       ))
-      # Get the mean and 1SD of the response for all cell_ids and remove rows with outliers
+      # Get the mean and 2SD of the response for all cell_ids and remove rows with outliers
       means_sd <- DBI::dbGetQuery(
         db,
         paste0("SELECT AVG(resp) mean_resp, STDDEV(resp) sd_resp, cell_id
@@ -807,20 +812,22 @@ AggDat <- R6::R6Class(
       )
       means_sd$sd_resp[is.na(means_sd$sd_resp)|
                          means_sd$sd_resp == 0] <- 10
-      means_sd$max_resp <- means_sd$mean_resp + means_sd$sd_resp
+      means_sd$max_resp <- means_sd$mean_resp + (2 * means_sd$sd_resp)
       means_sd$min_resp <- 0
+      means_sd$var_resp <- means_sd$sd_resp ^ 2
       invisible(
-        DBI::dbCreateTable(
+        DBI::dbWriteTable(
           db,
-          DBI::SQL(paste0(farmername, "_r.means")),
+          c(paste0(farmername, "_r"), "means"),
           means_sd,
-          row.names=NULL)
+          row.names = FALSE)
       )
       invisible(DBI::dbSendQuery(
           db,
           paste0("ALTER TABLE ", farmername, "_r.temp
                   ADD COLUMN max_resp REAL,
-                  ADD COLUMN min_resp REAL;")
+                  ADD COLUMN min_resp REAL,
+                  ADD COLUMN var_resp REAL;")
       ))
       invisible(DBI::dbSendQuery(
           db,
@@ -833,6 +840,13 @@ AggDat <- R6::R6Class(
         db,
         paste0("UPDATE ", farmername, "_r.temp temp
                   SET min_resp = means.min_resp
+                  FROM ", farmername, "_r.means means
+                  WHERE temp.cell_id = means.cell_id;")
+      ))
+      invisible(DBI::dbSendQuery(
+        db,
+        paste0("UPDATE ", farmername, "_r.temp temp
+                  SET var_resp = means.var_resp
                   FROM ", farmername, "_r.means means
                   WHERE temp.cell_id = means.cell_id;")
       ))
@@ -871,6 +885,30 @@ AggDat <- R6::R6Class(
 
                     UPDATE ", farmername, "_a.temp aggtemp
                     SET ", newcol, " = CAST ( vtemp.resp AS REAL )
+                    FROM vtemp
+                    WHERE aggtemp.cell_id = vtemp.cell_id;")
+        ))
+        invisible(DBI::dbSendQuery(
+          db,
+          paste0("ALTER TABLE ", farmername, "_a.temp
+                    ADD COLUMN var_", newcol, " REAL;")
+        ))
+        invisible(DBI::dbSendQuery(
+          db,
+          paste0("WITH vtemp AS (
+                    SELECT
+                      b.cell_id,
+                      to_char(
+                        AVG (b.resp),
+                        '9999999999999999999'
+                      ) AS var_resp
+                    FROM ", farmername, "_r.temp b
+                    INNER JOIN ", farmername, "_a.temp a ON a.cell_id = b.cell_id
+                    GROUP BY  b.cell_id
+                    )
+
+                    UPDATE ", farmername, "_a.temp aggtemp
+                    SET var_", newcol, " = CAST ( vtemp.var_resp AS REAL )
                     FROM vtemp
                     WHERE aggtemp.cell_id = vtemp.cell_id;")
         ))
@@ -926,6 +964,19 @@ AggDat <- R6::R6Class(
                       AND aggtemp.y = temp.y;")
           ))
           invisible(DBI::dbSendQuery(
+            db,
+            paste0("ALTER TABLE ", farmername, "_a.temp
+                      ADD COLUMN var_", respvar, " REAL;")
+          ))
+          invisible(DBI::dbSendQuery(
+            db,
+            paste0("UPDATE ", farmername, "_a.temp aggtemp
+                      SET var_", respvar, " = temp.var_resp
+                      FROM ", farmername, "_r.temp temp
+                      WHERE aggtemp.x = temp.x
+                      AND aggtemp.y = temp.y;")
+          ))
+          invisible(DBI::dbSendQuery(
               db,
               paste0("CREATE INDEX aggtemp_geom_idx ON ", farmername,
                      "_a.temp USING gist (geometry)")
@@ -963,8 +1014,39 @@ AggDat <- R6::R6Class(
                       AND vtemp.x = a.x
                       AND vtemp.y = a.y;")
           ))
+          invisible(DBI::dbSendQuery(
+            db,
+            paste0("ALTER TABLE ", farmername, "_a.temp
+                      ADD COLUMN var_prev_", respvar, " REAL;")
+          ))
+          invisible(DBI::dbSendQuery(
+            db,
+            paste0("WITH vtemp AS (
+                        SELECT a.cell_id,
+                        b.var_resp,
+                        a.x,
+                        a.y,
+                        a.geometry
+                        FROM ", farmername, "_a.temp a
+                        JOIN LATERAL (
+                          SELECT var_resp
+                          FROM ", farmername, "_r.temp temp
+                          ORDER BY a.geometry <-> temp.geometry
+                          LIMIT 1
+                        ) AS b
+                        ON true
+                      )
+
+                      UPDATE ", farmername, "_a.temp a SET
+                      var_prev_", respvar, " = vtemp.var_resp
+                      FROM vtemp
+                      WHERE vtemp.cell_id = a.cell_id
+                      AND vtemp.x = a.x
+                      AND vtemp.y = a.y;")
+          ))
         }
       }
+
       invisible(
         DBI::dbSendQuery(db, paste0("DROP TABLE ", farmername, "_r.temp"))
       )
@@ -1180,22 +1262,22 @@ AggDat <- R6::R6Class(
       invisible(
         DBI::dbSendQuery(db, paste0("VACUUM ANALYZE ", farmername, "_r.temp"))
       )
-      ## Calculate the mean and 5SD for the experimental variable and distance variable if present by the orig_file.
+      ## Calculate the mean and 4SD for the experimental variable and distance variable if present by the orig_file.
       means_sd <- DBI::dbGetQuery(
         db,
         paste0("SELECT AVG(exp) mean_exp, STDDEV(exp) sd_exp, AVG(dist) mean_dist, STDDEV(dist) sd_dist, orig_file
                 FROM ", farmername, "_r.temp GROUP BY temp.orig_file;")
       )
-      means_sd$max_exp <- means_sd$mean_exp + (5 * means_sd$sd_exp)
-      means_sd$max_dist <- means_sd$mean_dist + (5 * means_sd$sd_dist)
-      means_sd$min_exp <- ifelse((means_sd$mean_exp - (5 * means_sd$sd_exp)) < 0,
-                                 0, (means_sd$mean_exp - (5 * means_sd$sd_exp)))
-      means_sd$min_dist <- ifelse((means_sd$mean_dist - (5 * means_sd$sd_dist)) < 0,
-                                  0, (means_sd$mean_dist - (5 * means_sd$sd_dist)))
+      means_sd$max_exp <- means_sd$mean_exp + (4 * means_sd$sd_exp)
+      means_sd$max_dist <- means_sd$mean_dist + (4 * means_sd$sd_dist)
+      means_sd$min_exp <- ifelse((means_sd$mean_exp - (4 * means_sd$sd_exp)) < 0,
+                                 -1, (means_sd$mean_exp - (4 * means_sd$sd_exp)))
+      means_sd$min_dist <- ifelse((means_sd$mean_dist - (4 * means_sd$sd_dist)) < 0,
+                                  -1, (means_sd$mean_dist - (4 * means_sd$sd_dist)))
       for (i in 1:nrow(means_sd)) {
         if (is.na(means_sd[i, "mean_dist"]) | is.na(means_sd[i, "sd_dist"])) {
           means_sd[i, "max_dist"] <- 10000
-          means_sd[i, "min_dist"] <- 0
+          means_sd[i, "min_dist"] <- -1
         }
         invisible(DBI::dbSendQuery(
             db,
@@ -1276,7 +1358,7 @@ AggDat <- R6::R6Class(
                     FROM all_farms.gridtemp
                     WHERE ST_Within(temp.geometry, gridtemp.geom);")
         ))
-        # Get the mean and 1SD of the experimental variable for all cell_ids and remove rows with outliers
+        # Get the mean and 2SD of the experimental variable for all cell_ids and remove rows with outliers
         means_sd <- DBI::dbGetQuery(
           db,
           paste0("SELECT AVG(exp) mean_exp, STDDEV(exp) sd_exp, cell_id
@@ -1285,20 +1367,23 @@ AggDat <- R6::R6Class(
         )
         means_sd$sd_exp[is.na(means_sd$sd_exp)|
                           means_sd$sd_exp == 0] <- 10
-        means_sd$max_exp <- means_sd$mean_exp + means_sd$sd_exp
-        means_sd$min_exp <- ifelse((means_sd$mean_exp - means_sd$sd_exp) < 0,
-                                   0, (means_sd$mean_exp - means_sd$sd_exp))
-        invisible(DBI::dbCreateTable(
+        means_sd$max_exp <- means_sd$mean_exp + (2 * means_sd$sd_exp)
+        means_sd$min_exp <- ifelse((means_sd$mean_exp - (2 * means_sd$sd_exp)) < 0,
+                                   -1, (means_sd$mean_exp - (2 * means_sd$sd_exp)))
+        means_sd$var_exp <- means_sd$sd_exp ^ 2
+        invisible(
+          DBI::dbWriteTable(
             db,
-            DBI::SQL(paste0(farmername, "_r.means")),
+            c(paste0(farmername, "_r"), "means"),
             means_sd,
-            row.names = NULL
-        ))
+            row.names = FALSE)
+        )
         invisible(DBI::dbSendQuery(
             db,
             paste0("ALTER TABLE ", farmername, "_r.temp
                     ADD COLUMN max_exp REAL,
-                    ADD COLUMN min_exp REAL;")
+                    ADD COLUMN min_exp REAL,
+                    ADD COLUMN var_exp REAL;")
         ))
         invisible(DBI::dbSendQuery(
             db,
@@ -1311,6 +1396,13 @@ AggDat <- R6::R6Class(
           db,
           paste0("UPDATE ", farmername, "_r.temp temp
                     SET min_exp = means.min_exp
+                    FROM ", farmername, "_r.means means
+                    WHERE temp.cell_id = means.cell_id;")
+        ))
+        invisible(DBI::dbSendQuery(
+          db,
+          paste0("UPDATE ", farmername, "_r.temp temp
+                    SET var_exp = means.var_exp
                     FROM ", farmername, "_r.means means
                     WHERE temp.cell_id = means.cell_id;")
         ))
@@ -1331,6 +1423,16 @@ AggDat <- R6::R6Class(
                     as.character(is_poly),
                     ", ", utm_epsg, ")
                     USING ST_Transform(geometry, ", utm_epsg, ");")
+        ))
+        invisible(DBI::dbSendQuery(
+          db,
+          paste0("ALTER TABLE ", farmername, "_r.temp
+                    ADD COLUMN var_exp REAL;")
+        ))
+        invisible(DBI::dbSendQuery(
+          db,
+          paste0("UPDATE ", farmername, "_r.temp temp
+                    SET var_exp = 0;")
         ))
       }
 
@@ -1453,7 +1555,8 @@ AggDat <- R6::R6Class(
         invisible(DBI::dbSendQuery(
             db,
             paste0("ALTER TABLE ", farmername, "_a.exp_grid
-                    ADD COLUMN exp REAL;")
+                    ADD COLUMN exp REAL,
+                    ADD COLUMN var_exp REAL;")
         ))
         invisible(DBI::dbSendQuery(
           db,
@@ -1468,6 +1571,19 @@ AggDat <- R6::R6Class(
                     SET exp = temp.exp
                     FROM ", farmername, "_r.temp temp
                     WHERE ST_Within(aggexp_grid.geometry, temp.geometry);")
+        ))
+        invisible(DBI::dbSendQuery(
+          db,
+          paste0("UPDATE ", farmername, "_a.exp_grid aggexp_grid
+                    SET var_exp = temp.var_exp
+                    FROM ", farmername, "_r.temp temp
+                    WHERE ST_Within(aggexp_grid.geometry, temp.geometry);")
+        ))
+        invisible(DBI::dbSendQuery(
+          db,
+          paste0("UPDATE ", farmername, "_a.exp_grid
+                 SET exp = 0
+                 WHERE exp IS NULL;")
         ))
       } else {
         if (GRID == "grid") {
@@ -1494,6 +1610,30 @@ AggDat <- R6::R6Class(
 
                       UPDATE ", farmername, "_a.exp_grid aggexp_grid
                       SET exp = CAST ( vtemp.exp AS REAL )
+                      FROM vtemp
+                      WHERE aggexp_grid.cell_id = vtemp.cell_id;")
+          ))
+          invisible(DBI::dbSendQuery(
+            db,
+            paste0("ALTER TABLE ", farmername, "_a.exp_grid
+                      ADD COLUMN var_exp REAL;")
+          ))
+          invisible(DBI::dbSendQuery(
+            db,
+            paste0("WITH vtemp AS (
+                      SELECT
+                        b.cell_id,
+                        to_char(
+                          AVG (b.var_exp),
+                          '9999999999999999999'
+                        ) AS var_exp
+                      FROM ", farmername, "_r.temp b
+                      INNER JOIN ", farmername, "_a.exp_grid a ON a.cell_id = b.cell_id
+                      GROUP BY  b.cell_id
+                      )
+
+                      UPDATE ", farmername, "_a.exp_grid aggexp_grid
+                      SET var_exp = CAST ( vtemp.var_exp AS REAL )
                       FROM vtemp
                       WHERE aggexp_grid.cell_id = vtemp.cell_id;")
           ))
@@ -1532,14 +1672,42 @@ AggDat <- R6::R6Class(
                       AND vtemp.y = a.y
                       AND vtemp.dist < 3.25;")
           ))
+          invisible(DBI::dbSendQuery(
+            db,
+            paste0("ALTER TABLE ", farmername, "_a.exp_grid
+                      ADD COLUMN var_exp REAL;")
+          ))
+          invisible(DBI::dbSendQuery(
+            db,
+            paste0("WITH vtemp AS (
+                        SELECT a.cell_id,
+                        b.var_exp,
+                        b.dist,
+                        a.x,
+                        a.y,
+                        a.geometry
+                        FROM ", farmername, "_a.exp_grid a
+                        JOIN LATERAL (
+                          SELECT var_exp,
+                          ST_Distance(temp.geometry, a.geometry) as dist
+                          FROM ", farmername, "_r.temp temp
+                          ORDER BY a.geometry <-> temp.geometry
+                          LIMIT 1
+                        ) AS b
+                        ON true
+                      )
+
+                      UPDATE ", farmername, "_a.exp_grid a
+                      SET var_exp = vtemp.var_exp
+                      FROM vtemp
+                      WHERE vtemp.cell_id = a.cell_id
+                      AND vtemp.x = a.x
+                      AND vtemp.y = a.y
+                      AND vtemp.dist < 3.25;")
+          ))
         }
       }
-      invisible(DBI::dbSendQuery(
-          db,
-          paste0("UPDATE ", farmername, "_a.exp_grid
-               SET exp = 0
-               WHERE exp IS NULL;")
-      ))
+
       if (GRID == "grid") {
         # if gridded option get average from cell id
         # Add the mean experimental var to the aggregated table by cell_id
@@ -1564,6 +1732,30 @@ AggDat <- R6::R6Class(
 
                       UPDATE ", farmername, "_a.temp aggtemp
                       SET ", newcol, " = CAST ( vtemp.exp AS REAL )
+                      FROM vtemp
+                      WHERE aggtemp.cell_id = vtemp.cell_id;")
+        ))
+        invisible(DBI::dbSendQuery(
+          db,
+          paste0("ALTER TABLE ", farmername, "_a.temp
+                      ADD COLUMN var_", newcol, " REAL;")
+        ))
+        invisible(DBI::dbSendQuery(
+          db,
+          paste0("WITH vtemp AS (
+                      SELECT
+                        b.cell_id,
+                        to_char(
+                          AVG (b.exp),
+                          '9999999999999999999'
+                        ) AS var_exp
+                      FROM ", farmername, "_a.exp_grid b
+                      INNER JOIN ", farmername, "_a.temp a ON a.cell_id = b.cell_id
+                      GROUP BY  b.cell_id
+                      )
+
+                      UPDATE ", farmername, "_a.temp aggtemp
+                      SET var_", newcol, " = CAST ( vtemp.var_exp AS REAL )
                       FROM vtemp
                       WHERE aggtemp.cell_id = vtemp.cell_id;")
         ))
@@ -1602,7 +1794,55 @@ AggDat <- R6::R6Class(
                       AND vtemp.y = a.y
                       AND vtemp.dist < 10;")
         ))
+        invisible(DBI::dbSendQuery(
+          db,
+          paste0("ALTER TABLE ", farmername, "_a.temp
+                      ADD COLUMN var_", newcol, " REAL;")
+        ))
+        invisible(DBI::dbSendQuery(
+          db,
+          paste0("WITH vtemp AS (
+                        SELECT a.cell_id,
+                        b.var_exp,
+                        b.dist,
+                        a.x,
+                        a.y,
+                        a.geometry
+                        FROM ", farmername, "_a.temp a
+                        JOIN LATERAL (
+                          SELECT var_exp,
+                          ST_Distance(temp.geometry, a.geometry) as dist
+                          FROM ", farmername, "_a.exp_grid temp
+                          ORDER BY a.geometry <-> temp.geometry
+                          LIMIT 1
+                        ) AS b
+                        ON true
+                      )
+
+                      UPDATE ", farmername, "_a.temp a
+                      SET var_", newcol, " = vtemp.var_exp
+                      FROM vtemp
+                      WHERE vtemp.cell_id = a.cell_id
+                      AND vtemp.x = a.x
+                      AND vtemp.y = a.y
+                      AND vtemp.dist < 10;")
+        ))
       }
+
+      # browser() ## TODO: FIX ZERO RATE HERE
+      # invisible(DBI::dbSendQuery(
+      #   db,
+      #   paste0("UPDATE ", farmername, "_a.exp_grid
+      #          SET exp = 0
+      #          WHERE exp IS NULL;")
+      # ))
+      # invisible(DBI::dbSendQuery(
+      #   db,
+      #   paste0("UPDATE ", farmername, "_a.exp_grid
+      #          SET var_exp = 0
+      #          WHERE var_exp IS NULL;")
+      # ))
+
       invisible(
         DBI::dbSendQuery(db, paste0("DROP TABLE ", farmername, "_a.exp_box"))
       )
