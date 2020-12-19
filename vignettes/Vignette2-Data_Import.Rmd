@@ -53,10 +53,10 @@ Again, it is assumed that the user has completed Vignette 1 and understands the 
 # Workflow
 The sections below describe the process of importing data collected on-farms to the OFPE formatted database. The initial section loads the required packages and connects to the database. The activity workflow for importing data and a more detailed description is described on [this page](https://paulhegedus.github.io/OFPE-Website/data_import.html), where a component diagram can also be found. The vignette examples with "FarmerB" use only that farmer's data and Google Earth Engine data for the farm boundary of "FarmerB" from 2015 - 2020. This will take about 5GB on your machine.
 
-## Set-Up
+## 1.0 Set-Up
 The below contains the packages used in the vignette and a demonstration of connecting to your database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette uses example data located in the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) R-package. This vignette downloads data from the OFPE package in order to demonstrate a realistic data workflow. 
 
-### Load Packages
+### 1.1 Load Packages
 
 ```{r setup, message = FALSE, eval = FALSE}
 #devtools::install_github("paulhegedus/OFPE")
@@ -65,7 +65,7 @@ library(OFPE)
 library(OFPEDATA)
 ```
 
-### Connect to Database
+### 1.2 Connect to Database
 
 First, a connection is formed to the database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette, and the rest of the vignettes are working with an example database named 'OFPE' (as named in the tutorial above and exemplified in Vignette 1). This package utilizes an R6 class for containing the database connection information and the connection itself. This class defaults to a PostgreSQL database.
 
@@ -80,7 +80,7 @@ dbCon <- DBCon$new(
 OFPE::removeTempTables(dbCon$db)
 ```
 
-### Prepare Example Data
+### (Optional) Prepare Example Data
 This section is for creating a folder that contains the experimental field data FOR FARMER B. Extract FarmerB's data from the OFPEDATA package and put in a folder in you "~" directory called "INIT_UPLOADS" to follow along after this section. **NOTE:** when using your own data, this section is irrelevant, but you still might want to check out that tutorial. This vignette only uses FarmerB, as with Vignette1. Modify the code below to include data from FarmerC or FarmerI from the OFPEDATA package, but you may need to modify the code below. Again, this section is not used in the workflow, it is simply to get you setup for following along with the vignette.
 
 First, get the names of the data in the OFPEDATA package that has example data for these vignettes. Isolate the names of data corresponding to field data which does not have "_bbox" suffix. Extract from OFPEDATA.
@@ -127,10 +127,10 @@ rm(dat_list, temp_path)
 ```
 
 
-## Import On-Farm Data
+## 2.0 Import On-Farm Data
 The steps required for importing the data consist of initializing the import data R6 class with the path to the folder in which the data to be uploaded is saved. It is efficient to put all the data you want to import into one folder and path to that. That way you can instantiate the class, run it, and walk away for awhile while it loads. The on-farm import class has a method for initializing and a method for running. After the completion of the execution method, a data frame with the status of each attempted file is generated.
 
-### Initialize ImportOF
+### 2.1 Initialize ImportOF
 The ImportOF class is initialized with the path to the location of the data that the user wants to upload and a database object. This class can be initialized and executed as many times as needed. Data that is already present in the database and reuploaded to the database will be replaced.
 
 All of the data available in the example data from the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) package are used as an example here. The steps for uploading data are always the same.  
@@ -140,7 +140,7 @@ dat_path <- "<your/folder/path>"
 importOF <- ImportOF$new(dbCon, dat_path)
 ```
 
-### Import On-Farm Data
+### 2.2 Import On-Farm Data
 The execution method of the ImportOF class simply requires the file names to the data that is to be uploaded into the database. After the method has completed execution, the 'status' object in the ImportOF R6 class will indicate which files uploaded successfully and which did not.
 
 **NOTE:** This process may take some significant time depending on how much data you have in your specified upload folder. Go grab a coffee or take a break and work on something else.
@@ -149,7 +149,7 @@ importOF$executeUpload()
 ```
 
 
-### Check Status
+### 2.3 Check Status
 After the 'uploadData' method of the 'ImportOF' class has been executed, the import status of your data can be found in the 'status' object, a data.frame indicating the completion/fail of each file name.
 
 ```{r, eval = FALSE}
@@ -157,18 +157,22 @@ importOF$status
 ```
 
 
-## Import Google Earth Engine Data
+## 3.0 Import Google Earth Engine Data
 The steps required for importing data from Google Earth Engine are outlined below. Google Earth Engine data is gathered as discussed in these tutorials, [Google Earth Engine Set-Up](https://paulhegedus.github.io/OFPE-Website/gee_setup.html) and  [Run Google Earth Engine](https://paulhegedus.github.io/OFPE-Website/run_gee.html). Data is downloaded from GEE to Google Drive, where it is accessed by the R6 class below.
 
 This class utilizes the same database connection used for importing data on-farms.
 
 Before using the ImportGEE class, the Google Drive account where the user data is stored needs to be authorized. Simply insert your email address in the line below.
 
+###### 3.0.1 - Setup Google Earth Engine : https://paulhegedus.github.io/OFPE-Website/gee_setup.html
+###### 3.0.2 - Setup Google Drive : https://paulhegedus.github.io/OFPE-Website/gd_setup.html
+###### 3.0.3 - Run Google Earth Engine : https://paulhegedus.github.io/OFPE-Website/run_gee.html
+###### 3.0.4 - Authorize Google Drive
 ```{r, eval = FALSE}
 googledrive::drive_auth("<your_email@address>")
 ```
 
-### Initialize ImportGEE
+### 3.1 Initialize ImportGEE
 The ImportGEE class is initialized with the path to the location of the Google Drive folder where the data is connected, and a database connection. This class can be initialized and executed as many times as needed. Data that is already present in the database and re-uploaded to the database will be replaced if desired by setting the option of OVERWRITE to TRUE. 
 
 If following along with the FarmerB example for these vignettes, you will likely only want to import Farmer B's GEE data, so put in a specific folder in your Google Drive and set the path to that (e.g. make a folder called 'GEE_Surfaces_FarmerB').
@@ -178,7 +182,7 @@ dat_path <- "<your_google_drive_foldername>"
 importGEE <- ImportGEE$new(dbCon, dat_path, FALSE)
 ```
 
-### Import Google Earth Engine Data
+### 3.2 Import Google Earth Engine Data
 The execution method of the ImportGEE class simply requires the name of the Google Drive folder with data to be uploaded into the database. As data is uploaded, messages will appear on the status of the import.
 
 **NOTE:** This process takes some significant time depending on how much data you have in your specified Google Drive folder. Go grab a coffee or take a break and work on something else.

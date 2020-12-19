@@ -21,7 +21,7 @@ the selected location of aggregated data ('Grid' vs. 'Observed'). Experimental
 data is gathered from the year of interest and the year in which a crop was
 previously grown. These data are all cleaned in the same process. Across the
 whole field, data are removed when exceeding 5SD from the mean, and within
-each 10m grid cell, data are removed when exceeding 1SD from the cell mean.
+each 10m grid cell, data are removed when exceeding 2SD from the cell mean.
 This occurs regardless of whether 'Grid' or 'Observed' is selected. Then,
 data from remotely sensed sources are gathered. The data selected is dependent
 on the 'dat_used' variable, which indicates whether to use data from Jan 1 to

@@ -50,10 +50,10 @@ Data from the Billings, MT elevator contain variables that can be varied to get 
 
 The activity workflow for analyzing and simulating data and a more detailed description is described on [this page](https://paulhegedus.github.io/OFPE-Website/sim_analysis.html), where a component diagram can also be found.
 
-## Set-Up
+## 1.0 Set-Up
 The user must have access to an OFPE formatted database for using the vignette below. If using your own data and database, modify the pertinent information to your paths and file/folder/database names. This vignette does not use the OFPEDATA package directly, however references data from the package that was imported to the example database in Vignettes 1 and 2 and aggregated in Vignette 3.
 
-### Load Packages
+### 1.1 Load Packages
 
 ```{r setup, message = FALSE, eval = FALSE}
 #devtools::install_github("paulhegedus/OFPE")
@@ -61,7 +61,7 @@ library(OFPE)
 ```
 
 
-### Connect to Database
+### 1.2 Connect to Database
 First, a connection is formed to the database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette, and the rest of the vignettes are working with an example database named 'OFPE' (as named in the tutorial above and exemplified in Vignettes 1, 2, and 3). This class defaults to a PostgreSQL database.
 
 The user must also provide their Google key and register it to be able to plot maps of their data. See https://github.com/dkahle/ggmap for instructions on acquiring and registering a Google API key.
@@ -77,9 +77,10 @@ dbCon <- DBCon$new(
 ggmap::register_google(key = "your_google_key")
 ```
 
-## Select User Inputs
+## 2.0 Select User Inputs
 The user must instantiate all input classes required for the analysis and simulation steps. This includes instantiating the 'DatClass', 'SimClass', and the 'EconData' classes.
 
+#### 2.1 Create DatClass Object
 The 'DatObject' class is used for the analysis/simulation and Rx building steps of the OFPE data cycle. This object includes user selections such as the field and year of data to export from an OFPE database and the type of data (grid or observed) for analysis and simulation/prescription generation. Inputs can be supplied directly to this class during instantiation, however this is NOT recommended except for advanced users. It is recommended that the user supplies the database connection and uses the interactive selection methods to select user inputs. This class is passed to the 'DatObject' class that executes the methods for exporting data from the database and processing the data for analysis, simulation, and prescription building.
 
 ```{r, eval = FALSE}
@@ -87,6 +88,7 @@ datClass <- DatClass$new(dbCon)
 datClass$selectInputs()
 ```
 
+#### 2.2 Create SimClass Object
 The 'SimClass' class is used for the analysis/simulation and Rx building steps of the OFPE data cycle. This object includes user selections such as the model to use for fitting crop response functions for analysis, the number of iterations to run the simulation, the optimization method, the year(s) to use as an estimated weather scenario in which to simulate management outcomes, the farmer controlled fertilizer rate, the maximum amount of the input to simulate management to, and the minimum amount of the input to simulate from. Inputs can be supplied directly to this class during instantiation, however this is NOT recommended except for advanced users. It is recommended that the user supplies the database connection and farmer name and uses the interactive selection methods to select user inputs. This class is passed to the 'SimClass' and model classes that executes the methods for analysis, simulation, and subsequent prescription generation.
 
 ```{r, eval = FALSE}
@@ -94,6 +96,7 @@ simClass <- SimClass$new(dbCon)
 simClass$selectInputs(datClass$farmername, datClass$fieldname)
 ```
 
+#### 2.3 Create ModClass Object
 The 'ModClass' is an R6 object that holds the inputs necessary for loading the selected model to use for the response variables selected in the 'DatClass' class. Inputs can be supplied directly to this class during instantiation, however this is NOT recommended except for advanced users. It is recommended that the user uses the interactive selection methods to select user inputs. The user will be asked to provide the name of the function they would like to use to fit a crop response model to the experimental and covariate data for each response variable, allowing different models to be used for yield and/or protein. Advanced users can write their own model R6 class and will be required to provide the path to the folder that they have stored the script for the R6 model class.  If a user writes their own model class please contact the developer for testing and inclusion in the OFPE package. If the user chooses to use either a 'GAM' or 'NonLinear_Logistic' model, they will not have to provide a path to these scripts because they are built into this package. The user will have to provide the path to store model outputs such as diagnostic and validation plots.
 
 ```{r, eval = FALSE}
@@ -101,6 +104,7 @@ modClass <- ModClass$new()
 modClass$selectInputs(datClass$respvar)
 ```
 
+#### 2.4 Create EconDat Class
 The 'EconDat' class is used to store economic parameters and data used in the OFPE Monte Carlo simulation. This class includes selections for parameters such as the fixed costs associated with production, not including the input, the cost of applying variable rate or site-specific technology per acre, and the option to use default economic data or for the user to provide their own economic conditions to simulate or their own protein premium/dockage data to use to fit a model of protein premium/dockages that is used in the Monte Carlo simulation to estimate net-return. Inputs can be supplied directly to this class during instantiation, however this is NOT recommended except for advanced users. It is recommended that the user uses the interactive selection methods to select user inputs. This class is passed to the 'SimClass' executes the methods for the simulation and subsequent prescription generation.
 
 ```{r, eval = FALSE}
@@ -109,7 +113,7 @@ econDat$selectInputs()
 ```
 
 
-## Set Up Analysis
+## 3.0 Set Up Analysis
 Based on the user inputs above in the 'DatClass' class, gather and process data from the database. This includes the export of data from the database based on user inputs, the subsetting of columns needed for analysis based on the data sources the user selected for the vegetation index, precipitation, and growing degree days. The processing of the data also includes the centering, if selected, and splitting of the data into training and validation datasets. The objects created in the data gather and process include a named list with training and validation data, called 'mod_dat', for each response variable ('yld' and/or 'pro'), and a named list ('yld' and/or 'pro') for the simulation and prescription building process, called 'sim_dat'.
 
 ```{r, eval = FALSE}
@@ -122,7 +126,7 @@ modClass$setupOP()
 modClass$setupMod(datClass)
 ```
 
-## Analysis
+## 4.0 Analysis
 The 'fitModels' method of the modClass object calls the specific model class' method for executing the model fitting function. This can differ between model types and is thus model specific. The model is fit with the training data and then the fitted model is used to predict values in a validation dataset. These are used to asses the model ability to predict new values. The 'savePlots' method calls the model specific execution of it's 'saveDiagnostics' method to produce and save diagnostic plots of the model, and then executes a 'plotValidation' method to compare the observed vs. predicted values and show a scatterplot of the observed and predicted values vs. the experimental variable.
 
 ```{r, eval = FALSE}
@@ -131,7 +135,7 @@ invisible(modClass$fitModels())
 invisible(modClass$savePlots())
 ```
 
-## Set Up Simulation
+## 5.0 Set Up Simulation
 At this point, the user can either go back and reselect inputs in order to analyze the data in a different way, or can proceed to the simulation. The 'setupOP' method creates the output folders for the simulation. If the user
 
 The first step is to setup the simulation. The user supplies the DatClass, ModClass, and EconDat R6 classes the user initialized and/or used in prior steps. These are passed into the SimClass 'SetupSim' method, where the data from the user specified simulation years are gathered and processed to the user specifications (i.e. prec and gdd sources, center) in the DatClass, and the ModClass is used to predict crop responses at each location of all the simulation data for every as-applied rate in the range specified by the user. This process will take some time depending on the range of experimental values to simulate over, especially for GAM's.
@@ -140,7 +144,7 @@ The first step is to setup the simulation. The user supplies the DatClass, ModCl
 invisible(simClass$setupSim(datClass, modClass, econDat))
 ```
 
-## Simulation
+## 6.0 Simulation
 After the SimClass has been initialized and setup with DatClass, ModClass, and EconDat objects, the user can execute the Monte Carlo simulation for comparing management scenarios under a range of economic conditions for each of the simulation years specified. If the user has not selected otherwise, outputs from the simulations will be generated and saved to the 'Outputs' folder in the user specified path when the SimOP class is used to make outputs. 
 
 ```{r, eval = FALSE}

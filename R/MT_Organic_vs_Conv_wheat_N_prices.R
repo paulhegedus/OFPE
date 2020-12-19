@@ -4,7 +4,7 @@
 #' grown hard red winter wheat (HRWW), the cost of nitrogen fertilizer, and the
 #' year the data is related to.
 #'
-#' @format A data frame with 93 rows and 4 variables:
+#' @format A data frame with 98 rows and 4 variables:
 #' \describe{
 #'   \item{Year}{Year observation corresponds to.}
 #'   \item{org}{Price of HRWW grown organically, in dollars per bushel.}
