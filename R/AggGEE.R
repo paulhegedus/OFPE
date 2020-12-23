@@ -86,7 +86,49 @@ AggGEE <- R6::R6Class(
                   ADD COLUMN ssm_py REAL,
                   ADD COLUMN susm_cy REAL,
                   ADD COLUMN susm_py REAL,
-                  ADD COLUMN musym VARCHAR;")
+                  ADD COLUMN grtgroup REAL,
+                  ADD COLUMN texture0cm REAL,
+                  ADD COLUMN texture10cm REAL,
+                  ADD COLUMN texture30cm REAL,
+                  ADD COLUMN texture60cm REAL,
+                  ADD COLUMN texture100cm REAL,
+                  ADD COLUMN texture200cm REAL,
+                  ADD COLUMN bulkdensity0cm REAL,
+                  ADD COLUMN bulkdensity10cm REAL,
+                  ADD COLUMN bulkdensity30cm REAL,
+                  ADD COLUMN bulkdensity60cm REAL,
+                  ADD COLUMN bulkdensity100cm REAL,
+                  ADD COLUMN bulkdensity200cm REAL,
+                  ADD COLUMN claycontent0cm REAL,
+                  ADD COLUMN claycontent10cm REAL,
+                  ADD COLUMN claycontent30cm REAL,
+                  ADD COLUMN claycontent60cm REAL,
+                  ADD COLUMN claycontent100cm REAL,
+                  ADD COLUMN claycontent200cm REAL,
+                  ADD COLUMN sandcontent0cm REAL,
+                  ADD COLUMN sandcontent10cm REAL,
+                  ADD COLUMN sandcontent30cm REAL,
+                  ADD COLUMN sandcontent60cm REAL,
+                  ADD COLUMN sandcontent100cm REAL,
+                  ADD COLUMN sandcontent200cm REAL,
+                  ADD COLUMN phw0cm REAL,
+                  ADD COLUMN phw10cm REAL,
+                  ADD COLUMN phw30cm REAL,
+                  ADD COLUMN phw60cm REAL,
+                  ADD COLUMN phw100cm REAL,
+                  ADD COLUMN phw200cm REAL,
+                  ADD COLUMN watercontent0cm REAL,
+                  ADD COLUMN watercontent10cm REAL,
+                  ADD COLUMN watercontent30cm REAL,
+                  ADD COLUMN watercontent60cm REAL,
+                  ADD COLUMN watercontent100cm REAL,
+                  ADD COLUMN watercontent200cm REAL,
+                  ADD COLUMN carboncontent0cm REAL,
+                  ADD COLUMN carboncontent10cm REAL,
+                  ADD COLUMN carboncontent30cm REAL,
+                  ADD COLUMN carboncontent60cm REAL,
+                  ADD COLUMN carboncontent100cm REAL,
+                  ADD COLUMN carboncontent200cm REAL;")
         )
       )
       invisible(
@@ -105,11 +147,28 @@ AggGEE <- R6::R6Class(
                   "ndvi_cy_l", "ndvi_py_l", "ndvi_2py_l",
                   "ndre_cy", "ndre_py", "ndre_2py",
                   "cire_cy", "cire_py", "cire_2py",
-                  "ssm_cy", "ssm_py", "susm_cy", "susm_py")
+                  "ssm_cy", "ssm_py", "susm_cy", "susm_py",
+                  "grtgroup",
+                  "texture0cm", "texture10cm", "texture30cm", "texture60cm", "texture100cm", "texture200cm",
+                  "bulkdensity0cm", "bulkdensity10cm", "bulkdensity30cm", "bulkdensity60cm", "bulkdensity100cm", "bulkdensity200cm",
+                  "claycontent0cm", "claycontent10cm", "claycontent30cm", "claycontent60cm", "claycontent100cm", "claycontent200cm",
+                  "sandcontent0cm", "sandcontent10cm", "sandcontent30cm", "sandcontent60cm", "sandcontent100cm", "sandcontent200cm",
+                  "phw0cm", "phw10cm", "phw30cm", "phw60cm", "phw100cm", "phw200cm",
+                  "watercontent0cm", "watercontent10cm", "watercontent30cm", "watercontent60cm", "watercontent100cm", "watercontent200cm",
+                  "carboncontent0cm", "carboncontent10cm", "carboncontent30cm", "carboncontent60cm", "carboncontent100cm", "carboncontent200cm"
+                  )
       self$type <- c("aspect_rad", "slope", "elev", "tpi",
                 rep(("prec"), 2), rep("gdd", 2), rep("prec", 2),
                 rep("gdd", 2), rep("ndvi", 6), rep("ndre", 3),
-                rep("cire", 3), rep("ssm", 2), rep("susm", 2))
+                rep("cire", 3), rep("ssm", 2), rep("susm", 2),
+                "grtgroup",
+                "texture0cm", "texture10cm", "texture30cm", "texture60cm", "texture100cm", "texture200cm",
+                "bulkdensity0cm", "bulkdensity10cm", "bulkdensity30cm", "bulkdensity60cm", "bulkdensity100cm", "bulkdensity200cm",
+                "claycontent0cm", "claycontent10cm", "claycontent30cm", "claycontent60cm", "claycontent100cm", "claycontent200cm",
+                "sandcontent0cm", "sandcontent10cm", "sandcontent30cm", "sandcontent60cm", "sandcontent100cm", "sandcontent200cm",
+                "phw0cm", "phw10cm", "phw30cm", "phw60cm", "phw100cm", "phw200cm",
+                "watercontent0cm", "watercontent10cm", "watercontent30cm", "watercontent60cm", "watercontent100cm", "watercontent200cm",
+                "carboncontent0cm", "carboncontent10cm", "carboncontent30cm", "carboncontent60cm", "carboncontent100cm", "carboncontent200cm")
       self$SOURCE <- c(ifelse(self$aggInputs$farmername == "loewen", "srtm", "ned"),
                   ifelse(self$aggInputs$farmername == "loewen", "srtm", "ned"),
                   ifelse(self$aggInputs$farmername == "loewen", "cdem", "ned"),
@@ -119,15 +178,15 @@ AggGEE <- R6::R6Class(
                          ifelse(self$aggInputs$cy_resp == 2013, "L7", "L5")),
                   rep(ifelse(self$PY >= 2013, "L8",
                            ifelse(self$PY == 2012, "L7", "L5")), 2),
-                  rep("S2", 6), rep("smap", 4))
+                  rep("S2", 6), rep("smap", 4), rep("olm", 43))
       self$year <- c(rep("2015", 4), rep(c(self$aggInputs$cy_resp, self$PY), 4),
                 rep(c(self$aggInputs$cy_resp, self$PY, self$PY2), 4),
-                rep(c(self$aggInputs$cy_resp, self$PY), 2))
+                rep(c(self$aggInputs$cy_resp, self$PY), 2), rep("2015", 43))
       if (self$aggInputs$dat_used == "decision_point") {
         self$loy <- c(rep("full", 4),
                  rep(c("mar", "full"), 4),
                  rep(c("mar", "full", "full"), 4),
-                 rep(c("mar", "full"), 2))
+                 rep(c("mar", "full"), 2), rep("full", 43))
       } else {
         self$loy <- rep("full", length(self$labels))
       }
@@ -259,6 +318,15 @@ AggGEE <- R6::R6Class(
                     WHERE ST_Intersects(geetemp.rast, temp.geometry);")
           )
         )
+        if (grepl("phw", type)) {
+          invisible(
+            DBI::dbSendQuery(
+              db,
+              paste0("UPDATE ", farmername, "_a.temp
+                    SET ", label, " = ", label, " / 10;")
+            )
+          )
+        }
         if (type == "aspect_rad") {
           invisible(DBI::dbSendQuery(
             db,

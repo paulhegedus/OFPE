@@ -1955,6 +1955,13 @@ AggDat <- R6::R6Class(
     #' @param None No arguments needed because of class instantiation.
     #' @return None.
     .aggSSURGO = function() {
+      invisible(
+        DBI::dbSendQuery(
+          self$aggInputs$dbCon$db,
+          paste0("ALTER TABLE ", self$aggInputs$farmername, "_a.temp
+                  ADD COLUMN musym VARCHAR;")
+        )
+      )
       if (!length(self$farmidx) == 0) {
         ssurgoExist <- as.logical(DBI::dbGetQuery(
             self$aggInputs$dbCon$db,

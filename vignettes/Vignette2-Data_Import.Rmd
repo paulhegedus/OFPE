@@ -40,6 +40,8 @@ This [tutorial](https://paulhegedus.github.io/OFPE-Website/run_gee.html) outline
 
 The process for importing Google Earth Engine data to the database and a more detailed description is outlined in the activity diagram on [this page](https://paulhegedus.github.io/OFPE-Website/dat_import.html), where a component diagram can also be found. 
 
+Note that parameters like elevation, slope, aspect, TPI, soil great groups, soil texture, bulk density, clay content, sand content, pH, water content, and organic carbon content are collected in GEE for all years, however when aggregated only 2015 is searched for. So, when downloading data from GEE make sure to import these data for 2015. 
+
 # Resources
 The resources below are strongly recommended as supplemental information regarding the use and intent of this vignette and associated functions.
 

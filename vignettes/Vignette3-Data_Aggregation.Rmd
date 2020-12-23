@@ -62,6 +62,8 @@ OFPE::removeTempTables(dbCon$db) # removes temporary tables
 ## 2.0 Aggregate Data
 The steps for aggregating covariate information to yield or protein data consists of selecting the options and inputs related to the aggregation process and then executing the aggregation workflow. Both of these processes use R6 classes. The 'AggInput' class holds all of the options related to the aggregation workflow and is required for instantiating the 'AggDat' class. Note that you can only aggregate data that you have collected and imported into the database. This will not go collect your data, that is what Vignettes 1 and 2 cover.
 
+Note that parameters like elevation, slope, aspect, TPI, soil great groups, soil texture, bulk density, clay content, sand content, pH, water content, and organic carbon content are collected in GEE for all years, however when aggregated only 2015 is searched for. So, when downloading data from GEE make sure to import these data for 2015. 
+
 ### 2.1 Initialize AggInput Class
 This class holds information related to the data aggregation workflow seen in the activity diagrams on [this page](https://paulhegedus.github.io/OFPE-Website/dat_agg.html). 
 
