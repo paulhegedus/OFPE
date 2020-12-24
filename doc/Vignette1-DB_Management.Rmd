@@ -1,0 +1,302 @@
+---
+title: "Vignette1 - Database Creation and Management"
+author: "Paul Hegedus"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette1 - Database Creation and Management}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+# Introduction
+This is the first tutorial in the OFPE data workflow and typically the initial step before the OFPE data cycle. The Manage Database section below can be used to add new farmers, farms, or fields to the database. More information on creating the database can be found on this [page](https://paulhegedus.github.io/OFPE-Website/db_management.html) at the [OFPE Technical Website](https://paulhegedus.github.io/OFPE-Website/index.html).
+
+The user will need access to a server or need to create their own. In order to do this, see this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html) for downloading PostgreSQL and creating a local database. If using a pre-existing database, the user will need the host, username, password, and database driver. 
+
+This process begins by building a spatial database for storing data gathered from farms and from satellite sources. This database is set up in  a specific OFPE format to support the ensuing workflow and requires the user to specify the boundaries of fields selected for data intensive management and the farm boundary within which a farmer's fields fall. Setting up the database is a one-time process where once the database is set up it will only need management to keep it up to date.
+
+The user will need access to or need to create necessary farm and field boundaries associated with their experimental fields to set up their database. These farm boundaries that encompass the fields within a farmer's ownership/management purview are imported as assets into Google Earth Engine and imported into the database. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html) for creating a shapefile of a field or farm boundary. Remember that these boundaries should have one column named 'id' indicating the section of the field (1 if continuous, 2 if separated. See sec35middle). These are necessary for identifying data based on geographic location rather than searching files for information keying in on field or farm specific information. Farm boundaries are also used as the bounding boxes for downloading Google Earth Engine data.
+
+The process for building and setting up the database is outlined and a more detailed description in the activity diagram on [this page](https://paulhegedus.github.io/OFPE-Website/db_management.html), where a component diagram can also be found. This vignette outlines step 1 of the OFPE data cycle, executed using the R package. This is represented by step 1 in the blue ring of the figure below. There is an associated page on the OFPE web application (green ring) that utilizes these R classes and functions to achieve the same effect in a user friendly environment.
+
+```{r, out.width='100%', fig.align='center', fig.cap='**Figure 1.** Key is found in the top right corner of the schematic. The green ring represents the R-Shiny OFPE web spplication which is driven by the OFPE R-Package (blue ring). These both require connection to a PostgreSQL spatial database with PostGIS enabled. The yellow boxes represent different pages of the OFPE web application and vignettes in the R-package. Black boxes represent user inputs and orange clouds represent cloud based tools.', echo = FALSE}
+knitr::include_graphics('ofpe_data_workflow.png')
+```
+
+# Resources
+The resources below are strongly recommended as supplemental information regarding the use and intent of this vignette and associated functions.
+
+  * [OFPE Project Website](https://sites.google.com/site/ofpeframework/): Project information and products from the MSU OFPE project.
+  * [OFPE Technical Website](https://paulhegedus.github.io/OFPE-Website/index.html): Website with more detailed descriptions of the OFPE data cycle and workflow, as well as tutorials for external data processes that cannot be performed in R.
+  * [OFPE Overview](https://paulhegedus.github.io/OFPE-Website/ofpe_overview.html): Page of the OFPE Technical Website describing an overview of the OFPE data cycle and workflow.
+  * [OFPE Database Management](https://paulhegedus.github.io/OFPE-Website/db_management.html): Detailed description of the OFPE database set up
+  * [PostgreSQL Database Set-Up](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html): Tutorial for downloading PostgreSQL and PostGIS and creating a spatial database. 
+  * [Create ESRI Shapefiles](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html): Tutorial for creating ESRI shapefiles for farm and field boundaries required for the OFPE data cycle.
+
+The [PostgreSQL Database Set-Up](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html) tutorial is required before using this vignette. It is recommended that the database created is named 'OFPE' for continuity with the rest of these vignettes. The activity workflow for importing data and a more detailed description is described on [this page](https://paulhegedus.github.io/OFPE-Website/data_agg.html), where a component diagram can also be found.
+
+# Workflow
+The sections below describe the process of building and setting up an initial OFPE database for the first time and loading data into the database. The initial section loads the required packages and connects to the database. If the user does not have farm and field boundaries to upload, use the section for setting up example data in order to follow along with this and all of the vignettes. The activity workflow for building and formatting the database and a more detailed description is described on [this page](https://paulhegedus.github.io/OFPE-Website/db_management.html), where a component diagram can also be found.
+
+The vignette examples with "FarmerB" use only that farmer's data and Google Earth Engine data for the farm boundary of "FarmerB" from 2015 - 2020. This will take about 5GB on your machine.
+
+## 1.0 Set-Up
+The below contains the packages used in the vignette and a demonstration of connecting to your database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette uses example data located in the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) R-package. This vignette downloads data from the OFPE package in order to demonstrate a realistic data workflow. 
+
+### 1.1 Database Set-Up
+This section is for building the database and loading required extensions such as PostGIS. At this point, the user is expected to have followed the PostgreSQL download and set up tutorial found in the [link](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html) below. This is the first step of the OFPE data cycle and should only be required once. If adding more farmers, fields, or farms to the database, see the Manage Database section below. This section utilizes an R6 Class called BuildDB that is used to build and set-up an OFPE formatted database. This vignette operates under the assumption of a local server group established on the user's machine and that the user has created a database as in tutorial below. 
+
+  * PostgreSQL Database Set-Up : https://paulhegedus.github.io/OFPE-Website/postgres_setup.html
+
+### 1.2 Create Field and Farm Boundaries
+Follow the tutorial below for creating field boundaries for all fields experimented in. Also create larger farm boundaries that encompass all fields for a farmer. Multiple farm boundaries can be made for each farmer to avoid overlapping between farms.
+
+  * Create Boundaries :  https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html
+
+### 1.3 Load Packages
+
+```{r setup, message = FALSE, eval = FALSE}
+#devtools::install_github("paulhegedus/OFPE")
+#devtools::install_github("paulhegedus/OFPEDATA")
+library(OFPE)
+library(OFPEDATA)
+```
+
+### 1.4 Connect to Database
+
+First, a connection is formed to the database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette, and the rest of the vignettes are working with an example database named 'OFPE' (as named in the tutorial). This package utilizes an R6 class for containing the database connection information and the connection itself. This class defaults to a PostgreSQL database.
+
+```{r, eval = FALSE}
+dbCon <- DBCon$new(
+  user = "postgres",
+  password = "<your_password>",
+  dbname = "<your_db_name>", 
+  host = "localhost", # if you made your own db
+  port = "5432" # default 
+)
+```
+
+### (Optional) Prepare Example Data
+This section is for creating a folder that contains the experimental field and farm boundaries. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html) for creating a shapefile of a field or farm boundary. **NOTE:** when using your own data, this section is irrelevant, but you still might want to check out that tutorial.
+
+First, get the names of the data in the OFPEDATA package that has example data for these vignettes. Isolate the names of data corresponding to field or farm boundaries, labeled with 'bbox'. Extract from OFPEDATA.
+
+```{r, eval = FALSE}
+dat <- data(package = "OFPEDATA")
+dat_names <- dat$results[, "Item"] %>%
+  subset(grepl("_bbox", dat$results[, "Item"])) 
+dat_list <- as.list(dat_names) %>%
+  `names<-`(dat_names) %>% 
+  lapply(function (x) eval(parse(text = x)))
+rm(dat, dat_names) 
+```
+
+Second, save boundaries to a temporary folder. Again, in your real world situation you do not need to do this. **NOTE:** This example will create a temporary folder called 'INIT_UPLOADS' in your home directory and WILL delete any folder called 'INIT_UPLOADS' in your home directory.
+
+```{r, eval = FALSE}
+temp_path <- "~/INIT_UPLOADS/"
+ifelse(dir.exists(temp_path), 
+       {do.call(file.remove, list(list.files(temp_path, full.names = TRUE)));
+         file.remove(temp_path);
+         dir.create(temp_path)},
+       dir.create(temp_path)) %>% 
+  invisible
+mapply(function (x, y) sf::st_write(x, 
+                                    paste0(temp_path, y, ".shp"), 
+                                    quiet = TRUE),
+       dat_list, 
+       names(dat_list)) %>% 
+  invisible()
+rm(dat_list, temp_path)
+```
+
+### 1.5 Initialize BuildDB
+The BuildDB class is initialized with a database connection and a list of farmers for which to build schemas for. This list of farmers does not need to be exhaustive, as farmers can be added later. When adding farmers using the ManageDB class (see section below), the appropriate schemas will be built. This BuildDB class is only for use when setting up an OFPE database for the first time.
+
+For demonstrative purposes, not all of the farmers available in the example data from the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) package are used to initialize the database. Only FarmerB is used as an example in the vignettes, use FarmerC and FarmerI data from the OFPEDATA package to test out adding more farmers, fields, and farms with the same method for FarmerB.
+
+```{r, eval = FALSE}
+# an initial farmer name to setup database with
+farmers <- c("FarmerB") 
+# this example used PostGIS version 2.5, change to 3.0 if needed
+buildDB <- BuildDB$new(dbCon, "2.5", farmers) 
+```
+
+### 1.6 Build Database
+All methods are public for documentation purposes, however the only function needed to set up the database is below. The other functions listed in the documentation are not recommended for single use as the BuildDB class is intended to be used once upon database inception and not running the  functions in order could cause an error. The three functions are described below, see their help pages with '?BuildDB' for more information.
+
+#### Load Extensions: loadExtensions()
+There are a couple extensions that need to be activated in the database. First is [PostGIS](https://postgis.net), an extension of PostgreSQL database, and the second is an extension of PostGIS enabling raster functionality. Finally, a function for creating a net across an area is made. These are the minimum extensions needed for the OFPE data cycle. The function does not require arguments if you provided all arguments to the initializer function. If you provide arguments, as in a single use case, they will be used rather than the attributes you initialized the object with.
+
+### Build Schemas: buildSchemas()
+Additionally, the BuildDB object will generate two schemas for each farmer, one to hold raw and one to hold aggregated data. A general schema called 'all_farms' is also built.
+
+### Build Tables: buildTables()
+There are three tables that are initialized when building the OFPE database. These three initial tables are created in the 'all_farms' schema; 'farmers', 'farms', and 'fields' which are filled in using the manager functions below.
+
+Again, the function below simply runs each of the functions above in the intended order. Running those functions out of order will likely result in errors. Also, if you run this again after running once will result in error because extensions already created. Note that PostgreSQL does not allow uppercase letters in the names of their schemas or tables, so any names passed in are converted to lowercase.
+
+### Build Spatial Indexes: buildSpatialIndexes()
+The last step in the database build process involves building spatial indices for the tables with geometries that we just created. These are used to speed up spatial queries used later. After building spatial indices, it is recommended to vacuum/analyze your database regularly to keep these up to date. See this [page](https://postgis.net/workshops/postgis-intro/indexing.html) for more information on PostGIS spatial indexes.
+
+### Build Database: buildDatabase()
+The method that wraps all of the above functions up and executes in the proper order is the buildDatabase() method and is the only intended public method of the BuildDB class. However, the methods above are public for transparency and in order to document them. This function only needs to be run ONCE per database creation.
+
+```{r, eval = FALSE}
+invisible(buildDB$buildDatabase())
+```
+
+## 2.0 Manage Database
+This section is for managing and updating general information related to  on-farm precision experiments. It is also used to add initial data to the database upon inception in the method above. This data includes the names of collaborating farmers, the names of and boundaries for areas that encompass the experimental fields, and the names of and boundaries for experimental fields. **Note** you do not need to upload the field boundaries for all of the field's for which you upload data, just the fields that have experimental rates applied. For example, if you want to import data from a field with no experiments, perhaps for future comparisons, you would not need to include a field boundary until you want to analyze that data. **However**, any field data that you upload needs to fall within a farm boundary, otherwise it cannot be sorted into the database upon upload.
+
+The user will need access to or need to create necessary farm and field boundaries associated with their experimental fields to set up their database. These farm boundaries that encompass the fields within a farmer's ownership/management purview are both imported as assets into Google Earth Engine and imported into the database. See this [tutorial](https://paulhegedus.github.io/OFPE-Website/create_shp_qgis.html) for creating a shapefile of a field or farm boundary. These are necessary for identifying data based on geographic location rather than searching files for information keying in on field or farm specific information. Farm boundaries are also used as the bounding boxes for downloading Google Earth Engine data. The shapefile naming convention for fields is "<fieldname>_bbox.shp" while the shapefile naming convention for farm boundaries is "<farmername>_<farmname>_bbox.shp". This format is used because there are sometimes multiple farm boundaries corresponding to one farmer if their operations are spread across a large area (i.e. multiple counties). **NOTE:** Do not use the same name for a farm and a field. You must have the farm or field name present in the corresponding shapefile name. 
+
+### ManageDB Class
+This section utilizes an R6 Class called ManageDB that is used to update or add data to the OFPE database. This utilizes other R6 classes such as ManageFarmers, ManageFields, and ManageFarms, on request by the user. The modularity of the ManageDB class allows for users to create their own classes that can be integrated and passed into the ManageDB class. This vignette section operates under the assumption that the section above has been completed once for your database to enable extensions and add initial tables. This class takes a list of lists as an argument with an 'action class' name and associated parameters. 'Actions classes' include ManageFarmers(), ManageFarms(), and ManageFields(). 
+
+### 2.1 Initial Upload
+This section provides an example of uploading an initial batch of experimental information to the database, including the farm and field names and boundaries and the vector of farmer names. This information fills in the tables created with the BuildDB class. The section below will demonstrate how to add more farmers, fields, or farms to the database. 
+
+For demonstrative purposes, not all of the farmers available in the example data from the [OFPEDATA](https://github.com/paulhegedus/OFPEDATA.git) were used to build the database above in order to illustrate how to update and add to the database. 
+
+#### 2.1.1 Initial Parameters
+Initial parameters are provided below. When using your own data you will have different farm and field names and will likely have a lot more than two. In this example, we ware using the vector of farmer names defined above. This is the only argument for the ManageFarmers class and not redefined below.
+
+First, supply your inputs for farm information. For each farm, create a list with the name of the farm, the name of the farmer that owns it, and the name of the shapefile with the farm boundary. Remember that all arguments for names will be converted to lowercase (i.e. FarmerB = farmerb). Additionally, the path to the folder containing the farm boundary data will be required.
+
+```{r, eval = FALSE}
+farms <- list(
+  list(farm_name = "FarmerB_FarmName",
+       farm_shp_name = "FarmerB_FarmName_bbox",
+       farmer_name = "FarmerB")
+)
+farm_path <- "~/INIT_UPLOADS/"
+```
+
+Next, supply your inputs for field information. For each field, create a list with the name of the field, the name of the farmer that owns it, and the name of the shapefile with the field boundary. Remember that all arguments for names will be converted to lowercase (i.e. FarmerB = farmerb). Additionally, the path to the folder containing the field boundary data will be required.
+
+```{r, eval = FALSE}
+fields <- list(
+  list(field_name = "sec35middle",
+       field_shp_name = "sec35middle_bbox",
+       farmer_name = "FarmerB"),
+  list(field_name = "sec1east",
+       field_shp_name = "sec1east_bbox",
+       farmer_name = "FarmerB"),
+  list(field_name = "sec1west",
+       field_shp_name = "sec1west_bbox",
+       farmer_name = "FarmerB")
+)
+field_path <- "~/INIT_UPLOADS/"
+```
+
+#### 2.1.2 Initialize ManageDB
+The ManageDB class is initialized with a database connection, and a list of R6 action class names and associated arguments to run. These include a list of farmers to add to or update the database with, farm names and a file path to farm boundaries, and field names and a file path to field boundaries. When adding farmers using the ManageDB class the appropriate schemas will be built.
+
+Any or all of these R6 classes can be ran at any time in any order, however the user needs to be logical. If you are updating a new field from a new farmer but haven't added the new farm yet, no association with a farm can be made with the field, because the farm doesn't exist. Start at coarse spatial scales (farmers, farms) and then upload finer scale data (fields).
+
+```{r, eval = FALSE}
+action_list <- list(
+  list(action = "ManageFarmers",
+       farmers = farmers),
+  list(action = "ManageFarms",
+       farms = farms,
+       farm_path = farm_path),
+  list(action = "ManageFields",
+       fields = fields,
+       field_path = field_path)
+)
+```
+
+Now, pass the arguments on to the ManageDB class generator along with a database connection. Each of the action R6 classes specified by the user have the same interface that includes setup() and execute() methods. Any or all of these can be passed into the ManageDB class. These action classes are initialized with the initializeActions() method, setup with the setupActions() method, and executed with the executeActions() method. 
+
+```{r, eval = FALSE, message = FALSE}
+manageDB <- ManageDB$new(dbCon, action_list)
+invisible(manageDB$setupActions())
+```
+
+#### 2.1.3 Execute ManageDB
+After a ManageDB class object has been created and set up, the user can run the 'executeActions' method to add information to the database. The modularity of this class allows users to add R6 classes that they have built and pass them into the executeAction method. For example, a user may want to build a method or two for deleting information or adding information to other tables. See this [page](https://stackoverflow.com/questions/40295279/r-how-do-i-add-an-extra-function-to-a-package) for information on how to add to a package or clone the [OFPE package](https://github.com/paulhegedus/OFPE.git) Github repository, add your own classes and re-install the package from your source files.
+
+After the user has initialized the class, running the executeAction method will run the functions associated with each action method. Invisible is called to suppress chatty output.
+
+```{r, eval = FALSE, message = FALSE}
+invisible(manageDB$executeActions())
+```
+
+Now there should be data filled in the 'farmers', 'farms', and 'fields' tables in the 'all_farms' schema of the database. The section below will demonstrate how to add another farmer and their associated farm and fields.
+
+### 2.2 Adding Data
+Adding more data after an initial upload utilizes the same process and R6 classes as above in the 'Initial Upload' section above. Remember that if you attempt to upload a farm or field that already exists in the database it will be updated. This is determined based off of the farm or field name passed in. The section below adds two more farmer's data contained in the *OFPEDATA* package. Because this section mirrors the section above, it contains less information as above.
+
+Note that if you choose to execute the code below and add all associated data, this will take additional memory. The server where you plan to store your OFPE database you should have conservatively 100GB of space dedicated to your OFPE data, depending on the size and number of your farmers, farms, and fields.
+
+#### 2.2.1 Create Parameters
+Create your parameter objects that are passed onto the R6 classes and associated methods. This section will shows how to add new farmer data to the database. Simply rebuild the inputs for the classes with your new information and reexecute the methods.
+
+```{r, eval = FALSE}
+farmers <- c("FarmerC", "FarmerI")
+farms <- list(
+  list(farm_name = "FarmerC_FarmName",
+       farm_shp_name = "FarmerC_FarmName_bbox",
+       farmer_name = "FarmerC"),
+  list(farm_name = "FarmerI_FarmName",
+       farm_shp_name = "FarmerI_FarmName_bbox",
+       farmer_name = "FarmerI")
+)
+farm_path <- "~/INIT_UPLOADS/"
+fields <- list(
+  list(field_name = "millview",
+       field_shp_name = "millview_bbox",
+       farmer_name = "FarmerC"),
+  list(field_name = "henrys",
+       field_shp_name = "henrys_bbox",
+       farmer_name = "FarmerI")
+)
+field_path <- "~/INIT_UPLOADS/"
+```
+
+
+#### 2.2.2 Initialize ManageDB
+Now initialize the ManageDB class by building the 'action_list' and passing a DBCon object. Then setup the actions for execution. 
+
+```{r, eval = FALSE}
+action_list <- list(
+  list(action = "ManageFarmers",
+       farmers = farmers),
+  list(action = "ManageFarms",
+       farms = farms,
+       farm_path = farm_path),
+  list(action = "ManageFields",
+       fields = fields,
+       field_path = field_path)
+)
+manageDB <- ManageDB$new(dbCon, action_list)
+invisible(manageDB$setupActions())
+```
+
+Finally, execute the actions specified as above by running the executeActions() method of the ManageDB class.
+
+```{r, eval = FALSE, message = FALSE}
+invisible(manageDB$executeActions())
+```
+
+# Conclusion
+This vignette provided a demonstration of how to set-up a freshly created database following the completion of this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). A BuildDB class object is generated once per database and it's buildDatabase() method is used to load necessary extensions, build schemas and tables, and create spatial indices. 
+
+I HIGHLY recommend you vacuum/analyze the database frequently to keep it running smoothly.
+
+The ManageDB class can be initialized and executed whenever the user has new information to add to the database. The user specifies the list of actions to take and provides the necessary arguments to that list. The actions are then initialized, setup, and executed. 
+
+A diagram demonstrating the implementation and existence of modules related to the database creation and management can be seen [here](https://paulhegedus.github.io/OFPE-Website/db_management.html), diagramming the relationship of the classes used in this step. 
+
+Although the classes in this vignette interact with the database, none of them include any methods for deleting information. It is expected that the user will be able to execute a database query to remove any unwanted information.
+
+Whenever a database connection is open it needs to be closed.
+```{r, eval = FALSE}
+dbCon$disconnect()
+```
+
+
+
+

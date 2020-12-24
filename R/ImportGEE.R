@@ -201,6 +201,9 @@ ImportGEE <- R6::R6Class(
         str_locs <- as.data.frame(
           stringr::str_locate_all(info$orig_file, "200|201|1999")
         )
+        if (grepl("200cm", name)) {
+          str_locs <- str_locs[2, ]
+        }
         if (!anyNA(str_locs)) {
           if (str_locs[2] - str_locs[1] == 3) { # if the year is 1999
             info$year <- '1999'
