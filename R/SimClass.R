@@ -585,8 +585,6 @@ SimClass <- R6::R6Class(
                          out_path,
                          db,
                          utm_fieldname) {
-      browser()
-
       dat <- dat[which(dat$year == year), ]
 
       # if respvar > 1 and all(respvar ! in names(dat))
@@ -752,10 +750,33 @@ SimClass <- R6::R6Class(
       }
     },
     .setupSimDat = function(dat) {
+      ## if not both respvar
+      if (length(self$datClass$respvar) == 1) {
+        if (any(grepl("yld", self$datClass$respvar))) {
+          dat$pred_pro <- NA ## TODO: this might need to be arbitrary 0 for matrix in C++
+        } else {
+          dat$pred_yld <- NA
+        }
+      }
+
+      ## add NR cols
       dat$NR <- NA
       dat$NRmin <- NA
       dat$NRopp <- NA
       dat$NRfs <- NA
+      return(dat)
+    },
+    .trimSimCols = function(dat) {
+      # columns needed for the simulation
+      keep_columns <- c("x", "y", "row", "col", "field", "year", "NR", "NRmin",
+                        "NRopp", "NRfs", self$datClass$expvar,
+                        "pred_yld", "pred_pro")
+      # get rid of columns not in the keep vector
+      bad_columns <- names(dat)[!names(dat) %in% keep_columns]
+      for (i in 1:length(bad_columns)) {
+        remove_var <- bad_columns[i]
+        dat <- dat[, (remove_var):= NULL]
+      }
       return(dat)
     },
     .addExpCols = function(dat, EXPval) {
@@ -780,20 +801,22 @@ SimClass <- R6::R6Class(
     },
     .yearSim = function(sim_dat, sim_year, EXPvec) {
       tryCatch({
+        # add cols for NR & make list with df's for each N rate
         self$sim_list <- private$.setupSimDat(sim_dat) %>%
-          # add cols for NR
           list() %>%
-          # make list with df's for each N rate
           rep(length(EXPvec))
         ## add exp rates to lists
         self$sim_list <- mapply(private$.addExpCols,
                                 self$sim_list,
                                 EXPvec,
                                 SIMPLIFY = FALSE)
-          # for all years, location, & each rate predict repsonses
+        # for all years, location, & each rate predict repsonses
         private$.simResponses(self$datClass$respvar)
-          # do simulation & find opt. etc. for each sim_year save to written files
-          # returns the sim_list for plotEstsVsExp() for each pred year
+        # get rid of unneccessary columns for the simulation
+        self$sim_list <- lapply(self$sim_list,
+                                private$.trimSimCols)
+        # do simulation & find opt. etc. for each sim_year save to written files
+        # returns the sim_list for plotEstsVsExp() for each pred year
         private$.runSim(sim_year)
         },
         error = function(e) {
@@ -998,7 +1021,7 @@ SimClass <- R6::R6Class(
         } else {
           if (self$opt == "deriv") {
             NRff <- NRff %>% `names<-`(NULL) %>% as.matrix()
-            NRffmax <-OFPE::derivFFoptCpp(NRff,
+            NRffmax <- OFPE::derivFFoptCpp(NRff,
                                           nrow(NRff),
                                           self$fieldsize,
                                           CEXP) %>%
@@ -1231,10 +1254,11 @@ SimClass <- R6::R6Class(
           self$datClass$expvar
         ## for all response variables, predict yield and protein for all points
         for (j in 1:length(self$datClass$respvar)) {
-          sim_dat_list[[i]]$pred <- stats::predict(self$modClass$mod_list[[j]]$m,
-                                               sim_dat_list[[i]]) %>%
+          sim_dat_list[[i]]$pred <-
+            self$modClass$mod_list[[j]]$predResps(sim_dat_list[[i]],
+                                                  self$modClass$mod_list[[j]]$m) %>%
             as.numeric()
-          sim_dat_list[[i]]$pred <- exp(sim_dat_list[[i]]$pred)
+          # sim_dat_list[[i]]$pred <- exp(sim_dat_list[[i]]$pred)
 
           names(sim_dat_list[[i]])[grep("^pred$", names(sim_dat_list[[i]]))] <-
             paste0("pred_", self$datClass$respvar[j])
@@ -1298,9 +1322,9 @@ SimClass <- R6::R6Class(
     .NRcalc = function(dat, predInd, Bp, B0pd, B1pd, B2pd, CEXP, FC, ssAC) {
       if (predInd == 1) {
         P <- Bp + (B0pd + B1pd * dat$pred_pro + B2pd * dat$pred_pro^2);
-        dat$NR <- (dat$pred_yld * P) - CEXP * dat$exp - FC;
+        dat$NR <- (dat$pred_yld * P) - (CEXP * dat$exp) - FC;
       } else {
-        dat$NR <- (dat$pred_yld * (Bp + B0pd)) - CEXP * dat$exp - FC;
+        dat$NR <- (dat$pred_yld * Bp) - (CEXP * dat$exp) - FC;
       }
       return(dat)
     },
@@ -1411,8 +1435,6 @@ SimClass <- R6::R6Class(
       return(var_plot)
     },
     .plotActNRFun = function() {
-      browser()
-
       index <- lapply(self$datClass$mod_dat, lapply, dim) %>%
         lapply(function(x) do.call(rbind, x)) %>%
         lapply(function(x) sum(x[, 1]))

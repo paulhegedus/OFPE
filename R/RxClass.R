@@ -126,13 +126,16 @@ RxClass <- R6::R6Class(
     #' of experimental rates provided in 'exp_rate_length'. This is required
     #' for all new experiments and experimental prescriptions.
     exp_rates_prop = NULL,
-    #' @field strat_dat If the user is creating a new experiment with stratification
-    #' they must apply the data that they are stratifying on. This provides an
-    #' identifier for the data being used for the stratification. These must be codes
-    #' used in the OFPE workflow sucha as 'yld', 'pro', 'aa_n', 'aa_sr', etc.
+    #' @field strat_dat If the user is creating an experiment with stratification
+    #' they must supply the data type that they are stratifying on. These must be codes
+    #' used in the OFPE workflow such as 'yld', 'pro', 'aa_n', 'aa_sr', etc. You can
+    #' only stratify on one variable per field. You must have data you want to stratify
+    #' on aggregated in the database, otherwise more parameters for utilizing the raw
+    #' data would be required.
     strat_dat = NULL,
-    #' @field strat_dat_year Follows the same structure of 'strat_dat', however contains
-    #' the years to use for stratification of each of the data types for each of the fields.
+    #' @field strat_dat_year Follows the same structure of 'strat_dat' but
+    #' specifies the year of data to use for stratification. Must provide year
+    #' for each field prescription generated for.
     strat_dat_year = NULL,
     #' @field simClass If the user is creating an experimental prescription or
     #' prescription an R6 class SimClass object must be supplied. This has to be
@@ -254,22 +257,21 @@ RxClass <- R6::R6Class(
     #' @param exp_rates_prop Provide proportions (0 - 1) for the length
     #' of experimental rates provided in 'exp_rate_length'. This is required
     #' for all new experiments and experimental prescriptions.
-    #' @param strat_dat If the user is creating a new experiment with stratification
-    #' they must apply the data that they are stratifying on. This provides an
-    #' identifier for the data being used for the stratification. These must be codes
-    #' used in the OFPE workflow sucha as 'yld', 'pro', 'aa_n', 'aa_sr', etc. This
-    #' must be provided as a list with the fields for the prescription and a character
-    #' vector of the stratification data used. You must have data you want to stratify
-    #' on aggregated in the database, otherwise more paramters for utilizing the raw
+    #' @param strat_dat If the user is creating an experiment with stratification
+    #' they must supply the data type that they are stratifying on. These must be codes
+    #' used in the OFPE workflow such as 'yld', 'pro', 'aa_n', 'aa_sr', etc. You can
+    #' only stratify on one variable per field. You must have data you want to stratify
+    #' on aggregated in the database, otherwise more parameters for utilizing the raw
     #' data would be required.
-    #' @param strat_dat_year Follows the same structure of 'strat_dat', however contains
-    #' the years to use for stratification of each of the data types for each of the fields.
+    #' @param strat_dat_year Follows the same structure of 'strat_dat' but
+    #' specifies the year of data to use for stratification. Must provide year
+    #' for each field prescription generated for.
     #' @param exp_rate_gen Logical, for the experimental prescription provide
-    #' TRUE or FALSE for whether to create experimentla rates from gaps in the
+    #' TRUE or FALSE for whether to create experimental rates from gaps in the
     #' optimized rates. These experimental rates are placed between optimum rates
     #' to establish a range of rates for which to improve model predictions in future
     #' years.
-    #' @param opt_rate_length Provide the number of oprimum rates to use.
+    #' @param opt_rate_length Provide the number of optimum rates to use.
     #' This applies to prescriptions and experimental prescriptions. This
     #' represents the equipment constraints of the farmer. In the case of the
     #' experimental prescription, this number of rates does not include the
@@ -387,10 +389,6 @@ RxClass <- R6::R6Class(
         stopifnot(is.character(farmername))
         self$farmername <- farmername
       }
-      if (!is.null(fieldname)) {
-        stopifnot(is.character(fieldname))
-        self$fieldname <- fieldname
-      }
       if (!is.null(exp_rate_length)) {
         stopifnot(is.numeric(exp_rate_length))
         self$exp_rate_length <- exp_rate_length
@@ -404,25 +402,30 @@ RxClass <- R6::R6Class(
                   sum(exp_rates_prop) >= 0.99)
         self$exp_rates_prop <- exp_rates_prop
       }
-      if (!is.null(strat_dat)) {
-        stopifnot(is.list(strat_dat),
-                  length(strat_dat) == length(fieldname))
-        for (i in 1:length(strat_dat)) {
-          stopifnot(any(grepl("yld|pro|aa_n|aa_sr", strat_dat[[i]])))
-        }
-        self$strat_dat <- strat_dat
-      }
-      if (!is.null(strat_dat_year)) {
-        stopifnot(is.list(strat_dat_year),
-                  length(strat_dat_year == length(strat_dat)))
-        self$strat_dat_year <- strat_dat_year
-      }
       if (!is.null(simClass)) {
         stopifnot(any(grepl("SimClass", class(simClass))))
         self$simClass <- simClass
         self$expvar <- self$simClass$datClass$expvar
         self$out_path <- self$simClass$out_path
         self$farmername <- self$simClass$datClass$farmername
+        self$fieldname <- self$simClass$datClass$fieldname
+      }
+      if (!is.null(fieldname) & is.null(self$fieldname)) {
+        stopifnot(is.character(fieldname))
+        self$fieldname <- fieldname
+      }
+      if (!is.null(strat_dat)) {
+        stopifnot(is.character(strat_dat),
+                  length(strat_dat) == length(fieldname))
+        for (i in 1:length(strat_dat)) {
+          stopifnot(any(grepl("yld|pro|aa_n|aa_sr", strat_dat[i])))
+        }
+        self$strat_dat <- strat_dat
+      }
+      if (!is.null(strat_dat_year)) {
+        stopifnot(is.character(strat_dat_year) | is.numeric(strat_dat_year),
+                  length(strat_dat_year) == length(self$fieldname))
+        self$strat_dat_year <- strat_dat_year
       }
       if (!is.null(exp_rate_gen)) {
         stopifnot(is.logical(exp_rate_gen))
@@ -878,96 +881,125 @@ RxClass <- R6::R6Class(
     },
     .selectStratDat = function() {
       stopifnot(!is.null(self$fieldname))
-      strat_dat <- as.list(self$fieldname)
-      for (i in 1:length(strat_dat)) {
-        self$strat_dat[[i]] <- as.character(select.list(
+      self$strat_dat <- self$fieldname
+      for (i in 1:length(self$fieldname)) {
+        self$strat_dat[i] <- as.character(select.list(
           c("yld", "pro", "aa_n", "aa_sr"),
-          title = paste0("Provide the types of data to stratify on for ", self$fieldname[i], "."),
-          multiple = TRUE))
+          title = paste0("Provide the type of data to stratify on for ", self$fieldname[i], "."),
+          multiple = FALSE))
       }
     },
     .selectStratYears = function() {
-      self$strat_dat_year <- self$strat_dat
-      for (i in 1:length(self$strat_dat)) {
-        for (j in 1:length(self$strat_dat[[i]])) {
-          if (!grepl("aa_", self$strat_dat[[i]][j])) {
-            dat_exist <- as.logical(
-              DBI::dbGetQuery(
-                self$dbCon$db,
-                paste0("SELECT EXISTS (
+      self$strat_dat_year <- self$fieldname
+      for (i in 1:length(self$fieldname)) {
+        if (!grepl("aa_", self$strat_dat[i])) {
+          dat_exist <- as.logical(
+            DBI::dbGetQuery(
+              self$dbCon$db,
+              paste0("SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.tables
                 WHERE table_schema = '", self$farmername, "_a'
-                AND table_name = '", self$strat_dat[[i]][j], "')")
-              )
+                AND table_name = '", self$strat_dat[i], "')")
             )
-            if (dat_exist) {
-              unq_years <- unique(DBI::dbGetQuery(
-                self$dbCon$db,
-                paste0("SELECT DISTINCT year
-                       FROM ", self$farmername, "_a.", self$strat_dat[[i]][j]," tab
+          )
+          if (dat_exist) {
+            unq_years <- unique(DBI::dbGetQuery(
+              self$dbCon$db,
+              paste0("SELECT DISTINCT year
+                       FROM ", self$farmername, "_a.", self$strat_dat[i]," tab
                        WHERE tab.field = '", self$fieldname[i], "'")
-              )$year)
-              self$strat_dat_year[[i]][j] <- as.numeric(select.list(
-                unq_years,
-                multiple = TRUE,
-                title = paste0("Select year(s) to use for stratification for the  ", self$strat_dat[[i]][j], " data.")
-              ))
-            } else {
-              stop(paste0("No available", self$strat_dat[[i]][j], " data for ", self$fieldname[i], " to stratify on."))
-            }
+            )$year)
+            self$strat_dat_year[i] <- as.numeric(select.list(
+              unq_years,
+              multiple = FALSE,
+              title = paste0("Select year(s) to use for stratification for the  ", self$strat_dat[i], " data in ", self$fieldname[i], ".")
+            ))
           } else {
-            # check for yld or check for pro
-            dat_exist <- as.logical(
-              DBI::dbGetQuery(
-                self$dbCon$db,
-                paste0("SELECT EXISTS (
+            stop(paste0("No available", self$strat_dat[i], " data for ", self$fieldname[i], " to stratify on."))
+          }
+        } else {
+          # check for aa data
+          dat_exist_pnts <- as.logical(
+            DBI::dbGetQuery(
+              self$dbCon$db,
+              paste0("SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.tables
-                WHERE table_schema = '", self$farmername, "_a'
-                AND table_name = 'yld')")
-              )
+                WHERE table_schema = '", self$farmername, "_r'
+                AND table_name = '", self$strat_dat[i], "_pnts')")
             )
-            if (dat_exist) {
-              unq_years <- unique(DBI::dbGetQuery(
-                self$dbCon$db,
-                paste0("SELECT DISTINCT year
-                       FROM ", self$farmername, "_a.yld tab
-                       WHERE tab.field = '", self$fieldname[i], "'")
-              )$year)
-              self$strat_dat_year[[i]][j] <- as.numeric(select.list(
-                unq_years,
-                multiple = TRUE,
-                title = paste0("Select year(s) to use for stratification for the  ", self$strat_dat[[i]][j], " data.")
-              ))
-            } else {
-              dat_exist <- as.logical(
-                DBI::dbGetQuery(
-                  self$dbCon$db,
-                  paste0("SELECT EXISTS (
+          )
+          dat_exist_poly <- as.logical(
+            DBI::dbGetQuery(
+              self$dbCon$db,
+              paste0("SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.tables
-                WHERE table_schema = '", self$farmername, "_a'
-                AND table_name = 'pro')")
-                )
-              )
-              if (dat_exist) {
-                unq_years <- unique(DBI::dbGetQuery(
-                  self$dbCon$db,
-                  paste0("SELECT DISTINCT year
-                       FROM ", self$farmername, "_a.pro tab
+                WHERE table_schema = '", self$farmername, "_r'
+                AND table_name = '", self$strat_dat[i], "_poly')")
+            )
+          )
+          if (dat_exist_pnts & dat_exist_poly) {
+            fieldidx <- DBI::dbGetQuery(
+              self$dbCon$db,
+              paste0("SELECT DISTINCT fieldidx FROM all_farms.field_ids
+                     WHERE fieldname = '", self$fieldname[i], "'")
+            )$fieldidx
+            unq_years_pnts <- unique(DBI::dbGetQuery(
+              self$dbCon$db,
+              paste0("SELECT DISTINCT year
+                       FROM ", self$farmername, "_r.", self$strat_dat[i], "_pnts tab
+                       WHERE tab.fieldidx = '", fieldidx, "'")
+            )$year)
+            unq_years_poly <- unique(DBI::dbGetQuery(
+              self$dbCon$db,
+              paste0("SELECT DISTINCT year
+                       FROM ", self$farmername, "_r.", self$strat_dat[i], "_poly tab
+                       WHERE tab.fieldidx = '", fieldidx, "'")
+            )$year)
+            unq_years <- c(unq_years_pnts, unq_years_poly) %>% unique() %>% sort()
+            self$strat_dat_year[i] <- as.numeric(select.list(
+              unq_years,
+              multiple = FALSE,
+              title = paste0("Select year(s) to use for stratification for the  ", self$strat_dat[i], " data.")
+            ))
+            # if (unq_years %in% unq_years_pnts) {
+            #   self$strat_dat[i] <- paste0(self$strat_dat[i], "_pnts")
+            # } else {
+            #   self$strat_dat[i] <- paste0(self$strat_dat[i], "_poly")
+            # }
+          }
+          if (dat_exist_pnts & !dat_exist_poly) {
+            unq_years <- unique(DBI::dbGetQuery(
+              self$dbCon$db,
+              paste0("SELECT DISTINCT year
+                       FROM ", self$farmername, "_r.", self$strat_dat[i], "_pnts tab
                        WHERE tab.field = '", self$fieldname[i], "'")
-                )$year)
-                self$strat_dat_year[[i]][j] <- as.numeric(select.list(
-                  unq_years,
-                  multiple = TRUE,
-                  title = paste0("Select year(s) to use for stratification for the  ", self$strat_dat[[i]][j], " data.")
-                ))
-
-              } else {
-                stop(paste0("No available", self$strat_dat[[i]][j], " data for ", self$fieldname[i], " to stratify on."))
-              }
-            }
+            )$year)
+            self$strat_dat_year[i] <- as.numeric(select.list(
+              unq_years,
+              multiple = FALSE,
+              title = paste0("Select year(s) to use for stratification for the  ", self$strat_dat[i], " data.")
+            ))
+            # self$strat_dat[i] <- paste0(self$strat_dat[i], "_pnts")
+          }
+          if (dat_exist_poly & !dat_exist_pnts) {
+            unq_years <- unique(DBI::dbGetQuery(
+              self$dbCon$db,
+              paste0("SELECT DISTINCT year
+                       FROM ", self$farmername, "_r.", self$strat_dat[i], "_poly tab
+                       WHERE tab.field = '", self$fieldname[i], "'")
+            )$year)
+            self$strat_dat_year[i] <- as.numeric(select.list(
+              unq_years,
+              multiple = FALSE,
+              title = paste0("Select year(s) to use for stratification for the  ", self$strat_dat[i], " data.")
+            ))
+            # self$strat_dat[i] <- paste0(self$strat_dat[i], "_poly")
+          }
+          if (!dat_exist_poly & !dat_exist_pnts) {
+            stop(paste0("No available", self$strat_dat[i], " data for ", self$fieldname[i], " to stratify on."))
           }
         }
       }
@@ -1052,33 +1084,35 @@ RxClass <- R6::R6Class(
         `names<-`(c("x", "y"))
       sp <- sp::SpatialPoints(coords = llc[, c("x", "y")])
       e <- raster::extent(llc[, c("x", "y")])
-      map <- ggmap::get_map(location = c(lon = mean(sp::coordinates(as(utm, "Spatial"))[, 1]),
-                                         lat = mean(sp::coordinates(as(utm, "Spatial"))[, 2])),
-                            zoom = 14, maptype = "satellite", source = "google")
+      # map <- ggmap::get_map(location = c(lon = mean(sp::coordinates(as(utm, "Spatial"))[, 1]),
+      #                                    lat = mean(sp::coordinates(as(utm, "Spatial"))[, 2])),
+      #                       zoom = 14, maptype = "satellite", source = "google")
+      map <- ggmap::get_map(location = c(e@xmin, e@ymin,
+                                         e@xmax, e@ymax),
+                            maptype = "satellite", source = "google", zoom = 15
+      )
       dat <- sf::st_transform(dat, "epsg:4326")
       var_map <-
         ggmap::ggmap(map, extent  =  "panel") +
         ggplot2::coord_sf(crs = sf::st_crs(4326)) +
-
-
-        ggplot2::scale_x_continuous(limits = c(e@xmin-0.002, e@xmax+0.002),
-                                    expand = c(0, 0),
-                                    breaks = c(e@xmin-0.002, e@xmax+0.002)) +
-        ggplot2::scale_y_continuous(limits = c(e@ymin-0.002, e@ymax+0.002),
-                                    expand = c(0, 0)) +
+        # ggplot2::scale_x_continuous(limits = c(e@xmin-0.002, e@xmax+0.002),
+        #                             expand = c(0, 0),
+        #                             breaks = c(e@xmin-0.002, e@xmax+0.002)) +
+        # ggplot2::scale_y_continuous(limits = c(e@ymin-0.002, e@ymax+0.002),
+        #                             expand = c(0, 0)) +
         ggplot2::labs(title = var_main_label, x = "", y = "") +
         ggplot2::theme_bw() +
         ggplot2::theme(axis.text.x = ggplot2::element_blank(),
-                       axis.text.y = ggplot2::element_blank()) +
-        OFPE::scale_bar(lon = e@xmin-0.0015,
-                        lat = e@ymin-0.0015,
-                        distance_lon = 0.2,
-                        distance_lat = .01,
-                        distance_legend = -.01,
-                        dist_unit = "km",
-                        orientation = TRUE,
-                        arrow_length = .05,
-                        arrow_distance = .02) %>%
+                       axis.text.y = ggplot2::element_blank()) %>%
+        # OFPE::scale_bar(lon = e@xmin-0.0015,
+        #                 lat = e@ymin-0.0015,
+        #                 distance_lon = 0.2,
+        #                 distance_lat = .01,
+        #                 distance_legend = -.01,
+        #                 dist_unit = "km",
+        #                 orientation = TRUE,
+        #                 arrow_length = .05,
+        #                 arrow_distance = .02) %>%
         suppressMessages()
       if (length(unique(dat$exprate)) > 10) {
         color <- rev(colorRamps::matlab.like2(15))
@@ -1130,9 +1164,13 @@ RxClass <- R6::R6Class(
         `names<-`(c("x", "y"))
       sp <- sp::SpatialPoints(coords = llc[, c("x", "y")])
       e <- raster::extent(llc[, c("x", "y")])
-      map <- ggmap::get_map(location = c(lon = mean(sp::coordinates(as(utm, "Spatial"))[, 1]),
-                                         lat = mean(sp::coordinates(as(utm, "Spatial"))[, 2])),
-                            zoom = 14, maptype = "satellite", source = "google")
+      # map <- ggmap::get_map(location = c(lon = mean(sp::coordinates(as(utm, "Spatial"))[, 1]),
+      #                                    lat = mean(sp::coordinates(as(utm, "Spatial"))[, 2])),
+      #                       zoom = 14, maptype = "satellite", source = "google")
+      map <- ggmap::get_map(location = c(e@xmin, e@ymin,
+                                         e@xmax, e@ymax),
+                            maptype = "satellite", source = "google", zoom = 15
+      )
       dat <- sf::st_transform(dat, "epsg:4326")
       dat$cell_type <- ifelse(dat$cell_type == "base", "Base",
                               ifelse(dat$cell_type == "exp", "Exp",
@@ -1142,11 +1180,11 @@ RxClass <- R6::R6Class(
         ggmap::ggmap(map, extent  =  "panel") +
         ggplot2::coord_sf(crs = sf::st_crs(4326)) +
         ggplot2::geom_sf(data = dat, ggplot2::aes(fill = cell_type), inherit.aes = FALSE) +
-        ggplot2::scale_x_continuous(limits = c(e@xmin-0.002, e@xmax+0.002),
-                                    expand = c(0, 0),
-                                    breaks = c(e@xmin-0.002, e@xmax+0.002)) +
-        ggplot2::scale_y_continuous(limits = c(e@ymin-0.002, e@ymax+0.002),
-                                    expand = c(0, 0)) +
+        # ggplot2::scale_x_continuous(limits = c(e@xmin-0.002, e@xmax+0.002),
+        #                             expand = c(0, 0),
+        #                             breaks = c(e@xmin-0.002, e@xmax+0.002)) +
+        # ggplot2::scale_y_continuous(limits = c(e@ymin-0.002, e@ymax+0.002),
+        #                             expand = c(0, 0)) +
         ggplot2::labs(title = paste0(unique_fieldname, " Rate Type Applied"),
                       subtitle = rx_for_year,
                       x = "",
@@ -1154,16 +1192,16 @@ RxClass <- R6::R6Class(
                       fill = "Rate Type") +
         ggplot2::theme_bw() +
         ggplot2::theme(axis.text.x = ggplot2::element_blank(),
-                       axis.text.y = ggplot2::element_blank()) +
-        OFPE::scale_bar(lon = e@xmin-0.0015,
-                        lat = e@ymin-0.0015,
-                        distance_lon = 0.2,
-                        distance_lat = .01,
-                        distance_legend = -.01,
-                        dist_unit = "km",
-                        orientation = TRUE,
-                        arrow_length = .05,
-                        arrow_distance = .02) %>%
+                       axis.text.y = ggplot2::element_blank()) %>%
+        # OFPE::scale_bar(lon = e@xmin-0.0015,
+        #                 lat = e@ymin-0.0015,
+        #                 distance_lon = 0.2,
+        #                 distance_lat = .01,
+        #                 distance_legend = -.01,
+        #                 dist_unit = "km",
+        #                 orientation = TRUE,
+        #                 arrow_length = .05,
+        #                 arrow_distance = .02) %>%
         suppressMessages()
       return(var_map)
     }

@@ -260,30 +260,27 @@ ExpGen <- R6::R6Class(
       self$exp_rates_prop <- exp_rates_prop
 
       if (!is.null(strat_dat)) {
-        stopifnot(is.list(strat_dat),
+        stopifnot(is.character(strat_dat),
                   length(strat_dat) == length(fieldname))
         for (i in 1:length(strat_dat)) {
-          stopifnot(any(grepl("yld|pro|aa_n|aa_sr", strat_dat[[i]])))
+          stopifnot(any(grepl("yld|pro|aa_n|aa_sr", strat_dat[i])))
         }
         self$strat_dat <- strat_dat
       }
       if (!is.null(strat_dat_year)) {
-        stopifnot(is.list(strat_dat_year),
-                  length(strat_dat_year == length(strat_dat)))
+        stopifnot(is.character(strat_dat_year) | is.numeric(strat_dat_year),
+                  length(strat_dat_year) == length(self$fieldname))
         self$strat_dat_year <- strat_dat_year
       }
       self$unique_fieldname<- OFPE::uniqueFieldname(self$fieldname)
       self$rx_dt <- private$.makeExpDt(self$fieldname,
-                                        self$dbCon$db,
-                                        self$base_rate,
-                                        self$unique_fieldname,
-                                        self$farmername)
-      if (!is.null(strat_dat)) {
-        browser()
-        # TODO
-        # if strat dat need to get and data
-        # need to bin it up
-        # clip strat data
+                                       self$dbCon$db,
+                                       self$base_rate,
+                                       self$unique_fieldname,
+                                       self$farmername)
+      if (!is.null(self$strat_dat) &
+          !is.null(self$strat_dat_year)) {
+        self$strat_dat <- private$.getStratDat()
       }
     },
     #' @description
@@ -309,10 +306,11 @@ ExpGen <- R6::R6Class(
         OFPE::applyExpRates(self$exp_rates,
                             self$exp_rates_prop,
                             self$fld_prop,
-                            self$exp_rate_length,
-                            ifelse(!is.null(self$strat_dat),
-                                   strat_dat,
-                                   NA))
+                            self$exp_rate_length)
+      rx_sdt$fieldname <- NA
+      if (!is.null(self$strat_dat)) {
+        rx_sdt <- private$.stratDatRates(rx_sdt)
+      }
       fld_bound <- OFPE::makeBaseRate(self$dbCon$db,
                                          self$fieldname,
                                          self$unique_fieldname,
@@ -360,6 +358,152 @@ ExpGen <- R6::R6Class(
       rx_dt$mgmt_scen <- "exp"
       return(rx_dt)
     },
+    .getStratDat = function() {
+      strat_list <- as.list(self$fieldname)
+      # get data
+      for (i in 1:length(self$fieldname)) {
+        if (!grepl("aa_", self$strat_dat[i])) {
+          strat_list[[i]] <- private$.fetchStratDat(self$strat_dat[i],
+                                                    self$strat_dat[i],
+                                                    self$fieldname[i],
+                                                    self$strat_dat_year[i],
+                                                    self$farmername)
+        } else {
+          dat_exist <- as.logical(
+            DBI::dbGetQuery(
+              self$dbCon$db,
+              paste0("SELECT EXISTS (
+                SELECT 1
+                FROM information_schema.tables
+                WHERE table_schema = '", self$farmername, "_a'
+                AND table_name = 'yld')")
+            )
+          )
+          if (dat_exist) {
+            strat_list[[i]] <- private$.fetchStratDat("yld",
+                                                      self$strat_dat[i],
+                                                      self$fieldname[i],
+                                                      self$strat_dat_year[i],
+                                                      self$farmername)
+          } else {
+            ## Check for pro dat
+            dat_exist <- as.logical(
+              DBI::dbGetQuery(
+                self$dbCon$db,
+                paste0("SELECT EXISTS (
+                SELECT 1
+                FROM information_schema.tables
+                WHERE table_schema = '", self$farmername, "_a'
+                AND table_name = 'pro')")
+              )
+            )
+            if (dat_exist) {
+              strat_list[[i]] <- private$.fetchStratDat("pro",
+                                                        self$strat_dat[i],
+                                                        self$fieldname[i],
+                                                        self$strat_dat_year[i],
+                                                        self$farmername)
+            } else {
+              ## get raw data???
+              stop(print(paste0("STRAT DAT MUST BE IN farmername_a SCHEMA WHERE grid = 'grid' FOR SPECIFIED DATA.")))
+            }
+          }
+        }
+      }
+      return(strat_list)
+    },
+    .fetchStratDat = function(table_var, strat_var, field, year, farmername, grid) {
+      strat_df <- DBI::dbGetQuery(
+        self$dbCon$db,
+        paste0("SELECT x, y, cell_id, field, ", strat_var, "  FROM ",
+               farmername, "_a.", table_var,
+               " WHERE field = '", field, "'
+               AND year = '", year, "'
+               AND grid = 'grid'
+               AND datused = 'decision_point';"))
+      if (nrow(strat_df) == 0) {
+        strat_df <- DBI::dbGetQuery(
+          self$dbCon$db,
+          paste0("SELECT x, y, cell_id, field, ", strat_var, "  FROM ",
+                 farmername, "_a.", table_var,
+                 " WHERE field = '", field, "'
+               AND year = '", year, "'
+               AND grid = 'grid'
+               AND datused = 'full_year';"))
+      }
+      if (nrow(strat_df) == 0) {
+        strat_df <- DBI::dbGetQuery(
+          self$dbCon$db,
+          paste0("SELECT x, y, cell_id, field, ", strat_var, "  FROM ",
+                 farmername, "_a.", table_var,
+                 " WHERE field = '", field, "'
+               AND year = '", year, "'
+               AND grid = 'obs'
+               AND datused = 'decision_point';"))
+      }
+      if (nrow(strat_df) == 0) {
+        strat_df <- DBI::dbGetQuery(
+          self$dbCon$db,
+          paste0("SELECT x, y, cell_id, field, ", strat_var, "  FROM ",
+                 farmername, "_a.", table_var,
+                 " WHERE field = '", field, "'
+               AND year = '", year, "'
+               AND grid = 'obs'
+               AND datused = 'full_year';"))
+      }
+      if (nrow(strat_df) == 0) {
+        stop(print(paste0("NO ", strat_var, " DATA AVAILABLE.")))
+      }
+      return(strat_df)
+    },
+    .stratDatRates = function(rx_sdt) {
+      ## for each strat_dat
+      for (i in 1:length(self$fieldname)) {
+        self$strat_dat[[i]] <- private$.binStratRates(self$strat_dat[[i]])
+      }
+      ## make spatial
+      strat_dat <- data.table::rbindlist(self$strat_dat)
+      utm_epsg <- OFPE::findUTMzone(self$dbCon$db, fieldname = self$fieldname[1])
+      strat_dat$X <- strat_dat$x
+      strat_dat$Y <- strat_dat$y
+      sp::coordinates(strat_dat) <- c("X", "Y")
+      strat_dat <- sf::st_as_sf(strat_dat, remove_coordinates = FALSE)
+      if (is.na(raster::crs(strat_dat))) {
+        sf::st_crs(strat_dat) <- utm_epsg
+      }
+      ## rx_sdt point intersect with raster for strat_f
+      nn_pnts <- nngeo::st_nn(rx_sdt, strat_dat) 
+      nn_pnts <- do.call(rbind, nn_pnts)
+      rx_sdt$strat_f <- strat_dat[nn_pnts[,1], "strat_f"]$strat_f
+      rx_sdt$fieldname <- strat_dat[nn_pnts[,1], "field"]$field
+      ## make bins for exp dat
+      if (self$exp_rate_length > 1) {
+        rx_sdt <- private$.binExpRates(rx_sdt)
+      }
+      ## if exp rate in same bin as strat rate, change bin ONLY for cell_type = exp
+      if (self$exp_rate_length > 1) {
+        for (i in 1:nrow(rx_sdt)) {
+          vec <- rx_sdt[i, ]
+          if (vec$cell_type == "exp") {
+            if (!is.na(vec$exp_f) & !is.na(vec$strat_f) &
+                !is.null(vec$exp_f) & !is.null(vec$strat_f)) {
+              if (vec$strat_f == vec$exp_f) {
+                exp_levs <- 1:(self$exp_rate_length ) %>% as.numeric()
+                lev <- as.numeric(vec$exp_f)
+                stopifnot(lev == as.numeric(vec$strat_f))
+                vec$exp_f <- sample(exp_levs[-lev], 1)
+                vec$exprate <- self$exp_rates[as.numeric(vec$exp_f)]
+              }
+            }
+          }
+          rx_sdt[i, ] <- vec
+        }
+      }
+      # remove strat cols e.g.(strat_val_type, strat_val, strat_f, exp_f)
+      rx_sdt$strat_f <- NULL
+      rx_sdt$exp_f <- NULL
+      return(rx_sdt)
+    },
     .makeOutLabels = function() {
       self$out_name <- paste0(self$out_path,
                               "/Outputs/Rx/",
@@ -378,6 +522,58 @@ ExpGen <- R6::R6Class(
                                        self$unique_fieldname, "_rateTypeMap_",
                                        self$rx_for_year, ".png")
       self$size <- paste0(self$trt_length, " x ", self$boom_width * 2)
+    },
+    .binStratRates = function(bin_df) {
+      stopifnot(!is.null(bin_df),
+                !is.null(self$exp_rate_length))
+      strat_var_col <- names(bin_df)[!grepl(paste(c("^x$", "^y$", "cell_id", "field"),
+                                                              collapse = "|"),
+                                                        names(bin_df))]
+      strat_var_col_num <- grep(strat_var_col, names(bin_df))
+      names(bin_df)[strat_var_col_num] <- "stratrate"
+      rates <- bin_df$stratrate %>% na.omit()
+      if (sd(rates) != 0) {
+        breaks <- seq(min(rates), max(rates), (max(rates) - min(rates)) / self$exp_rate_length)
+        tags <- rep(NA, self$exp_rate_length)
+        for (i in 1:self$exp_rate_length) {
+          tags[i] <- paste0(breaks[i], " - ", breaks[i + 1])
+        }
+        bin_df$strat_f <- cut(bin_df$stratrate,
+                           breaks = breaks,
+                           include.lowest = TRUE,
+                           right = FALSE,
+                           labels = 1:self$exp_rate_length)
+      } else {
+        bin_df$strat_f <- NA
+      }
+      return(bin_df)
+    },
+    .binExpRates = function(bin_df) {
+      stopifnot(!is.null(bin_df),
+                !is.null(self$exp_rate_length))
+      if (length(unique(bin_df$exprate)) > (self$exp_rate_length + 1)) {
+        rates <- bin_df$exprate 
+        if (sd(rates) != 0) {
+          breaks <- seq(min(rates), 
+                        max(rates), 
+                        (max(rates) - min(rates)) / self$exp_rate_length)
+          tags <- rep(NA, self$exp_rate_length)
+          for (i in 1:self$exp_rate_length) {
+            tags[i] <- paste0(breaks[i], " - ", breaks[i + 1])
+          }
+          bin_df$exp_f <- cut(bin_df$exprate,
+                              breaks = breaks,
+                              include.lowest = TRUE,
+                              right = FALSE,
+                              labels = 1:self$exp_rate_length)
+        } else {
+          bin_df$strat_f <- NA
+        }
+      } else {
+        bin_df$exp_f <- factor(bin_df$exprate)
+        levels(bin_df$exp_f) <- 1:length(unique(bin_df$exprate))
+      }
+      return(bin_df)
     }
   )
 )

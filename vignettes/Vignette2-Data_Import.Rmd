@@ -109,14 +109,10 @@ ifelse(dir.exists(temp_path),
   invisible()
 toTempFolder <- function (x, y, farmer) {
   if (grepl(farmer, y)) {
-    if (!grepl("pro", y)) {
+    if (any(grepl("sf", class(x)))) {
       sf::st_write(x, paste0(temp_path, y, ".shp"), quiet = TRUE)
     } else {
-      if (grepl("2019", y)) {
-        data.table::fwrite(x, paste0(temp_path, y, ".csv"))
-      } else {
-        sf::st_write(x, paste0(temp_path, y, ".shp"), quiet = TRUE)
-      }
+      data.table::fwrite(x, paste0(temp_path, y, ".csv"))
     }
   }
 }
@@ -124,7 +120,7 @@ toTempFolder <- function (x, y, farmer) {
 invisible(mapply(toTempFolder,
        dat_list, 
        names(dat_list),
-       MoreArgs = list(farmer = "FarmerB")))
+       MoreArgs = list(farmer = "FarmerB|FarmerI|FarmerC")))
 rm(dat_list, temp_path)
 ```
 

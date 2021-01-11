@@ -351,10 +351,10 @@ RxGen <- R6::R6Class(
     },
     #' @description
     #' Method for calling the execution method of the experiment
-    #' generator. This randomly applies the experimental rates across
-    #' the field. If the user selected stratification data, these are
-    #' used for stratification during the random placement.
-    #' @param None All parametes supplied upon initialization.
+    #' generator. This applies the prescription/experimental rates across
+    #' the field. Check rates are stratified across prescription/experimental
+    #' rates for representative checks.
+    #' @param None All parameters supplied upon initialization.
     #' @return A completed experiment table containing the output.
     executeOutput = function() {
       rx_sdt <- OFPE::getRxGrid(self$dbCon$db,
@@ -366,6 +366,7 @@ RxGen <- R6::R6Class(
                                 self$unique_fieldname,
                                 self$mgmt_scen) %>%
         ## TODO - orientation
+
         OFPE::trimGrid(self$simClass$datClass$fieldname,
                        self$dbCon$db,
                        self$simClass$datClass$farmername) %>%
@@ -409,24 +410,29 @@ RxGen <- R6::R6Class(
     .makeRxDt = function() {
       stopifnot(is.character(self$mgmt_scen),
                 any(grepl("SSOPT|FFOPT|FS|Min", self$mgmt_scen)))
-      rx_list <-as.list(
-        which(names(self$simClass$sim_out) %in% self$rx_years)
-      )
+      rx_list <- as.list(self$rx_years)
       for (i in 1:length(rx_list)) {
-        rx_list[[i]] <- self$simClass$sim_out[[rx_list[[i]]]]$NRopt
+        rx_list[[i]] <- read.csv(paste0(self$simClass$dat_path,
+                                        self$simClass$unique_fieldname, "_NRopt_",
+                                        self$simClass$unique_fxn, "_",
+                                        rx_list[[i]], "_",
+                                        self$simClass$opt, ".csv"))
+        # rx_list[[i]] <- self$simClass$sim_out[[rx_list[[i]]]]$NRopt
         rx_list[[i]]$cell_id <- paste0(rx_list[[i]]$row, "_", rx_list[[i]]$col)
         rx_list[[i]]$cell_id <- factor(rx_list[[i]]$cell_id)
         cols <- grep("field|cell_id", names(rx_list[[i]]))
-        non_nums <- rx_list[[i]][, ..cols] %>%
+        non_nums <- rx_list[[i]][, cols] %>%
           unique()
         cols <- grep("field", names(rx_list[[i]]))
-        rx_list[[i]] <- rx_list[[i]][, -..cols]
-        rx_list[[i]] <- rx_list[[i]][, lapply(.SD, mean), by = rx_list[[i]]$cell_id]
+        rx_list[[i]] <- rx_list[[i]][, -cols]
+        rx_list[[i]] <- suppressWarnings(rx_list[[i]] %>%
+          dplyr::group_by(cell_id) %>%
+          dplyr::summarize(dplyr::across(everything(), mean)))
         names(rx_list[[i]])[1] <- "cell_id"
         rx_list[[i]]$cell_id <- factor(rx_list[[i]]$cell_id)
         rx_list[[i]] <- merge(rx_list[[i]], non_nums, by = "cell_id")
         cols <- grep("sim", names(rx_list[[i]]))
-        rx_list[[i]] <- rx_list[[i]][, -..cols]
+        rx_list[[i]] <- rx_list[[i]][, -cols]
       }
       self$rx_dt <- data.table::rbindlist(rx_list)
       cols <- grep("field|cell_id", names(self$rx_dt))
@@ -511,95 +517,117 @@ RxGen <- R6::R6Class(
       return(rx_sdt)
     },
     .expRateGen = function(exp_rate_length, base_rates, AAmin, AArateCutoff) {
+      ## NEW: bad method. will have overlap b/w base rates and exp_rates...
+      ## if AAmin in base rates, make seq length of exp_rate_length + 1, don't take min
+      ## if AAmax in base rates, make seq length of exp_rate_length + 1, don't take max
+      ## if AAmin & AAmax in base rates, make seq length of exp_rate_length + 2, don't take min or max
       base_rates <- na.omit(base_rates)
-      direction <- ifelse(min(base_rates) - AAmin > AArateCutoff - max(base_rates),
-                          "to_min",
-                          "to_max")
-      if (direction == "to_min") {
-        if (exp_rate_length == 1) {
-          if (!AAmin %in% base_rates) {
-            exp_rates <- AAmin
-          } else {
-            if (!AArateCutoff %in% base_rates) {
-              exp_rates <- AArateCutoff
-            } else {
-              base_rates <- c(AAmin, unique(base_rates), AArateCutoff) %>% sort()
-              rate_diffs <- rep(NA, length(base_rates) - 1)
-              for (i in 1:length(rate_diffs)) {
-                rate_diffs[i] <- base_rates[i + 1] - base_rates[i]
-              }
-              exp_rates <- base_rates[which(rate_diffs == max(rate_diffs))] +
-                rate_diffs[which(rate_diffs == max(rate_diffs))] / 2
-            }
-          }
-        } else {
-          exp_rates <- rep(NA, exp_rate_length)
-          if (!AAmin %in% base_rates) {
-            exp_rates[1] <- AAmin
-          }
-          if (any(is.na(exp_rates))) {
-            if (!AArateCutoff %in% base_rates) {
-              exp_rates[exp_rate_length] <- AArateCutoff
-            }
-            if (any(is.na(exp_rates))) {
-              base_rates <- c(AAmin, unique(base_rates), AArateCutoff) %>% sort()
-              rate_diffs <- rep(NA, length(base_rates) - 1)
-              for (i in 1:length(rate_diffs)) {
-                rate_diffs[i] <- base_rates[i + 1] - base_rates[i]
-              }
-              miss_rates <- which(is.na(exp_rates))
-              for (i in 1:length(miss_rates)) {
-                exp_rates[miss_rates[i]] <-
-                  base_rates[which(rate_diffs == max(rate_diffs))] +
-                  rate_diffs[which(rate_diffs == max(rate_diffs))] / 2
-                rate_diffs[which(rate_diffs == max(rate_diffs))] <- 0
-              }
-            }
-          }
-        }
+      if (AAmin %in% base_rates &
+          AArateCutoff %in% base_rates) {
+        # AAmin & AArateCutoff in base rates so don't include
+        exp_rates <- seq(AAmin, AArateCutoff, length.out = exp_rate_length + 2)
+        exp_rates <- exp_rates[2:(length(exp_rates) - 1)]
       } else {
-        if (exp_rate_length == 1) {
-          if (!AArateCutoff %in% base_rates) {
-            exp_rates <- AArateCutoff
-          } else {
-            if (!AAmin %in% base_rates) {
-              exp_rates <- AAmin
-            } else {
-              base_rates <- c(AAmin, unique(base_rates), AArateCutoff) %>% sort()
-              rate_diffs <- rep(NA, length(base_rates) - 1)
-              for (i in 1:length(rate_diffs)) {
-                rate_diffs[i] <- base_rates[i + 1] - base_rates[i]
-              }
-              exp_rates <- base_rates[which(rate_diffs == max(rate_diffs))] +
-                rate_diffs[which(rate_diffs == max(rate_diffs))] / 2
-            }
-          }
+        if (!AAmin %in% base_rates &
+            !AArateCutoff %in% base_rates) {
+          # AAmin & AArateCutoff NOT in base rates so include
+          exp_rates <- seq(AAmin, AArateCutoff, length.out = exp_rate_length)
         } else {
-          exp_rates <- rep(NA, exp_rate_length)
-          if (!AArateCutoff %in% base_rates) {
-            exp_rates[exp_rate_length] <- AArateCutoff
-          }
-          if (any(is.na(exp_rates))) {
-            if (!AAmin %in% base_rates) {
-              exp_rates[1] <- AAmin
-            }
-            if (any(is.na(exp_rates))) {
-              base_rates <- c(AAmin, unique(base_rates), AArateCutoff) %>% sort()
-              rate_diffs <- rep(NA, length(base_rates) - 1)
-              for (i in 1:length(rate_diffs)) {
-                rate_diffs[i] <- base_rates[i + 1] - base_rates[i]
-              }
-              miss_rates <- which(is.na(exp_rates))
-              for (i in 1:length(miss_rates)) {
-                exp_rates[miss_rates[i]] <-
-                  base_rates[which(rate_diffs == max(rate_diffs))] +
-                  rate_diffs[which(rate_diffs == max(rate_diffs))] / 2
-                rate_diffs[which(rate_diffs == max(rate_diffs))] <- 0
-              }
+          if (AAmin %in% base_rates &
+              !AArateCutoff %in% base_rates) {
+            # just AAmin in base rates
+            exp_rates <- seq(AAmin, AArateCutoff, length.out = exp_rate_length + 1)
+            exp_rates <- exp_rates[2:length(exp_rates)]
+          } else {
+            if (!AAmin %in% base_rates &
+                AArateCutoff %in% base_rates) {
+              # just AArateCutoff in base rates
+              exp_rates <- seq(AAmin, AArateCutoff, length.out = exp_rate_length + 1)
+              exp_rates <- exp_rates[1:(length(exp_rates) - 1)]
             }
           }
         }
       }
+
+
+      ## OLD: better... found rates between base rates... issues with single base rates
+      # base_rates <- na.omit(base_rates)
+      # direction <- ifelse(min(base_rates) - AAmin > AArateCutoff - max(base_rates),
+      #                     "to_min",
+      #                     "to_max")
+      # if (direction == "to_min") {
+      #   if (exp_rate_length == 1) {
+      #     if (!AAmin %in% base_rates) {
+      #       exp_rates <- AAmin
+      #     } else {
+      #       if (!AArateCutoff %in% base_rates) {
+      #         exp_rates <- AArateCutoff
+      #       } else {
+      #         exp_rates <- seq(AAmin, AArateCutoff, length.out = 3)[2]
+      #       }
+      #     }
+      #   } else {
+      #     exp_rates <- rep(NA, exp_rate_length)
+      #     if (!AAmin %in% base_rates) {
+      #       exp_rates[1] <- AAmin
+      #     }
+      #     if (any(is.na(exp_rates))) {
+      #       if (!AArateCutoff %in% base_rates) {
+      #         exp_rates[exp_rate_length] <- AArateCutoff
+      #       }
+      #       if (any(is.na(exp_rates))) {
+      #         base_rates <- c(AAmin, unique(base_rates), AArateCutoff) %>% sort()
+      #         rate_diffs <- rep(NA, length(base_rates) - 1)
+      #         for (i in 1:length(rate_diffs)) {
+      #           rate_diffs[i] <- base_rates[i + 1] - base_rates[i]
+      #         }
+      #         miss_rates <- which(is.na(exp_rates))
+      #         for (i in 1:length(miss_rates)) {
+      #           exp_rates[miss_rates[i]] <-
+      #             base_rates[which(rate_diffs == max(rate_diffs))] +
+      #             rate_diffs[which(rate_diffs == max(rate_diffs))] / 2
+      #           rate_diffs[which(rate_diffs == max(rate_diffs))] <- 0
+      #         }
+      #       }
+      #     }
+      #   }
+      # } else {
+      #   if (exp_rate_length == 1) {
+      #     if (!AArateCutoff %in% base_rates) {
+      #       exp_rates <- AArateCutoff
+      #     } else {
+      #       if (!AAmin %in% base_rates) {
+      #         exp_rates <- AAmin
+      #       } else {
+      #         exp_rates <- seq(AAmin, AArateCutoff, length.out = 3)[2]
+      #       }
+      #     }
+      #   } else {
+      #     exp_rates <- rep(NA, exp_rate_length)
+      #     if (!AArateCutoff %in% base_rates) {
+      #       exp_rates[exp_rate_length] <- AArateCutoff
+      #     }
+      #     if (any(is.na(exp_rates))) {
+      #       if (!AAmin %in% base_rates) {
+      #         exp_rates[1] <- AAmin
+      #       }
+      #       if (any(is.na(exp_rates))) {
+      #         base_rates <- c(AAmin, unique(base_rates), AArateCutoff) %>% sort()
+      #         rate_diffs <- rep(NA, length(base_rates) - 1)
+      #         for (i in 1:length(rate_diffs)) {
+      #           rate_diffs[i] <- base_rates[i + 1] - base_rates[i]
+      #         }
+      #         miss_rates <- which(is.na(exp_rates))
+      #         for (i in 1:length(miss_rates)) {
+      #           exp_rates[miss_rates[i]] <-
+      #             base_rates[which(rate_diffs == max(rate_diffs))] +
+      #             rate_diffs[which(rate_diffs == max(rate_diffs))] / 2
+      #           rate_diffs[which(rate_diffs == max(rate_diffs))] <- 0
+      #         }
+      #       }
+      #     }
+      #   }
+      # }
       return(sort(exp_rates))
     },
     .applyCheckRates = function(rx_sdt, base_rate, fld_prop, opt_rate_length) {

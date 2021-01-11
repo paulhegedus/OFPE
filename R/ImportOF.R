@@ -160,7 +160,7 @@ ImportOF <- R6::R6Class(
     #' @return Imported data.
     .impDat = function(name) {
       if (grepl("shp$", name)) {
-        FILE <- sf::read_sf(paste0(self$dat_path, name)) %>%
+        FILE <- sf::read_sf(paste0(self$dat_path, "/", name)) %>%
           sf::st_zm()
       }
       if (grepl("csv$",name)) {
@@ -715,19 +715,43 @@ ImportOF <- R6::R6Class(
               dtype <- "aa_n_pnts"
             }
           } else {
-            dtype <- "aa_sr"
+            if (any(grepl("poly",
+                          class(sf::st_geometry(sf::st_as_sf(FILE))),
+                          ignore.case = TRUE))) {
+              dtype <- "aa_sr_poly"
+            } else {
+              dtype <- "aa_sr_pnts"
+            }
           }
         } else {
-          dtype <- "aa_sr"
+          if (any(grepl("poly",
+                        class(sf::st_geometry(sf::st_as_sf(FILE))),
+                        ignore.case = TRUE))) {
+            dtype <- "aa_sr_poly"
+          } else {
+            dtype <- "aa_sr_pnts"
+          }
         }
       }
       # looks for seed or rate b/c N should have been identified earlier
       if (is.na(dtype) & any(grepl("seed|_SR_", name, ignore.case = TRUE))) {
-        dtype <- "aa_sr"
+        if (any(grepl("poly",
+                      class(sf::st_geometry(sf::st_as_sf(FILE))),
+                      ignore.case = TRUE))) {
+          dtype <- "aa_sr_poly"
+        } else {
+          dtype <- "aa_sr_pnts"
+        }
       }
       # looks for seed or rate b/c N should have been identified earlier
       if (is.na(dtype) & any(grepl("seed|rate",NAMES,ignore.case = TRUE))) {
-        dtype <- "aa_sr"
+        if (any(grepl("poly",
+                      class(sf::st_geometry(sf::st_as_sf(FILE))),
+                      ignore.case = TRUE))) {
+          dtype <- "aa_sr_poly"
+        } else {
+          dtype <- "aa_sr_pnts"
+        }
       }
       # Protein data - again... now looks for "pro"
       if (is.na(dtype) &
