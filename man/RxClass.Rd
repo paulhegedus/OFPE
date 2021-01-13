@@ -132,13 +132,16 @@ based on gaps in optimum rates.}
 of experimental rates provided in 'exp_rate_length'. This is required
 for all new experiments and experimental prescriptions.}
 
-\item{\code{strat_dat}}{If the user is creating a new experiment with stratification
-they must apply the data that they are stratifying on. This provides an
-identifier for the data being used for the stratification. These must be codes
-used in the OFPE workflow sucha as 'yld', 'pro', 'aa_n', 'aa_sr', etc.}
+\item{\code{strat_dat}}{If the user is creating an experiment with stratification
+they must supply the data type that they are stratifying on. These must be codes
+used in the OFPE workflow such as 'yld', 'pro', 'aa_n', 'aa_sr', etc. You can
+only stratify on one variable per field. You must have data you want to stratify
+on aggregated in the database, otherwise more parameters for utilizing the raw
+data would be required.}
 
-\item{\code{strat_dat_year}}{Follows the same structure of 'strat_dat', however contains
-the years to use for stratification of each of the data types for each of the fields.}
+\item{\code{strat_dat_year}}{Follows the same structure of 'strat_dat' but
+specifies the year of data to use for stratification. Must provide year
+for each field prescription generated for.}
 
 \item{\code{simClass}}{If the user is creating an experimental prescription or
 prescription an R6 class SimClass object must be supplied. This has to be
@@ -332,25 +335,24 @@ based on gaps in optimum rates.}
 of experimental rates provided in 'exp_rate_length'. This is required
 for all new experiments and experimental prescriptions.}
 
-\item{\code{strat_dat}}{If the user is creating a new experiment with stratification
-they must apply the data that they are stratifying on. This provides an
-identifier for the data being used for the stratification. These must be codes
-used in the OFPE workflow sucha as 'yld', 'pro', 'aa_n', 'aa_sr', etc. This
-must be provided as a list with the fields for the prescription and a character
-vector of the stratification data used. You must have data you want to stratify
-on aggregated in the database, otherwise more paramters for utilizing the raw
+\item{\code{strat_dat}}{If the user is creating an experiment with stratification
+they must supply the data type that they are stratifying on. These must be codes
+used in the OFPE workflow such as 'yld', 'pro', 'aa_n', 'aa_sr', etc. You can
+only stratify on one variable per field. You must have data you want to stratify
+on aggregated in the database, otherwise more parameters for utilizing the raw
 data would be required.}
 
-\item{\code{strat_dat_year}}{Follows the same structure of 'strat_dat', however contains
-the years to use for stratification of each of the data types for each of the fields.}
+\item{\code{strat_dat_year}}{Follows the same structure of 'strat_dat' but
+specifies the year of data to use for stratification. Must provide year
+for each field prescription generated for.}
 
 \item{\code{exp_rate_gen}}{Logical, for the experimental prescription provide
-TRUE or FALSE for whether to create experimentla rates from gaps in the
+TRUE or FALSE for whether to create experimental rates from gaps in the
 optimized rates. These experimental rates are placed between optimum rates
 to establish a range of rates for which to improve model predictions in future
 years.}
 
-\item{\code{opt_rate_length}}{Provide the number of oprimum rates to use.
+\item{\code{opt_rate_length}}{Provide the number of optimum rates to use.
 This applies to prescriptions and experimental prescriptions. This
 represents the equipment constraints of the farmer. In the case of the
 experimental prescription, this number of rates does not include the

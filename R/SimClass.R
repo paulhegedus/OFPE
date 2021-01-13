@@ -604,9 +604,9 @@ SimClass <- R6::R6Class(
       names(dat)[grep(expvar, names(dat))] <- "exp"
       if (any(respvar == "pro")) {
         P <- Bp + (B0pd + B1pd * dat$pro + B2pd * dat$pro^2)
-        dat$NR <- (dat$yld * P) - CEXP * dat$exp - FC - ssAC
+        dat$NR <- (dat$yld * P) - (CEXP * dat$exp) - FC - ssAC
       } else {
-        dat$NR <- (dat$yld * (Bp + B0pd)) - CEXP * dat$exp - FC - ssAC
+        dat$NR <- (dat$yld * Bp) - (CEXP * dat$exp) - FC - ssAC
       }
       # pass to plot sim maps
       var_col_name <- "NR"

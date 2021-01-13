@@ -481,6 +481,7 @@ ExpGen <- R6::R6Class(
         rx_sdt <- private$.binExpRates(rx_sdt)
       }
       ## if exp rate in same bin as strat rate, change bin ONLY for cell_type = exp
+      rx_sdt$fid <- 1:nrow(rx_sdt)
       if (self$exp_rate_length > 1) {
         for (i in 1:nrow(rx_sdt)) {
           vec <- rx_sdt[i, ]
@@ -491,8 +492,26 @@ ExpGen <- R6::R6Class(
                 exp_levs <- 1:(self$exp_rate_length ) %>% as.numeric()
                 lev <- as.numeric(vec$exp_f)
                 stopifnot(lev == as.numeric(vec$strat_f))
-                vec$exp_f <- sample(exp_levs[-lev], 1)
-                vec$exprate <- self$exp_rates[as.numeric(vec$exp_f)]
+                repeat({
+                  fid <- sample(rx_sdt[rx_sdt$exp_f != lev & rx_sdt$strat_f != lev, "fid"]$fid, 1)
+                  if (!is.na(fid)) {
+                    if (as.numeric(rx_sdt[fid, "strat_f"]$strat_f) !=
+                        as.numeric(rx_sdt[i, "exp_f"]$exp_f)) {
+                      break
+                    }
+                  }
+                })
+                vec$exp_f <- rx_sdt[fid, "exp_f"]$exp_f %>% as.numeric()
+                vec$exprate <- rx_sdt[fid, "exprate"]$exprate %>% as.numeric()
+                vec$cell_type <- rx_sdt[fid, "cell_type"]$cell_type 
+                
+                rx_sdt[fid, "exp_f"] <- rx_sdt[i, "exp_f"]$exp_f %>% as.numeric()
+                rx_sdt[fid, "exprate"] <- rx_sdt[i, "exprate"]$exprate %>% as.numeric()
+                rx_sdt[fid, "cell_type"] <- rx_sdt[i, "cell_type"]$cell_type
+                
+                stopifnot(rx_sdt[fid, "exp_f"]$exp_f %>% as.numeric() != 
+                            rx_sdt[fid, "strat_f"]$strat_f %>% as.numeric(),
+                          vec$exp_f != vec$strat_f)
               }
             }
           }
@@ -500,6 +519,7 @@ ExpGen <- R6::R6Class(
         }
       }
       # remove strat cols e.g.(strat_val_type, strat_val, strat_f, exp_f)
+      rx_sdt$fid <- NULL
       rx_sdt$strat_f <- NULL
       rx_sdt$exp_f <- NULL
       return(rx_sdt)
@@ -567,11 +587,13 @@ ExpGen <- R6::R6Class(
                               right = FALSE,
                               labels = 1:self$exp_rate_length)
         } else {
-          bin_df$strat_f <- NA
+          bin_df$exp_f <- NA
         }
       } else {
+        bin_df[bin_df$exprate == self$base_rate, "exprate"] <- NA
         bin_df$exp_f <- factor(bin_df$exprate)
         levels(bin_df$exp_f) <- 1:length(unique(bin_df$exprate))
+        bin_df[is.na(bin_df$exprate), "exprate"] <- self$base_rate
       }
       return(bin_df)
     }
