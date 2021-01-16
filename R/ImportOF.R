@@ -670,49 +670,64 @@ ImportOF <- R6::R6Class(
         dtype <- "ssurgo"
       }
       # RX or ssopt data
-      if (is.na(dtype) &
-          any(grepl("RX|ssopt", name, ignore.case = TRUE)|
-              any(grepl("RX|ssopt", NAMES, ignore.case = TRUE)))) {
-        if (any(grepl("poly",
-                      class(sf::st_geometry(sf::st_as_sf(FILE))),
-                      ignore.case = TRUE))) {
-          dtype <- "rx_poly"
-        } else {
-          dtype <- "rx"
+      if (is.na(dtype)) {
+        if (any(grepl("RX|ssopt", name, ignore.case = TRUE)|
+                any(grepl("RX|ssopt", NAMES, ignore.case = TRUE)))) {
+          if (any(grepl("poly",
+                        class(sf::st_geometry(sf::st_as_sf(FILE))),
+                        ignore.case = TRUE))) {
+            dtype <- "rx_poly"
+          } else {
+            dtype <- "rx"
+          }
         }
       }
+      
       # Yield data - looks for "yield", otherwise looks for "yld" but not rate (N)
-      if (is.na(dtype) &
-          any(any(grepl("yield", NAMES, ignore.case = TRUE))|
-              any(grepl("yld", NAMES, ignore.case = TRUE))|
-              any(grepl("yld", name, ignore.case = TRUE)))) {
-        if (!any(grepl("rate|bulk_rt|blk_rt_", NAMES, ignore.case = TRUE))) {
-          dtype <- "yld"
-        } else {
-          dtype <- NA
+      if (is.na(dtype)) {
+        if (any(any(grepl("yield", NAMES, ignore.case = TRUE))|
+                any(grepl("yld", NAMES, ignore.case = TRUE))|
+                any(grepl("yld", name, ignore.case = TRUE)))) {
+          if (!any(grepl("rate|bulk_rt|blk_rt_", NAMES, ignore.case = TRUE))) {
+            dtype <- "yld"
+          } else {
+            dtype <- NA
+          }
         }
       }
+      
       # Protein data - looks for the string protein and sample_id (cropscan formate)
-      if (is.na(dtype) &
-          any(grepl("protein", NAMES, ignore.case = TRUE))) {
-        dtype <- "pro"
+      if (is.na(dtype)) {
+        if (any(grepl("protein", NAMES, ignore.case = TRUE))) {
+          dtype <- "pro"
+        }
       }
+      
       # N data - looks for colnames containing "rate" or "AA" (as-applied) and doesn't include "seed"
-      if (is.na(dtype) &
-          any(grepl("rate|AA", NAMES, ignore.case = TRUE))|
-          any(grepl("rate|aaN|AA|_aa|Rate|RATE|AA_N|_N_",
-                    name, ignore.case = FALSE))) {
-        if (!any(grepl("seed", NAMES, ignore.case = TRUE))) {
-          # check in data file for "seed"
-          anySeed <- private$.findSeed(FILE)
-          # if not seed data it is N data
-          if (anySeed=="no") {
-            if (any(grepl("poly",
-                          class(sf::st_geometry(sf::st_as_sf(FILE))),
-                          ignore.case = TRUE))) {
-              dtype <- "aa_n_poly"
+      if (is.na(dtype)) {
+        if (any(grepl("rate|AA", NAMES, ignore.case = TRUE))|
+            any(grepl("rate|aaN|AA|_aa|Rate|RATE|AA_N|_N_",
+                      name, ignore.case = FALSE))) {
+          if (!any(grepl("seed", NAMES, ignore.case = TRUE))) {
+            # check in data file for "seed"
+            anySeed <- private$.findSeed(FILE)
+            # if not seed data it is N data
+            if (anySeed=="no") {
+              if (any(grepl("poly",
+                            class(sf::st_geometry(sf::st_as_sf(FILE))),
+                            ignore.case = TRUE))) {
+                dtype <- "aa_n_poly"
+              } else {
+                dtype <- "aa_n_pnts"
+              }
             } else {
-              dtype <- "aa_n_pnts"
+              if (any(grepl("poly",
+                            class(sf::st_geometry(sf::st_as_sf(FILE))),
+                            ignore.case = TRUE))) {
+                dtype <- "aa_sr_poly"
+              } else {
+                dtype <- "aa_sr_pnts"
+              }
             }
           } else {
             if (any(grepl("poly",
@@ -723,7 +738,12 @@ ImportOF <- R6::R6Class(
               dtype <- "aa_sr_pnts"
             }
           }
-        } else {
+        }
+      }
+      
+      # looks for seed or rate b/c N should have been identified earlier
+      if (is.na(dtype)) {
+        if (any(grepl("seed|_SR_", name, ignore.case = TRUE))) {
           if (any(grepl("poly",
                         class(sf::st_geometry(sf::st_as_sf(FILE))),
                         ignore.case = TRUE))) {
@@ -733,30 +753,25 @@ ImportOF <- R6::R6Class(
           }
         }
       }
+      
       # looks for seed or rate b/c N should have been identified earlier
-      if (is.na(dtype) & any(grepl("seed|_SR_", name, ignore.case = TRUE))) {
-        if (any(grepl("poly",
-                      class(sf::st_geometry(sf::st_as_sf(FILE))),
-                      ignore.case = TRUE))) {
-          dtype <- "aa_sr_poly"
-        } else {
-          dtype <- "aa_sr_pnts"
+      if (is.na(dtype)) {
+        if (any(grepl("seed|rate",NAMES,ignore.case = TRUE))) {
+          if (any(grepl("poly",
+                        class(sf::st_geometry(sf::st_as_sf(FILE))),
+                        ignore.case = TRUE))) {
+            dtype <- "aa_sr_poly"
+          } else {
+            dtype <- "aa_sr_pnts"
+          }
         }
       }
-      # looks for seed or rate b/c N should have been identified earlier
-      if (is.na(dtype) & any(grepl("seed|rate",NAMES,ignore.case = TRUE))) {
-        if (any(grepl("poly",
-                      class(sf::st_geometry(sf::st_as_sf(FILE))),
-                      ignore.case = TRUE))) {
-          dtype <- "aa_sr_poly"
-        } else {
-          dtype <- "aa_sr_pnts"
-        }
-      }
+      
       # Protein data - again... now looks for "pro"
-      if (is.na(dtype) &
-          any(grepl("pro", NAMES, ignore.case = TRUE))) {
-        dtype <- "pro"
+      if (is.na(dtype)) {
+        if (any(grepl("pro", NAMES, ignore.case = TRUE))) {
+          dtype <- "pro"
+        }
       }
       return(dtype)
     },
