@@ -63,12 +63,8 @@ RxClass <- R6::R6Class(
     #' @field trt_width The width of the treatment blocks. Should be a multiple of 
     #' the sprayer boom or spreader width, given as feet (converted to meters).
     trt_width = NULL,
-    #' @field heading Numeric, heading in degrees from true north to rotate the 
-    #' experiment/prescription to. Default is 0 (no rotation). Note that if a 
-    #' heading is provided, the grid is trimmed based on the buffered boundary but
-    #' rotation caused by providing a heading may skew treatment rates so that 
-    #' they encroach into the cleanup strip.
-    heading = 0,
+    #' @field orientation TODO... Not implemented yet.
+    orientation = NULL,
     #' @field fld_prop The proportion of the field to apply experimental
     #' rates to (i.e. 0.5 or 1.0), OR, the percent of available cells to
     #' apply check rates to (i.e. 0.05, 0.1).
@@ -132,11 +128,10 @@ RxClass <- R6::R6Class(
     exp_rates_prop = NULL,
     #' @field strat_dat_parms Named list by fieldname that contains a list for each field
     #' containing named slots for 'table', 'grid_size', 'path', 'year', and 'col_name' 
-    #' to define the stratification data to use for randomly applying experimental rates.
-    #' Set named slots to NA for any fields that you don't want to make stratified
-    #' rates on. You can stratify on multiple variables per field, with priority 
-    #' given by order. Each of the sublist slots for each field must have the same 
-    #' dimensions. Note that more stratification variables increases processing times.
+    #' to define the stratification data to use for randomly applying experimental rates. 
+    #' You can stratify on multiple variables per field, with priority given by order. 
+    #' Each of the sublist slots for each field must have the same dimensions. Note
+    #' that more stratification variables increases processing times.
     #' 
     #' The table ('table') indicates the location within the database that the stratification
     #' data is stored in. This can either be from an aggregated table ('yld', 'pro',
@@ -197,16 +192,10 @@ RxClass <- R6::R6Class(
     #' to place experiments or prescriptions. Provided by the user in feet and
     #'converted to meters internally.
     buffer_width = NULL,
-    #' @field min_rate_jumps Optional, supply either 'N/S' or 'E/W' to indicate 
-    #' direction in which to minimize rate jumps. This is the predominant direction 
-    #' that the experimental input is applied across the field. This function minimizes
-    #' the difference in rates between adjacent treatments for easier use on the 
-    #' equipment. Note that this will eradicate any randomization/optimization of 
-    #' rates and will partially or completely remove stratification. This function makes 
-    #' sure that the rates do not vary by more than 2 rate levels in the direction 
-    #' specified. Default is NULL, which prevents execution. This will not guarantee
-    #' eradication of all rate jumps, but will reduce the amount. 
-    min_rate_jumps = NULL,
+    #' @field min_rate_jumps Logical, whether to minimize the jumps in input
+    #' rates. This makes sure that the rates do not vary by more than 2 rate 
+    #' levels. Default is FALSE. If TRUE, this could take some time to run.
+    min_rate_jumps = FALSE,
     
     #' @field out_gen An output generator R6 class (i.e. ExpGen or RxGen), that produces
     #' the output specified by the user. There are different classes with different
@@ -240,11 +229,7 @@ RxClass <- R6::R6Class(
     #' farmer selected base rate randomly placed, stratified on optimum rates.
     #' @param trt_length Length, in feet, for which to apply treatments.
     #' @param trt_width The width, in feet, for which to apply treatments.
-    #' @param heading Numeric, heading in degrees from true north to rotate the 
-    #' experiment/prescription to. Default is 0 (no rotation). Note that if a 
-    #' heading is provided, the grid is trimmed based on the buffered boundary but
-    #' rotation caused by providing a heading may skew treatment rates so that 
-    #' they encroach into the cleanup strip.
+    #' @param orientation TODO... Not implemented yet.
     #' @param fld_prop The proportion of the field to apply experimental
     #' rates to (i.e. 0.5 or 1.0), OR, the percent of available cells to
     #' apply check rates to (i.e. 0.05, 0.1).
@@ -346,22 +331,16 @@ RxClass <- R6::R6Class(
     #' an equipment restriction specific to the farmer.
     #' @param buffer_width The width of the buffer from field edge for
     #' experiments or prescriptions (feet).
-    #' @param min_rate_jumps Optional, supply either 'N/S' or 'E/W' to indicate 
-    #' direction in which to minimize rate jumps. This is the predominant direction 
-    #' that the experimental input is applied across the field. This function minimizes
-    #' the difference in rates between adjacent treatments for easier use on the 
-    #' equipment. Note that this will eradicate any randomization/optimization of 
-    #' rates and will partially or completely remove stratification. This function makes 
-    #' sure that the rates do not vary by more than 2 rate levels in the direction 
-    #' specified. Default is NULL, which prevents execution. This will not guarantee
-    #' eradication of all rate jumps, but will reduce the amount.
+    #' @param min_rate_jumps Logical, whether to minimize the jumps in input
+    #' rates. This makes sure that the rates do not vary by more than 2 rate 
+    #' levels. Default is FALSE. If TRUE, this could take some time to run.
     #' @return An initialized RxClass R6 class object.
     initialize = function(dbCon,
                           simClass = NULL,
                           gen_type = NULL,
                           trt_length = NULL,
                           trt_width = NULL,
-                          heading = 0,
+                          orientation = NULL,
                           fld_prop = NULL,
                           conv = NULL,
                           base_rate = NULL,
@@ -381,8 +360,8 @@ RxClass <- R6::R6Class(
                           mgmt_scen = NULL,
                           expvar = NULL,
                           min_app_rate = NULL,
-                          buffer_width = 0,
-                          min_rate_jumps = NULL) {
+                          buffer_width = NULL,
+                          min_rate_jumps = FALSE) {
       stopifnot(!is.null(dbCon))
       self$dbCon <- dbCon
 
@@ -411,9 +390,9 @@ RxClass <- R6::R6Class(
                   buffer_width > 0)
         self$buffer_width <- round(buffer_width, 0) * 0.3048 # convert to meters
       }
-      if (!is.null(heading)) {
-        stopifnot(is.numeric(heading))
-        self$heading <- heading
+      if (!is.null(orientation)) {
+        stopifnot(is.numeric(orientation))
+        self$orientation <- orientation
       }
       if (!is.null(fld_prop)) {
         stopifnot(is.numeric(fld_prop),
@@ -484,14 +463,14 @@ RxClass <- R6::R6Class(
       if (!is.null(strat_dat_parms)) {
         if (grepl("NewExp_wStrat", self$gen_type)) {
           stopifnot(length(strat_dat_parms) == length(fieldname))
-          # for (i in 1:length(strat_dat_parms)) {
+          for (i in 1:length(strat_dat_parms)) {
             # stopifnot(names(strat_dat_parms[[i]]) == c("table", "path", "year", "col_name"))
             # for (j in 1:length(strat_dat_parms[[i]])) {
             #   stopifnot(is.character(strat_dat_parms[[i]][j]) |
             #               is.numeric(strat_dat_parms[[i]][j]) |
             #               is.na(strat_dat_parms[[i]][j]))
             # }
-          # }
+          }
           self$strat_dat_parms <- strat_dat_parms
         }
       }
@@ -512,11 +491,6 @@ RxClass <- R6::R6Class(
         stopifnot(is.numeric(min_app_rate))
         self$min_app_rate <- min_app_rate
       }
-      if (!is.null(min_rate_jumps)) {
-        stopifnot(is.character(min_rate_jumps),
-                  any(grepl("N/S|E/W", min_rate_jumps)))
-        self$min_rate_jumps <- min_rate_jumps
-      }
     },
     #' @description
     #' Interactive method for selecting inputs related to the prescription or
@@ -532,7 +506,7 @@ RxClass <- R6::R6Class(
     #' different selections are required for the user to set up the generation
     #' method.
     #'
-    #' The user will have to select the treatment length and width, the heading 
+    #' The user will have to select the treatment length and width, the orientation 
     #' to align the treatments relative to N/S, the base rate to apply to around 
     #' experiments or for checks in the prescription, the year(s) the farmer 
     #' thinks the upcoming year will resemble and to make the prescription for, 
@@ -544,7 +518,7 @@ RxClass <- R6::R6Class(
       private$.selectGenType()
       private$.selectTrtLength()
       private$.selectTrtWidth()
-      private$.selectHeading()
+      private$.selectOrientation()
       private$.selectBaseRate()
       private$.selectYearForRx()
       private$.selectToDB()
@@ -587,7 +561,6 @@ RxClass <- R6::R6Class(
         self$farmername <- self$simClass$datClass$farmername
       }
       private$.selectMinAppRate()
-      private$.selectMinRateJumps()
     },
     #' @description
     #' Method used to setup the output location for the prescription and related
@@ -860,9 +833,9 @@ RxClass <- R6::R6Class(
         self$buffer_width <- self$trt_width
       }
     },
-    .selectHeading = function() {
-      self$heading <- as.numeric(readline(
-        "Provide the heading of the treatments to N (in degrees). Used to rotate the treatments to align with farmer management: "
+    .selectOrientation = function() {
+      self$orientation <- as.numeric(readline(
+        "Provide the orientation of the treatments to N (in degrees). Used to rotate the treatments to align with farmer management: "
       ))
     },
     .selectFldProp = function() {
@@ -962,17 +935,6 @@ RxClass <- R6::R6Class(
       }
       stopifnot(sum(self$exp_rates_prop) >= 0.99)
     },
-    .selectMinRateJumps = function() {
-      min_rate_jumps <- as.character(select.list(
-        c("Yes", "No"),
-        title = "Select whether to minimize the jumps in rates between treatments. Will add time to processing."))
-      if (min_rate_jumps == "Yes") {
-        min_rate_jumps <- as.character(select.list(
-          c("N/S", "E/W"),
-          title = "Select the general direction of travel across the field. Rates are minimized across treatment columns or rows, respectively."))
-        self$min_rate_jumps <- min_rate_jumps
-      } 
-    },
     .selectStratDat = function() {
       stopifnot(!is.null(self$fieldname))
       self$strat_dat_parms <- rep(list(NA), length(self$fieldname))
@@ -982,118 +944,112 @@ RxClass <- R6::R6Class(
                                                                             year = NA, 
                                                                             col_name = NA))
       for (i in 1:length(self$fieldname)) {
-        strat_dat <- as.logical(select.list(
-          c(TRUE, FALSE),
-          multiple = FALSE,
-          title = paste0("TRUE/FALSE: Whether to randomly apply experimental rates with stratification in ", self$fieldname[i], ".")
-        ))
-        if (strat_dat) {
-          strat_vars <- as.numeric(readline(prompt = paste0("Provide the number of variables to stratify on in ", self$fieldname[i], ". Submit 0 for no stratification.: ")))
-          stopifnot(is.numeric(strat_vars),
-                    !is.na(strat_vars))
-          if (strat_vars != 0) {
-            self$strat_dat_parms[[i]] <- lapply(self$strat_dat_parms[[i]], rep, NA, strat_vars)
-            strat_vars <- 1:strat_vars
+        strat_vars <- as.numeric(readline(prompt = paste0("Provide the number of variables to stratify on in ", self$fieldname[i], ". Submit 0 for no stratification.: ")))
+        stopifnot(is.numeric(strat_vars),
+                  !is.na(strat_vars))
+        if (strat_vars != 0) {
+          self$strat_dat_parms[[i]] <- lapply(self$strat_dat_parms[[i]], rep, NA, strat_vars)
+          strat_vars <- 1:strat_vars
+          
+          for (j in 1:length(strat_vars)) {
             
-            for (j in 1:length(strat_vars)) {
-              ## select table/type of data to gather
-              table_selection <- as.character(select.list(
-                c("Agg", "Raw"),
-                multiple = FALSE,
-                title = paste0("Select location of the table with stratification data ", strat_vars[j]," for ", self$fieldname[i], ".")
-              ))
-              schema <- ifelse(table_selection == "Raw", "_r", "_a")
-              schema <- paste0(self$farmername, schema)
-              tables <- suppressWarnings(DBI::dbGetQuery(
-                self$dbCon$db,
-                paste0("SELECT *
+            ## select table/type of data to gather
+            table_selection <- as.character(select.list(
+              c("Agg", "Raw"),
+              multiple = FALSE,
+              title = paste0("Select location of the table with stratification data ", strat_vars[j]," for ", self$fieldname[i], ".")
+            ))
+            schema <- ifelse(table_selection == "Raw", "_r", "_a")
+            schema <- paste0(self$farmername, schema)
+            tables <- suppressWarnings(DBI::dbGetQuery(
+              self$dbCon$db,
+              paste0("SELECT *
                      FROM pg_catalog.pg_tables 
                      WHERE schemaname = '", schema, "';")
-              ))$tablename
-              self$strat_dat_parms[[i]]$table[j] <- as.character(select.list(
-                tables,
-                multiple = FALSE,
-                title = paste0("Select location of the table with stratification data ", strat_vars[j]," for ", self$fieldname[i], ".")
-              ))
-              
-              ## if raw select original filename, else agg path = NA
-              if (table_selection == "Raw") {
-                filenames <- suppressWarnings(DBI::dbGetQuery(
-                  self$dbCon$db,
-                  paste0("SELECT DISTINCT orig_file 
+            ))$tablename
+            self$strat_dat_parms[[i]]$table[j] <- as.character(select.list(
+              tables,
+              multiple = FALSE,
+              title = paste0("Select location of the table with stratification data ", strat_vars[j]," for ", self$fieldname[i], ".")
+            ))
+            
+            ## if raw select original filename, else agg path = NA
+            if (table_selection == "Raw") {
+              filenames <- suppressWarnings(DBI::dbGetQuery(
+                self$dbCon$db,
+                paste0("SELECT DISTINCT orig_file 
                      FROM ", schema, ".", self$strat_dat_parms[[i]]$table[j], ";")
-                )$orig_file)
-                self$strat_dat_parms[[i]]$path[j] <- as.character(select.list(
-                  filenames,
-                  multiple = FALSE,
-                  title = paste0("Select the filename used to import the data into the database ('orig_file' column in raw data) for stratification data ", strat_vars[j]," for ", self$fieldname[i], ".")
-                ))
-              } 
-              
-              ## if raw get year, else ask user
-              if (table_selection == "Raw") {
-                self$strat_dat_parms[[i]]$year[j] <- suppressWarnings(DBI::dbGetQuery(
-                  self$dbCon$db,
-                  paste0("SELECT DISTINCT year 
+              )$orig_file)
+              self$strat_dat_parms[[i]]$path[j] <- as.character(select.list(
+                filenames,
+                multiple = FALSE,
+                title = paste0("Select the filename used to import the data into the database ('orig_file' column in raw data) for stratification data ", strat_vars[j]," for ", self$fieldname[i], ".")
+              ))
+            } 
+            
+            ## if raw get year, else ask user
+            if (table_selection == "Raw") {
+              self$strat_dat_parms[[i]]$year[j] <- suppressWarnings(DBI::dbGetQuery(
+                self$dbCon$db,
+                paste0("SELECT DISTINCT year 
                      FROM ", schema, ".", self$strat_dat_parms[[i]]$table[j], "
                      WHERE orig_file = '", self$strat_dat_parms[[i]]$path[j], "';")
-                )$year)
-              } else {
-                unq_years <- unique(DBI::dbGetQuery(
-                  self$dbCon$db,
-                  paste0("SELECT DISTINCT year 
+              )$year)
+            } else {
+              unq_years <- unique(DBI::dbGetQuery(
+                self$dbCon$db,
+                paste0("SELECT DISTINCT year 
                      FROM ", schema, ".", self$strat_dat_parms[[i]]$table[j]," 
                      WHERE field = '", self$fieldname[i], "'")
-                )$year)
-                self$strat_dat_parms[[i]]$year[j] <- as.numeric(select.list(
-                  unq_years,
-                  multiple = FALSE,
-                  title = paste0("Select year to use for stratification data ", self$strat_vars[j], " for ", self$fieldname[i], ".")
-                ))
-                
-                unq_grid_size <- suppressWarnings(DBI::dbGetQuery(
-                  self$dbCon$db,
-                  paste0("SELECT DISTINCT size 
+              )$year)
+              self$strat_dat_parms[[i]]$year[j] <- as.numeric(select.list(
+                unq_years,
+                multiple = FALSE,
+                title = paste0("Select year to use for stratification data ", self$strat_vars[j], " for ", self$fieldname[i], ".")
+              ))
+              
+              unq_grid_size <- suppressWarnings(DBI::dbGetQuery(
+                self$dbCon$db,
+                paste0("SELECT DISTINCT size 
                      FROM ", schema, ".", self$strat_dat_parms[[i]]$table[j], "
                        WHERE field = '", self$fieldname[i], "' 
                        AND year = '", self$strat_dat_parms[[i]]$year[j], "';")
-                )$size)
-                self$strat_dat_parms[[i]]$grid_size[j] <- as.numeric(select.list(
-                  unq_grid_size,
-                  multiple = FALSE,
-                  title = paste0("Select the size of the grid (in meters) used to clean and aggregate stratification data ", strat_vars[j]," for ", self$fieldname[i], ".")
-                ))
-              }
-              
-              ## ask user to select from column names for strat
-              if (table_selection == "Raw") {
-                temp_tab_cols <-  suppressWarnings(DBI::dbGetQuery(
-                  self$dbCon$db,
-                  paste0("SELECT *
-                       FROM  ", schema, ".", self$strat_dat_parms[[i]]$table[j], "
-                       WHERE orig_file = '", self$strat_dat_parms[[i]]$path[j], "';")
-                ))
-              } else {
-                temp_tab_cols <- OFPE::fetchAggStratDat(
-                  table_var = self$strat_dat_parms[[i]]$table[j], 
-                  strat_var = NULL, 
-                  field = self$fieldname[i], 
-                  year = self$strat_dat_parms[[i]]$year[j], 
-                  farmername = self$farmername,
-                  grid_size = self$strat_dat_parms[[i]]$grid_size[j],
-                  db = self$dbCon$db
-                )
-              }
-              temp_tab_cols <- private$.removeNAcols(temp_tab_cols)
-              temp_tab_cols <- as.data.frame(t(subset(temp_tab_cols,
-                                                      temp_tab_cols == FALSE)))
-              
-              self$strat_dat_parms[[i]]$col_name[j] <- as.character(select.list(
-                colnames(temp_tab_cols),
+              )$size)
+              self$strat_dat_parms[[i]]$grid_size[j] <- as.numeric(select.list(
+                unq_grid_size,
                 multiple = FALSE,
-                title = paste0("Select column name with stratification data ", self$strat_vars[j], " for ", self$fieldname[i], ".")
+                title = paste0("Select the size of the grid (in meters) used to clean and aggregate stratification data ", strat_vars[j]," for ", self$fieldname[i], ".")
               ))
             }
+            
+            ## ask user to select from column names for strat
+            if (table_selection == "Raw") {
+              temp_tab_cols <-  suppressWarnings(DBI::dbGetQuery(
+                self$dbCon$db,
+                paste0("SELECT *
+                       FROM  ", schema, ".", self$strat_dat_parms[[i]]$table[j], "
+                       WHERE orig_file = '", self$strat_dat_parms[[i]]$path[j], "';")
+              ))
+            } else {
+              temp_tab_cols <- OFPE::fetchAggStratDat(
+                table_var = self$strat_dat_parms[[i]]$table[j], 
+                strat_var = NULL, 
+                field = self$fieldname[i], 
+                year = self$strat_dat_parms[[i]]$year[j], 
+                farmername = self$farmername,
+                grid_size = self$strat_dat_parms[[i]]$grid_size[j],
+                db = self$dbCon$db
+              )
+            }
+            temp_tab_cols <- private$.removeNAcols(temp_tab_cols)
+            temp_tab_cols <- as.data.frame(t(subset(temp_tab_cols,
+                                                    temp_tab_cols == FALSE)))
+            
+            self$strat_dat_parms[[i]]$col_name[j] <- as.character(select.list(
+              colnames(temp_tab_cols),
+              multiple = FALSE,
+              title = paste0("Select column name with stratification data ", self$strat_vars[j], " for ", self$fieldname[i], ".")
+            ))
           }
         }
       }
@@ -1135,7 +1091,7 @@ RxClass <- R6::R6Class(
     .loadGenerator = function() {
       out_gen <- ifelse(grepl("Rx", self$gen_type), "RxGen", "ExpGen")
       if (grepl("Exp", out_gen)) {
-        init_text <- c("dbCon", "trt_length", "trt_width", "heading", "fld_prop", 
+        init_text <- c("dbCon", "trt_length", "trt_width", "orientation", "fld_prop", 
                        "expvar", "conv", "base_rate", "rx_for_year", "out_path", 
                        "SAVE", "fieldname", "farmername", "exp_rate_length", 
                        "exp_rates", "exp_rates_prop", "buffer_width", "min_rate_jumps")
@@ -1144,7 +1100,7 @@ RxClass <- R6::R6Class(
         } 
       } else {
         init_text <- c("dbCon", "simClass", "mgmt_scen", "trt_length", "trt_width",
-                       "heading", "expvar", "conv", "base_rate", "rx_years",
+                       "orientation", "expvar", "conv", "base_rate", "rx_years",
                        "rx_for_year", "out_path", "SAVE", "opt_rate_length", "fld_prop", 
                        "buffer_width", "min_rate_jumps")
         if (grepl("Exp", self$gen_type)) {

@@ -426,7 +426,7 @@ ImportOF <- R6::R6Class(
       #******************************************************************
       #******************************************************************
       # check if table exists for data type in farmer's schema
-      if (grepl("rx", dtype)) {
+      if (dtype == "rx") {
         schema <- paste0(farmer, "_a")
         query <- paste0("ALTER TABLE ", schema,".", dtype,
                         " ADD PRIMARY KEY (gid, fieldname, year, orig_file)")
@@ -678,7 +678,7 @@ ImportOF <- R6::R6Class(
                         ignore.case = TRUE))) {
             dtype <- "rx_poly"
           } else {
-            dtype <- "rx_pnts"
+            dtype <- "rx"
           }
         }
       }

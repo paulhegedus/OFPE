@@ -66,12 +66,8 @@ RxGen <- R6::R6Class(
     trt_length = NULL,
     #' @field trt_width Width, in meters, for which to apply treatments.
     trt_width = NULL,
-    #' @field heading Numeric, heading in degrees from true north to rotate the 
-    #' experiment/prescription to. Default is 0 (no rotation). Note that if a 
-    #' heading is provided, the grid is trimmed based on the buffered boundary but
-    #' rotation caused by providing a heading may skew treatment rates so that 
-    #' they encroach into the cleanup strip.
-    heading = 0,
+    #' @field orientation TODO... Not implemented yet.
+    orientation = NULL,
     #' @field expvar Experimental variable to optimize, select/input
     #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
     #' input that is experimentally varied across the field as part of the
@@ -144,16 +140,10 @@ RxGen <- R6::R6Class(
     #' to place experiments or prescriptions. Provided by the user in feet and
     #'converted to meters internally.
     buffer_width = NULL,
-    #' @field min_rate_jumps Optional, supply either 'N/S' or 'E/W' to indicate 
-    #' direction in which to minimize rate jumps. This is the predominant direction 
-    #' that the experimental input is applied across the field. This function minimizes
-    #' the difference in rates between adjacent treatments for easier use on the 
-    #' equipment. Note that this will eradicate any randomization/optimization of 
-    #' rates and will partially or completely remove stratification. This function makes 
-    #' sure that the rates do not vary by more than 2 rate levels in the direction 
-    #' specified. Default is NULL, which prevents execution. This will not guarantee
-    #' eradication of all rate jumps, but will reduce the amount.
-    min_rate_jumps = NULL,
+    #' @field min_rate_jumps Logical, whether to minimize the jumps in input
+    #' rates. This makes sure that the rates do not vary by more than 2 rate 
+    #' levels. Default is FALSE. If TRUE, this could take some time to run.
+    min_rate_jumps = FALSE,
 
     #' @field unique_fieldname Unique fieldname for the field(s) used for the experiment. This
     #' concatenates multiple fields with an ampersand. Used for labelling.
@@ -213,11 +203,7 @@ RxGen <- R6::R6Class(
     #' organic systems, both of which are already provided.
     #' @param trt_length Length, in meters, for which to apply treatments.
     #' @param trt_width Width, in meters, for which to apply treatments.
-    #' @param heading Numeric, heading in degrees from true north to rotate the 
-    #' experiment/prescription to. Default is 0 (no rotation). Note that if a 
-    #' heading is provided, the grid is trimmed based on the buffered boundary but
-    #' rotation caused by providing a heading may skew treatment rates so that 
-    #' they encroach into the cleanup strip.
+    #' @param orientation TODO... Not implemented yet.
     #' @param expvar Experimental variable to optimize, select/input
     #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
     #' input that is experimentally varied across the field as part of the
@@ -255,15 +241,9 @@ RxGen <- R6::R6Class(
     #' apply check rates to (i.e. 0.05, 0.1).
     #' @param buffer_width The width of the buffer from field edge for
     #' experiments or prescriptions (feet).
-    #' @param min_rate_jumps Optional, supply either 'N/S' or 'E/W' to indicate 
-    #' direction in which to minimize rate jumps. This is the predominant direction 
-    #' that the experimental input is applied across the field. This function minimizes
-    #' the difference in rates between adjacent treatments for easier use on the 
-    #' equipment. Note that this will eradicate any randomization/optimization of 
-    #' rates and will partially or completely remove stratification. This function makes 
-    #' sure that the rates do not vary by more than 2 rate levels in the direction 
-    #' specified. Default is NULL, which prevents execution. This will not guarantee
-    #' eradication of all rate jumps, but will reduce the amount.
+    #' @param min_rate_jumps Logical, whether to minimize the jumps in input
+    #' rates. This makes sure that the rates do not vary by more than 2 rate 
+    #' levels. Default is FALSE. If TRUE, this could take some time to run.
     #' @param exp_rate_gen Logical, for the experimental prescription provide
     #' TRUE or FALSE for whether to create experimentla rates from gaps in the
     #' optimized rates. These experimental rates are placed between optimum rates
@@ -291,7 +271,7 @@ RxGen <- R6::R6Class(
                           mgmt_scen,
                           trt_length,
                           trt_width,
-                          heading = 0,
+                          orientation,
                           expvar,
                           conv,
                           base_rate,
@@ -301,8 +281,8 @@ RxGen <- R6::R6Class(
                           SAVE,
                           opt_rate_length,
                           fld_prop,
-                          buffer_width = 0,
-                          min_rate_jumps = NULL,
+                          buffer_width = NULL,
+                          min_rate_jumps = FALSE,
                           exp_rate_gen = NULL,
                           exp_rate_length = NULL,
                           exp_rates = NULL,
@@ -312,7 +292,7 @@ RxGen <- R6::R6Class(
                 !is.null(mgmt_scen),
                 !is.null(trt_length),
                 !is.null(trt_width),
-                !is.null(heading),
+                !is.null(orientation),
                 !is.null(fld_prop),
                 !is.null(conv),
                 !is.null(base_rate),
@@ -324,7 +304,7 @@ RxGen <- R6::R6Class(
                 trt_length > 0,
                 is.numeric(trt_width),
                 trt_width > 0,
-                is.numeric(heading),
+                is.numeric(orientation),
                 is.numeric(fld_prop),
                 fld_prop >= 0 & fld_prop <= 1,
                 is.numeric(conv),
@@ -344,7 +324,7 @@ RxGen <- R6::R6Class(
       self$trt_length <- round(trt_length, 0)
       self$trt_width <- round(trt_width, 0)
       self$buffer_width <- buffer_width
-      self$heading <- heading
+      self$orientation <- orientation
       self$conv <- conv
       self$base_rate <- round(base_rate, 0)
       self$rx_for_year <- rx_for_year
@@ -380,11 +360,6 @@ RxGen <- R6::R6Class(
                   sum(exp_rates_prop) >= 0.99)
         self$exp_rates_prop <- exp_rates_prop
       }
-      if (!is.null(min_rate_jumps)) {
-        stopifnot(is.character(min_rate_jumps),
-                  any(grepl("N/S|E/W", min_rate_jumps)))
-        self$min_rate_jumps <- min_rate_jumps
-      }
       self$unique_fieldname <- OFPE::uniqueFieldname(self$simClass$datClass$fieldname)
       private$.makeRxDt()
     },
@@ -396,6 +371,8 @@ RxGen <- R6::R6Class(
     #' @param None All parameters supplied upon initialization.
     #' @return A completed experiment table containing the output.
     executeOutput = function() {
+      browser()
+      
       rx_sdt <- OFPE::getRxGrid(self$dbCon$db,
                                 self$rx_dt,
                                 self$simClass$datClass$farmername,
@@ -404,12 +381,18 @@ RxGen <- R6::R6Class(
                                 self$trt_width,
                                 self$unique_fieldname,
                                 self$mgmt_scen,
-                                self$buffer_width,
-                                self$heading) %>%
+                                self$buffer_width) %>%
+        
+        
+        
+        ## TODO - orientation
+        
+        
+        
         OFPE::trimGrid(self$simClass$datClass$fieldname,
                        self$dbCon$db,
                        self$simClass$datClass$farmername,
-                       ifelse(self$heading == 0, self$buffer_width, 0)) %>%
+                       self$buffer_width) %>%
         private$.binOptRates()
       if (!is.null(self$exp_rate_gen)) {
         if (self$exp_rate_gen) {
@@ -434,11 +417,13 @@ RxGen <- R6::R6Class(
                                            self$fld_prop,
                                            self$opt_rate_length)
       }
-      if (!is.null(self$min_rate_jumps)) {
-        rx_sdt <- OFPE::minRateJumps(rx_sdt = rx_sdt, 
-                                     min_rate_jumps = self$min_rate_jumps,
-                                     rate_lengths = self$exp_rate_length + self$opt_rate_length + 1)
-      }
+      
+      
+      
+      ## TODO - minimize rate jumps
+      
+      
+      
       fld_bound <- OFPE::makeBaseRate(self$dbCon$db,
                                          self$simClass$datClass$fieldname,
                                          self$unique_fieldname,

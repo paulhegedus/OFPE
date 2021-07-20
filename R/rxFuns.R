@@ -27,11 +27,6 @@
 #' organic systems, both of which are already provided. Default to 'base' for new
 #' experiments, override if making a prescription.
 #' @param buffer_width Width from the edge of the field within which to apply treatments.
-#' @param heading Numeric, heading in degrees from true north to rotate the 
-#' experiment/prescription to. Default is 0 (no rotation). Note that if a 
-#' heading is provided, the grid is trimmed based on the buffered boundary but
-#' rotation caused by providing a heading may skew treatment rates so that 
-#' they encroach into the cleanup strip.
 #' @return NULL, grid data stored in database in 'rxgrids' and 'rxgridtemp'.
 #' @export
 getRxGrid <- function(db,
@@ -42,15 +37,15 @@ getRxGrid <- function(db,
                       trt_width,
                       unique_fieldname,
                       mgmt_scen = "base",
-                      buffer_width,
-                      heading = 0) {
+                      buffer_width) {
+  # browser()
+  
   utm_epsg <- OFPE::findUTMzone(db, fieldname = fieldname[1])
   # remove temp tables
   OFPE::removeTempTables(db)
   OFPE::removeTempFarmerTables(db, farmername)
 
-  # make a grid from field boundary
-  OFPE::makeTempBound(db, fieldname, farmername) 
+  OFPE::makeTempBound(db, fieldname, farmername, buffer_width)
 
   # make a grid and add to db if not already present (rx_grids) saved in db
   OFPE::makeRXGrid(db,
@@ -77,7 +72,7 @@ getRxGrid <- function(db,
     geom = "geometry",
     new.id = "gid"
   ))
-  # Add cell_id to temp table from rxgridtemp and get the mean ssopt from each cell
+  #Add cell_id to temp table from rxgridtemp and get the mean ssopt from each cell
   # Get the cell_id for each point in the temporary table
   invisible(DBI::dbSendQuery(
     db,
@@ -118,9 +113,9 @@ getRxGrid <- function(db,
           FROM vtemp
           WHERE rxgridtemp.cell_id = vtemp.cell_id;")
   ))
-  
-  ## make temp bound with buffer to get compete blocks within 
-  OFPE::makeTempBound(db, fieldname, farmername, buffer_width)
+
+  # Clip rxgridtemp to field boundary & bring into R
+  # clip raster
   invisible(DBI::dbSendQuery(
     db,
     paste0( "ALTER TABLE all_farms.rxgridtemp
@@ -142,40 +137,6 @@ getRxGrid <- function(db,
     paste0( "ALTER TABLE all_farms.rxgridtemp
           DROP COLUMN id;")
   ))
-  
-  ## rotate to heading if present
-  if (heading != 0) {
-    # bring in rxgridtemp to R
-    rxgridtemp <- sf::st_read(db, query = "SELECT * FROM all_farms.rxgridtemp;")
-    # get centers and coords in lat long to calculate bearing to rotate by
-    cntr <- suppressWarnings(sf::st_transform(rxgridtemp, 4326) %>% 
-                               sf::st_union() %>% 
-                               sf::st_centroid())
-    cntr <- unclass(cntr[[1]])
-    # rotate rxgridtemp
-    theta <- (heading - 180) * pi / 180 ## in radians
-    rot = function(a) matrix(c(cos(a), sin(a), -sin(a), cos(a)), 2, 2)
-    rxgridtemp_rot = (sf::st_transform(rxgridtemp, 4326)$geom - cntr) * 
-      rot(theta) + 
-      cntr
-    rxgridtemp_rot <- sf::st_set_crs(rxgridtemp_rot, 4326) %>% 
-      sf::st_transform(32612)
-    # ggplot(rxgridtemp) + geom_sf() ; ggplot(rxgridtemp_rot) + geom_sf()
-    rxgridtemp$geom <- rxgridtemp_rot
-    # ggplot(rxgridtemp) + geom_sf()
-    # remove from db
-    invisible(suppressWarnings(DBI::dbRemoveTable(db, c("all_farms", "rxgridtemp"))))
-    # put back in db
-    invisible(suppressMessages(rpostgis::pgInsert(
-      db,
-      c("all_farms", "rxgridtemp"),
-      as(rxgridtemp, "Spatial"),
-      geom = "geom"
-    )))
-    rm(rxgridtemp, rxgridtemp_rot, cntr, theta, rot)
-  }
-  
-  ## bring in exp/prescription grid
   rx_sdt <- sf::st_read(
     db,
     query = paste0("SELECT * FROM all_farms.rxgridtemp"),
@@ -198,38 +159,27 @@ getRxGrid <- function(db,
 #' @param buffer_width Width from the edge of the field within which to apply treatments.
 #' @return NULL, temporary field boundary table in 'all_farms'.
 #' @export
-makeTempBound <- function(db, fieldname, farmername, buffer_width = NULL) {
-  geom_temp_exist <- as.logical(
-    DBI::dbGetQuery(
-      db,
-      paste0("SELECT EXISTS (
-             SELECT 1
-             FROM   information_schema.tables
-             WHERE  table_schema = 'all_farms'
-             AND table_name = 'temp')")
-    )
-  )
-  if(geom_temp_exist){
-    invisible(
-      DBI::dbSendQuery(
-        db,
-        paste0("DROP TABLE all_farms.temp")
-      )
-    )
-    
-  }
+makeTempBound <- function(db, fieldname, farmername, buffer_width) {
+  # browser()
+  
   utm_epsg <- OFPE::findUTMzone(db, fieldname = fieldname[1])
-  fld_bound <- OFPE::getFldBound(fieldname, db, farmername)
-  if (!is.null(buffer_width)) {
-    fld_bound <- sf::st_buffer(fld_bound, -buffer_width)
+  for (i in 1:length(fieldname)) {
+    if (i == 1) {
+      invisible(DBI::dbSendQuery(
+        db,
+        paste0("CREATE TABLE all_farms.temp AS
+              SELECT * FROM all_farms.fields fields
+              WHERE fields.fieldname = '", fieldname[i], "';")
+      ))
+    } else {
+      invisible(DBI::dbSendQuery(
+        db,
+        paste0("INSERT INTO all_farms.temp
+              SELECT * FROM all_farms.fields fields
+              WHERE fields.fieldname = '", fieldname[i], "';")
+      ))
+    }
   }
-  suppressMessages(rpostgis::pgInsert(
-    db,
-    c(paste0("all_farms"), "temp"),
-    as(fld_bound, "Spatial"),
-    geom = "geom",
-    new.id = "gid"
-  ))
   invisible(DBI::dbSendQuery(
     db,
     paste0("ALTER TABLE all_farms.temp
@@ -276,6 +226,8 @@ makeRXGrid <- function(db,
                        farmername,
                        unique_fieldname,
                        mgmt_scen) {
+  # browser()
+  
   utm_epsg <- OFPE::findUTMzone(db, fieldname = fieldname[1])
   size <- paste0(trt_width, " x ", trt_length)
   grids_exist <- FALSE
@@ -315,7 +267,7 @@ makeRXGrid <- function(db,
                 FROM all_farms.rxgrids
                 WHERE field = '", unique_fieldname, "'
                 AND size = '", size, "'
-                AND rxgrids.mgmt_scen = '", mgmt_scen, "';")
+                AND rxgrids.mgmt_scen = '", mgmt_scen, "'")
         )
       )
     }
@@ -387,7 +339,9 @@ makeRXGrid <- function(db,
                ON all_farms.rxgridtemp
                USING gist (geom);")
     ))
-    
+  }
+  # if boundary_import = no, field does not exist in grids
+  if (!field_exist) {
     if (grids_exist) { # if grids_exists append
       invisible(DBI::dbSendQuery(
         db,
@@ -405,7 +359,6 @@ makeRXGrid <- function(db,
       db, paste0("VACUUM ANALYZE all_farms.rxgrids")
     ))
   }
-  
   invisible(DBI::dbSendQuery(
     db, paste0("VACUUM ANALYZE all_farms.rxgridtemp")
   ))
@@ -476,6 +429,8 @@ applyExpRates = function(rx_sdt,
   stopifnot(length(exp_rates) == exp_rate_length,
             length(exp_rates_prop) == exp_rate_length)
   
+  # browser()
+  ## TODO : should be for each field??
   fieldname <- unique(rx_sdt$fieldname)
   rx_sdt$fid <- 1:nrow(rx_sdt)
   for (i in 1:length(fieldname)) {
@@ -649,7 +604,9 @@ makeBaseRate = function(db,
 #' @param buffer_width Width from the edge of the field within which to apply treatments.
 #' @return A 'sf' object with a clipped grid for experimentation or prescription generation.
 #' @export
-trimGrid <- function(rx_sdt, fieldname, db, farmername, buffer_width = 0) {
+trimGrid <- function(rx_sdt, fieldname, db, farmername, buffer_width) {
+  # browser()
+  
   buff_bound <- sf::st_buffer(
     OFPE::getFldBound(fieldname, db, farmername), -buffer_width
   )
@@ -714,8 +671,6 @@ makeRx <- function(rx_sdt, fld_bound, rx_for_year, conv, strat_dat_parms = NULL)
     }
     rm_cols <- grep(paste(unq_col_names, collapse = "|"), names(rx_sdt))
     rx_sdt[, rm_cols] <- NULL
-  } else {
-    rx_sdt$strat_combo <- NA
   }
   # clip fld bound to area around the prescription rates and within field bounds
   clip_field <- suppressWarnings(as(fld_bound, "Spatial") -
@@ -830,214 +785,3 @@ fetchAggStratDat = function(table_var,
   }
   return(strat_df)
 }
-
-#' @title Minimize jumps in experimental input rates
-#'
-#' @description This function is used to minimize the number of levels that 
-#' adjacent treatment blocks can vary. This is to reduce rate jumps that are 
-#' hard on equipment. The arguments are the prescription/experiment data frame 
-#' with grid cell id's and rates applied, the direction to minimize jumps across 
-#' the field ('N/S' or 'E/W') which corresponds to the general bearing of the 
-#' application, and the total number of unique rates applied. This is typically 
-#' the number of experimental and/or optimized rates and the base rate. 
-#' 
-#' This function goes through each cell and makes sure that the rate of the 
-#' surrounding row/col (depending on 'min_rate_jump' selection) are within two 
-#' rate levels. If the surrounding treatment rate is not within 2 rate levels, it 
-#' is randomly swapped with another treatment cell that is within 2 rate levels 
-#' of the original, so long as the original is within 2 rate levels of the potentially 
-#' swapped treatment neighbors. This is so that the original treatment rate does not 
-#' undo previous rate minimization. This will not guarantee eradication of all rate 
-#' jumps, but will reduce the amount. 
-#' @param rx_sdt A 'sf' object containing the experiment or prescription
-#' generated by user inputs.
-#' @param min_rate_jumps Either 'N/S' or 'E/W' to indicate 
-#' direction in which to minimize rate jumps. This is the predominant direction 
-#' that the experimental input is applied across the field. 
-#' @param rate_lengths The total number of rates applied in the experiment/prescription.
-#' This is any combination, when relevant, of the length of experimental and/or 
-#' optimized rates, and the base rate. 
-#' @return A 'sf' object containing the experiment or prescription data with 
-#' minimized jumps between rates.
-#' @export
-minRateJumps = function(rx_sdt, min_rate_jumps, rate_lengths) {
-  ## setup
-  # make fid
-  rx_sdt$fid <- 1:nrow(rx_sdt)
-  # bin into rate_length levels & make rate_f 
-  min_exp <- min(rx_sdt$exprate, na.rm = TRUE)
-  max_exp <- max(rx_sdt$exprate, na.rm = TRUE)
-  breaks <- seq(min_exp, max_exp, (max_exp - min_exp) / rate_lengths)
-  rx_sdt$rate_f <- cut(rx_sdt$exprate,
-                       breaks = breaks,
-                       include.lowest = TRUE,
-                       right = FALSE,
-                       labels = 1:rate_lengths) 
-  unq_rate_f <- unique(rx_sdt$rate_f) %>% sort
-  if (length(unq_rate_f) < rate_lengths) {
-    # if there is a gap in rate factors
-    # relevel
-    rx_sdt$rate_f <- factor(rx_sdt$rate_f)
-    levels(rx_sdt$rate_f) <- 1:length(unq_rate_f)
-  }
-  rx_sdt$rate_f <- rx_sdt$rate_f %>% 
-    as.character() %>% 
-    as.numeric()
-  
-  ## min rate jumps
-  # for min row to max row OR min col to max col
-  min_row <- min(rx_sdt$row, na.rm = TRUE)
-  max_row <- max(rx_sdt$row, na.rm = TRUE)
-  min_col <- min(rx_sdt$col, na.rm = TRUE)
-  max_col <- max(rx_sdt$col, na.rm = TRUE)
-  ## if direction is N/S
-  if (min_rate_jumps == "N/S") {
-    for (col in min_col:max_col) {
-      # for each col (b/c moving N/S)
-      # get subset with cells in col
-      col_subset <- rx_sdt[rx_sdt$col == col, ]
-      col_subset <- col_subset[with(col_subset, order(row, decreasing = TRUE)), ] 
-      if (nrow(col_subset) > 1) {
-        # if more than 1 row for the col
-        # make sure the rate in the next row is within 2 levels
-        for (row in 2:nrow(col_subset)) {
-          # for each row in col starting with second
-          # check if row rate_f is w/in 2 levels of row - 1 rate_f 
-          row_rate <- col_subset$rate_f[row]
-          min_jump <- ifelse(row_rate >= col_subset$rate_f[row - 1] - 2 & 
-                               row_rate <= col_subset$rate_f[row - 1] + 2, 
-                             FALSE, 
-                             TRUE)
-          if (min_jump) {
-            # if need to minimize jump
-            # subset rx_sdt for rate_f w/in two levels of row - 1 rate_f & != row-1 rate
-            pot_donors <- rx_sdt[rx_sdt$rate_f >= col_subset$rate_f[row - 1] - 2 & 
-                                   rx_sdt$rate_f <= col_subset$rate_f[row - 1] + 2 &
-                                   rx_sdt$rate_f != col_subset$rate_f[row - 1], ]
-            donor_fid <- sample(pot_donors$fid)
-            match <- FALSE
-            for (j in 1:length(donor_fid)) {
-              if (!match) {
-                # get rates of the neighbors of the potential donor
-                nbr1_rate <- rx_sdt[rx_sdt$row == pot_donors[pot_donors$fid == donor_fid[j], "row"]$row - 1 & 
-                                      rx_sdt$col == pot_donors[pot_donors$fid == donor_fid[j], "col"]$col, 
-                                    "rate_f"]$rate_f
-                nbr2_rate <- rx_sdt[rx_sdt$row == pot_donors[pot_donors$fid == donor_fid[j], "row"]$row + 1 & 
-                                      rx_sdt$col == pot_donors[pot_donors$fid == donor_fid[j], "col"]$col, 
-                                    "rate_f"]$rate_f
-                # check if row_rate w/in 2 levels of potential donor rates
-                swap <- rep(TRUE, 2)
-                if (length(nbr1_rate) == 1) {
-                  if (row_rate <= nbr1_rate - 2 & row_rate >= nbr1_rate + 2) {
-                    swap[1] <- FALSE
-                  } 
-                } 
-                if (length(nbr2_rate) == 1) {
-                  if (row_rate <= nbr2_rate - 2 & row_rate >= nbr2_rate + 2) {
-                    swap[2] <- FALSE
-                  } 
-                }
-                # swap based on fid? if TRUE
-                if (all(swap)) {
-                  swap_cols <- c("cell_type", "mgmt_scen", "exprate", "rate_f") %>% 
-                    paste(collapse = "|") %>% 
-                    grep(names(rx_sdt))
-                  temp <- rx_sdt[rx_sdt$fid == donor_fid[j] | rx_sdt$fid == col_subset$fid[row], swap_cols]
-                  temp$geom <- NULL
-                  rx_sdt[rx_sdt$fid == col_subset$fid[row], swap_cols] <- temp[1, ]
-                  rx_sdt[rx_sdt$fid == donor_fid[j], swap_cols] <- temp[2, ]
-                  match <- TRUE
-                  col_subset <- rx_sdt[rx_sdt$col == col, ]
-                  col_subset <- col_subset[with(col_subset, order(row, decreasing = TRUE)), ] 
-                }
-              } else {
-                break
-              }
-            }
-          } # end if min_jump = T
-        } # end each row in col
-      } # else one row in col,  nothing to jump to or from
-    } # end all col 
-  } # end if N/S
-  ## if direction is E/W
-  if (min_rate_jumps == "E/W") {
-    for (row in min_row:max_row) {
-      # for each row (b/c moving E/W)
-      # get subset with cells in row
-      row_subset <- rx_sdt[rx_sdt$row == row, ]
-      row_subset <- row_subset[with(row_subset, order(col)), ] 
-      if (nrow(row_subset) > 1) {
-        # if more than 1 col for the row
-        # make sure the rate in the next col is within 2 levels
-        for (col in 2:nrow(row_subset)) {
-          # for each col in row starting with second
-          # check if col rate_f is w/in 2 levels of col - 1 rate_f 
-          col_rate <- row_subset$rate_f[col]
-          min_jump <- ifelse(col_rate >= row_subset$rate_f[col - 1] - 2 & 
-                               col_rate <= row_subset$rate_f[col - 1] + 2, 
-                             FALSE, 
-                             TRUE)
-          if (min_jump) {
-            # if need to minimize jump
-            # subset rx_sdt for rate_f w/in two levels of col - 1 rate_f & != col-1 rate
-            pot_donors <- rx_sdt[rx_sdt$rate_f >= row_subset$rate_f[col - 1] - 2 & 
-                                   rx_sdt$rate_f <= row_subset$rate_f[col - 1] + 2 &
-                                   rx_sdt$rate_f != row_subset$rate_f[col - 1], ]
-            donor_fid <- sample(pot_donors$fid)
-            match <- FALSE
-            for (j in 1:length(donor_fid)) {
-              if (!match) {
-                # get rates of the neighbors of the potential donor
-                nbr1_rate <- rx_sdt[rx_sdt$col == pot_donors[pot_donors$fid == donor_fid[j], "col"]$col - 1 & 
-                                      rx_sdt$row == pot_donors[pot_donors$fid == donor_fid[j], "row"]$row, 
-                                    "rate_f"]$rate_f
-                nbr2_rate <- rx_sdt[rx_sdt$col == pot_donors[pot_donors$fid == donor_fid[j], "col"]$col + 1 & 
-                                      rx_sdt$row == pot_donors[pot_donors$fid == donor_fid[j], "row"]$row, 
-                                    "rate_f"]$rate_f
-                # check if col_rate w/in 2 levels of potential donor rates
-                swap <- rep(TRUE, 2)
-                if (length(nbr1_rate) == 1) {
-                  if (col_rate <= nbr1_rate - 2 & col_rate >= nbr1_rate + 2) {
-                    swap[1] <- FALSE
-                  } 
-                } 
-                if (length(nbr2_rate) == 1) {
-                  if (col_rate <= nbr2_rate - 2 & col_rate >= nbr2_rate + 2) {
-                    swap[2] <- FALSE
-                  } 
-                }
-                # swap based on fid? if TRUE
-                if (all(swap)) {
-                  swap_cols <- c("cell_type", "mgmt_scen", "exprate", "rate_f") %>% 
-                    paste(collapse = "|") %>% 
-                    grep(names(rx_sdt))
-                  temp <- rx_sdt[rx_sdt$fid == donor_fid[j] | rx_sdt$fid == row_subset$fid[col], swap_cols]
-                  temp$geom <- NULL
-                  rx_sdt[rx_sdt$fid == row_subset$fid[col], swap_cols] <- temp[1, ]
-                  rx_sdt[rx_sdt$fid == donor_fid[j], swap_cols] <- temp[2, ]
-                  match <- TRUE
-                  row_subset <- rx_sdt[rx_sdt$row == row, ]
-                  row_subset <- row_subset[with(row_subset, order(col, decreasing = TRUE)), ] 
-                }
-              } else {
-                break
-              }
-            }
-          } # end if min_jump = T
-        } # end each col in row
-      } # else one col in row,  nothing to jump to or from
-    } # end all row 
-  } # end if E/W
-  
-  rx_sdt$fid <- NULL
-  rx_sdt$rate_f <- NULL
-  # remove rate_f
-  return(rx_sdt)
-}
-
-
-
-
-
-
-
