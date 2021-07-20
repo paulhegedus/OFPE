@@ -250,45 +250,27 @@ ImportGEE <- R6::R6Class(
                            "full")
       }
       # identify the data type
-      if (any(grepl(paste(c("ndvi", "ndre", "clre", "aspect_rad", "slope", 
-                            "elev", "tpi", "prec", "gdd", "ssm", "susm", 
-                            "grtgroup", "texture0cm", "texture10cm", 
-                            "texture30cm", "texture60cm", "texture100cm", 
-                            "texture200cm", "bulkdensity0cm", "bulkdensity10cm",
-                            "bulkdensity30cm", "bulkdensity60cm", "bulkdensity100cm", 
-                            "bulkdensity200cm", "claycontent0cm", "claycontent10cm", 
-                            "claycontent30cm", "claycontent60cm", "claycontent100cm",
-                            "claycontent200cm", "sandcontent0cm", "sandcontent10cm", 
-                            "sandcontent30cm", "sandcontent60cm", "sandcontent100cm", 
-                            "sandcontent200cm", "phw0cm", "phw10cm", "phw30cm",
-                            "phw60cm", "phw100cm", "phw200cm", "watercontent0cm",
-                            "watercontent10cm", "watercontent30cm", "watercontent60cm", 
-                            "watercontent100cm", "watercontent200cm", "carboncontent0cm", 
-                            "carboncontent10cm", "carboncontent30cm", "carboncontent60cm",
-                            "carboncontent100cm", "carboncontent200cm"), 
-                     collapse = "|"),
+      if (any(grepl("ndvi|ndre|clre|aspect_rad|slope|elev|tpi|prec|gdd|ssm|susm|
+                    grtgroup|texture0cm|texture10cm|texture30cm|texture60cm|texture100cm|texture200cm|
+                    bulkdensity0cm|bulkdensity10cm|bulkdensity30cm|bulkdensity60cm|bulkdensity100cm|bulkdensity200cm|
+                    claycontent0cm|claycontent10cm|claycontent30cm|claycontent60cm|claycontent100cm|claycontent200cm|
+                    sandcontent0cm|sandcontent10cm|sandcontent30cm|sandcontent60cm|sandcontent100cm|sandcontent200cm|
+                    phw0cm|phw10cm|phw30cm|phw60cm|phw100cm|phw200cm|
+                    watercontent0cm|watercontent10cm|watercontent30cm|watercontent60cm|watercontent100cm|watercontent200cm|
+                    carboncontent0cm|carboncontent10cm|carboncontent30cm|carboncontent60cm|carboncontent100cm|carboncontent200cm",
                    info$orig_file))) {
         #******************************************************************
         # < IF OTHER DATATYPES NEED DEALING WITH, INSERT IN IF STATEMENT ^ >
         #******************************************************************
         str_locs <- stringr::str_locate(info$orig_file,
-                                        paste(c("ndvi", "ndre", "clre", "aspect_rad", "slope", 
-                                                "elev", "tpi", "prec", "gdd", "ssm", "susm", 
-                                                "grtgroup", "texture0cm", "texture10cm", 
-                                                "texture30cm", "texture60cm", "texture100cm", 
-                                                "texture200cm", "bulkdensity0cm", "bulkdensity10cm",
-                                                "bulkdensity30cm", "bulkdensity60cm", "bulkdensity100cm", 
-                                                "bulkdensity200cm", "claycontent0cm", "claycontent10cm", 
-                                                "claycontent30cm", "claycontent60cm", "claycontent100cm",
-                                                "claycontent200cm", "sandcontent0cm", "sandcontent10cm", 
-                                                "sandcontent30cm", "sandcontent60cm", "sandcontent100cm", 
-                                                "sandcontent200cm", "phw0cm", "phw10cm", "phw30cm",
-                                                "phw60cm", "phw100cm", "phw200cm", "watercontent0cm",
-                                                "watercontent10cm", "watercontent30cm", "watercontent60cm", 
-                                                "watercontent100cm", "watercontent200cm", "carboncontent0cm", 
-                                                "carboncontent10cm", "carboncontent30cm", "carboncontent60cm",
-                                                "carboncontent100cm", "carboncontent200cm"), 
-                                              collapse = "|")) # CHANGED dem to elev
+                                        "ndvi|ndre|clre|aspect_rad|slope|elev|tpi|prec|gdd|ssm|susm|
+                    grtgroup|texture0cm|texture10cm|texture30cm|texture60cm|texture100cm|texture200cm|
+                    bulkdensity0cm|bulkdensity10cm|bulkdensity30cm|bulkdensity60cm|bulkdensity100cm|bulkdensity200cm|
+                    claycontent0cm|claycontent10cm|claycontent30cm|claycontent60cm|claycontent100cm|claycontent200cm|
+                    sandcontent0cm|sandcontent10cm|sandcontent30cm|sandcontent60cm|sandcontent100cm|sandcontent200cm|
+                    phw0cm|phw10cm|phw30cm|phw60cm|phw100cm|phw200cm|
+                    watercontent0cm|watercontent10cm|watercontent30cm|watercontent60cm|watercontent100cm|watercontent200cm|
+                    carboncontent0cm|carboncontent10cm|carboncontent30cm|carboncontent60cm|carboncontent100cm|carboncontent200cm") # CHANGED dem to elev
         info$type <- stringr::str_sub(info$orig_file,
                                       str_locs[1],
                                       str_locs[2])
