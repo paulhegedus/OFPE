@@ -64,8 +64,8 @@ RxGen <- R6::R6Class(
     mgmt_scen = NULL,
     #' @field trt_length Length, in meters, for which to apply treatments.
     trt_length = NULL,
-    #' @field trt_width Width, in meters, for which to apply treatments.
-    trt_width = NULL,
+    #' @field boom_width The width of the sprayer boom or spreader.
+    boom_width = NULL,
     #' @field orientation TODO... Not implemented yet.
     orientation = NULL,
     #' @field expvar Experimental variable to optimize, select/input
@@ -136,14 +136,6 @@ RxGen <- R6::R6Class(
     #' of experimental rates provided in 'exp_rate_length'. This is required
     #' for all new experiments and experimental prescriptions.
     exp_rates_prop = NULL,
-    #' @field buffer_width The width of the buffer from the field edge within which
-    #' to place experiments or prescriptions. Provided by the user in feet and
-    #'converted to meters internally.
-    buffer_width = NULL,
-    #' @field min_rate_jumps Logical, whether to minimize the jumps in input
-    #' rates. This makes sure that the rates do not vary by more than 2 rate 
-    #' levels. Default is FALSE. If TRUE, this could take some time to run.
-    min_rate_jumps = FALSE,
 
     #' @field unique_fieldname Unique fieldname for the field(s) used for the experiment. This
     #' concatenates multiple fields with an ampersand. Used for labelling.
@@ -179,8 +171,8 @@ RxGen <- R6::R6Class(
     #' @field var_main_label The main label to apply to the map. Used in figure
     #' labelling for plotting in RxClass.
     var_main_label = NULL,
-    #' @field size The size of the treatment zones, which is the treatment width x
-    #' the treatment length.
+    #' @field size The size of the treatment zones, which is the treatment length x
+    #' the boom width x 2.
     size = NULL,
 
     #' @description It is recommended to initialize this class through the RxClass,
@@ -189,9 +181,11 @@ RxGen <- R6::R6Class(
     #' @param dbCon Database connection object connected to an OFPE formatted
     #' database, see DBCon class.
     #' @param simClass If the user is creating an experimental prescription or
-    #' prescription an R6 class SimClass object must be supplied. This class is 
-    #' queried for relevant information, most importantly, a path the the output
-    #' data.
+    #' prescription an R6 class SimClass object must be supplied. This has to be
+    #' set up, however does not need to have the execution method performed.
+    #' The RxClass will check the SimClass for simulation output data that matches
+    #' the year of the data provided, and execute simulations for any years not
+    #' present.
     #' @param mgmt_scen If the user is creating a prescription or experimental
     #' prescription, they must provide the management scenario to use for their
     #' prescription. The user can choose from the management options listed in
@@ -202,7 +196,7 @@ RxGen <- R6::R6Class(
     #' input rate in conventional system types, and the farmer selected rate for
     #' organic systems, both of which are already provided.
     #' @param trt_length Length, in meters, for which to apply treatments.
-    #' @param trt_width Width, in meters, for which to apply treatments.
+    #' @param boom_width The width of the sprayer boom or spreader.
     #' @param orientation TODO... Not implemented yet.
     #' @param expvar Experimental variable to optimize, select/input
     #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
@@ -239,11 +233,6 @@ RxGen <- R6::R6Class(
     #' the management scenario and number of experimental rates into account.
     #' @param fld_prop The percent of available cells to
     #' apply check rates to (i.e. 0.05, 0.1).
-    #' @param buffer_width The width of the buffer from field edge for
-    #' experiments or prescriptions (feet).
-    #' @param min_rate_jumps Logical, whether to minimize the jumps in input
-    #' rates. This makes sure that the rates do not vary by more than 2 rate 
-    #' levels. Default is FALSE. If TRUE, this could take some time to run.
     #' @param exp_rate_gen Logical, for the experimental prescription provide
     #' TRUE or FALSE for whether to create experimentla rates from gaps in the
     #' optimized rates. These experimental rates are placed between optimum rates
@@ -267,10 +256,10 @@ RxGen <- R6::R6Class(
     #' pure prescription.
     #' @return An initialized RxGen R6 class object.
     initialize = function(dbCon,
-                          simClass = NULL,
+                          simClass,
                           mgmt_scen,
                           trt_length,
-                          trt_width,
+                          boom_width,
                           orientation,
                           expvar,
                           conv,
@@ -281,8 +270,6 @@ RxGen <- R6::R6Class(
                           SAVE,
                           opt_rate_length,
                           fld_prop,
-                          buffer_width = NULL,
-                          min_rate_jumps = FALSE,
                           exp_rate_gen = NULL,
                           exp_rate_length = NULL,
                           exp_rates = NULL,
@@ -291,7 +278,7 @@ RxGen <- R6::R6Class(
                 !is.null(simClass),
                 !is.null(mgmt_scen),
                 !is.null(trt_length),
-                !is.null(trt_width),
+                !is.null(boom_width),
                 !is.null(orientation),
                 !is.null(fld_prop),
                 !is.null(conv),
@@ -302,8 +289,8 @@ RxGen <- R6::R6Class(
                 !is.null(out_path),
                 is.numeric(trt_length),
                 trt_length > 0,
-                is.numeric(trt_width),
-                trt_width > 0,
+                is.numeric(boom_width),
+                boom_width > 0,
                 is.numeric(orientation),
                 is.numeric(fld_prop),
                 fld_prop >= 0 & fld_prop <= 1,
@@ -322,8 +309,7 @@ RxGen <- R6::R6Class(
       self$dbCon <- dbCon
       self$simClass <- simClass
       self$trt_length <- round(trt_length, 0)
-      self$trt_width <- round(trt_width, 0)
-      self$buffer_width <- buffer_width
+      self$boom_width <- round(boom_width, 0)
       self$orientation <- orientation
       self$conv <- conv
       self$base_rate <- round(base_rate, 0)
@@ -371,28 +357,19 @@ RxGen <- R6::R6Class(
     #' @param None All parameters supplied upon initialization.
     #' @return A completed experiment table containing the output.
     executeOutput = function() {
-      browser()
-      
       rx_sdt <- OFPE::getRxGrid(self$dbCon$db,
                                 self$rx_dt,
                                 self$simClass$datClass$farmername,
                                 self$simClass$datClass$fieldname,
                                 self$trt_length,
-                                self$trt_width,
+                                self$boom_width,
                                 self$unique_fieldname,
-                                self$mgmt_scen,
-                                self$buffer_width) %>%
-        
-        
-        
+                                self$mgmt_scen) %>%
         ## TODO - orientation
-        
-        
-        
+
         OFPE::trimGrid(self$simClass$datClass$fieldname,
                        self$dbCon$db,
-                       self$simClass$datClass$farmername,
-                       self$buffer_width) %>%
+                       self$simClass$datClass$farmername) %>%
         private$.binOptRates()
       if (!is.null(self$exp_rate_gen)) {
         if (self$exp_rate_gen) {
@@ -417,18 +394,11 @@ RxGen <- R6::R6Class(
                                            self$fld_prop,
                                            self$opt_rate_length)
       }
-      
-      
-      
-      ## TODO - minimize rate jumps
-      
-      
-      
       fld_bound <- OFPE::makeBaseRate(self$dbCon$db,
                                          self$simClass$datClass$fieldname,
                                          self$unique_fieldname,
                                          self$base_rate,
-                                         self$trt_width,
+                                         self$boom_width,
                                          self$trt_length,
                                          self$simClass$datClass$farmername,
                                       self$mgmt_scen)
@@ -508,7 +478,7 @@ RxGen <- R6::R6Class(
                                        self$unique_fieldname, "_", self$mgmt_scen,
                                        "_rateTypeMap_", unique_fxn, "_",
                                        self$rx_for_year, "_", opt, ".png")
-      self$size <- paste0(self$trt_width, " x ", self$trt_length)
+      self$size <- paste0(self$trt_length, " x ", self$boom_width * 2)
     },
     .setBaseRate = function() {
       if (self$mgmt_scen == "SSOPT") {
@@ -580,8 +550,7 @@ RxGen <- R6::R6Class(
       }
 
 
-      ## OLD: better actually... found rates between base rates... 
-      ## issues with single variable base rates 
+      ## OLD: better... found rates between base rates... issues with single base rates
       # base_rates <- na.omit(base_rates)
       # direction <- ifelse(min(base_rates) - AAmin > AArateCutoff - max(base_rates),
       #                     "to_min",
