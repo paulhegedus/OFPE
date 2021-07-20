@@ -160,7 +160,8 @@ ImportOF <- R6::R6Class(
     #' @return Imported data.
     .impDat = function(name) {
       if (grepl("shp$", name)) {
-        FILE <- sf::read_sf(paste0(self$dat_path, name)) %>%
+        FILE <- sf::read_sf(self$dat_path,
+                            stringr::str_sub(name, 1, nchar(name) - 4)) %>%
           sf::st_zm()
       }
       if (grepl("csv$",name)) {
