@@ -328,9 +328,9 @@ An initialized RxGen R6 class object.
 \if{latex}{\out{\hypertarget{method-executeOutput}{}}}
 \subsection{Method \code{executeOutput()}}{
 Method for calling the execution method of the experiment
-generator. This applies the prescription/experimental rates across
-the field. Check rates are stratified across prescription/experimental
-rates for representative checks.
+generator. This randomly applies the experimental rates across
+the field. If the user selected stratification data, these are
+used for stratification during the random placement.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RxGen$executeOutput()}\if{html}{\out{</div>}}
 }
@@ -338,7 +338,7 @@ rates for representative checks.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{None}}{All parameters supplied upon initialization.}
+\item{\code{None}}{All parametes supplied upon initialization.}
 }
 \if{html}{\out{</div>}}
 }

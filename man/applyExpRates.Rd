@@ -4,7 +4,14 @@
 \alias{applyExpRates}
 \title{Apply experimental rates across the room.}
 \usage{
-applyExpRates(rx_sdt, exp_rates, exp_rates_prop, fld_prop, exp_rate_length)
+applyExpRates(
+  rx_sdt,
+  exp_rates,
+  exp_rates_prop,
+  fld_prop,
+  exp_rate_length,
+  strat_dat = NULL
+)
 }
 \arguments{
 \item{rx_sdt}{A 'sf' object containing the grid cells available for

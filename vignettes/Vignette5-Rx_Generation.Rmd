@@ -75,10 +75,15 @@ The activity workflow for creating experiments and prescriptions and a more deta
 
 ###### Execute one of the options below within 2.1 or 2.2. Select from 2.1.1 (Randomized Experiment), 2.1.2 (Stratified Experiment), 2.2.1 (Experimental Prescription), 2.2.2 (Pure Prescription). Run your specified section then create the map for the sprayer by running section 3.0
 
-**Important:** There are two paths for the user to take to make a prescription outlined in steps 2.1 and 2.2. The user should choose one of these options from the onset. Section 2.1 outlines making a new experiment for a field with a user specified background rate. Section 2.2 outlines how to make an experiment with a SSOPT rate created via Vignette 4 as the background rates. The user should set their experiment up in one of the two ways by initializing the RxClass with 1) only a database connection (Section 2.1) OR 2) with a database connection and fully executed SimClass object (Section 2.2). After the user sets their RxClass in either fashion, run Section 3.0. 
-
 ### 2.1 New Experiment
 The two subsections below describe how to use the RxClass to build a new experiment on a field that has not had prior OFPE. This takes a field(s) boundary from the database and creates an experiment across the field with randomly placed rates (stratified or not) using the user provided rates for experimentation. To create an experiment with a prescription as a basemap or to create a pure prescription see the next section.
+
+To initialize an RxClass for an experiment, simply pass in the database connection object. Then use the interactive 'selectInputs' method to choose your parameters. 
+
+```{r, eval = FALSE}
+rxClass <- RxClass$new(dbCon)
+rxClass$selectInputs()
+```
 
 #### 2.1.1 New Experiment - No Stratification
 This section describes the creation of a new experiment for a field without any stratification on previous data. The user simply supplies the rates and proportions of each to be applied, and an experimental rate map is generated for the user. In this section the user does require the database connection to select the field(s).
@@ -90,18 +95,10 @@ This section describes the creation of a new experiment for a field with stratif
 
 It is recommended that the user sets up this scenario by initializing the class with a database connection and then using the interactive method to select inputs. The arguments used in this scenario are the generator type, the treatment length and width, the orientation of the applications relative to N, the field proportion to use for experimentation, the conversion rate from lbs of the experimental input to lbs of the applied input (i.e. lbs N to gal urea), the base rate the farmer wants to apply surrounding the experiment, the year the experiment is generated for, an output path to save the experiment and figures, logical statements on whether to save to the output folder or the database, the fieldname(s) that an experiment is being generated for, the farmer name of the manager of the field, the length of experimental rates to apply (does not include the base rate), the experimental rates, and the proportion to apply each rate. When stratifying on other variables, the user can pass in a list for each field with a vector of character codes for variables to stratify on. A vector of years to gather data of the specified type is also required in the same format as and corresponding to the stratification variables.
 
-#### 2.1.3 Initialize RxClass
-To initialize an RxClass for an experiment, simply pass in the database connection object. Then use the interactive 'selectInputs' method to choose your parameters. 
-
-```{r, eval = FALSE}
-rxClass <- RxClass$new(dbCon)
-rxClass$selectInputs()
-```
-
 ### 2.2 Prescription
 The two subsections below describe how to use the RxClass to build a new prescription with or without experimental rates. These methods require the SimClass object to be provided to the RxClass. This provides the codebase and options for performing a simulation for a given year(s) to determine the net-returns of various management scenarios under user specified weather and economic conditions. While the user has the option of simulating more years upon initialization of the RxClass, it is assumed that the user performed their simulations in the SimClass with the economic data they want to use to generate the prescription.
 
-To initialize an RxClass for an experiment, a set up and executed SimClass object must be passed in with a database connection. Once the SimClass object has been instantiated and executed, it can be passed into the RxClass upon initialization. The code below repeats the code found in Vignette 4. 
+To initialize an RxClass for an experiment, a set up and executed SimClass object must be passed in with a database connection. Once the SimClass object has been instantiated and executed, it can be passed into the RxClass upon initialization. The code below repeats the code found in Vignette 4. Assuming the user has completed this step, there is no documentation because it is in Vignette 4. If the user has completed step 4 and has an executed simClass in their environment, they can skip this section.
 ```{r, eval = FALSE}
 datClass <- DatClass$new(dbCon)
 datClass$selectInputs()
@@ -122,7 +119,12 @@ simOP <- SimOP$new(simClass, create = TRUE)
 invisible(simOP$savePlots())
 ```
 
-After a SimClass object has been fully executed and specified, this can be passed into a RxClass upon initialization to take advantage of the SSOPT rates created as a result of the Monte Carlo analysis (see Vignette 4). See Section 2.2.1 and 2.2.2 below for choosing between one of two methods for creating an experimental prescription utilizing data from your SimClass. After choosing either method 2.2.1/2.2.2, execute Section 2.2.3 in the appropriate fashion. 
+When the user has a completed SimClass object, initialize the RxClass with your database connection object and the simulation class and select your inputs for creating an experimental prescription or pure prescription.
+
+```{r, eval = FALSE}
+rxClass <- RxClass$new(dbCon, simClass)
+rxClass$selectInputs()
+```
 
 #### 2.2.1 Experimental Prescription
 This section describes the creation of an experimental prescription. This process extends from the analysis and simulation step that identifies the optimum as-applied rates for each of the management scenarios. The user will select their preferred management scenario and then experimental rates are randomly placed, stratified on the optimized rate map. This creates a map with the optimum rates as the "background" to experimental rates. This allows the generation of more data to use for fitting the crop response models that are used for generating the optimized maps. However, the option is available for the user to decide to stop experimentation and create prescriptions (see section below). The user can provide experimental rates or can elect to auto select experimental rates between gaps in the optimum rates. This is provided by the 'exp_rate_gen' argument, with TRUE indicating auto selection. The two headings below portray the two setup options.
@@ -130,15 +132,8 @@ This section describes the creation of an experimental prescription. This proces
 #### 2.2.2 Pure Prescription
 This section describes the creation of a "pure" prescription without experimental rates based on a user specified management scenario. This process also extends from the analysis and simulation step and requires user to specify the management scenario on which to create the prescription. Based on the user selections, the optimized rates from the outcome of the simulation for the user specified economic and weather conditions is used to generate the map for the user. Before export, treatment blocks of a farmer selected rate indicating what their "business as usual" rate would have been, are randomly placed in each of the experimental rates. This provides a check for the optimized rates against what the farmer would have applied, to evaluate the efficacy of the optimized rates. If not outperforming the farmer selected rates, resuming experimentation is recommended to further tune the crop responses models and provide stronger predictions for generating optimized rates.
 
-### 2.2.3 
-When the user has a completed SimClass object, initialize the RxClass with your database connection object and the simulation class and select your inputs for creating an experimental prescription or pure prescription.
-```{r, eval = FALSE}
-rxClass <- RxClass$new(dbCon, simClass)
-rxClass$selectInputs()
-```
-
 ## 3.0 Execute
-Now that the RxClass has been initialized (in any of the ways above) and setup according to user specifications, the RxClass methods can be used to generate the user specified output and save to the 'Outputs' folder and to the database.
+Now that the RxClass has been initialized and setup how the user has decided, the RxClass methods can be used to generate the user specified output and save to the 'Outputs' folder and to the database.
 
 ```{r, eval = FALSE}
 rxClass$setupOP()
