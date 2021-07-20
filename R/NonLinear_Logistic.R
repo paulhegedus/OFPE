@@ -104,8 +104,6 @@ NonLinear_Logistic <- R6::R6Class(
         means = NA,
         sd = NA
       )
-
-      ## TEMP - NEEDS UPDATING BASED ON MODEL
       alpha_comps <- c("a0", paste0("prev_", self$expvar), paste0("prev_", self$respvar),
                        "aspect_rad", "slope", "elev", "tpi")
       beta_comps <- c("b0", "prec_cy", "prec_py", "gdd_cy", "gdd_py",

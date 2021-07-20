@@ -1,6 +1,7 @@
 .Rproj.user
 .Rhistory
 .RData
-inst/doc
-doc
-Meta
+.Ruserdata
+src/*.o
+src/*.so
+src/*.dll

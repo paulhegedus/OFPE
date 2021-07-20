@@ -51,6 +51,7 @@ getRxGrid <- function(db,
                   farmername,
                   unique_fieldname,
                   mgmt_scen)
+
   #Make rxDt spatial and add to database (not saved)
   rx_sdt <- rx_dt %>%
     `names<-`(names(rx_dt))
@@ -419,11 +420,19 @@ applyExpRates = function(rx_sdt,
                           exp_rates,
                           exp_rates_prop,
                           fld_prop,
-                          exp_rate_length) {
+                          exp_rate_length,
+                          strat_dat = NULL) {
   exp_cells <- DescTools::RoundTo(nrow(rx_sdt) * fld_prop, 1, floor)
   exp_cells <- sample(row.names(rx_sdt), exp_cells)
   exp_reps <- OFPE::getExpReps(length(exp_cells), exp_rates_prop)
   exp_rate_rep <- rep(exp_rates, exp_reps) %>% sample()
+
+  if (!is.null(strat_dat)) {
+    if (!is.na(strat_dat)) {
+      #browser()
+      ## TODO: add stratification
+    }
+  }
 
   rx_sdt[exp_cells, "exprate"] <- exp_rate_rep
   rx_sdt[exp_cells, "cell_type"] <- "exp"
@@ -568,7 +577,6 @@ makeBaseRate = function(db,
   fld_bound$applrate <- NA
   fld_bound$size <- paste0(trt_length, " x ", boom_width * 2)
   fld_bound$mgmt_scen <- mgmt_scen
-  fld_bound$fieldname <- NA
   return(fld_bound)
 }
 #' @title Trim grid to field buffer

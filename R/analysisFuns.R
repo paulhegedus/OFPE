@@ -28,16 +28,6 @@ findBadParms <- function(parm_df, dat) {
   parm_df[grep("prev_", parm_df$parms), "bad_parms"] <- TRUE
   parm_df[grep("ssm_", parm_df$parms), "bad_parms"] <- TRUE
   parm_df[grep("susm_", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("var_", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("grtgroup", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("texture", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("bulkdensity", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("claycontent", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("sandcontent", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("phw", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("watercontent", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("carboncontent", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("musym", parm_df$parms), "bad_parms"] <- TRUE
 
   # check each var
   obs_num <- by(dat, dat$year, nrow) %>%

@@ -73,7 +73,7 @@ The sections below show and describe how to use the RxClass to build a new exper
 
 The activity workflow for creating experiments and prescriptions and a more detailed description is described on [this page](https://paulhegedus.github.io/OFPE-Website/rx_gen.html), where a component diagram can also be found.
 
-###### Execute one of the options below within 2.1 or 2.2. Select from 2.1.1 (Randomized Experiment), 2.1.2 (Stratified Experiment), 2.2.1 (Experimental Prescription), 2.2.2 (Pure Prescription). Run your specified section then create the map for the sprayer by running section 3.0
+###### Execute one of the options below within 2.1 or 2.2 for creating a map for the sprayer. Select from 2.1.1 (Randomized Experiment), 2.1.2 (Stratified Experiment), 2.2.1 (Experimental Prescription), 2.2.2 (Pure Prescription)
 
 ### 2.1 New Experiment
 The two subsections below describe how to use the RxClass to build a new experiment on a field that has not had prior OFPE. This takes a field(s) boundary from the database and creates an experiment across the field with randomly placed rates (stratified or not) using the user provided rates for experimentation. To create an experiment with a prescription as a basemap or to create a pure prescription see the next section.

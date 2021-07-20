@@ -412,15 +412,13 @@ ObsOP <- R6::R6Class(
                          db,
                          farmername,
                          dat_used) {
-      browser()
-
       OFPE::removeTempFarmerTables(db, farmername)
       invisible(
         DBI::dbSendQuery(
           db,
           paste0(
-            "CREATE TABLE ", farmername,"_a_OG.temp AS (SELECT *
-            FROM ", farmername, "_a_OG.", respvar, " ", respvar,"
+            "CREATE TABLE ", farmername,"_a.temp AS (SELECT *
+            FROM ", farmername, "_a.", respvar, " ", respvar,"
             WHERE field = '", fieldname, "'
             AND year = '", year, "'
             AND grid = '", GRID, "'
@@ -433,7 +431,7 @@ ObsOP <- R6::R6Class(
           db,
           paste0(
             "ALTER TABLE ",
-            farmername, "_a_OG.temp
+            farmername, "_a.temp
             DROP COLUMN geometry;"
           )
         )
@@ -441,14 +439,14 @@ ObsOP <- R6::R6Class(
       db_dat <- invisible(
         DBI::dbGetQuery(
           db,
-          paste0("SELECT * FROM ", farmername, "_a_OG.temp;")
+          paste0("SELECT * FROM ", farmername, "_a.temp;")
         )
       )
       invisible(
         DBI::dbSendQuery(
           db,
           paste0(
-            "DROP TABLE ", farmername, "_a_OG.temp;"
+            "DROP TABLE ", farmername, "_a.temp;"
           )
         )
       )

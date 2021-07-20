@@ -874,14 +874,6 @@ DatClass <- R6::R6Class(
       dat$field <- factor(dat$field)
       dat$year <- factor(dat$year)
       dat$musym <- factor(dat$musym)
-      dat$grtgroup <- factor(dat$grtgroup)
-      dat$texture0cm <- factor(dat$texture0cm)
-      dat$texture10cm <- factor(dat$texture10cm)
-      dat$texture30cm <- factor(dat$texture30cm)
-      dat$texture60cm <- factor(dat$texture60cm)
-      dat$texture100cm <- factor(dat$texture100cm)
-      dat$texture200cm <- factor(dat$texture200cm)
-
       return(dat)
     },
     .cleanDat = function(dat) {
