@@ -34,10 +34,10 @@ Raw data from various sources need to be wrangled and aggregated together before
 
 The activity workflow for enriching yield and protein datasets and a more detailed description is described on [this page](https://paulhegedus.github.io/OFPE-Website/data_agg.html), where a component diagram can also be found.
 
-## 1.0 Set-Up
+## Set-Up
 The user must have access to an OFPE formatted database for using the vignette below. If using your own data and database, modify the pertinent information to your paths and file/folder/database names. This vignette does not use the OFPEDATA package directly, however references data from the package that was imported to the example database in Vignettes 1 and 2.
 
-### 1.1 Load Packages
+### Load Packages
 
 ```{r setup, message = FALSE, eval = FALSE}
 #devtools::install_github("paulhegedus/OFPE")
@@ -45,7 +45,7 @@ library(OFPE)
 ```
 
 
-### 1.2 Connect to Database
+### Connect to Database
 First, a connection is formed to the database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette, and the rest of the vignettes are working with an example database named 'OFPE' (as named in the tutorial above and exemplified in Vignettes 1 and 2). This class defaults to a PostgreSQL database.
 
 ```{r, eval = FALSE}
@@ -59,10 +59,10 @@ dbCon <- DBCon$new(
 OFPE::removeTempTables(dbCon$db) # removes temporary tables
 ```
 
-## 2.0 Aggregate Data
+## Aggregate Data
 The steps for aggregating covariate information to yield or protein data consists of selecting the options and inputs related to the aggregation process and then executing the aggregation workflow. Both of these processes use R6 classes. The 'AggInput' class holds all of the options related to the aggregation workflow and is required for instantiating the 'AggDat' class. Note that you can only aggregate data that you have collected and imported into the database. This will not go collect your data, that is what Vignettes 1 and 2 cover.
 
-### 2.1 Initialize AggInput Class
+### Initialize AggInput Class
 This class holds information related to the data aggregation workflow seen in the activity diagrams on [this page](https://paulhegedus.github.io/OFPE-Website/dat_agg.html). 
 
 The aggregation process includes multiple options. First, the user must choose the field to aggregate data in. If using the interactive feature, the user can supply a shapefile bounding box to use for querying the database for information available to aggregate, otherwise the field selection is used for querying using database relations. The user then has the choice of what response variable to aggregate data to. Yield and protein are separated because they are collected at different resolutions. This also includes the 'Satellite' option, in which farmers can aggregate remotely sensed data for any year they have data for. The aggregation of 'Satellite' data is important because it will enable the user to simulate these years in the analysis and simulation step of the OFPE data workflow. The user also selects the 'current year', or the year of interest to collect data. This year represents the year that the crop was harvested and observed. The 'previous year' is the last year a crop was harvested in the field.
@@ -76,7 +76,7 @@ aggInputs <- AggInputs$new(dbCon)
 aggInputs$selectInputs()
 ```
 
-### 2.2 Aggregate Data
+### Aggregate Data
 After the user selects the inputs, they can pass the 'AggInputs' class to the 'AggDat' class to execute the aggregation action. This process takes the AggInputs class and executes the aggregation process depending on these inputs. Most operations occur within the PostgreSQL database for speed and memory purposes. The response variable data is separated from the raw file to make the base of the aggregation file based on whether using the observed or gridded locations. The 'previous year' response variable data are then extracted from the raw files and associated with the 'current year' data by intersection of grid cells or nearest neighbor to observed data. This is repeated for the experimental variable, with any product conversion applied. Blank application areas indicate the application of 0 fertilizer rates, and filled in appropriately before a 30m buffer is taken from the field edge as part of the cleaning process. Across the whole field, data falling outside of 4SD from the mean is removed, as well as any negative yield and protein values (as they are impossible). If the grid option is selected, this process is repeated with 1SD within each gridcell. After all on-farm data has been aggregated, the remotely sensed raster data is extracted to the locations of the aggregated data. Finally, if SSURGO data is present it is added, otherwise skipped. 
 
 If the 'Satellite' response variable is chosen, then the process begins with the creation of 10m centroid locations and the extraction of remotely sensed and SSURGO data if present. Aggregated data are saved in the '*farmername*_a' schemas in tables appropriately labeled based on the response variable. 

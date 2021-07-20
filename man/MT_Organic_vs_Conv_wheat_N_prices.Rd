@@ -5,7 +5,7 @@
 \alias{MT_Organic_vs_Conv_wheat_N_prices}
 \title{Default economic conditions used for OFPE simulations.}
 \format{
-A data frame with 98 rows and 4 variables:
+A data frame with 93 rows and 4 variables:
 \describe{
 \item{Year}{Year observation corresponds to.}
 \item{org}{Price of HRWW grown organically, in dollars per bushel.}
