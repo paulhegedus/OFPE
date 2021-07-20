@@ -259,32 +259,6 @@ AggGEE <- R6::R6Class(
                     WHERE ST_Intersects(geetemp.rast, temp.geometry);")
           )
         )
-        if (type == "aspect_rad") {
-          invisible(DBI::dbSendQuery(
-            db,
-            paste0("ALTER TABLE ", farmername, "_a.temp
-               ADD COLUMN aspect_cos REAL,
-               ADD COLUMN aspect_sin REAL;")
-          ))
-          aspect_vec <- DBI::dbGetQuery(
-            db,
-            paste0("SELECT aspect_rad
-                FROM ", farmername, "_a.temp;")
-          )
-          aspect <- data.frame(aspect_rad = aspect_vec)
-          aspect$aspect_cos <- cos(aspect$aspect_rad)
-          aspect$aspect_sin <- sin(aspect$aspect_rad)
-          invisible(DBI::dbSendQuery(
-            db,
-            paste0("UPDATE ", farmername, "_a.temp temp
-                  SET aspect_cos = cos(temp.aspect_rad);")
-          ))
-          invisible(DBI::dbSendQuery(
-            db,
-            paste0("UPDATE ", farmername, "_a.temp temp
-                  SET aspect_sin = sin(temp.aspect_rad);")
-          ))
-        }
         invisible(
           DBI::dbSendQuery(db, paste0("DROP TABLE all_farms.geetemp;"))
         )
