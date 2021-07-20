@@ -198,6 +198,7 @@ ImportGEE <- R6::R6Class(
       if (grepl("2020", info$orig_file)) {
         info$year <- '2020'
       } else {
+        # only looks for data more recent than 1999 NEEDS 2020 UPDATING
         str_locs <- as.data.frame(
           stringr::str_locate_all(info$orig_file, "200|201|1999")
         )
@@ -247,40 +248,26 @@ ImportGEE <- R6::R6Class(
                            "full")
       }
       # identify the data type
-      if (any(grepl("ndvi|ndre|clre|aspect_rad|slope|elev|tpi|prec|gdd|ssm|susm|
-                    grtgroup|texture0cm|texture10cm|texture30cm|texture60cm|texture100cm|texture200cm|
-                    bulkdensity0cm|bulkdensity10cm|bulkdensity30cm|bulkdensity60cm|bulkdensity100cm|bulkdensity200cm|
-                    claycontent0cm|claycontent10cm|claycontent30cm|claycontent60cm|claycontent100cm|claycontent200cm|
-                    sandcontent0cm|sandcontent10cm|sandcontent30cm|sandcontent60cm|sandcontent100cm|sandcontent200cm|
-                    phw0cm|phw10cm|phw30cm|phw60cm|phw100cm|phw200cm|
-                    watercontent0cm|watercontent10cm|watercontent30cm|watercontent60cm|watercontent100cm|watercontent200cm|
-                    carboncontent0cm|carboncontent10cm|carboncontent30cm|carboncontent60cm|carboncontent100cm|carboncontent200cm",
+      if (any(grepl("ndvi|ndre|clre|aspect_rad|slope|elev|tpi|prec|gdd|ssm|susm",
                    info$orig_file))) {
         #******************************************************************
         # < IF OTHER DATATYPES NEED DEALING WITH, INSERT IN IF STATEMENT ^ >
         #******************************************************************
         str_locs <- stringr::str_locate(info$orig_file,
-                                        "ndvi|ndre|clre|aspect_rad|slope|elev|tpi|prec|gdd|ssm|susm|
-                    grtgroup|texture0cm|texture10cm|texture30cm|texture60cm|texture100cm|texture200cm|
-                    bulkdensity0cm|bulkdensity10cm|bulkdensity30cm|bulkdensity60cm|bulkdensity100cm|bulkdensity200cm|
-                    claycontent0cm|claycontent10cm|claycontent30cm|claycontent60cm|claycontent100cm|claycontent200cm|
-                    sandcontent0cm|sandcontent10cm|sandcontent30cm|sandcontent60cm|sandcontent100cm|sandcontent200cm|
-                    phw0cm|phw10cm|phw30cm|phw60cm|phw100cm|phw200cm|
-                    watercontent0cm|watercontent10cm|watercontent30cm|watercontent60cm|watercontent100cm|watercontent200cm|
-                    carboncontent0cm|carboncontent10cm|carboncontent30cm|carboncontent60cm|carboncontent100cm|carboncontent200cm") # CHANGED dem to elev
+                                       "ndvi|ndre|clre|aspect_rad|slope|elev|tpi|prec|gdd|ssm|susm") # CHANGED dem to elev
         info$type <- stringr::str_sub(info$orig_file,
                                       str_locs[1],
                                       str_locs[2])
       } else {
         info$type <- "see_README" # if the data type is not specified see naming convention and document what data this is.
       }
-      # identify scale (look for 4km or 10m or 20m or 30m or 20km or 1km or 250m )
-      if (any(grepl("4km|10m|20m|30m|20km|1km|250m", info$orig_file))) {
+      # identify scale (look for 4km or 10m or 20m or 30m or 20km or 1km )
+      if (any(grepl("4km|10m|20m|30m|20km|1km", info$orig_file))) {
         #******************************************************************
         # < IF OTHER SCALES NEED DEALING WITH, INSERT IN IF STATEMENT ^ >
         #******************************************************************
         str_locs <- stringr::str_locate(info$orig_file,
-                                       "4km|10m|20m|30m|20km|1km|250m")
+                                       "4km|10m|20m|30m|20km|1km")
         info$scale <- stringr::str_sub(info$orig_file,
                                        str_locs[1],
                                        str_locs[2])
@@ -288,14 +275,14 @@ ImportGEE <- R6::R6Class(
       } else {
         info$scale <- "see_README" # scale not identified
       }
-      # identify source (look for gridmet, daymet, ned, cdem, srtm, smap, S2, L5, L7, L8, olm)
-      if (any(grepl("gridmet|daymet|ned|cdem|srtm|smap|S2|L5|L7|L8|olm",
+      # identify source (look for gridmet, daymet, ned, cdem, srtm, smap, S2, L5, L7, L8)
+      if (any(grepl("gridmet|daymet|ned|cdem|srtm|smap|S2|L5|L7|L8",
                    info$orig_file))) {
         #******************************************************************
         # < IF OTHER SOURCES NEED DEALING WITH, INSERT IN IF STATEMENT ^ >
         #******************************************************************
         str_locs <- stringr::str_locate(info$orig_file,
-                                       "gridmet|daymet|ned|cdem|srtm|smap|S2|L5|L7|L8|olm")
+                                       "gridmet|daymet|ned|cdem|srtm|smap|S2|L5|L7|L8")
         info$source <- stringr::str_sub(info$orig_file,
                                         str_locs[1],
                                         str_locs[2])
