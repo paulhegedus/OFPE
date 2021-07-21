@@ -1,10 +1,10 @@
 on:
   push:
     branches:
-      - master
+      - new_master
   pull_request:
     branches:
-      - master
+      - new_master
 
 name: R-CMD-check
 
@@ -19,10 +19,10 @@ jobs:
       matrix:
         config:
           # - {os: macOS-latest,   r: 'devel'} # sf & rpostgis error
-          - {os: macOS-latest,   r: '4.0'}
+          - {os: macOS-latest,   r: '4.0.5'}
           - {os: windows-latest, r: 'devel'}
-          - {os: windows-latest, r: '4.0'}
-          - {os: ubuntu-16.04,   r: '4.0', rspm: "https://packagemanager.rstudio.com/cran/__linux__/xenial/latest"}
+          - {os: windows-latest, r: '4.0.5'}
+          - {os: ubuntu-16.04,   r: '4.0.5', rspm: "https://packagemanager.rstudio.com/cran/__linux__/xenial/latest"}
           - {os: ubuntu-16.04,   r: '3.6', rspm: "https://packagemanager.rstudio.com/cran/__linux__/xenial/latest"}
           # - {os: ubuntu-16.04,   r: '3.5', rspm: "https://packagemanager.rstudio.com/cran/__linux__/xenial/latest"}
           # - {os: ubuntu-16.04,   r: '3.4', rspm: "https://packagemanager.rstudio.com/cran/__linux__/xenial/latest"} # rpostgis error
