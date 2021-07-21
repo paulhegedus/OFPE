@@ -52,6 +52,7 @@ Imports:
     DescTools,
     Metrics,
     grDevices,
+    ggmap,
     maps,
     maptools,
     grid,
