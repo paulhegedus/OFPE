@@ -42,7 +42,7 @@ VignetteBuilder: knitr
 Imports: 
     DBI,
     R6,
-    sf,
+    sf (<= 0.9-6),
     rpostgis,
     data.table,
     Rcpp,
