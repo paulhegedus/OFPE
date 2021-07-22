@@ -29,7 +29,7 @@ This class can be initialized with arguments required to run the methods for acq
 
 ## Setup Environment
 Load packages, connect to database and clear out any temporary files, and setup your Google key.
-```{r}
+```{r, eval = FALSE}
 #devtools::install_github("paulhegedus/OFPE")
 library(OFPE)
 dbCon <- DBCon$new(
@@ -47,7 +47,7 @@ OFPE::removeTempTables(dbCon$db) # removes temporary tables. good practice
 This sections demonstrates how to setup a 'clean' ObsOP class with just a database connection. This allows the user the freedom to execute the methods of the class and pass in their data selection choices with standard function notation. The user can then run any of the functions in the class by specifying inputs to each method. The examples below show how to use the ObsOP class to manipulate and visualize various datasets using the same instantiation of the class. 
 
 First, simply create a new object of the ObsOP class.
-```{r}
+```{r, eval = FALSE}
 obsOP <- ObsOP$new()
 ```
 
@@ -172,7 +172,7 @@ obsOP$plotHistogram(dat = pro,
 The user can simplify the process of calling these individual methods by initializing an ObsOP class for specific data selections. This will store these selections within the class and used automatically when methods are called. The following examples show how to instantiate an ObsOP class with user specifications for the data and how to run the data manipulation and visualization methods with the internalized data. 
 
 Initialize an ObsOP object with specifications for the database connection, the field to gather data for, the year of data to gather, the table the data is contained in within an OFPE database, and specifications for the grid type and data used. 
-```{r}
+```{r, eval = FALSE}
 obsOP <- ObsOP$new()#add specs
 
 ```

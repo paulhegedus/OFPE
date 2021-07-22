@@ -774,7 +774,9 @@ RxClass <- R6::R6Class(
     #' @param dtype The data type of the data for upload to the database, default
     #' to 'rx'.
     #' @return Output experiment or prescription saved in database.
-    uploadRxFun = function(RX, db, farmername, fieldname, rx_year, size, mgmt_scen, dtype = "rx") {
+    uploadRxFun = function(RX, db, farmername, fieldname, rx_year, size, mgmt_scen, dtype = "rx_poly") {
+      # browser()
+      
       RX <- sf::st_transform(RX, "epsg:4326") %>%
         as("Spatial")
       schema <- paste0(farmername, "_a")
@@ -801,7 +803,7 @@ RxClass <- R6::R6Class(
               db,
               paste0(
                 "DELETE FROM ", schema, ".", dtype, "
-                  WHERE field = '", fieldname, "'
+                  WHERE fieldname = '", fieldname, "'
                   AND rxyear = '", rx_year,"'
                   AND size = '", size, "'
                   AND mgmt_scen = '", mgmt_scen, "';")

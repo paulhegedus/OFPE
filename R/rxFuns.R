@@ -143,6 +143,9 @@ getRxGrid <- function(db,
           DROP COLUMN id;")
   ))
   
+  ## rotate rxgridtemp manually in QGIS here
+  # browser() 
+  
   ## rotate to heading if present
   if (heading != 0) {
     # bring in rxgridtemp to R

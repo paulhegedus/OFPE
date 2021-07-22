@@ -712,7 +712,7 @@ ImportOF <- R6::R6Class(
             # check in data file for "seed"
             anySeed <- private$.findSeed(FILE)
             # if not seed data it is N data
-            if (anySeed=="no") {
+            if (anySeed == "no") {
               if (any(grepl("poly",
                             class(sf::st_geometry(sf::st_as_sf(FILE))),
                             ignore.case = TRUE))) {

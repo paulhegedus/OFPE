@@ -417,10 +417,12 @@ ExpGen <- R6::R6Class(
       fld_bound <- OFPE::getFldBound(fieldname, db, farmername)
       xy <- rep(list(NA), length(fieldname))
       for(i in 1:length(xy)) {
+        OFPE::makeXmGrid(db, "No", fieldname[i], 10, farmername)
         xy[[i]] <- DBI::dbGetQuery(db,
             paste0("SELECT x, y 
-                   FROM all_farms.grids
+                   FROM all_farms.gridtemp
                    WHERE field = '", fieldname[i], "'"))
+        OFPE::removeTempTables(db)
       }
       xy <- do.call(rbind, xy)
       xy$X <- xy$x
@@ -735,8 +737,6 @@ ExpGen <- R6::R6Class(
             }
           } 
         } else {
-          browser()
-          
           temp <- OFPE::applyExpRates(rx_sdt, 
                                       self$exp_rates,
                                       self$exp_rates_prop,
