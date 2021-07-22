@@ -34,8 +34,7 @@
 #' use more generally, the class can be initialized and figure making methods
 #' can be run individually.
 #'
-#' ## TODO: correlation/CV maps, summary statistics
-#'
+#' TODO: correlation/CV maps, summary statistics
 #' @export
 ObsOP <- R6::R6Class(
   "ObsOP",

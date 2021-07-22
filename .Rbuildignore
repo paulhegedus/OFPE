@@ -1,2 +1,9 @@
-^.*\.Rproj$
+^OFPE\.Rproj$
 ^\.Rproj\.user$
+^LICENSE\.md$
+^README\.Rmd$
+^\.travis\.yml$
+^\.github$
+^doc$
+^Meta$
+^\data-raw$

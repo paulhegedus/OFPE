@@ -1,6 +1,6 @@
 Package: OFPE
-Version: 1.5.0
-Title: On-Farm Precision Experiments (OFPE) data management and analysis tools
+Version: 1.5.1
+Title: On-Farm Precision Experiments (OFPE) Data Management And Analysis Tools
 Description: The MT OFPE project lays out a concenptual framework for a data 
     intensive field management approach to dryland winter wheat production in
     MT using experimentally applied input rates such as nitrogen fertilizer and 
@@ -20,8 +20,7 @@ Authors@R: c(
     person(given = "Bruce",
            family = "Maxwell",
            role = c("ctb"),
-           email = "bmax@montana.edu",
-           comment = c(ORCID = "000-0001-7775-9419")),
+           email = "bmax@montana.edu"),
     person(given = "Montana State University", 
            role = c("cph"))
     )
