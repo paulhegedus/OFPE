@@ -6,13 +6,16 @@
 \description{
 R6 class for generating maps and figures from observed data
 in an OFPE database. This class can be initialized with arguments required
-to run the methods for acquiring or making figures, or can be initialized solely
-with a 'create' argument, described below. When an empty 'ObsOP' class is initialized,
-the methods must have all arguments passed, whereas if the user initializes the
-'ObsOP' class with arguments, methods can be executed with minimal other arguments.
+to run the methods for acquiring or making figures, or can be initialized empty.
+When an empty 'ObsOP' class is initialized, the methods must have all arguments
+passed each time, whereas if the user initializes the 'ObsOP' class with arguments
+specifying the data selections, the methods can be executed with minimal other arguments.
+This is meant to simplify use and allow the user to have multiple ObsOP classes for
+different datasets.
 
 It is recommended to initialize one 'ObsOP' class for each dataset desired for
-analysis. Multiple fields will be treated as one, and only one year is allowed
+analysis by passing in the specifications for data in the instantiation of the class.
+Multiple fields will be treated as one, and only one year is allowed
 for gathering.
 
 This class can be used to import data from an OFPE database for data
@@ -33,9 +36,7 @@ histograms of a variable. These figures are returned from the methods but also c
 specified locations. This is an R6 class so all parameters needed for
 generating figures can be supplied upon class initialization. However, to
 use more generally, the class can be initialized and figure making methods
-can be run individually.
-\subsection{TODO: correlation/CV maps, summary statistics}{
-}
+can be run individually. TODO: correlation/CV maps, summary statistics
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -82,6 +83,10 @@ simulation, and prescription building steps. See the 'AggInputs' class
 documentation for more information on the 'dat_used' selection.}
 
 \item{\code{orig_file}}{The original file name of the data to gather.}
+
+\item{\code{agg_dat}}{Aggregated data saved as a result of the fetchAggDat() method.}
+
+\item{\code{raw_dat}}{Raw data saved as a result of the fetchRawDat() method.}
 }
 \if{html}{\out{</div>}}
 }
@@ -95,7 +100,7 @@ documentation for more information on the 'dat_used' selection.}
 \item \href{#method-calcNR}{\code{ObsOP$calcNR()}}
 \item \href{#method-plotObsMaps}{\code{ObsOP$plotObsMaps()}}
 \item \href{#method-plotScatters}{\code{ObsOP$plotScatters()}}
-\item \href{#method-plotHist}{\code{ObsOP$plotHist()}}
+\item \href{#method-plotHistogram}{\code{ObsOP$plotHistogram()}}
 \item \href{#method-clone}{\code{ObsOP$clone()}}
 }
 }
@@ -192,7 +197,8 @@ and type of data to gather.
   year = self$year,
   dat_tab = self$dat_tab,
   GRID = self$GRID,
-  dat_used = self$dat_used
+  dat_used = self$dat_used,
+  store = TRUE
 )}\if{html}{\out{</div>}}
 }
 
@@ -222,6 +228,9 @@ option. Provide either "grid" or "obs".}
 simulation, and prescription building steps. See the 'AggInputs' class
 documentation for more information on the 'dat_used' selection. Provide either
 "decision_point" or "full_year".}
+
+\item{\code{store}}{Logical, whether to save the data internally in the class.
+Default is TRUE. Access via rxClass$agg_dat. If FALSE will return dataset.}
 }
 \if{html}{\out{</div>}}
 }
@@ -241,7 +250,8 @@ name of the original file for the data ('orig_file').
   db = self$db,
   farmername = self$farmername,
   dat_tab = self$dat_tab,
-  orig_file = self$orig_file
+  orig_file,
+  store = TRUE
 )}\if{html}{\out{</div>}}
 }
 
@@ -259,6 +269,9 @@ the database. This corresponds to the type of data gathered (i.e. 'yld',
 'aa_n_poly', 'aa_sr', etc.).}
 
 \item{\code{orig_file}}{The original file name of the data to gather.}
+
+\item{\code{store}}{Logical, whether to save the data internally in the class.
+Default is TRUE. Access via rxClass$raw_dat. If FALSE will return dataset.}
 }
 \if{html}{\out{</div>}}
 }
@@ -270,7 +283,9 @@ Data table with specified data.
 \if{html}{\out{<a id="method-krigeDat"></a>}}
 \if{latex}{\out{\hypertarget{method-krigeDat}{}}}
 \subsection{Method \code{krigeDat()}}{
-Interpolate data using kriging.
+Interpolate data using kriging. Takes two datasets and the
+specified column name in the source data for the variable to be kriged
+to the the target data.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ObsOP$krigeDat(source_dat, target_dat, var)}\if{html}{\out{</div>}}
 }
@@ -294,10 +309,69 @@ Data table with interpolated data.
 \if{html}{\out{<a id="method-calcNR"></a>}}
 \if{latex}{\out{\hypertarget{method-calcNR}{}}}
 \subsection{Method \code{calcNR()}}{
+Method for calculating net-return in a dataset. This method
+looks for columns specified as 'yld' or 'pro' as well as 'aa_X' specifying
+the experimental input variable. The user also specifies the economic
+conditions used to calculate net-return. If there is no protein data in
+the dataset, the protein premium/dockage specifications are not required.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ObsOP$calcNR()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ObsOP$calcNR(
+  dat,
+  yld_col_name = NULL,
+  pro_col_name = NULL,
+  exp_col_name,
+  CEXP,
+  FC,
+  ssAC,
+  Bp,
+  B0pd = NULL,
+  B1pd = NULL,
+  B2pd = NULL
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{dat}}{The data frame or data table.}
+
+\item{\code{yld_col_name}}{Character, name of column containing yield data. Leave
+NULL to calculate net-return based on just protein. If NULL, pro_col_name
+cannot also be NULL.}
+
+\item{\code{pro_col_name}}{Character, name of column containing protein data. Leave
+NULL to calculate net-return based on just yield. If NULL, yld_col_name
+cannot also be NULL.}
+
+\item{\code{exp_col_name}}{Character, name of the column for the experimental input
+data. Required.}
+
+\item{\code{CEXP}}{The cost of the experimental input.}
+
+\item{\code{FC}}{Fixed costs ($/acre) associated with production, not including
+the input of interest. This includes things like the cost of labor, fuel, etc.}
+
+\item{\code{ssAC}}{The cost ($/acre) of using site-specific technology or variable rate
+applications. For farmers that have variable rate technology this cost may be zero,
+otherwise is the cost per acre to hire the equipment/operators with variable rate
+technology.}
+
+\item{\code{Bp}}{The base price corresponding to the price for the system
+type selected by the user (i.e. conventional or organic).}
+
+\item{\code{B0pd}}{The intercept for the protein premium/dockage equation.}
+
+\item{\code{B1pd}}{The coefficient for protein in the protein premium/dockage
+equation.}
+
+\item{\code{B2pd}}{The coefficient for protein squared for the protein
+premium/dockage equation.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Data frame with new 'NR' column.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-plotObsMaps"></a>}}
@@ -364,19 +438,111 @@ A 'ggmap' object and maps saved in 'Outputs/Maps' folder if selected.
 \if{html}{\out{<a id="method-plotScatters"></a>}}
 \if{latex}{\out{\hypertarget{method-plotScatters}{}}}
 \subsection{Method \code{plotScatters()}}{
+This method is for creating a scatterplot of variables specified by the
+user. The user specifies the x and y column to plot and a variable or
+variables to color points by.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ObsOP$plotScatters()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ObsOP$plotScatters(
+  dat,
+  x_var,
+  y_var,
+  x_lab = NULL,
+  y_lab = NULL,
+  color_var = NULL,
+  fieldname = self$fieldname,
+  year = self$year,
+  farmername = self$farmername,
+  out_path = self$out_path,
+  SAVE = self$SAVE
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{dat}}{Data frame with variables to plot. Must include the columns for
+specified data.}
+
+\item{\code{x_var}}{The column name of the variable to plot on the x axis.}
+
+\item{\code{y_var}}{The column name of the variable to plot on the y axis.}
+
+\item{\code{x_lab}}{The label to be applied to the x axis of the plot.}
+
+\item{\code{y_lab}}{The label to be applied to the y axis of the plot.}
+
+\item{\code{color_var}}{The variable or variables, passed in as a character string,
+to color the data by. If left NULL no coloring is applied.}
+
+\item{\code{fieldname}}{Name of the field(s) plotted. Used for labeling and saving
+data. Can be left NULL.}
+
+\item{\code{year}}{Year of the observed data. Used for labeling and saving
+data. Can be left NULL.}
+
+\item{\code{farmername}}{The name of the farmer that manages the field. Used for
+labeling and saving data. Can be left NULL.}
+
+\item{\code{out_path}}{The path to the folder in which to store and
+save outputs from the simulation.}
+
+\item{\code{SAVE}}{Logical, whether to save figure.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A scatterplot and saved in 'Outputs/Maps' folder if selected.
+}
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plotHist"></a>}}
-\if{latex}{\out{\hypertarget{method-plotHist}{}}}
-\subsection{Method \code{plotHist()}}{
+\if{html}{\out{<a id="method-plotHistogram"></a>}}
+\if{latex}{\out{\hypertarget{method-plotHistogram}{}}}
+\subsection{Method \code{plotHistogram()}}{
+This method is for creating a histogram of a variable specified by the
+user. The user specifies the column in the data holding the data of interest
+and provides a lavel.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ObsOP$plotHist()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ObsOP$plotHistogram(
+  dat,
+  x_var,
+  x_lab = NULL,
+  fieldname = self$fieldname,
+  year = self$year,
+  farmername = self$farmername,
+  out_path = self$out_path,
+  SAVE = self$SAVE
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{dat}}{Data frame with variables to plot. Must include the columns for
+specified data.}
+
+\item{\code{x_var}}{The column name of the variable to plot on the x axis.}
+
+\item{\code{x_lab}}{The label to be applied to the x axis of the plot.}
+
+\item{\code{fieldname}}{Name of the field(s) plotted. Used for labeling and saving
+data. Can be left NULL.}
+
+\item{\code{year}}{Year of the observed data. Used for labeling and saving
+data. Can be left NULL.}
+
+\item{\code{farmername}}{The name of the farmer that manages the field. Used for
+labeling and saving data. Can be left NULL.}
+
+\item{\code{out_path}}{The path to the folder in which to store and
+save outputs from the simulation.}
+
+\item{\code{SAVE}}{Logical, whether to save figure.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A scatterplot and saved in 'Outputs/Maps' folder if selected.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}

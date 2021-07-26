@@ -1,3 +1,5 @@
+#' @title Make a grid of X x X meters
+#'
 #' @description
 #' Makes a grid across a field of a specified size. If the grid
 #' option was selected observations will be aggregated onto

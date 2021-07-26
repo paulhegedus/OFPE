@@ -4,7 +4,7 @@
 \alias{makeTempBound}
 \title{Make a temporary table of field boundaries}
 \usage{
-makeTempBound(db, fieldname, farmername)
+makeTempBound(db, fieldname, farmername, buffer_width = NULL)
 }
 \arguments{
 \item{db}{Connection to an OFPE formatted database.}
@@ -12,6 +12,8 @@ makeTempBound(db, fieldname, farmername)
 \item{fieldname}{Provide the field name for the experiment or prescription.}
 
 \item{farmername}{Provide the name of the farmer that manages the field.}
+
+\item{buffer_width}{Width from the edge of the field within which to apply treatments.}
 }
 \value{
 NULL, temporary field boundary table in 'all_farms'.

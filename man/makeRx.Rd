@@ -4,7 +4,7 @@
 \alias{makeRx}
 \title{Make experiment or prescription}
 \usage{
-makeRx(rx_sdt, fld_bound, rx_for_year, conv)
+makeRx(rx_sdt, fld_bound, rx_for_year, conv, strat_dat_parms = NULL)
 }
 \arguments{
 \item{rx_sdt}{A 'sf' object containing the experiment or prescription
@@ -21,6 +21,31 @@ units of the as-applied input (i.e. lbs N/ac to gal urea/ac).
 Should be from RxClass object or is 1 / the conversion factor to
 go from lbs of the experimental input to units of the as-applied
 input.}
+
+\item{strat_dat_parms}{Optional, only if stratification used to make the
+experimental rates. Named list by fieldname that contains a list for each field
+containing named slots for 'table', 'grid_size', 'path', 'year', and 'col_name'
+to define the stratification data to use for randomly applying experimental rates.
+You can stratify on multiple variables per field, with priority given by order.
+Each of the sublist slots for each field must have the same dimensions. Note
+that more stratification variables increases processing times.
+
+The table ('table') indicates the location within the database that the stratification
+data is stored in. This can either be from an aggregated table ('yld', 'pro',
+or 'sat') or can be from a raw table. Simply specify the table name and the
+schema will be derived from the farmername. For data from an aggregated table,
+the user must also provide the size ('grid_size') of the grid cells used to
+aggregate the data the user desires in the aggregated dataset (i.e. 10, 30 meters).
+This is a numeric variable and if stratifying on raw data, this parameter
+can be left NA. Conversely, if you are stratifying on raw data, an additional
+parameter called 'path' needs to be supplied in a named slot of each field's
+sublist to specify the original filename of the data imported into the database.
+If the desired data is from an aggregated table than enter NA for the 'path'. The year of
+the desired data must also be provided ('year'). This is to specify which data in
+the aggregated table to use. If using raw data, the year is automatically
+derived from the data specified by the filename. Finally, the user must
+supply the column name ('col_name') of the variable to stratify on.
+This must be supplied for both raw and aggregated data.}
 }
 \value{
 A 'sf' object with the final output for the producer.

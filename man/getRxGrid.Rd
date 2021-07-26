@@ -10,9 +10,11 @@ getRxGrid(
   farmername,
   fieldname,
   trt_length,
-  boom_width,
+  trt_width,
   unique_fieldname,
-  mgmt_scen = "base"
+  mgmt_scen = "base",
+  buffer_width,
+  heading = 0
 )
 }
 \arguments{
@@ -28,7 +30,7 @@ made to aggregate data for the field.}
 
 \item{trt_length}{Length, in meters, for which to apply treatments.}
 
-\item{boom_width}{The width of the sprayer boom or spreader.}
+\item{trt_width}{Width, in meters, for which to apply treatments.}
 
 \item{unique_fieldname}{Unique fieldname for the field(s) used for the experiment. This
 concatenates multiple fields with an ampersand. Used for labeling.}
@@ -43,6 +45,14 @@ rate, 'Min': applying the least intensive input rates (i.e. 0 lbs N/ac, or
 input rate in conventional system types, and the farmer selected rate for
 organic systems, both of which are already provided. Default to 'base' for new
 experiments, override if making a prescription.}
+
+\item{buffer_width}{Width from the edge of the field within which to apply treatments.}
+
+\item{heading}{Numeric, heading in degrees from true north to rotate the
+experiment/prescription to. Default is 0 (no rotation). Note that if a
+heading is provided, the grid is trimmed based on the buffered boundary but
+rotation caused by providing a heading may skew treatment rates so that
+they encroach into the cleanup strip.}
 }
 \value{
 NULL, grid data stored in database in 'rxgrids' and 'rxgridtemp'.

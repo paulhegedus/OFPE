@@ -70,9 +70,13 @@ organic systems, both of which are already provided.}
 
 \item{\code{trt_length}}{Length, in meters, for which to apply treatments.}
 
-\item{\code{boom_width}}{The width of the sprayer boom or spreader.}
+\item{\code{trt_width}}{Width, in meters, for which to apply treatments.}
 
-\item{\code{orientation}}{TODO... Not implemented yet.}
+\item{\code{heading}}{Numeric, heading in degrees from true north to rotate the
+experiment/prescription to. Default is 0 (no rotation). Note that if a
+heading is provided, the grid is trimmed based on the buffered boundary but
+rotation caused by providing a heading may skew treatment rates so that
+they encroach into the cleanup strip.}
 
 \item{\code{expvar}}{Experimental variable to optimize, select/input
 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
@@ -141,6 +145,20 @@ based on gaps in optimum rates.}
 of experimental rates provided in 'exp_rate_length'. This is required
 for all new experiments and experimental prescriptions.}
 
+\item{\code{buffer_width}}{The width of the buffer from the field edge within which
+to place experiments or prescriptions. Provided by the user in feet and
+converted to meters internally.}
+
+\item{\code{min_rate_jumps}}{Optional, supply either 'N/S' or 'E/W' to indicate
+direction in which to minimize rate jumps. This is the predominant direction
+that the experimental input is applied across the field. This function minimizes
+the difference in rates between adjacent treatments for easier use on the
+equipment. Note that this will eradicate any randomization/optimization of
+rates and will partially or completely remove stratification. This function makes
+sure that the rates do not vary by more than 2 rate levels in the direction
+specified. Default is NULL, which prevents execution. This will not guarantee
+eradication of all rate jumps, but will reduce the amount.}
+
 \item{\code{unique_fieldname}}{Unique fieldname for the field(s) used for the experiment. This
 concatenates multiple fields with an ampersand. Used for labelling.}
 
@@ -175,8 +193,8 @@ in RxClass.}
 \item{\code{var_main_label}}{The main label to apply to the map. Used in figure
 labelling for plotting in RxClass.}
 
-\item{\code{size}}{The size of the treatment zones, which is the treatment length x
-the boom width x 2.}
+\item{\code{size}}{The size of the treatment zones, which is the treatment width x
+the treatment length.}
 }
 \if{html}{\out{</div>}}
 }
@@ -198,11 +216,11 @@ inputs are in the correct format and present.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RxGen$new(
   dbCon,
-  simClass,
+  simClass = NULL,
   mgmt_scen,
   trt_length,
-  boom_width,
-  orientation,
+  trt_width,
+  heading = 0,
   expvar,
   conv,
   base_rate,
@@ -212,6 +230,8 @@ inputs are in the correct format and present.
   SAVE,
   opt_rate_length,
   fld_prop,
+  buffer_width = 0,
+  min_rate_jumps = NULL,
   exp_rate_gen = NULL,
   exp_rate_length = NULL,
   exp_rates = NULL,
@@ -226,11 +246,9 @@ inputs are in the correct format and present.
 database, see DBCon class.}
 
 \item{\code{simClass}}{If the user is creating an experimental prescription or
-prescription an R6 class SimClass object must be supplied. This has to be
-set up, however does not need to have the execution method performed.
-The RxClass will check the SimClass for simulation output data that matches
-the year of the data provided, and execute simulations for any years not
-present.}
+prescription an R6 class SimClass object must be supplied. This class is
+queried for relevant information, most importantly, a path the the output
+data.}
 
 \item{\code{mgmt_scen}}{If the user is creating a prescription or experimental
 prescription, they must provide the management scenario to use for their
@@ -244,9 +262,13 @@ organic systems, both of which are already provided.}
 
 \item{\code{trt_length}}{Length, in meters, for which to apply treatments.}
 
-\item{\code{boom_width}}{The width of the sprayer boom or spreader.}
+\item{\code{trt_width}}{Width, in meters, for which to apply treatments.}
 
-\item{\code{orientation}}{TODO... Not implemented yet.}
+\item{\code{heading}}{Numeric, heading in degrees from true north to rotate the
+experiment/prescription to. Default is 0 (no rotation). Note that if a
+heading is provided, the grid is trimmed based on the buffered boundary but
+rotation caused by providing a heading may skew treatment rates so that
+they encroach into the cleanup strip.}
 
 \item{\code{expvar}}{Experimental variable to optimize, select/input
 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
@@ -291,6 +313,19 @@ the management scenario and number of experimental rates into account.}
 
 \item{\code{fld_prop}}{The percent of available cells to
 apply check rates to (i.e. 0.05, 0.1).}
+
+\item{\code{buffer_width}}{The width of the buffer from field edge for
+experiments or prescriptions (feet).}
+
+\item{\code{min_rate_jumps}}{Optional, supply either 'N/S' or 'E/W' to indicate
+direction in which to minimize rate jumps. This is the predominant direction
+that the experimental input is applied across the field. This function minimizes
+the difference in rates between adjacent treatments for easier use on the
+equipment. Note that this will eradicate any randomization/optimization of
+rates and will partially or completely remove stratification. This function makes
+sure that the rates do not vary by more than 2 rate levels in the direction
+specified. Default is NULL, which prevents execution. This will not guarantee
+eradication of all rate jumps, but will reduce the amount.}
 
 \item{\code{exp_rate_gen}}{Logical, for the experimental prescription provide
 TRUE or FALSE for whether to create experimentla rates from gaps in the

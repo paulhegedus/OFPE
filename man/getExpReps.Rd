@@ -2,7 +2,7 @@
 % Please edit documentation in R/rxFuns.R
 \name{getExpReps}
 \alias{getExpReps}
-\title{Apply experimental rates across the room.}
+\title{Apply experimental rates across the field}
 \usage{
 getExpReps(exp_cells_length, exp_rates_prop)
 }

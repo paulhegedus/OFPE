@@ -32,9 +32,7 @@
 #' specified locations. This is an R6 class so all parameters needed for
 #' generating figures can be supplied upon class initialization. However, to
 #' use more generally, the class can be initialized and figure making methods
-#' can be run individually.
-#'
-#' TODO: correlation/CV maps, summary statistics
+#' can be run individually. TODO: correlation/CV maps, summary statistics
 #' @export
 ObsOP <- R6::R6Class(
   "ObsOP",
@@ -208,7 +206,7 @@ ObsOP <- R6::R6Class(
     #' simulation, and prescription building steps. See the 'AggInputs' class
     #' documentation for more information on the 'dat_used' selection. Provide either
     #' "decision_point" or "full_year".
-    #' @param store Logical, whether to save the data internally in the class. 
+    #' @param store Logical, whether to save the data internally in the class.
     #' Default is TRUE. Access via rxClass$agg_dat. If FALSE will return dataset.
     #' @return Data table with specified data.
     fetchAggDat = function(db = self$db,
@@ -220,7 +218,7 @@ ObsOP <- R6::R6Class(
                            dat_used = self$dat_used,
                            store = TRUE) {
       stopifnot(length(year) == 1,
-                length(dat_tab) == 1, 
+                length(dat_tab) == 1,
                 length(GRID) == 1,
                 length(dat_used) == 1)
       dat <- private$.fetchDat(GRID,
@@ -247,7 +245,7 @@ ObsOP <- R6::R6Class(
     #' the database. This corresponds to the type of data gathered (i.e. 'yld',
     #' 'aa_n_poly', 'aa_sr', etc.).
     #' @param orig_file The original file name of the data to gather.
-    #' @param store Logical, whether to save the data internally in the class. 
+    #' @param store Logical, whether to save the data internally in the class.
     #' Default is TRUE. Access via rxClass$raw_dat. If FALSE will return dataset.
     #' @return Data table with specified data.
     fetchRawDat = function(db = self$db,
@@ -256,7 +254,7 @@ ObsOP <- R6::R6Class(
                            orig_file,
                            store = TRUE) {
       stopifnot(length(farmername) == 1,
-                length(dat_tab) == 1, 
+                length(dat_tab) == 1,
                 length(orig_file) == 1)
       dat <- DBI::dbGetQuery(
         db,
@@ -270,8 +268,8 @@ ObsOP <- R6::R6Class(
         return(dat)
       }
     },
-    #' @description Interpolate data using kriging. Takes two datasets and the 
-    #' specified column name in the source data for the variable to be kriged 
+    #' @description Interpolate data using kriging. Takes two datasets and the
+    #' specified column name in the source data for the variable to be kriged
     #' to the the target data.
     #' @param source_dat The data to interpolate from.
     #' @param target_dat The data to krige data to.
@@ -283,7 +281,7 @@ ObsOP <- R6::R6Class(
                 any(grepl("x|y", names(source_dat))),
                 any(grepl("x|y", names(target_dat))))
       source_dat <- as.data.frame(source_dat)
-      source_dat <- source_dat[!is.na(source_dat[, var]), ] %>% 
+      source_dat <- source_dat[!is.na(source_dat[, var]), ] %>%
         data.table::as.data.table()
       dat_list <- list(source = source_dat,
                        target = target_dat) %>%
@@ -310,17 +308,17 @@ ObsOP <- R6::R6Class(
     },
     #' @description Method for calculating net-return in a dataset. This method
     #' looks for columns specified as 'yld' or 'pro' as well as 'aa_X' specifying
-    #' the experimental input variable. The user also specifies the economic 
-    #' conditions used to calculate net-return. If there is no protein data in 
+    #' the experimental input variable. The user also specifies the economic
+    #' conditions used to calculate net-return. If there is no protein data in
     #' the dataset, the protein premium/dockage specifications are not required.
     #' @param dat The data frame or data table.
-    #' @param yld_col_name Character, name of column containing yield data. Leave 
-    #' NULL to calculate net-return based on just protein. If NULL, pro_col_name 
+    #' @param yld_col_name Character, name of column containing yield data. Leave
+    #' NULL to calculate net-return based on just protein. If NULL, pro_col_name
     #' cannot also be NULL.
-    #' @param pro_col_name Character, name of column containing protein data. Leave 
-    #' NULL to calculate net-return based on just yield. If NULL, yld_col_name 
+    #' @param pro_col_name Character, name of column containing protein data. Leave
+    #' NULL to calculate net-return based on just yield. If NULL, yld_col_name
     #' cannot also be NULL.
-    #' @param exp_col_name Character, name of the column for the experimental input 
+    #' @param exp_col_name Character, name of the column for the experimental input
     #' data. Required.
     #' @param CEXP The cost of the experimental input.
     #' @param FC Fixed costs ($/acre) associated with production, not including
@@ -337,7 +335,7 @@ ObsOP <- R6::R6Class(
     #' @param B2pd The coefficient for protein squared for the protein
     #' premium/dockage equation.
     #' @return Data frame with new 'NR' column.
-    calcNR = function(dat, 
+    calcNR = function(dat,
                       yld_col_name = NULL,
                       pro_col_name = NULL,
                       exp_col_name,
@@ -363,7 +361,7 @@ ObsOP <- R6::R6Class(
         pro_col <- grep(paste0("^", pro_col_name, "$"), names(dat))
       }
       exp_col <- grep(paste0("^", exp_col_name, "$"), names(dat))
-      
+
       if (!is.null(pro_col_name)) {
         P <- Bp + (B0pd + B1pd * dat[, pro_col] + B2pd * dat[, pro_col]^2)
         dat$NR <- (dat[, yld_col] * P) - (CEXP * dat[, exp_col]) - FC - ssAC
@@ -438,22 +436,22 @@ ObsOP <- R6::R6Class(
       return(p)
     },
     #' @description
-    #' This method is for creating a scatterplot of variables specified by the 
-    #' user. The user specifies the x and y column to plot and a variable or 
+    #' This method is for creating a scatterplot of variables specified by the
+    #' user. The user specifies the x and y column to plot and a variable or
     #' variables to color points by.
-    #' @param dat Data frame with variables to plot. Must include the columns for 
+    #' @param dat Data frame with variables to plot. Must include the columns for
     #' specified data.
-    #' @param x_var The column name of the variable to plot on the x axis. 
+    #' @param x_var The column name of the variable to plot on the x axis.
     #' @param y_var The column name of the variable to plot on the y axis.
     #' @param x_lab The label to be applied to the x axis of the plot.
     #' @param y_lab The label to be applied to the y axis of the plot.
-    #' @param color_var The variable or variables, passed in as a character string, 
+    #' @param color_var The variable or variables, passed in as a character string,
     #' to color the data by. If left NULL no coloring is applied.
-    #' @param fieldname Name of the field(s) plotted. Used for labeling and saving 
+    #' @param fieldname Name of the field(s) plotted. Used for labeling and saving
     #' data. Can be left NULL.
-    #' @param year Year of the observed data. Used for labeling and saving 
+    #' @param year Year of the observed data. Used for labeling and saving
     #' data. Can be left NULL.
-    #' @param farmername The name of the farmer that manages the field. Used for 
+    #' @param farmername The name of the farmer that manages the field. Used for
     #' labeling and saving data. Can be left NULL.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
@@ -472,7 +470,7 @@ ObsOP <- R6::R6Class(
                             SAVE = self$SAVE) {
       ## takes two vars and plots
       dat <- as.data.frame(dat)
-      stopifnot(!is.null(dat), 
+      stopifnot(!is.null(dat),
                 !is.null(x_var) & is.character(x_var),
                 !is.null(y_var) & is.character(y_var),
                 is.data.frame(dat) | data.table::is.data.table(dat))
@@ -502,9 +500,9 @@ ObsOP <- R6::R6Class(
       if (!is.numeric(dat[, y_col])) {
         dat[, y_col] <- as.numeric(dat[, y_col])
       }
-      x_round_to <- ifelse(max(dat[, x_col], na.rm = T) - 
+      x_round_to <- ifelse(max(dat[, x_col], na.rm = T) -
                              min(dat[, x_col], na.rm = T) > 5, 5, 1)
-      y_round_to <- ifelse(max(dat[, y_col], na.rm = T) - 
+      y_round_to <- ifelse(max(dat[, y_col], na.rm = T) -
                              min(dat[, y_col], na.rm = T) > 5, 5, 1)
       xMIN <- DescTools::RoundTo(min(dat[, x_col], na.rm = T), x_round_to, floor)
       xMAX <- DescTools::RoundTo(max(dat[, x_col], na.rm = T), x_round_to, ceiling)
@@ -514,7 +512,7 @@ ObsOP <- R6::R6Class(
       yMAX <- DescTools::RoundTo(max(dat[, y_col], na.rm = T), y_round_to, ceiling)
       ySTEP <- (DescTools::RoundTo(max(dat[, y_col], na.rm = T), y_round_to, ceiling) -
                   DescTools::RoundTo(min(dat[, y_col], na.rm = T), y_round_to, floor)) / 10
-      
+
       if (is.null(color_var)) {
         p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col], y = dat[, y_col])) +
           ggplot2::geom_point()
@@ -522,17 +520,17 @@ ObsOP <- R6::R6Class(
         p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col], y = dat[, y_col])) +
           ggplot2::geom_point(ggplot2::aes(col = Factor))
       }
-      p <- p + 
+      p <- p +
         ggplot2::labs(x = x_lab, y = y_lab) +
-        ggplot2::scale_y_continuous(limits = c(yMIN, yMAX), 
+        ggplot2::scale_y_continuous(limits = c(yMIN, yMAX),
                            breaks = seq(yMIN, yMAX, ySTEP),
                            labels = seq(yMIN, yMAX, ySTEP)) +
-        ggplot2::scale_x_continuous(limits = c(xMIN, xMAX), 
+        ggplot2::scale_x_continuous(limits = c(xMIN, xMAX),
                            breaks = seq(xMIN, xMAX, xSTEP),
                            labels = seq(xMIN, xMAX, xSTEP))  +
         ggplot2::theme_bw()
       if (!is.null(fieldname) & !is.null(farmername) & !is.null(year)) {
-        p <- p + 
+        p <- p +
           ggplot2::ggtitle(paste0(fieldname, "_", year),
                            subtitle = farmername)
       }
@@ -540,7 +538,7 @@ ObsOP <- R6::R6Class(
         try({dev.off()}, silent = TRUE)
         ggplot2::ggsave(
           file = paste0(out_path,
-                        fieldname, "_", year, "_", 
+                        fieldname, "_", year, "_",
                         y_var, "_vs_", x_var, ".png"),
           plot = p, device = "png",
           width = 7.5, height = 7.5, units = "in"
@@ -549,18 +547,18 @@ ObsOP <- R6::R6Class(
       return(p)
     },
     #' @description
-    #' This method is for creating a histogram of a variable specified by the 
+    #' This method is for creating a histogram of a variable specified by the
     #' user. The user specifies the column in the data holding the data of interest
     #' and provides a lavel.
-    #' @param dat Data frame with variables to plot. Must include the columns for 
+    #' @param dat Data frame with variables to plot. Must include the columns for
     #' specified data.
-    #' @param x_var The column name of the variable to plot on the x axis. 
+    #' @param x_var The column name of the variable to plot on the x axis.
     #' @param x_lab The label to be applied to the x axis of the plot.
-    #' @param fieldname Name of the field(s) plotted. Used for labeling and saving 
+    #' @param fieldname Name of the field(s) plotted. Used for labeling and saving
     #' data. Can be left NULL.
-    #' @param year Year of the observed data. Used for labeling and saving 
+    #' @param year Year of the observed data. Used for labeling and saving
     #' data. Can be left NULL.
-    #' @param farmername The name of the farmer that manages the field. Used for 
+    #' @param farmername The name of the farmer that manages the field. Used for
     #' labeling and saving data. Can be left NULL.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
@@ -576,7 +574,7 @@ ObsOP <- R6::R6Class(
                              SAVE = self$SAVE) {
       ## make histogram of specified var
       dat <- as.data.frame(dat)
-      stopifnot(!is.null(dat), 
+      stopifnot(!is.null(dat),
                 !is.null(x_var) & is.character(x_var),
                 is.data.frame(dat) | data.table::is.data.table(dat))
       if (!is.null(out_path)) {
@@ -589,42 +587,42 @@ ObsOP <- R6::R6Class(
       if (!is.numeric(dat[, x_col])) {
         dat[, x_col] <- as.numeric(dat[, x_col])
       }
-      x_round_to <- ifelse(max(dat[, x_col], na.rm = T) - 
+      x_round_to <- ifelse(max(dat[, x_col], na.rm = T) -
                              min(dat[, x_col], na.rm = T) > 5, 5, 1)
       xMIN <- DescTools::RoundTo(min(dat[, x_col], na.rm = T), x_round_to, floor)
       xMAX <- DescTools::RoundTo(max(dat[, x_col], na.rm = T), x_round_to, ceiling)
       xSTEP <- (DescTools::RoundTo(max(dat[, x_col], na.rm = T), x_round_to, ceiling) -
                   DescTools::RoundTo(min(dat[, x_col], na.rm = T), x_round_to, floor)) / 10
-      bin_width <- (max(dat[, x_col], na.rm = T) - min(dat[, x_col], na.rm = T)) * 0.05 
+      bin_width <- (max(dat[, x_col], na.rm = T) - min(dat[, x_col], na.rm = T)) * 0.05
       p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col])) +
         ggplot2::geom_histogram(stat = "bin", binwidth = bin_width, na.rm = TRUE,
-                                fill = "grey70", color = "grey30") + 
+                                fill = "grey70", color = "grey30") +
         ggplot2::labs(x = x_lab, y = "Frequency") +
         ggplot2::scale_x_continuous(limits = c(xMIN, xMAX),
                                     breaks = seq(xMIN, xMAX, xSTEP),
                                     labels = seq(xMIN, xMAX, xSTEP))  +
         ggplot2::theme_bw()
       y_vec <- ggplot2::layer_data(p, 1)$count
-      y_round_to <- ifelse(max(y_vec, na.rm = T) - 
+      y_round_to <- ifelse(max(y_vec, na.rm = T) -
                              min(y_vec, na.rm = T) > 5, 5, 1)
       yMIN <- DescTools::RoundTo(min(y_vec, na.rm = T), y_round_to, floor)
       yMAX <- DescTools::RoundTo(max(y_vec, na.rm = T), y_round_to, ceiling)
       ySTEP <- (DescTools::RoundTo(max(y_vec, na.rm = T), y_round_to, ceiling) -
                   DescTools::RoundTo(min(y_vec, na.rm = T), y_round_to, floor)) / 10
-      p <- p + ggplot2::scale_y_continuous(limits = c(yMIN, yMAX), 
+      p <- p + ggplot2::scale_y_continuous(limits = c(yMIN, yMAX),
                                            breaks = seq(yMIN, yMAX, ySTEP),
                                            labels = seq(yMIN, yMAX, ySTEP))
       if (!is.null(fieldname) & !is.null(farmername) & !is.null(year)) {
-        p <- p + 
+        p <- p +
           ggplot2::ggtitle(paste0(fieldname, "_", year),
                            subtitle = farmername)
       }
-      
+
       if (SAVE) {
         try({dev.off()}, silent = TRUE)
         ggplot2::ggsave(
           file = paste0(out_path,
-                        fieldname, "_", year, "_", 
+                        fieldname, "_", year, "_",
                         x_var, "_histogram.png"),
           plot = p, device = "png",
           width = 7.5, height = 7.5, units = "in"

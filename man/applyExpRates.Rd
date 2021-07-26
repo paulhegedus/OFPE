@@ -2,7 +2,7 @@
 % Please edit documentation in R/rxFuns.R
 \name{applyExpRates}
 \alias{applyExpRates}
-\title{Apply experimental rates across the room.}
+\title{Apply experimental rates across the field}
 \usage{
 applyExpRates(rx_sdt, exp_rates, exp_rates_prop, fld_prop, exp_rate_length)
 }
@@ -30,9 +30,6 @@ represents the equipment constraints of the farmer. In the case of the
 experimental prescription, this number of rates does not include the
 number of rates for the optimized base map, so take your selections for
 the management scenario and number of optimum rates into account.}
-
-\item{strat_dat}{List of data to stratify data on from the OFPE
-database... TODO... not implemented yet}
 }
 \value{
 Amended 'rx_sdt' object wit randomly placed experimental

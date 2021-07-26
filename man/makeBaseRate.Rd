@@ -9,7 +9,7 @@ makeBaseRate(
   fieldname,
   unique_fieldname,
   base_rate,
-  boom_width,
+  trt_width,
   trt_length,
   farmername,
   mgmt_scen
@@ -29,7 +29,7 @@ concatenates multiple fields with an ampersand. Used for labeling.}
 and the field edge, or as check rates in the prescription selected
 option.}
 
-\item{boom_width}{The width of the sprayer boom or spreader.}
+\item{trt_width}{Width, in meters, for which to apply treatments.}
 
 \item{trt_length}{Length, in meters, for which to apply treatments.}
 

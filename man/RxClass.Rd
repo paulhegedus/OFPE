@@ -66,10 +66,14 @@ farmer selected base rate randomly placed, stratified on optimum rates.}
 \item{\code{trt_length}}{Length, given in feet and converted to meters, for
 which to apply treatments.}
 
-\item{\code{boom_width}}{The width of the sprayer boom or spreader, given as feet
-and converted to meters.}
+\item{\code{trt_width}}{The width of the treatment blocks. Should be a multiple of
+the sprayer boom or spreader width, given as feet (converted to meters).}
 
-\item{\code{orientation}}{TODO... Not implemented yet.}
+\item{\code{heading}}{Numeric, heading in degrees from true north to rotate the
+experiment/prescription to. Default is 0 (no rotation). Note that if a
+heading is provided, the grid is trimmed based on the buffered boundary but
+rotation caused by providing a heading may skew treatment rates so that
+they encroach into the cleanup strip.}
 
 \item{\code{fld_prop}}{The proportion of the field to apply experimental
 rates to (i.e. 0.5 or 1.0), OR, the percent of available cells to
@@ -132,16 +136,30 @@ based on gaps in optimum rates.}
 of experimental rates provided in 'exp_rate_length'. This is required
 for all new experiments and experimental prescriptions.}
 
-\item{\code{strat_dat}}{If the user is creating an experiment with stratification
-they must supply the data type that they are stratifying on. These must be codes
-used in the OFPE workflow such as 'yld', 'pro', 'aa_n', 'aa_sr', etc. You can
-only stratify on one variable per field. You must have data you want to stratify
-on aggregated in the database, otherwise more parameters for utilizing the raw
-data would be required.}
+\item{\code{strat_dat_parms}}{Named list by fieldname that contains a list for each field
+containing named slots for 'table', 'grid_size', 'path', 'year', and 'col_name'
+to define the stratification data to use for randomly applying experimental rates.
+Set named slots to NA for any fields that you don't want to make stratified
+rates on. You can stratify on multiple variables per field, with priority
+given by order. Each of the sublist slots for each field must have the same
+dimensions. Note that more stratification variables increases processing times.
 
-\item{\code{strat_dat_year}}{Follows the same structure of 'strat_dat' but
-specifies the year of data to use for stratification. Must provide year
-for each field prescription generated for.}
+The table ('table') indicates the location within the database that the stratification
+data is stored in. This can either be from an aggregated table ('yld', 'pro',
+or 'sat') or can be from a raw table. Simply specify the table name and the
+schema will be derived from the farmername. For data from an aggregated table,
+the user must also provide the size ('grid_size') of the grid cells used to
+aggregate the data the user desires in the aggregated dataset (i.e. 10, 30 meters).
+This is a numeric variable and if stratifying on raw data, this parameter
+can be left NA. Conversely, if you are stratifying on raw data, an additional
+parameter called 'path' needs to be supplied in a named slot of each field's
+sublist to specify the original filename of the data imported into the database.
+If the desired data is from an aggregated table than enter NA for the 'path'. The year of
+the desired data must also be provided ('year'). This is to specify which data in
+the aggregated table to use. If using raw data, the year is automatically
+derived from the data specified by the filename. Finally, the user must
+supply the column name ('col_name') of the variable to stratify on.
+This must be supplied for both raw and aggregated data.}
 
 \item{\code{simClass}}{If the user is creating an experimental prescription or
 prescription an R6 class SimClass object must be supplied. This has to be
@@ -180,6 +198,20 @@ on-farm experimentation.}
 apply. This must be in the units of the input applied to the field,
 which is not necessarily the same as the experimental input. This is
 an equipment restriction specific to the farmer.}
+
+\item{\code{buffer_width}}{The width of the buffer from the field edge within which
+to place experiments or prescriptions. Provided by the user in feet and
+converted to meters internally.}
+
+\item{\code{min_rate_jumps}}{Optional, supply either 'N/S' or 'E/W' to indicate
+direction in which to minimize rate jumps. This is the predominant direction
+that the experimental input is applied across the field. This function minimizes
+the difference in rates between adjacent treatments for easier use on the
+equipment. Note that this will eradicate any randomization/optimization of
+rates and will partially or completely remove stratification. This function makes
+sure that the rates do not vary by more than 2 rate levels in the direction
+specified. Default is NULL, which prevents execution. This will not guarantee
+eradication of all rate jumps, but will reduce the amount.}
 
 \item{\code{out_gen}}{An output generator R6 class (i.e. ExpGen or RxGen), that produces
 the output specified by the user. There are different classes with different
@@ -224,8 +256,8 @@ SimClass R6 class, EVEN IF using the interactive methods.
   simClass = NULL,
   gen_type = NULL,
   trt_length = NULL,
-  boom_width = NULL,
-  orientation = NULL,
+  trt_width = NULL,
+  heading = 0,
   fld_prop = NULL,
   conv = NULL,
   base_rate = NULL,
@@ -239,13 +271,14 @@ SimClass R6 class, EVEN IF using the interactive methods.
   exp_rate_length = NULL,
   exp_rates = NULL,
   exp_rates_prop = NULL,
-  strat_dat = NULL,
-  strat_dat_year = NULL,
+  strat_dat_parms = NULL,
   exp_rate_gen = NULL,
   opt_rate_length = NULL,
   mgmt_scen = NULL,
   expvar = NULL,
-  min_app_rate = NULL
+  min_app_rate = NULL,
+  buffer_width = 0,
+  min_rate_jumps = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -270,9 +303,13 @@ farmer selected base rate randomly placed, stratified on optimum rates.}
 
 \item{\code{trt_length}}{Length, in feet, for which to apply treatments.}
 
-\item{\code{boom_width}}{The width of the sprayer boom or spreader (feet).}
+\item{\code{trt_width}}{The width, in feet, for which to apply treatments.}
 
-\item{\code{orientation}}{TODO... Not implemented yet.}
+\item{\code{heading}}{Numeric, heading in degrees from true north to rotate the
+experiment/prescription to. Default is 0 (no rotation). Note that if a
+heading is provided, the grid is trimmed based on the buffered boundary but
+rotation caused by providing a heading may skew treatment rates so that
+they encroach into the cleanup strip.}
 
 \item{\code{fld_prop}}{The proportion of the field to apply experimental
 rates to (i.e. 0.5 or 1.0), OR, the percent of available cells to
@@ -335,16 +372,29 @@ based on gaps in optimum rates.}
 of experimental rates provided in 'exp_rate_length'. This is required
 for all new experiments and experimental prescriptions.}
 
-\item{\code{strat_dat}}{If the user is creating an experiment with stratification
-they must supply the data type that they are stratifying on. These must be codes
-used in the OFPE workflow such as 'yld', 'pro', 'aa_n', 'aa_sr', etc. You can
-only stratify on one variable per field. You must have data you want to stratify
-on aggregated in the database, otherwise more parameters for utilizing the raw
-data would be required.}
+\item{\code{strat_dat_parms}}{Named list by fieldname that contains a list for each field
+containing named slots for 'table', 'grid_size', 'path', 'year', and 'col_name'
+to define the stratification data to use for randomly applying experimental rates.
+You can stratify on multiple variables per field, with priority given by order.
+Each of the sublist slots for each field must have the same dimensions. Note
+that more stratification variables increases processing times.
 
-\item{\code{strat_dat_year}}{Follows the same structure of 'strat_dat' but
-specifies the year of data to use for stratification. Must provide year
-for each field prescription generated for.}
+The table ('table') indicates the location within the database that the stratification
+data is stored in. This can either be from an aggregated table ('yld', 'pro',
+or 'sat') or can be from a raw table. Simply specify the table name and the
+schema will be derived from the farmername. For data from an aggregated table,
+the user must also provide the size ('grid_size') of the grid cells used to
+aggregate the data the user desires in the aggregated dataset (i.e. 10, 30 meters).
+This is a numeric variable and if stratifying on raw data, this parameter
+can be left NA. Conversely, if you are stratifying on raw data, an additional
+parameter called 'path' needs to be supplied in a named slot of each field's
+sublist to specify the original filename of the data imported into the database.
+If the desired data is from an aggregated table than enter NA for the 'path'. The year of
+the desired data must also be provided ('year'). This is to specify which data in
+the aggregated table to use. If using raw data, the year is automatically
+derived from the data specified by the filename. Finally, the user must
+supply the column name ('col_name') of the variable to stratify on.
+This must be supplied for both raw and aggregated data.}
 
 \item{\code{exp_rate_gen}}{Logical, for the experimental prescription provide
 TRUE or FALSE for whether to create experimental rates from gaps in the
@@ -378,6 +428,19 @@ on-farm experimentation.}
 apply. This must be in the units of the input applied to the field,
 which is not necessarily the same as the experimental input. This is
 an equipment restriction specific to the farmer.}
+
+\item{\code{buffer_width}}{The width of the buffer from field edge for
+experiments or prescriptions (feet).}
+
+\item{\code{min_rate_jumps}}{Optional, supply either 'N/S' or 'E/W' to indicate
+direction in which to minimize rate jumps. This is the predominant direction
+that the experimental input is applied across the field. This function minimizes
+the difference in rates between adjacent treatments for easier use on the
+equipment. Note that this will eradicate any randomization/optimization of
+rates and will partially or completely remove stratification. This function makes
+sure that the rates do not vary by more than 2 rate levels in the direction
+specified. Default is NULL, which prevents execution. This will not guarantee
+eradication of all rate jumps, but will reduce the amount.}
 }
 \if{html}{\out{</div>}}
 }
@@ -402,12 +465,11 @@ initialization, an error will be thrown. Based on the user specification
 different selections are required for the user to set up the generation
 method.
 
-The user will have to select the treatment length, the width of the application
-boom for a sprayer or preader, the orientation to align the treatments relative
-to N/S, the base rate to apply to around experiments or for checks in the
-prescription, the year(s) the farmer thinks the upcoming year will resemble and
-to make the prescription for, and whether to save the prescription or experiment
-in the database.
+The user will have to select the treatment length and width, the heading
+to align the treatments relative to N/S, the base rate to apply to around
+experiments or for checks in the prescription, the year(s) the farmer
+thinks the upcoming year will resemble and to make the prescription for,
+and whether to save the prescription or experiment in the database.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RxClass$selectInputs()}\if{html}{\out{</div>}}
 }
@@ -582,7 +644,7 @@ database.
   rx_year,
   size,
   mgmt_scen,
-  dtype = "rx"
+  dtype = "rx_poly"
 )}\if{html}{\out{</div>}}
 }
 
@@ -603,8 +665,8 @@ in the simulation.}
 \item{\code{rx_year}}{Provide the year that the prescription or experiment
 is made for. Used for labeling outputs.}
 
-\item{\code{size}}{The size of the treatment zones, which is the treatment length x
-the boom width x 2.}
+\item{\code{size}}{The size of the treatment zones, which is the treatment width x
+the treatment length.}
 
 \item{\code{mgmt_scen}}{If the user is creating a prescription or experimental
 prescription, they must provide the management scenario to use for their

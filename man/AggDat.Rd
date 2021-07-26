@@ -54,7 +54,6 @@ falls within.}
 \itemize{
 \item \href{#method-new}{\code{AggDat$new()}}
 \item \href{#method-aggregateData}{\code{AggDat$aggregateData()}}
-\item \href{#method-.makeXmGrid}{\code{AggDat$.makeXmGrid()}}
 \item \href{#method-.createAggTable}{\code{AggDat$.createAggTable()}}
 \item \href{#method-.cleanRespData}{\code{AggDat$.cleanRespData()}}
 \item \href{#method-.aggRespData}{\code{AggDat$.aggRespData()}}
@@ -113,51 +112,6 @@ class.}
 }
 \subsection{Returns}{
 Aggregated data in the 'farmername_a' schema
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.makeXmGrid"></a>}}
-\if{latex}{\out{\hypertarget{method-.makeXmGrid}{}}}
-\subsection{Method \code{.makeXmGrid()}}{
-Makes a grid across a field of a specified size. If the grid
-option was selected observations will be aggregated onto
-the centroids of 10m grid cells generated from the bounding box of
-the field boundary. If the field boundary is from the database, the
-centroid locations will be consistent for aggregted data across years.
-If the user imported a field boundary, these points may not be consistent
-across years unless the user uses the same field boundary each year.
-Again, it is strongly encouraged that the user updates the database with
-the field boundary they have imported, to assure the centroid location
-remains constant year to year. To create the aggregation table, a 10m grid
-is applied to the field using the bounding box of the field boundary. The
-locations of the center of the grid cells are extracted, as well as the
-grid ID. These create the basis of the aggregation table. If the observed
-option was selected, a grid is still made to identify the grid cells,
-however data is not aggregated to the grid cell centroid locations. The
-dot indicates that this function would be private if not for
-documentations sake.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AggDat$.makeXmGrid(db, boundary_import, fieldname, size = 10, farmername)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{db}}{Connection to an OFPE formatted database.}
-
-\item{\code{boundary_import}}{Whether the user uploaded their own field boundary
-or are using a boundary stored in the database.}
-
-\item{\code{fieldname}}{Name of the field for aggregation.}
-
-\item{\code{size}}{Size of grid to make (meters), default = 10.}
-
-\item{\code{farmername}}{Name of farmer that owns the field.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-None.
 }
 }
 \if{html}{\out{<hr>}}

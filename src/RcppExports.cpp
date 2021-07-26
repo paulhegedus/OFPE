@@ -6,6 +6,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // NRcalcCpp
 arma::mat NRcalcCpp(arma::mat df, double Bp, double B0pd, double B1pd, double B2pd, double CEXP, double BpOpp, double FC, double fs, double ssAC, int predInd, int rr, int expCol, int yldCol, int proCol, int NRcol, int NRminCol, int NRoppCol, int NRfsCol, int AAmin);
 RcppExport SEXP _OFPE_NRcalcCpp(SEXP dfSEXP, SEXP BpSEXP, SEXP B0pdSEXP, SEXP B1pdSEXP, SEXP B2pdSEXP, SEXP CEXPSEXP, SEXP BpOppSEXP, SEXP FCSEXP, SEXP fsSEXP, SEXP ssACSEXP, SEXP predIndSEXP, SEXP rrSEXP, SEXP expColSEXP, SEXP yldColSEXP, SEXP proColSEXP, SEXP NRcolSEXP, SEXP NRminColSEXP, SEXP NRoppColSEXP, SEXP NRfsColSEXP, SEXP AAminSEXP) {

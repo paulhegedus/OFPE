@@ -30,7 +30,7 @@
 #' Engine data, \code{\link{AggInputs}} for the inputs required for the aggregation
 #' process.
 #' @export
-AggDat <- R6::R6Class(
+AggDat <- R6::R6Class( 
   "AggDat",
   public = list(
     #' @field aggInputs An object of the 'AggInputs' class containaing the options

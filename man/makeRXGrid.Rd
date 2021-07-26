@@ -8,7 +8,7 @@ makeRXGrid(
   db,
   fieldname,
   trt_length,
-  boom_width,
+  trt_width,
   farmername,
   unique_fieldname,
   mgmt_scen
@@ -21,7 +21,7 @@ makeRXGrid(
 
 \item{trt_length}{Length, in meters, for which to apply treatments.}
 
-\item{boom_width}{The width of the sprayer boom or spreader.}
+\item{trt_width}{Width, in meters, for which to apply treatments.}
 
 \item{farmername}{The name of the farmer that manages the field.}
 
@@ -45,7 +45,7 @@ NULL, grid data stored in database in 'rxgrids' and 'rxgridtemp'.
 Creates a grid of the user specified dimensions and
 stores in the database for later use. The grid is used to place and
 apply the experiment or prescription outputs and reflects the dimensions
-of the user's equipment and desired treatment lengths. The 'boom_width',
-or width of the applicator, is multiplied by two, to make treatments with
-two passes of the equipment.
+of the user's equipment and desired treatment lengths. The 'trt_width',
+or treatment width is used to create a buffer from the field to take into
+account cleanup passes around field edges.
 }
