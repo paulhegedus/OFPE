@@ -1,5 +1,5 @@
 Package: OFPE
-Version: 1.5.5
+Version: 1.5.6
 Title: On-Farm Precision Experiments (OFPE) Data Management and Analysis Tools
 Description: The MT OFPE project lays out a concenptual framework for a data 
     intensive field management approach to dryland winter wheat production in
@@ -26,10 +26,10 @@ Authors@R: c(
     )
 Depends: 
     R (>= 3.0.0),
-    magrittr
+    magrittr,
+    rmarkdown
 Suggests: 
     knitr,
-    rmarkdown,
     devtools,
     testthat
 License: MIT + file LICENSE
