@@ -1,8 +1,11 @@
 # R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
 
-language: R
-cache: packages
+language: r
 sudo: required
+warnings_are_errors: true
+script:
+- R CMD build .
+- R CMD check *tar.gz --as-cran
 
 apt_packages:
     - gdal-bin
