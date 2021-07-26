@@ -8,11 +8,11 @@
 [![Project Status: Active – The project has reached a stable, usable
 state and is being actively
 developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
-[![Last-changedate](https://img.shields.io/badge/last%20change-2020--10--02-yellowgreen.svg)](/commits/master)
+[![Last-changedate](https://img.shields.io/badge/last%20change-2021--07--26-yellowgreen.svg)](/commits/master)
 [![R build
 status](https://github.com/paulhegedus/OFPE/workflows/R-CMD-check/badge.svg)](https://github.com/paulhegedus/OFPE/actions)
 [![Build
-Status](https://travis-ci.org/paulhegedus/OFPE.svg?branch=master)](https://travis-ci.org/paulhegedus/OFPE)
+Status](https://travis-ci.org/paulhegedus/OFPE.svg?branch=master)](https://travis-ci.com/paulhegedus/OFPE)
 
 ## Installation
 
@@ -63,27 +63,24 @@ handling process
 <div class="figure" style="text-align: center">
 
 <img src="man/figures/ofpe_framework.png" alt="**Figure 1.** OFPE data framework showing the circular process of experiment creation and application, data collection, and prescription and experiment generation. Figured made by Bruce Maxwell (2015)." width="100%" />
-
 <p class="caption">
-
 **Figure 1.** OFPE data framework showing the circular process of
 experiment creation and application, data collection, and prescription
 and experiment generation. Figured made by Bruce Maxwell (2015).
-
 </p>
 
 </div>
 
 More information/products of the MSU OFPE Project can be found at;
 
-  - [OFPE Project Website](https://sites.google.com/site/ofpeframework/)
-  - [OFPE Technical
+-   [OFPE Project Website](https://sites.google.com/site/ofpeframework/)
+-   [OFPE Technical
     Website](https://paulhegedus.github.io/OFPE-Website/)
-  - [OFPE Web
+-   [OFPE Web
     Application](https://paulhegedus.shinyapps.io/OFPE_AnalysisAndSim_App_v1/?_ga=2.189182059.1336631904.1592115204-590292424.1592115204)
-  - The OFPE Tools package vignettes & OFPE Data Package
-    ([OFPEDATA](%5Bhere%5D\(https://github.com/paulhegedus/OFPEDATA.git\)))
-  - [OFPE CropScan
+-   The OFPE Tools package vignettes & OFPE Data Package
+    ([OFPEDATA](%5Bhere%5D(https://github.com/paulhegedus/OFPEDATA.git)))
+-   [OFPE CropScan
     Application](https://paulhegedus.shinyapps.io/OFPE_Protein_Application/?_ga=2.69643152.1880072526.1592481594-590292424.1592115204)
 
 It is **strongly** recommended that the user familiarizes themselves
@@ -141,7 +138,7 @@ and enable a *postgres* server account. This process is describe in this
 This is not needed if you have credentials to a preexisting OFPE
 formatted database. Note that depending on the size of your fields and
 farms and how many farmers you are managing, databases can be quite
-large (\>100GB) and require dedicated storage space.
+large (&gt;100GB) and require dedicated storage space.
 
 This package includes functions for interfacing with Google Earth Engine
 and Google Drive. To access and operate these functions, or for complete
@@ -156,7 +153,8 @@ While not required, it is assumed that the user has access and uses
 grain protein percent as a response variable complementary to winter
 wheat crop yield. This package assumes that the user is gathering
 protein data with [NextInstruments](https://www.nextinstruments.net)
-[CropScan 3300H](http://www.nextinstruments.net/index.php/products/cropscan)
+[CropScan
+3300H](http://www.nextinstruments.net/index.php/products/cropscan)
 infrared on-combine monitor. Users can visualize their observed protein
 data from the CropScan monitor with the [OFPE Protein Vis
 App](https://paulhegedus.shinyapps.io/OFPE_Protein_Application/?_ga=2.163574524.1336631904.1592115204-590292424.1592115204).
@@ -194,9 +192,7 @@ prescriptions of inputs (Step 5).
 <div class="figure" style="text-align: center">
 
 <img src="vignettes/ofpe_data_workflow.png" alt="**Figure 2.** Key is found in the top right corner of the schematic. The green ring represents the R-Shiny OFPE web spplication which is driven by the OFPE R-Package (blue ring). These both require connection to a PostgreSQL spatial database with PostGIS enabled. The yellow boxes represent different pages of the OFPE web application and vignettes in the R-package. Black boxes represent user inputs and orange clouds represent cloud based tools." width="100%" />
-
 <p class="caption">
-
 **Figure 2.** Key is found in the top right corner of the schematic. The
 green ring represents the R-Shiny OFPE web spplication which is driven
 by the OFPE R-Package (blue ring). These both require connection to a
@@ -204,7 +200,6 @@ PostgreSQL spatial database with PostGIS enabled. The yellow boxes
 represent different pages of the OFPE web application and vignettes in
 the R-package. Black boxes represent user inputs and orange clouds
 represent cloud based tools.
-
 </p>
 
 </div>
@@ -222,9 +217,8 @@ in the OFPEDATA package. Following along in the vignettes using only
 “FarmerB” data and importing GEE data for “FarmerB” from 2015 - 2020
 should take \~5GB on your machine. This is to save memory and time when
 creating example databases. Users are encouraged to explore with
-“FarmerC” and “FarmerI” data, but remember that adding more farmer
-data or more data from GEE will require more space on your machine or
-server.
+“FarmerC” and “FarmerI” data, but remember that adding more farmer data
+or more data from GEE will require more space on your machine or server.
 
 ### Database Creation/Management
 
@@ -369,13 +363,13 @@ to make a pure prescription, in which case check rates can be added to
 the map to assess the how the prescription performs compared to a farmer
 selected rate. Alternatively, the user can elect to create a new
 experiment for a field. They must select a field present in the
-‘all\_farms.fields’ table of the OFPE database to create the
-experiment for. The user has the option of stratifying the experiment on
-previous data available in the database, such as yield, protein, or
-previous as-applied rates. The user must provide the number of
-experimental rates to apply if experimental rates are applied, as well
-as the number of optimum rates to use. In addition to the base rate
-applied, the sum should equal the equipment limitation on rates applied.
+‘all\_farms.fields’ table of the OFPE database to create the experiment
+for. The user has the option of stratifying the experiment on previous
+data available in the database, such as yield, protein, or previous
+as-applied rates. The user must provide the number of experimental rates
+to apply if experimental rates are applied, as well as the number of
+optimum rates to use. In addition to the base rate applied, the sum
+should equal the equipment limitation on rates applied.
 
 The activity workflow for generating prescriptions and a more detailed
 description is described on [this

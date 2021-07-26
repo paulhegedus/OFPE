@@ -1,23 +1,26 @@
 # R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
 
 language: r
-sudo: required
 warnings_are_errors: true
 script:
-- R CMD build .
-- R CMD check *tar.gz --as-cran
-
+  - R CMD build .
+  - R CMD check *tar.gz --as-cran
+os:
+  - linux
+  - osx
+dist:
+  - xenial
 apt_packages:
-    - gdal-bin
-    - libgdal-dev
-    - libxml2-dev
-    - libproj-dev
-    - libudunits2-dev
-    - libgeos-dev
-    - libfontconfig1-dev
-    - libv8-dev
-    - libcairo2-dev
-    - libnetcdf-dev
+  - gdal-bin
+  - libgdal-dev
+  - libxml2-dev
+  - libproj-dev
+  - libudunits2-dev
+  - libgeos-dev
+  - libfontconfig1-dev
+  - libv8-dev
+  - libcairo2-dev
+  - libnetcdf-dev
 
 addons:
   homebrew:
