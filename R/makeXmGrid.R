@@ -25,6 +25,7 @@
 #' @param size Size of grid to make (meters), default = 10.
 #' @param farmername Name of farmer that owns the field.
 #' @return None.
+#' @export
 makeXmGrid = function(db, boundary_import, fieldname, size = 10, farmername) {
   utm_epsg <- OFPE::findUTMzone(db, fieldname = fieldname[1])
   grids_exist <- FALSE
