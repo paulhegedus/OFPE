@@ -369,8 +369,11 @@ ExpGen <- R6::R6Class(
                        self$farmername,
                        ifelse(self$heading == 0, self$buffer_width, 0))# 
       # get fieldname
+      ## TODO: adding this where statement may not be wise, I assume there was 
+      ## a reason the fieldname wasn't used to subset but why not
       fields <- sf::st_read(dsn = self$dbCon$db, 
-                            query = paste0("SELECT * FROM all_farms.fields;"),
+                            query = paste0("SELECT * FROM all_farms.fields 
+                                           WHERE fieldname = '", self$fieldname, "';"), 
                             geometry_column = "geom")
       temp_rx_sdt <- sf::st_transform(rx_sdt, 4326)
       temp_rx_sdt <- invisible(suppressWarnings(sf::st_intersection(temp_rx_sdt, fields)))

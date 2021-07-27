@@ -162,7 +162,7 @@ getRxGrid <- function(db,
       rot(theta) + 
       cntr
     rxgridtemp_rot <- sf::st_set_crs(rxgridtemp_rot, 4326) %>% 
-      sf::st_transform(32612)
+      sf::st_transform(utm_epsg)
     # ggplot(rxgridtemp) + geom_sf() ; ggplot(rxgridtemp_rot) + geom_sf()
     rxgridtemp$geom <- rxgridtemp_rot
     # ggplot(rxgridtemp) + geom_sf()
