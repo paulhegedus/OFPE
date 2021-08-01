@@ -209,7 +209,7 @@ Histograms can be useful for looking at the distribution of any variables in you
 
 ```
 
-
+Boxplots are also nice and already made...
 
 
 # Conclusion

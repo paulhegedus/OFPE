@@ -12,7 +12,10 @@ jobs:
       dist: xenial
     - os: osx
       osx_image: xcode12.5
-
+matrix:
+  exclude:
+    - r: devel
+      os: osx
 apt_packages:
   - gdal-bin
   - libgdal-dev

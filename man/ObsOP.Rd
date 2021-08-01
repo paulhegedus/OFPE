@@ -100,6 +100,7 @@ documentation for more information on the 'dat_used' selection.}
 \item \href{#method-calcNR}{\code{ObsOP$calcNR()}}
 \item \href{#method-plotObsMaps}{\code{ObsOP$plotObsMaps()}}
 \item \href{#method-plotScatters}{\code{ObsOP$plotScatters()}}
+\item \href{#method-plotBoxplots}{\code{ObsOP$plotBoxplots()}}
 \item \href{#method-plotHistogram}{\code{ObsOP$plotHistogram()}}
 \item \href{#method-clone}{\code{ObsOP$clone()}}
 }
@@ -492,6 +493,66 @@ save outputs from the simulation.}
 }
 \subsection{Returns}{
 A scatterplot and saved in 'Outputs/Maps' folder if selected.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-plotBoxplots"></a>}}
+\if{latex}{\out{\hypertarget{method-plotBoxplots}{}}}
+\subsection{Method \code{plotBoxplots()}}{
+This method is for creating a boxplot of variables specified by the
+user. The user specifies the x and y column to plot and a variable or
+variables to color points by.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ObsOP$plotBoxplots(
+  dat,
+  x_var,
+  y_var,
+  x_lab = NULL,
+  y_lab = NULL,
+  color_var = NULL,
+  fieldname = self$fieldname,
+  year = self$year,
+  farmername = self$farmername,
+  out_path = self$out_path,
+  SAVE = self$SAVE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{dat}}{Data frame with variables to plot. Must include the columns for
+specified data.}
+
+\item{\code{x_var}}{The column name of the variable to plot on the x axis.}
+
+\item{\code{y_var}}{The column name of the variable to plot on the y axis.}
+
+\item{\code{x_lab}}{The label to be applied to the x axis of the plot.}
+
+\item{\code{y_lab}}{The label to be applied to the y axis of the plot.}
+
+\item{\code{color_var}}{The variable or variables, passed in as a character string,
+to color the data by. If left NULL no coloring is applied.}
+
+\item{\code{fieldname}}{Name of the field(s) plotted. Used for labeling and saving
+data. Can be left NULL.}
+
+\item{\code{year}}{Year of the observed data. Used for labeling and saving
+data. Can be left NULL.}
+
+\item{\code{farmername}}{The name of the farmer that manages the field. Used for
+labeling and saving data. Can be left NULL.}
+
+\item{\code{out_path}}{The path to the folder in which to store and
+save outputs from the simulation.}
+
+\item{\code{SAVE}}{Logical, whether to save figure.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A boxplot and saved in 'Outputs/Maps' folder if selected.
 }
 }
 \if{html}{\out{<hr>}}

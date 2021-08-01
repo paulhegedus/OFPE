@@ -547,6 +547,115 @@ ObsOP <- R6::R6Class(
       return(p)
     },
     #' @description
+    #' This method is for creating a boxplot of variables specified by the
+    #' user. The user specifies the x and y column to plot and a variable or
+    #' variables to color points by.
+    #' @param dat Data frame with variables to plot. Must include the columns for
+    #' specified data.
+    #' @param x_var The column name of the variable to plot on the x axis.
+    #' @param y_var The column name of the variable to plot on the y axis.
+    #' @param x_lab The label to be applied to the x axis of the plot.
+    #' @param y_lab The label to be applied to the y axis of the plot.
+    #' @param color_var The variable or variables, passed in as a character string,
+    #' to color the data by. If left NULL no coloring is applied.
+    #' @param fieldname Name of the field(s) plotted. Used for labeling and saving
+    #' data. Can be left NULL.
+    #' @param year Year of the observed data. Used for labeling and saving
+    #' data. Can be left NULL.
+    #' @param farmername The name of the farmer that manages the field. Used for
+    #' labeling and saving data. Can be left NULL.
+    #' @param out_path The path to the folder in which to store and
+    #' save outputs from the simulation.
+    #' @param SAVE Logical, whether to save figure.
+    #' @return A boxplot and saved in 'Outputs/Maps' folder if selected.
+    plotBoxplots = function(dat,
+                            x_var,
+                            y_var,
+                            x_lab = NULL,
+                            y_lab = NULL,
+                            color_var = NULL,
+                            fieldname = self$fieldname,
+                            year = self$year,
+                            farmername = self$farmername,
+                            out_path = self$out_path,
+                            SAVE = self$SAVE) {
+      ## takes two vars and plots
+      dat <- as.data.frame(dat)
+      stopifnot(!is.null(dat),
+                !is.null(x_var) & is.character(x_var),
+                !is.null(y_var) & is.character(y_var),
+                is.data.frame(dat) | data.table::is.data.table(dat))
+      if (!is.null(out_path)) {
+        stopifnot(!is.null(fieldname),
+                  !is.null(farmername),
+                  !is.null(year),
+                  !is.null(SAVE))
+      }
+      
+      if (!is.null(color_var)) {
+        stopifnot(is.character(color_var))
+        col_f <- grep(color_var, names(dat))
+        dat$Factor <- dat[, col_f]
+      }
+      if (length(levels(dat$Factor)) == 3) {
+        color <- RColorBrewer::brewer.pal(3, "RdYlGn")
+      } else {
+        if (length(levels(dat$Factor)) == 2) {
+          color <- c("#F8766D", "#00BFC4")
+        } else {
+          color <- randomcoloR::randomColor(length(levels(dat$Factor)))
+        }
+      }
+      
+      x_col <- grep(paste0("^", x_var, "$"), names(dat))
+      y_col <- grep(paste0("^", y_var, "$"), names(dat))
+      stopifnot(is.factor(dat[, x_col]))
+      if (!is.numeric(dat[, y_col])) {
+        dat[, y_col] <- as.numeric(dat[, y_col])
+      }
+      y_round_to <- ifelse(max(dat[, y_col], na.rm = T) -
+                             min(dat[, y_col], na.rm = T) > 5, 5, 1)
+      yMIN <- DescTools::RoundTo(min(dat[, y_col], na.rm = T), y_round_to, floor)
+      yMAX <- DescTools::RoundTo(max(dat[, y_col], na.rm = T), y_round_to, ceiling)
+      ySTEP <- (DescTools::RoundTo(max(dat[, y_col], na.rm = T), y_round_to, ceiling) -
+                  DescTools::RoundTo(min(dat[, y_col], na.rm = T), y_round_to, floor)) / 10
+      ## remove NA from factors
+      # dat$Factor <- factor(dat$factor)
+      # dat[, x_col] <- factor(dat[, x_col])
+      dat <- dat[!is.na(dat[, x_col]), ]
+      
+      if (is.null(color_var)) {
+        p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col], y = dat[, y_col])) +
+          ggplot2::geom_boxplot(na.rm = TRUE)
+      } else {
+        p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col], y = dat[, y_col])) +
+          ggplot2::geom_boxplot(ggplot2::aes(fill = Factor), na.rm = TRUE) +
+          ggplot2::scale_fill_manual(values = color) 
+      }
+      p <- p +
+        ggplot2::labs(x = x_lab, y = y_lab, fill = color_var) +
+        ggplot2::scale_y_continuous(limits = c(yMIN, yMAX),
+                                    breaks = seq(yMIN, yMAX, ySTEP),
+                                    labels = seq(yMIN, yMAX, ySTEP)) +
+        ggplot2::theme_bw()
+      if (!is.null(fieldname) & !is.null(farmername) & !is.null(year)) {
+        p <- p +
+          ggplot2::ggtitle(paste0(fieldname, "_", year),
+                           subtitle = farmername)
+      }
+      if (SAVE) {
+        try({dev.off()}, silent = TRUE)
+        ggplot2::ggsave(
+          file = paste0(out_path,
+                        fieldname, "_", year, "_",
+                        y_var, "_vs_", x_var, ".png"),
+          plot = p, device = "png",
+          width = 7.5, height = 7.5, units = "in"
+        )
+      }
+      return(p)
+    },
+    #' @description
     #' This method is for creating a histogram of a variable specified by the
     #' user. The user specifies the column in the data holding the data of interest
     #' and provides a lavel.
