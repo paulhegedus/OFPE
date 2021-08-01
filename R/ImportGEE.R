@@ -46,6 +46,7 @@ ImportGEE <- R6::R6Class(
       self$dat_path <- dat_path
       self$overwrite <- overwrite
       self$file_names <- invisible(googledrive::drive_ls(self$dat_path))
+      self$file_names$id <- as.character(self$file_names$id)
 
       self$farmers <- DBI::dbGetQuery(self$dbCon$db,
                                       "SELECT * FROM all_farms.farmers")
