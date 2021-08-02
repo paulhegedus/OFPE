@@ -200,7 +200,7 @@ ImportGEE <- R6::R6Class(
         info$year <- '2020'
       } else {
         str_locs <- as.data.frame(
-          stringr::str_locate_all(info$orig_file, "200|201|1999")
+          stringr::str_locate_all(info$orig_file, "200|201|1999|202")
         )
         if (grepl("200cm", name)) {
           str_locs <- str_locs[2, ]
