@@ -537,7 +537,7 @@ ObsOP <- R6::R6Class(
       } else {
         p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col], y = dat[, y_col])) +
           ggplot2::geom_point(ggplot2::aes(col = Factor)) +
-          ggplot2::labs(x = x_lab, y = y_lab, col = col_lab) 
+          ggplot2::labs(x = x_lab, y = y_lab, col = color_lab) 
       }
       p <- p +
         ggplot2::scale_y_continuous(limits = c(yMIN, yMAX),
@@ -654,7 +654,7 @@ ObsOP <- R6::R6Class(
         p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col], y = dat[, y_col])) +
           ggplot2::geom_boxplot(ggplot2::aes(fill = Factor), na.rm = TRUE) +
           ggplot2::scale_fill_manual(values = color) +
-          ggplot2::labs(x = x_lab, y = y_lab, fill = col_lab) 
+          ggplot2::labs(x = x_lab, y = y_lab, fill = color_lab) 
       }
       p <- p +
         ggplot2::scale_y_continuous(limits = c(yMIN, yMAX),
@@ -774,7 +774,7 @@ ObsOP <- R6::R6Class(
           geom_boxplot(width = 0.1,
                        position = ggplot2::position_dodge(0.65)) +
           ggplot2::scale_fill_manual(values = color) +
-          ggplot2::labs(x = x_lab, y = y_lab, fill = col_lab)
+          ggplot2::labs(x = x_lab, y = y_lab, fill = color_lab)
       }
       p <- p +
         ggplot2::scale_y_continuous(limits = c(yMIN, yMAX),
