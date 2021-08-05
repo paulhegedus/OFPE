@@ -453,6 +453,7 @@ variables to color points by.
   x_lab = NULL,
   y_lab = NULL,
   color_var = NULL,
+  color_lab = NULL,
   main_label,
   out_path = self$out_path,
   save_label = NULL,
@@ -476,6 +477,8 @@ specified data.}
 
 \item{\code{color_var}}{The variable or variables, passed in as a character string,
 to color the data by. If left NULL no coloring is applied.}
+
+\item{\code{color_lab}}{The label to be applied to the legend for the fill color.}
 
 \item{\code{main_label}}{Title for the figure.}
 
@@ -509,6 +512,7 @@ variables to color points by.
   x_lab = NULL,
   y_lab = NULL,
   color_var = NULL,
+  color_lab = NULL,
   main_label,
   out_path = self$out_path,
   save_label = NULL,
@@ -532,6 +536,8 @@ specified data.}
 
 \item{\code{color_var}}{The variable or variables, passed in as a character string,
 to color the data by. If left NULL no coloring is applied.}
+
+\item{\code{color_lab}}{The label to be applied to the legend for the fill color.}
 
 \item{\code{main_label}}{Title for the figure.}
 
@@ -567,6 +573,7 @@ to show the IQR.
   x_lab = NULL,
   y_lab = NULL,
   color_var = NULL,
+  color_lab = NULL,
   main_label,
   out_path = self$out_path,
   save_label = NULL,
@@ -590,6 +597,8 @@ specified data.}
 
 \item{\code{color_var}}{The variable or variables, passed in as a character string,
 to color the data by. If left NULL no coloring is applied.}
+
+\item{\code{color_lab}}{The label to be applied to the legend for the fill color.}
 
 \item{\code{main_label}}{Title for the figure.}
 

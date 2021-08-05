@@ -467,6 +467,7 @@ ObsOP <- R6::R6Class(
     #' @param y_lab The label to be applied to the y axis of the plot.
     #' @param color_var The variable or variables, passed in as a character string,
     #' to color the data by. If left NULL no coloring is applied.
+    #' @param color_lab The label to be applied to the legend for the fill color.
     #' @param main_label Title for the figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
@@ -481,6 +482,7 @@ ObsOP <- R6::R6Class(
                             x_lab = NULL,
                             y_lab = NULL,
                             color_var = NULL,
+                            color_lab = NULL,
                             main_label,
                             out_path = self$out_path,
                             save_label = NULL,
@@ -530,13 +532,14 @@ ObsOP <- R6::R6Class(
 
       if (is.null(color_var)) {
         p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col], y = dat[, y_col])) +
-          ggplot2::geom_point()
+          ggplot2::geom_point() +
+          ggplot2::labs(x = x_lab, y = y_lab) 
       } else {
         p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col], y = dat[, y_col])) +
-          ggplot2::geom_point(ggplot2::aes(col = Factor))
+          ggplot2::geom_point(ggplot2::aes(col = Factor)) +
+          ggplot2::labs(x = x_lab, y = y_lab, col = col_lab) 
       }
       p <- p +
-        ggplot2::labs(x = x_lab, y = y_lab) +
         ggplot2::scale_y_continuous(limits = c(yMIN, yMAX),
                            breaks = seq(yMIN, yMAX, ySTEP),
                            labels = seq(yMIN, yMAX, ySTEP)) +
@@ -578,6 +581,7 @@ ObsOP <- R6::R6Class(
     #' @param y_lab The label to be applied to the y axis of the plot.
     #' @param color_var The variable or variables, passed in as a character string,
     #' to color the data by. If left NULL no coloring is applied.
+    #' @param color_lab The label to be applied to the legend for the fill color.
     #' @param main_label Title for the figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
@@ -592,6 +596,7 @@ ObsOP <- R6::R6Class(
                             x_lab = NULL,
                             y_lab = NULL,
                             color_var = NULL,
+                            color_lab = NULL,
                             main_label,
                             out_path = self$out_path,
                             save_label = NULL,
@@ -643,14 +648,15 @@ ObsOP <- R6::R6Class(
       
       if (is.null(color_var)) {
         p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col], y = dat[, y_col])) +
-          ggplot2::geom_boxplot(na.rm = TRUE)
+          ggplot2::geom_boxplot(na.rm = TRUE) +
+          ggplot2::labs(x = x_lab, y = y_lab) 
       } else {
         p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col], y = dat[, y_col])) +
           ggplot2::geom_boxplot(ggplot2::aes(fill = Factor), na.rm = TRUE) +
-          ggplot2::scale_fill_manual(values = color) 
+          ggplot2::scale_fill_manual(values = color) +
+          ggplot2::labs(x = x_lab, y = y_lab, fill = col_lab) 
       }
       p <- p +
-        ggplot2::labs(x = x_lab, y = y_lab, fill = color_var) +
         ggplot2::scale_y_continuous(limits = c(yMIN, yMAX),
                                     breaks = seq(yMIN, yMAX, ySTEP),
                                     labels = seq(yMIN, yMAX, ySTEP)) +
@@ -660,12 +666,12 @@ ObsOP <- R6::R6Class(
       if (is.null(color_var) & SAVE) {
         filename <- paste0(out_path,
                            save_label, "_",
-                           y_var, "_vs_", x_var, "_scatter.png")
+                           y_var, "_vs_", x_var, "_boxplot.png")
       } else {
         filename <- paste0(out_path,
                            save_label, "_",
                            y_var, "_vs_", x_var, "_vs_", 
-                           color_var,  "_scatter.png")
+                           color_var,  "_boxplot.png")
       }
       if (SAVE) {
         try({dev.off()}, silent = TRUE)
@@ -691,6 +697,7 @@ ObsOP <- R6::R6Class(
     #' @param y_lab The label to be applied to the y axis of the plot.
     #' @param color_var The variable or variables, passed in as a character string,
     #' to color the data by. If left NULL no coloring is applied.
+    #' @param color_lab The label to be applied to the legend for the fill color.
     #' @param main_label Title for the figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
@@ -705,6 +712,7 @@ ObsOP <- R6::R6Class(
                             x_lab = NULL,
                             y_lab = NULL,
                             color_var = NULL,
+                           color_lab = NULL,
                             main_label,
                             out_path = self$out_path,
                             save_label = NULL,
@@ -766,7 +774,7 @@ ObsOP <- R6::R6Class(
           geom_boxplot(width = 0.1,
                        position = ggplot2::position_dodge(0.65)) +
           ggplot2::scale_fill_manual(values = color) +
-          ggplot2::labs(x = x_lab, y = y_lab, fill = color_var)
+          ggplot2::labs(x = x_lab, y = y_lab, fill = col_lab)
       }
       p <- p +
         ggplot2::scale_y_continuous(limits = c(yMIN, yMAX),
@@ -778,12 +786,12 @@ ObsOP <- R6::R6Class(
       if (is.null(color_var) & SAVE) {
         filename <- paste0(out_path,
                            save_label, "_",
-                           y_var, "_vs_", x_var, "_scatter.png")
+                           y_var, "_vs_", x_var, "_violin.png")
       } else {
         filename <- paste0(out_path,
                            save_label, "_",
                            y_var, "_vs_", x_var, "_vs_", 
-                           color_var,  "_scatter.png")
+                           color_var,  "_violin.png")
       }
       if (SAVE) {
         try({dev.off()}, silent = TRUE)
