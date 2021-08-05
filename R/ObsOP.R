@@ -467,14 +467,12 @@ ObsOP <- R6::R6Class(
     #' @param y_lab The label to be applied to the y axis of the plot.
     #' @param color_var The variable or variables, passed in as a character string,
     #' to color the data by. If left NULL no coloring is applied.
-    #' @param fieldname Name of the field(s) plotted. Used for labeling and saving
-    #' data. Can be left NULL.
-    #' @param year Year of the observed data. Used for labeling and saving
-    #' data. Can be left NULL.
-    #' @param farmername The name of the farmer that manages the field. Used for
-    #' labeling and saving data. Can be left NULL.
+    #' @param main_label Title for the figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
+    #' @param save_label The label to apply to the filename. The y, x, and color
+    #' variables will also be added to the filename. Optional, but if SAVE = TRUE
+    #' and save_lable = NULL 'main_label' will be used.
     #' @param SAVE Logical, whether to save figure.
     #' @return A scatterplot and saved in the specified output folder if selected.
     plotScatters = function(dat,
@@ -483,10 +481,9 @@ ObsOP <- R6::R6Class(
                             x_lab = NULL,
                             y_lab = NULL,
                             color_var = NULL,
-                            fieldname = self$fieldname,
-                            year = self$year,
-                            farmername = self$farmername,
+                            main_label,
                             out_path = self$out_path,
+                            save_label = NULL,
                             SAVE = self$SAVE) {
       ## takes two vars and plots
       dat <- as.data.frame(dat)
@@ -495,9 +492,7 @@ ObsOP <- R6::R6Class(
                 !is.null(y_var) & is.character(y_var),
                 is.data.frame(dat) | data.table::is.data.table(dat))
       if (!is.null(out_path)) {
-        stopifnot(!is.null(fieldname),
-                  !is.null(farmername),
-                  !is.null(year),
+        stopifnot(!is.null(save_label),
                   !is.null(SAVE))
       }
       if (!is.null(color_var)) {
@@ -548,18 +543,23 @@ ObsOP <- R6::R6Class(
         ggplot2::scale_x_continuous(limits = c(xMIN, xMAX),
                            breaks = seq(xMIN, xMAX, xSTEP),
                            labels = seq(xMIN, xMAX, xSTEP))  +
-        ggplot2::theme_bw()
-      if (!is.null(fieldname) & !is.null(farmername) & !is.null(year)) {
-        p <- p +
-          ggplot2::ggtitle(paste0(fieldname, "_", year),
-                           subtitle = farmername)
+        ggplot2::theme_bw() +
+        ggplot2::ggtitle(main_label)
+      
+      if (is.null(color_var) & SAVE) {
+        filename <- paste0(out_path,
+                           save_label, "_",
+                           y_var, "_vs_", x_var, "_scatter.png")
+      } else {
+        filename <- paste0(out_path,
+                           save_label, "_",
+                           y_var, "_vs_", x_var, "_vs_", 
+                           color_var,  "_scatter.png")
       }
       if (SAVE) {
         try({dev.off()}, silent = TRUE)
         ggplot2::ggsave(
-          file = paste0(out_path,
-                        fieldname, "_", year, "_",
-                        y_var, "_vs_", x_var, ".png"),
+          file = filename,
           plot = p, device = "png",
           width = 7.5, height = 7.5, units = "in"
         )
@@ -578,14 +578,12 @@ ObsOP <- R6::R6Class(
     #' @param y_lab The label to be applied to the y axis of the plot.
     #' @param color_var The variable or variables, passed in as a character string,
     #' to color the data by. If left NULL no coloring is applied.
-    #' @param fieldname Name of the field(s) plotted. Used for labeling and saving
-    #' data. Can be left NULL.
-    #' @param year Year of the observed data. Used for labeling and saving
-    #' data. Can be left NULL.
-    #' @param farmername The name of the farmer that manages the field. Used for
-    #' labeling and saving data. Can be left NULL.
+    #' @param main_label Title for the figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
+    #' @param save_label The label to apply to the filename. The y, x, and color
+    #' variables will also be added to the filename. Optional, but if SAVE = TRUE
+    #' and save_lable = NULL 'main_label' will be used.
     #' @param SAVE Logical, whether to save figure.
     #' @return A boxplot and saved in the specified output folder if selected.
     plotBoxplots = function(dat,
@@ -594,10 +592,9 @@ ObsOP <- R6::R6Class(
                             x_lab = NULL,
                             y_lab = NULL,
                             color_var = NULL,
-                            fieldname = self$fieldname,
-                            year = self$year,
-                            farmername = self$farmername,
+                            main_label,
                             out_path = self$out_path,
+                            save_label = NULL,
                             SAVE = self$SAVE) {
       ## takes two vars and plots
       dat <- as.data.frame(dat)
@@ -606,9 +603,7 @@ ObsOP <- R6::R6Class(
                 !is.null(y_var),
                 is.data.frame(dat) | data.table::is.data.table(dat))
       if (!is.null(out_path)) {
-        stopifnot(!is.null(fieldname),
-                  !is.null(farmername),
-                  !is.null(year),
+        stopifnot(!is.null(save_label),
                   !is.null(SAVE))
       }
       
@@ -659,21 +654,18 @@ ObsOP <- R6::R6Class(
         ggplot2::scale_y_continuous(limits = c(yMIN, yMAX),
                                     breaks = seq(yMIN, yMAX, ySTEP),
                                     labels = seq(yMIN, yMAX, ySTEP)) +
-        ggplot2::theme_bw()
-      if (!is.null(fieldname) & !is.null(farmername) & !is.null(year)) {
-        p <- p +
-          ggplot2::ggtitle(paste0(fieldname, "_", year),
-                           subtitle = farmername)
-      }
-      if (is.null(color_var)) {
+        ggplot2::theme_bw()+
+        ggplot2::ggtitle(main_label)
+      
+      if (is.null(color_var) & SAVE) {
         filename <- paste0(out_path,
-                           fieldname, "_", year, "_",
-                           y_var, "_vs_", x_var, "_boxplot.png")
+                           save_label, "_",
+                           y_var, "_vs_", x_var, "_scatter.png")
       } else {
         filename <- paste0(out_path,
-                           fieldname, "_", year, "_",
+                           save_label, "_",
                            y_var, "_vs_", x_var, "_vs_", 
-                           color_var,  "_boxplot.png")
+                           color_var,  "_scatter.png")
       }
       if (SAVE) {
         try({dev.off()}, silent = TRUE)
@@ -699,14 +691,12 @@ ObsOP <- R6::R6Class(
     #' @param y_lab The label to be applied to the y axis of the plot.
     #' @param color_var The variable or variables, passed in as a character string,
     #' to color the data by. If left NULL no coloring is applied.
-    #' @param fieldname Name of the field(s) plotted. Used for labeling and saving
-    #' data. Can be left NULL.
-    #' @param year Year of the observed data. Used for labeling and saving
-    #' data. Can be left NULL.
-    #' @param farmername The name of the farmer that manages the field. Used for
-    #' labeling and saving data. Can be left NULL.
+    #' @param main_label Title for the figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
+    #' @param save_label The label to apply to the filename. The y, x, and color
+    #' variables will also be added to the filename. Optional, but if SAVE = TRUE
+    #' and save_lable = NULL 'main_label' will be used.
     #' @param SAVE Logical, whether to save figure.
     #' @return A violin plot and saved in the specified output folder if selected.
     plotViolins = function(dat,
@@ -715,10 +705,9 @@ ObsOP <- R6::R6Class(
                             x_lab = NULL,
                             y_lab = NULL,
                             color_var = NULL,
-                            fieldname = self$fieldname,
-                            year = self$year,
-                            farmername = self$farmername,
+                            main_label,
                             out_path = self$out_path,
+                            save_label = NULL,
                             SAVE = self$SAVE) {
       ## takes two vars and plots
       dat <- as.data.frame(dat)
@@ -727,9 +716,7 @@ ObsOP <- R6::R6Class(
                 !is.null(y_var),
                 is.data.frame(dat) | data.table::is.data.table(dat))
       if (!is.null(out_path)) {
-        stopifnot(!is.null(fieldname),
-                  !is.null(farmername),
-                  !is.null(year),
+        stopifnot(!is.null(save_label),
                   !is.null(SAVE))
       }
       
@@ -785,21 +772,18 @@ ObsOP <- R6::R6Class(
         ggplot2::scale_y_continuous(limits = c(yMIN, yMAX),
                                     breaks = seq(yMIN, yMAX, ySTEP),
                                     labels = seq(yMIN, yMAX, ySTEP)) +
-        ggplot2::theme_bw()
-      if (!is.null(fieldname) & !is.null(farmername) & !is.null(year)) {
-        p <- p +
-          ggplot2::ggtitle(paste0(fieldname, "_", year),
-                           subtitle = farmername)
-      }
-      if (is.null(color_var)) {
+        ggplot2::theme_bw() +
+        ggplot2::ggtitle(main_label)
+      
+      if (is.null(color_var) & SAVE) {
         filename <- paste0(out_path,
-                           fieldname, "_", year, "_",
-                           y_var, "_vs_", x_var, "_violin.png")
+                           save_label, "_",
+                           y_var, "_vs_", x_var, "_scatter.png")
       } else {
         filename <- paste0(out_path,
-                           fieldname, "_", year, "_",
+                           save_label, "_",
                            y_var, "_vs_", x_var, "_vs_", 
-                           color_var,  "_violin.png")
+                           color_var,  "_scatter.png")
       }
       if (SAVE) {
         try({dev.off()}, silent = TRUE)
@@ -819,23 +803,20 @@ ObsOP <- R6::R6Class(
     #' specified data.
     #' @param x_var The column name of the variable to plot on the x axis.
     #' @param x_lab The label to be applied to the x axis of the plot.
-    #' @param fieldname Name of the field(s) plotted. Used for labeling and saving
-    #' data. Can be left NULL.
-    #' @param year Year of the observed data. Used for labeling and saving
-    #' data. Can be left NULL.
-    #' @param farmername The name of the farmer that manages the field. Used for
-    #' labeling and saving data. Can be left NULL.
+    #' @param main_label Title for the figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
+    #' @param save_label The label to apply to the filename. The y, x, and color
+    #' variables will also be added to the filename. Optional, but if SAVE = TRUE
+    #' and save_lable = NULL 'main_label' will be used.
     #' @param SAVE Logical, whether to save figure.
     #' @return A scatterplot and saved in 'Outputs/Maps' folder if selected.
     plotHistogram = function(dat,
                              x_var,
                              x_lab = NULL,
-                             fieldname = self$fieldname,
-                             year = self$year,
-                             farmername = self$farmername,
+                             main_label,
                              out_path = self$out_path,
+                             save_label = NULL,
                              SAVE = self$SAVE) {
       ## make histogram of specified var
       dat <- as.data.frame(dat)
@@ -843,9 +824,7 @@ ObsOP <- R6::R6Class(
                 !is.null(x_var) & is.character(x_var),
                 is.data.frame(dat) | data.table::is.data.table(dat))
       if (!is.null(out_path)) {
-        stopifnot(!is.null(fieldname),
-                  !is.null(farmername),
-                  !is.null(year),
+        stopifnot(!is.null(save_label),
                   !is.null(SAVE))
       }
       x_col <- grep(paste0("^", x_var, "$"), names(dat))
@@ -876,18 +855,14 @@ ObsOP <- R6::R6Class(
                   DescTools::RoundTo(min(y_vec, na.rm = T), y_round_to, floor)) / 10
       p <- p + ggplot2::scale_y_continuous(limits = c(yMIN, yMAX),
                                            breaks = seq(yMIN, yMAX, ySTEP),
-                                           labels = seq(yMIN, yMAX, ySTEP))
-      if (!is.null(fieldname) & !is.null(farmername) & !is.null(year)) {
-        p <- p +
-          ggplot2::ggtitle(paste0(fieldname, "_", year),
-                           subtitle = farmername)
-      }
-
+                                           labels = seq(yMIN, yMAX, ySTEP)) + 
+        ggplot2::ggtitle(main_label)
+      
       if (SAVE) {
         try({dev.off()}, silent = TRUE)
         ggplot2::ggsave(
           file = paste0(out_path,
-                        fieldname, "_", year, "_",
+                        save_label, "_",
                         x_var, "_histogram.png"),
           plot = p, device = "png",
           width = 7.5, height = 7.5, units = "in"

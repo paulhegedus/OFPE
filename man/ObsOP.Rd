@@ -453,10 +453,9 @@ variables to color points by.
   x_lab = NULL,
   y_lab = NULL,
   color_var = NULL,
-  fieldname = self$fieldname,
-  year = self$year,
-  farmername = self$farmername,
+  main_label,
   out_path = self$out_path,
+  save_label = NULL,
   SAVE = self$SAVE
 )}\if{html}{\out{</div>}}
 }
@@ -478,17 +477,14 @@ specified data.}
 \item{\code{color_var}}{The variable or variables, passed in as a character string,
 to color the data by. If left NULL no coloring is applied.}
 
-\item{\code{fieldname}}{Name of the field(s) plotted. Used for labeling and saving
-data. Can be left NULL.}
-
-\item{\code{year}}{Year of the observed data. Used for labeling and saving
-data. Can be left NULL.}
-
-\item{\code{farmername}}{The name of the farmer that manages the field. Used for
-labeling and saving data. Can be left NULL.}
+\item{\code{main_label}}{Title for the figure.}
 
 \item{\code{out_path}}{The path to the folder in which to store and
 save outputs from the simulation.}
+
+\item{\code{save_label}}{The label to apply to the filename. The y, x, and color
+variables will also be added to the filename. Optional, but if SAVE = TRUE
+and save_lable = NULL 'main_label' will be used.}
 
 \item{\code{SAVE}}{Logical, whether to save figure.}
 }
@@ -513,10 +509,9 @@ variables to color points by.
   x_lab = NULL,
   y_lab = NULL,
   color_var = NULL,
-  fieldname = self$fieldname,
-  year = self$year,
-  farmername = self$farmername,
+  main_label,
   out_path = self$out_path,
+  save_label = NULL,
   SAVE = self$SAVE
 )}\if{html}{\out{</div>}}
 }
@@ -538,17 +533,14 @@ specified data.}
 \item{\code{color_var}}{The variable or variables, passed in as a character string,
 to color the data by. If left NULL no coloring is applied.}
 
-\item{\code{fieldname}}{Name of the field(s) plotted. Used for labeling and saving
-data. Can be left NULL.}
-
-\item{\code{year}}{Year of the observed data. Used for labeling and saving
-data. Can be left NULL.}
-
-\item{\code{farmername}}{The name of the farmer that manages the field. Used for
-labeling and saving data. Can be left NULL.}
+\item{\code{main_label}}{Title for the figure.}
 
 \item{\code{out_path}}{The path to the folder in which to store and
 save outputs from the simulation.}
+
+\item{\code{save_label}}{The label to apply to the filename. The y, x, and color
+variables will also be added to the filename. Optional, but if SAVE = TRUE
+and save_lable = NULL 'main_label' will be used.}
 
 \item{\code{SAVE}}{Logical, whether to save figure.}
 }
@@ -575,10 +567,9 @@ to show the IQR.
   x_lab = NULL,
   y_lab = NULL,
   color_var = NULL,
-  fieldname = self$fieldname,
-  year = self$year,
-  farmername = self$farmername,
+  main_label,
   out_path = self$out_path,
+  save_label = NULL,
   SAVE = self$SAVE
 )}\if{html}{\out{</div>}}
 }
@@ -600,17 +591,14 @@ specified data.}
 \item{\code{color_var}}{The variable or variables, passed in as a character string,
 to color the data by. If left NULL no coloring is applied.}
 
-\item{\code{fieldname}}{Name of the field(s) plotted. Used for labeling and saving
-data. Can be left NULL.}
-
-\item{\code{year}}{Year of the observed data. Used for labeling and saving
-data. Can be left NULL.}
-
-\item{\code{farmername}}{The name of the farmer that manages the field. Used for
-labeling and saving data. Can be left NULL.}
+\item{\code{main_label}}{Title for the figure.}
 
 \item{\code{out_path}}{The path to the folder in which to store and
 save outputs from the simulation.}
+
+\item{\code{save_label}}{The label to apply to the filename. The y, x, and color
+variables will also be added to the filename. Optional, but if SAVE = TRUE
+and save_lable = NULL 'main_label' will be used.}
 
 \item{\code{SAVE}}{Logical, whether to save figure.}
 }
@@ -632,10 +620,9 @@ and provides a lavel.
   dat,
   x_var,
   x_lab = NULL,
-  fieldname = self$fieldname,
-  year = self$year,
-  farmername = self$farmername,
+  main_label,
   out_path = self$out_path,
+  save_label = NULL,
   SAVE = self$SAVE
 )}\if{html}{\out{</div>}}
 }
@@ -650,17 +637,14 @@ specified data.}
 
 \item{\code{x_lab}}{The label to be applied to the x axis of the plot.}
 
-\item{\code{fieldname}}{Name of the field(s) plotted. Used for labeling and saving
-data. Can be left NULL.}
-
-\item{\code{year}}{Year of the observed data. Used for labeling and saving
-data. Can be left NULL.}
-
-\item{\code{farmername}}{The name of the farmer that manages the field. Used for
-labeling and saving data. Can be left NULL.}
+\item{\code{main_label}}{Title for the figure.}
 
 \item{\code{out_path}}{The path to the folder in which to store and
 save outputs from the simulation.}
+
+\item{\code{save_label}}{The label to apply to the filename. The y, x, and color
+variables will also be added to the filename. Optional, but if SAVE = TRUE
+and save_lable = NULL 'main_label' will be used.}
 
 \item{\code{SAVE}}{Logical, whether to save figure.}
 }
