@@ -101,6 +101,7 @@ documentation for more information on the 'dat_used' selection.}
 \item \href{#method-plotObsMaps}{\code{ObsOP$plotObsMaps()}}
 \item \href{#method-plotScatters}{\code{ObsOP$plotScatters()}}
 \item \href{#method-plotBoxplots}{\code{ObsOP$plotBoxplots()}}
+\item \href{#method-plotViolins}{\code{ObsOP$plotViolins()}}
 \item \href{#method-plotHistogram}{\code{ObsOP$plotHistogram()}}
 \item \href{#method-clone}{\code{ObsOP$clone()}}
 }
@@ -189,7 +190,7 @@ model output figures if specified.
 \subsection{Method \code{fetchAggDat()}}{
 Gather data from an aggregated table in an
 OFPE database. Provide the farmername, fieldname(s), year(s),
-and type of data to gather.
+and type of data to gather. Requires database connection.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ObsOP$fetchAggDat(
   db = self$db,
@@ -245,7 +246,8 @@ Data table with specified data.
 \subsection{Method \code{fetchRawDat()}}{
 Gather data from a raw table in an
 OFPE database. Provide the farmername, the type of data, and the
-name of the original file for the data ('orig_file').
+name of the original file for the data ('orig_file'). Requires database
+connection.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ObsOP$fetchRawDat(
   db = self$db,
@@ -393,7 +395,7 @@ labeling the map.
   SAVE = self$SAVE,
   farmername = self$farmername,
   out_path = self$out_path,
-  db = self$db,
+  db = self$dbCon$db,
   utm_fieldname = self$utm_fieldname
 )}\if{html}{\out{</div>}}
 }
@@ -425,14 +427,15 @@ corresponding to the variable mapped.}
 \item{\code{out_path}}{The path to the folder in which to store and
 save outputs from the simulation.}
 
-\item{\code{db}}{Connection to the OFPE database to identify UTM zone.}
+\item{\code{db}}{Connection to the OFPE database to identify UTM zone. Optional, will try
+and calculate without.}
 
 \item{\code{utm_fieldname}}{Name of the field for identifying the UTM zone.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A 'ggmap' object and maps saved in 'Outputs/Maps' folder if selected.
+A 'ggmap' object and maps saved in the specified output folder if selected.
 }
 }
 \if{html}{\out{<hr>}}
@@ -492,7 +495,7 @@ save outputs from the simulation.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A scatterplot and saved in 'Outputs/Maps' folder if selected.
+A scatterplot and saved in the specified output folder if selected.
 }
 }
 \if{html}{\out{<hr>}}
@@ -552,7 +555,69 @@ save outputs from the simulation.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A boxplot and saved in 'Outputs/Maps' folder if selected.
+A boxplot and saved in the specified output folder if selected.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-plotViolins"></a>}}
+\if{latex}{\out{\hypertarget{method-plotViolins}{}}}
+\subsection{Method \code{plotViolins()}}{
+This method is for creating a violin plot of variables specified by the
+user. The user specifies the x and y column to plot and a variable or
+variables to color points by. The violin plot shows the probability
+density of observations, and also contains a boxplot within the violin
+to show the IQR.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ObsOP$plotViolins(
+  dat,
+  x_var,
+  y_var,
+  x_lab = NULL,
+  y_lab = NULL,
+  color_var = NULL,
+  fieldname = self$fieldname,
+  year = self$year,
+  farmername = self$farmername,
+  out_path = self$out_path,
+  SAVE = self$SAVE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{dat}}{Data frame with variables to plot. Must include the columns for
+specified data.}
+
+\item{\code{x_var}}{The column name of the variable to plot on the x axis.}
+
+\item{\code{y_var}}{The column name of the variable to plot on the y axis.}
+
+\item{\code{x_lab}}{The label to be applied to the x axis of the plot.}
+
+\item{\code{y_lab}}{The label to be applied to the y axis of the plot.}
+
+\item{\code{color_var}}{The variable or variables, passed in as a character string,
+to color the data by. If left NULL no coloring is applied.}
+
+\item{\code{fieldname}}{Name of the field(s) plotted. Used for labeling and saving
+data. Can be left NULL.}
+
+\item{\code{year}}{Year of the observed data. Used for labeling and saving
+data. Can be left NULL.}
+
+\item{\code{farmername}}{The name of the farmer that manages the field. Used for
+labeling and saving data. Can be left NULL.}
+
+\item{\code{out_path}}{The path to the folder in which to store and
+save outputs from the simulation.}
+
+\item{\code{SAVE}}{Logical, whether to save figure.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A violin plot and saved in the specified output folder if selected.
 }
 }
 \if{html}{\out{<hr>}}

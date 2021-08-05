@@ -188,7 +188,7 @@ ObsOP <- R6::R6Class(
     ## Data Gather and Manipulation
     #' @description Gather data from an aggregated table in an
     #' OFPE database. Provide the farmername, fieldname(s), year(s),
-    #' and type of data to gather.
+    #' and type of data to gather. Requires database connection.
     #' @param db Connection to a database to gather data from. Must be
     #' set up and filled in the OFPE specific format.
     #' @param farmername The name of the farmer, corresponding to the format in the
@@ -217,7 +217,8 @@ ObsOP <- R6::R6Class(
                            GRID = self$GRID,
                            dat_used = self$dat_used,
                            store = TRUE) {
-      stopifnot(length(year) == 1,
+      stopifnot(!is.null(self$db), 
+                length(year) == 1,
                 length(dat_tab) == 1,
                 length(GRID) == 1,
                 length(dat_used) == 1)
@@ -236,7 +237,8 @@ ObsOP <- R6::R6Class(
     },
     #' @description Gather data from a raw table in an
     #' OFPE database. Provide the farmername, the type of data, and the
-    #' name of the original file for the data ('orig_file').
+    #' name of the original file for the data ('orig_file'). Requires database
+    #' connection.
     #' @param db Connection to a database to gather data from. Must be
     #' set up and filled in the OFPE specific format.
     #' @param farmername The name of the farmer, corresponding to the format in the
@@ -253,7 +255,8 @@ ObsOP <- R6::R6Class(
                            dat_tab = self$dat_tab,
                            orig_file,
                            store = TRUE) {
-      stopifnot(length(farmername) == 1,
+      stopifnot(!is.null(self$db), 
+                length(farmername) == 1,
                 length(dat_tab) == 1,
                 length(orig_file) == 1)
       dat <- DBI::dbGetQuery(
@@ -390,9 +393,10 @@ ObsOP <- R6::R6Class(
     #' @param farmername The name of the farmer that manages the field.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
-    #' @param db Connection to the OFPE database to identify UTM zone.
+    #' @param db Connection to the OFPE database to identify UTM zone. Optional, will try
+    #' and calculate without. 
     #' @param utm_fieldname Name of the field for identifying the UTM zone.
-    #' @return A 'ggmap' object and maps saved in 'Outputs/Maps' folder if selected.
+    #' @return A 'ggmap' object and maps saved in the specified output folder if selected.
     plotObsMaps = function(dat,
                            var,
                            var_col_name,
@@ -403,13 +407,29 @@ ObsOP <- R6::R6Class(
                            SAVE = self$SAVE,
                            farmername = self$farmername,
                            out_path = self$out_path,
-                           db = self$db,
+                           db = self$dbCon$db,
                            utm_fieldname = self$utm_fieldname) {
       stopifnot(length(year) == 1)
       if (is.null(var_main_label)) {
         var_main_label <- paste0("Observed ", year," ", var)
       }
-      utm_zone <- OFPE::findUTMzone(db, fieldname = utm_fieldname)
+      
+      if (is.null(self$dbCon$db) | is.null(db)) {
+        if (!any(grepl("sf|sp", class(dat)))) {
+          dat_sf <- sf::st_as_sf(dat, coords = c("x", "y"), crs = 4326)
+          cords <- sf::st_coordinates(dat_sf) %>%
+            as.data.frame() %>% 
+            `names<-`(c("x", "y"))
+          dat_sf <- cbind(dat_sf, cords)
+        } else {
+          dat_sf <- sf::st_transform(dat, 4326)
+        }
+        utm_zone <- OFPE::calcUTMzone(dat_sf)
+        rm(dat_sf)
+      } else {
+        utm_zone <- OFPE::findUTMzone(db, farmername, fieldname)
+      }
+      
       p <- OFPE::plotMaps(dat,
                           var_col_name,
                           var_label,
@@ -456,7 +476,7 @@ ObsOP <- R6::R6Class(
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
     #' @param SAVE Logical, whether to save figure.
-    #' @return A scatterplot and saved in 'Outputs/Maps' folder if selected.
+    #' @return A scatterplot and saved in the specified output folder if selected.
     plotScatters = function(dat,
                             x_var,
                             y_var,
@@ -567,7 +587,7 @@ ObsOP <- R6::R6Class(
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
     #' @param SAVE Logical, whether to save figure.
-    #' @return A boxplot and saved in 'Outputs/Maps' folder if selected.
+    #' @return A boxplot and saved in the specified output folder if selected.
     plotBoxplots = function(dat,
                             x_var,
                             y_var,
@@ -583,7 +603,7 @@ ObsOP <- R6::R6Class(
       dat <- as.data.frame(dat)
       stopifnot(!is.null(dat),
                 !is.null(x_var) & is.character(x_var),
-                !is.null(y_var) & is.character(y_var),
+                !is.null(y_var),
                 is.data.frame(dat) | data.table::is.data.table(dat))
       if (!is.null(out_path)) {
         stopifnot(!is.null(fieldname),
@@ -608,8 +628,10 @@ ObsOP <- R6::R6Class(
       }
       
       x_col <- grep(paste0("^", x_var, "$"), names(dat))
+      if (!is.factor(dat[, x_col])) {
+        dat[, x_col] <- factor(dat[, x_col])
+      }
       y_col <- grep(paste0("^", y_var, "$"), names(dat))
-      stopifnot(is.factor(dat[, x_col]))
       if (!is.numeric(dat[, y_col])) {
         dat[, y_col] <- as.numeric(dat[, y_col])
       }
@@ -643,12 +665,146 @@ ObsOP <- R6::R6Class(
           ggplot2::ggtitle(paste0(fieldname, "_", year),
                            subtitle = farmername)
       }
+      if (is.null(color_var)) {
+        filename <- paste0(out_path,
+                           fieldname, "_", year, "_",
+                           y_var, "_vs_", x_var, "_boxplot.png")
+      } else {
+        filename <- paste0(out_path,
+                           fieldname, "_", year, "_",
+                           y_var, "_vs_", x_var, "_vs_", 
+                           color_var,  "_boxplot.png")
+      }
       if (SAVE) {
         try({dev.off()}, silent = TRUE)
         ggplot2::ggsave(
-          file = paste0(out_path,
-                        fieldname, "_", year, "_",
-                        y_var, "_vs_", x_var, ".png"),
+          file = filename,
+          plot = p, device = "png",
+          width = 7.5, height = 7.5, units = "in"
+        )
+      }
+      return(p)
+    },
+    #' @description
+    #' This method is for creating a violin plot of variables specified by the
+    #' user. The user specifies the x and y column to plot and a variable or
+    #' variables to color points by. The violin plot shows the probability 
+    #' density of observations, and also contains a boxplot within the violin 
+    #' to show the IQR. 
+    #' @param dat Data frame with variables to plot. Must include the columns for
+    #' specified data.
+    #' @param x_var The column name of the variable to plot on the x axis.
+    #' @param y_var The column name of the variable to plot on the y axis.
+    #' @param x_lab The label to be applied to the x axis of the plot.
+    #' @param y_lab The label to be applied to the y axis of the plot.
+    #' @param color_var The variable or variables, passed in as a character string,
+    #' to color the data by. If left NULL no coloring is applied.
+    #' @param fieldname Name of the field(s) plotted. Used for labeling and saving
+    #' data. Can be left NULL.
+    #' @param year Year of the observed data. Used for labeling and saving
+    #' data. Can be left NULL.
+    #' @param farmername The name of the farmer that manages the field. Used for
+    #' labeling and saving data. Can be left NULL.
+    #' @param out_path The path to the folder in which to store and
+    #' save outputs from the simulation.
+    #' @param SAVE Logical, whether to save figure.
+    #' @return A violin plot and saved in the specified output folder if selected.
+    plotViolins = function(dat,
+                            x_var,
+                            y_var,
+                            x_lab = NULL,
+                            y_lab = NULL,
+                            color_var = NULL,
+                            fieldname = self$fieldname,
+                            year = self$year,
+                            farmername = self$farmername,
+                            out_path = self$out_path,
+                            SAVE = self$SAVE) {
+      ## takes two vars and plots
+      dat <- as.data.frame(dat)
+      stopifnot(!is.null(dat),
+                !is.null(x_var) & is.character(x_var),
+                !is.null(y_var),
+                is.data.frame(dat) | data.table::is.data.table(dat))
+      if (!is.null(out_path)) {
+        stopifnot(!is.null(fieldname),
+                  !is.null(farmername),
+                  !is.null(year),
+                  !is.null(SAVE))
+      }
+      
+      if (!is.null(color_var)) {
+        stopifnot(is.character(color_var))
+        col_f <- grep(color_var, names(dat))
+        dat$Factor <- dat[, col_f]
+      }
+      if (length(levels(dat$Factor)) == 3) {
+        color <- RColorBrewer::brewer.pal(3, "RdYlGn")
+      } else {
+        if (length(levels(dat$Factor)) == 2) {
+          color <- c("#F8766D", "#00BFC4")
+        } else {
+          color <- randomcoloR::randomColor(length(levels(dat$Factor)))
+        }
+      }
+      
+      x_col <- grep(paste0("^", x_var, "$"), names(dat))
+      if (!is.factor(dat[, x_col])) {
+        dat[, x_col] <- factor(dat[, x_col])
+      }
+      y_col <- grep(paste0("^", y_var, "$"), names(dat))
+      if (!is.numeric(dat[, y_col])) {
+        dat[, y_col] <- as.numeric(dat[, y_col])
+      }
+      y_round_to <- ifelse(max(dat[, y_col], na.rm = T) -
+                             min(dat[, y_col], na.rm = T) > 5, 5, 1)
+      yMIN <- DescTools::RoundTo(min(dat[, y_col], na.rm = T), y_round_to, floor)
+      yMAX <- DescTools::RoundTo(max(dat[, y_col], na.rm = T), y_round_to, ceiling)
+      ySTEP <- (DescTools::RoundTo(max(dat[, y_col], na.rm = T), y_round_to, ceiling) -
+                  DescTools::RoundTo(min(dat[, y_col], na.rm = T), y_round_to, floor)) / 10
+      ## remove NA from factors
+      # dat$Factor <- factor(dat$factor)
+      # dat[, x_col] <- factor(dat[, x_col])
+      dat <- dat[!is.na(dat[, x_col]), ]
+      
+      if (is.null(color_var)) {
+        p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col], y = dat[, y_col])) +
+          ggplot2::geom_violin(na.rm = TRUE) +
+          geom_boxplot(width = 0.1, na.rm = TRUE) + 
+          ggplot2::labs(x = x_lab, y = y_lab)
+      } else {
+        p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col], y = dat[, y_col], fill = Factor)) +
+          ggplot2::geom_violin(position = ggplot2::position_dodge(0.65), 
+                               na.rm = TRUE) +
+          geom_boxplot(width = 0.1,
+                       position = ggplot2::position_dodge(0.65)) +
+          ggplot2::scale_fill_manual(values = color) +
+          ggplot2::labs(x = x_lab, y = y_lab, fill = color_var)
+      }
+      p <- p +
+        ggplot2::scale_y_continuous(limits = c(yMIN, yMAX),
+                                    breaks = seq(yMIN, yMAX, ySTEP),
+                                    labels = seq(yMIN, yMAX, ySTEP)) +
+        ggplot2::theme_bw()
+      if (!is.null(fieldname) & !is.null(farmername) & !is.null(year)) {
+        p <- p +
+          ggplot2::ggtitle(paste0(fieldname, "_", year),
+                           subtitle = farmername)
+      }
+      if (is.null(color_var)) {
+        filename <- paste0(out_path,
+                           fieldname, "_", year, "_",
+                           y_var, "_vs_", x_var, "_violin.png")
+      } else {
+        filename <- paste0(out_path,
+                           fieldname, "_", year, "_",
+                           y_var, "_vs_", x_var, "_vs_", 
+                           color_var,  "_violin.png")
+      }
+      if (SAVE) {
+        try({dev.off()}, silent = TRUE)
+        ggplot2::ggsave(
+          file = filename,
           plot = p, device = "png",
           width = 7.5, height = 7.5, units = "in"
         )
