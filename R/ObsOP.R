@@ -614,7 +614,7 @@ ObsOP <- R6::R6Class(
       
       if (!is.null(color_var)) {
         stopifnot(is.character(color_var))
-        col_f <- grep(color_var, names(dat))
+        col_f <- grep(paste0("^", color_var, "$"), names(dat))
         dat$Factor <- dat[, col_f]
       }
       if (length(levels(dat$Factor)) == 3) {
@@ -730,7 +730,7 @@ ObsOP <- R6::R6Class(
       
       if (!is.null(color_var)) {
         stopifnot(is.character(color_var))
-        col_f <- grep(color_var, names(dat))
+        col_f <- grep(paste0("^", color_var, "$"), names(dat))
         dat$Factor <- dat[, col_f]
       }
       if (length(levels(dat$Factor)) == 3) {
@@ -739,7 +739,8 @@ ObsOP <- R6::R6Class(
         if (length(levels(dat$Factor)) == 2) {
           color <- c("#F8766D", "#00BFC4")
         } else {
-          color <- randomcoloR::randomColor(length(levels(dat$Factor)))
+          color <- RColorBrewer::brewer.pal(length(levels(dat$Factor)), "Paired")
+            # randomcoloR::randomColor(length(levels(dat$Factor)))
         }
       }
       
@@ -765,13 +766,13 @@ ObsOP <- R6::R6Class(
       if (is.null(color_var)) {
         p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col], y = dat[, y_col])) +
           ggplot2::geom_violin(na.rm = TRUE) +
-          geom_boxplot(width = 0.1, na.rm = TRUE) + 
+          ggplot2::geom_boxplot(width = 0.1, na.rm = TRUE) + 
           ggplot2::labs(x = x_lab, y = y_lab)
       } else {
         p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col], y = dat[, y_col], fill = Factor)) +
           ggplot2::geom_violin(position = ggplot2::position_dodge(0.65), 
                                na.rm = TRUE) +
-          geom_boxplot(width = 0.1,
+          ggplot2::geom_boxplot(width = 0.1,
                        position = ggplot2::position_dodge(0.65)) +
           ggplot2::scale_fill_manual(values = color) +
           ggplot2::labs(x = x_lab, y = y_lab, fill = color_lab)
