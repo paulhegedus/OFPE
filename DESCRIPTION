@@ -64,8 +64,7 @@ Imports:
     gstat,
     RColorBrewer,
     nngeo,
-    colorRamps,
-    randomcoloR
+    colorRamps
 LinkingTo: 
     Rcpp, 
     RcppArmadillo
