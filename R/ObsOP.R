@@ -740,7 +740,7 @@ ObsOP <- R6::R6Class(
         if (length(levels(dat$Factor)) == 2) {
           color <- c("#F8766D", "#00BFC4")
         } else {
-          color <- RColorBrewer::brewer.pal(length(levels(dat$Factor)), "Set3")
+          color <- RColorBrewer::brewer.pal(length(levels(dat$Factor)), "Set3") 
             # randomcoloR::randomColor(length(levels(dat$Factor)))
         }
       }
