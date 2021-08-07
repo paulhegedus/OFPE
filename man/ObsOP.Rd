@@ -396,7 +396,8 @@ labeling the map.
   farmername = self$farmername,
   out_path = self$out_path,
   db = self$dbCon$db,
-  utm_fieldname = self$utm_fieldname
+  utm_fieldname = self$utm_fieldname,
+  utm_zone = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -428,9 +429,14 @@ corresponding to the variable mapped.}
 save outputs from the simulation.}
 
 \item{\code{db}}{Connection to the OFPE database to identify UTM zone. Optional, will try
-and calculate without.}
+and calculate without. Defaults to whatever was passed in to initialize ObsOP class.
+Optional, but require 'utm_zone' if omitted.}
 
-\item{\code{utm_fieldname}}{Name of the field for identifying the UTM zone.}
+\item{\code{utm_fieldname}}{Name of the field for identifying the UTM zone. Defaults to whatever
+was passed in to initialize ObsOP class. Optional, but require 'utm_zone' if omitted.}
+
+\item{\code{utm_zone}}{The EPSG code for the UTM zone that contains the data. Optional if a
+database connection is provided to look it up.}
 }
 \if{html}{\out{</div>}}
 }

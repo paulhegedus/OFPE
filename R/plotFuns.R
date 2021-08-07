@@ -81,9 +81,14 @@ plotMaps <- function(df,
                           )
     rSpdf <- as(rastVar, "SpatialPixelsDataFrame")
     rDf <- as.data.frame(rSpdf)
-
+    
     color <- OFPE::getColorRamp(var_col_name)
-    colnames(rDf)[1] <- var_label[i]
+    if (var_col_name == "x" | var_col_name == "y") {
+      colnames(rDf)[1] <- toupper(var_label[i])
+    } else {
+      colnames(rDf)[1] <- var_label[i]
+    }
+    
     main <- var_main_label[i]
     if (grepl("prev", var_col_name[i])) {
       sub_main <- df[1, "prev_yr"]

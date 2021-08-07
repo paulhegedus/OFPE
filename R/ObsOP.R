@@ -394,8 +394,12 @@ ObsOP <- R6::R6Class(
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
     #' @param db Connection to the OFPE database to identify UTM zone. Optional, will try
-    #' and calculate without. 
-    #' @param utm_fieldname Name of the field for identifying the UTM zone.
+    #' and calculate without. Defaults to whatever was passed in to initialize ObsOP class.
+    #' Optional, but require 'utm_zone' if omitted.
+    #' @param utm_fieldname Name of the field for identifying the UTM zone. Defaults to whatever
+    #' was passed in to initialize ObsOP class. Optional, but require 'utm_zone' if omitted.
+    #' @param utm_zone The EPSG code for the UTM zone that contains the data. Optional if a 
+    #' database connection is provided to look it up. 
     #' @return A 'ggmap' object and maps saved in the specified output folder if selected.
     plotObsMaps = function(dat,
                            var,
@@ -408,37 +412,43 @@ ObsOP <- R6::R6Class(
                            farmername = self$farmername,
                            out_path = self$out_path,
                            db = self$dbCon$db,
-                           utm_fieldname = self$utm_fieldname) {
+                           utm_fieldname = self$utm_fieldname,
+                           utm_zone = NULL) {
       stopifnot(length(year) == 1)
       if (is.null(var_main_label)) {
         var_main_label <- paste0("Observed ", year," ", var)
       }
       
       if (is.null(self$dbCon$db) | is.null(db)) {
-        if (!any(grepl("sf|sp", class(dat)))) {
-          dat_sf <- sf::st_as_sf(dat, coords = c("x", "y"), crs = 4326)
-          cords <- sf::st_coordinates(dat_sf) %>%
-            as.data.frame() %>% 
-            `names<-`(c("x", "y"))
-          dat_sf <- cbind(dat_sf, cords)
-        } else {
-          dat_sf <- sf::st_transform(dat, 4326)
-        }
-        utm_zone <- OFPE::calcUTMzone(dat_sf)
-        rm(dat_sf)
+        stopifnot(!is.null(utm_zone))
       } else {
-        utm_zone <- OFPE::findUTMzone(db, farmername, fieldname)
+        stopifnot(!is.null(db), 
+                  !is.null(farmername),
+                  !is.null(utm_fieldname))
+        utm_zone <- OFPE::findUTMzone(db, farmername, utm_fieldname)
+      }
+      if (is.numeric(dat[, grep(var_col_name, names(dat))])) {
+        p <- OFPE::plotMaps(dat,
+                            var_col_name,
+                            var_label,
+                            var_main_label,
+                            fieldname,
+                            farmername,
+                            utm_zone) %>%
+          suppressMessages() %>%
+          suppressWarnings()
+      } else {
+        p <- OFPE::plotCatMaps(dat, 
+                               var_col_name,
+                               var_label,
+                               var_main_label,
+                               fieldname,
+                               farmername,
+                               utm_zone) %>% 
+          suppressMessages() %>% 
+          suppressWarnings()
       }
       
-      p <- OFPE::plotMaps(dat,
-                          var_col_name,
-                          var_label,
-                          var_main_label,
-                          fieldname,
-                          farmername,
-                          utm_zone) %>%
-        suppressMessages() %>%
-        suppressWarnings()
 
       ## TODO: need to specify ObsMaps folder?? or leave up
       ## to user
@@ -859,7 +869,7 @@ ObsOP <- R6::R6Class(
       y_vec <- ggplot2::layer_data(p, 1)$count
       y_round_to <- ifelse(max(y_vec, na.rm = T) -
                              min(y_vec, na.rm = T) > 5, 5, 1)
-      yMIN <- DescTools::RoundTo(min(y_vec, na.rm = T), y_round_to, floor)
+      yMIN <- 0
       yMAX <- DescTools::RoundTo(max(y_vec, na.rm = T), y_round_to, ceiling)
       ySTEP <- (DescTools::RoundTo(max(y_vec, na.rm = T), y_round_to, ceiling) -
                   DescTools::RoundTo(min(y_vec, na.rm = T), y_round_to, floor)) / 10
