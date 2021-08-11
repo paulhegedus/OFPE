@@ -32,6 +32,7 @@ plotMaps <- function(df,
                      fieldname,
                      farmername,
                      utm_zone) {
+  
   stopifnot(
     length(var_col_name) == length(var_label),
     length(var_col_name) == length(var_main_label),
@@ -56,6 +57,7 @@ plotMaps <- function(df,
     if (length(which(is.na(df[, var_col_name[i]]))) > 0) {
       df <- df[-which(is.na(df[, var_col_name[i]])), ]
     }
+    df[, var_col_name[i]] <- as.numeric(df[, var_col_name[i]])
 
     sp <- sp::SpatialPoints(coords = df[, c("x", "y")])
     utm <- sf::st_as_sf(sp, remove_coordinates = FALSE)
@@ -69,6 +71,7 @@ plotMaps <- function(df,
       as.data.frame() %>%
       `names<-`(c("x", "y"))
     sp <- sp::SpatialPoints(coords = llc[, c("x", "y")])
+    sp::proj4string(sp) <- sp::CRS("+init=epsg:4326")
     e <- raster::extent(llc[, c("x", "y")])
     rast <- raster::raster(ext = e, resolution = 0.00015)
     rastVar <- raster::rasterize(sp, rast, df[, var_col_name[i]], fun = mean, na.rm = TRUE)
@@ -202,8 +205,9 @@ plotCatMaps <- function(df,
                         maptype = "satellite", source = "google", zoom = 15
   )
   
-  df <- sf::st_as_sf(df)
-  df <- sf::st_transform(df, 4326)
+  df <- sf::st_as_sf(df, coords = c("x", "y")) %>% 
+    sf::st_set_crs(utm_zone) %>% 
+    sf::st_transform(4326)
   
   main <- var_main_label
   if (grepl("prev", var_col_name)) {

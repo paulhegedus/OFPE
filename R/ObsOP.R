@@ -427,7 +427,7 @@ ObsOP <- R6::R6Class(
                   !is.null(utm_fieldname))
         utm_zone <- OFPE::findUTMzone(db, farmername, utm_fieldname)
       }
-      if (is.numeric(dat[, grep(var_col_name, names(dat))])) {
+      if (is.numeric(dat[[var_col_name]])) {
         p <- OFPE::plotMaps(dat,
                             var_col_name,
                             var_label,
@@ -851,13 +851,25 @@ ObsOP <- R6::R6Class(
       if (!is.numeric(dat[, x_col])) {
         dat[, x_col] <- as.numeric(dat[, x_col])
       }
-      x_round_to <- ifelse(max(dat[, x_col], na.rm = T) -
-                             min(dat[, x_col], na.rm = T) > 5, 5, 1)
-      xMIN <- DescTools::RoundTo(min(dat[, x_col], na.rm = T), x_round_to, floor)
-      xMAX <- DescTools::RoundTo(max(dat[, x_col], na.rm = T), x_round_to, ceiling)
-      xSTEP <- (DescTools::RoundTo(max(dat[, x_col], na.rm = T), x_round_to, ceiling) -
-                  DescTools::RoundTo(min(dat[, x_col], na.rm = T), x_round_to, floor)) / 10
-      bin_width <- (max(dat[, x_col], na.rm = T) - min(dat[, x_col], na.rm = T)) * 0.05
+      dat <- dat[!is.na(dat[, x_col]), ]
+      
+      if (sd(dat[, x_col], na.rm = TRUE) == 0) {
+        x_round_to <- ifelse(max(dat[, x_col], na.rm = T) -
+                               min(dat[, x_col], na.rm = T) > 5, 5, 1)
+        xMIN <- unique(dat[, x_col]) - x_round_to
+        xMAX <- unique(dat[, x_col]) + x_round_to
+        xSTEP <- (xMAX - xMIN) / 10
+        bin_width <- xSTEP * 2
+      } else {
+        x_round_to <- ifelse(max(dat[, x_col], na.rm = T) -
+                               min(dat[, x_col], na.rm = T) > 5, 5, 1)
+        xMIN <- DescTools::RoundTo(min(dat[, x_col], na.rm = T), x_round_to, floor)
+        xMAX <- DescTools::RoundTo(max(dat[, x_col], na.rm = T), x_round_to, ceiling)
+        xSTEP <- (DescTools::RoundTo(max(dat[, x_col], na.rm = T), x_round_to, ceiling) -
+                    DescTools::RoundTo(min(dat[, x_col], na.rm = T), x_round_to, floor)) / 10
+        bin_width <- (max(dat[, x_col], na.rm = T) - min(dat[, x_col], na.rm = T)) * 0.05
+      }
+      
       p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col])) +
         ggplot2::geom_histogram(stat = "bin", binwidth = bin_width, na.rm = TRUE,
                                 fill = "grey70", color = "grey30") +
