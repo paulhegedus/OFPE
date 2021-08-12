@@ -32,7 +32,6 @@ plotMaps <- function(df,
                      fieldname,
                      farmername,
                      utm_zone) {
-  
   stopifnot(
     length(var_col_name) == length(var_label),
     length(var_col_name) == length(var_main_label),
@@ -66,12 +65,13 @@ plotMaps <- function(df,
       sf::st_crs(utm) <- utm_zone
     }
     utm <- sf::st_transform(utm, "epsg:4326")
-    utm[, 1:2] <- sp::coordinates(as(utm, "Spatial"))
+    utm[, 1:2] <- sf::st_coordinates(utm)
     llc <- sp::coordinates(as(utm, "Spatial")) %>%
       as.data.frame() %>%
       `names<-`(c("x", "y"))
     sp <- sp::SpatialPoints(coords = llc[, c("x", "y")])
-    sp::proj4string(sp) <- sp::CRS("+init=epsg:4326")
+    wkt <- sf::st_crs(4326)[[2]]
+    sp::proj4string(sp) <- sp::CRS(wkt)
     e <- raster::extent(llc[, c("x", "y")])
     rast <- raster::raster(ext = e, resolution = 0.00015)
     rastVar <- raster::rasterize(sp, rast, df[, var_col_name[i]], fun = mean, na.rm = TRUE)
@@ -196,8 +196,7 @@ plotCatMaps <- function(df,
   llc <- sp::coordinates(as(utm, "Spatial")) %>%
     as.data.frame() %>%
     `names<-`(c("x", "y"))
-  rm(utm)
-  sp <- sp::SpatialPoints(coords = llc[, c("x", "y")])
+  rm(utm, sp)
   e <- raster::extent(llc[, c("x", "y")])
   rm(llc)
   map <- ggmap::get_map(location = c(e@xmin, e@ymin,
