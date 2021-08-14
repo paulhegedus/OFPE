@@ -128,7 +128,13 @@ AggGEE <- R6::R6Class(
                   ADD COLUMN carboncontent30cm REAL,
                   ADD COLUMN carboncontent60cm REAL,
                   ADD COLUMN carboncontent100cm REAL,
-                  ADD COLUMN carboncontent200cm REAL;")
+                  ADD COLUMN carboncontent200cm REAL,
+                  ADD COLUMN ndwi_cy_s REAL,
+                  ADD COLUMN ndwi_py_s REAL,
+                  ADD COLUMN ndwi_2py_s REAL,
+                  ADD COLUMN ndwi_cy_l REAL,
+                  ADD COLUMN ndwi_py_l REAL,
+                  ADD COLUMN ndwi_2py_l REAL;")
         )
       )
       invisible(
@@ -155,7 +161,9 @@ AggGEE <- R6::R6Class(
                   "sandcontent0cm", "sandcontent10cm", "sandcontent30cm", "sandcontent60cm", "sandcontent100cm", "sandcontent200cm",
                   "phw0cm", "phw10cm", "phw30cm", "phw60cm", "phw100cm", "phw200cm",
                   "watercontent0cm", "watercontent10cm", "watercontent30cm", "watercontent60cm", "watercontent100cm", "watercontent200cm",
-                  "carboncontent0cm", "carboncontent10cm", "carboncontent30cm", "carboncontent60cm", "carboncontent100cm", "carboncontent200cm"
+                  "carboncontent0cm", "carboncontent10cm", "carboncontent30cm", "carboncontent60cm", "carboncontent100cm", "carboncontent200cm",
+                  "ndwi_cy_s", "ndwi_py_s", "ndwi_2py_s",
+                  "ndwi_cy_l", "ndwi_py_l", "ndwi_2py_l"
                   )
       self$type <- c("aspect_rad", "slope", "elev", "tpi",
                 rep(("prec"), 2), rep("gdd", 2), rep("prec", 2),
@@ -168,7 +176,8 @@ AggGEE <- R6::R6Class(
                 "sandcontent0cm", "sandcontent10cm", "sandcontent30cm", "sandcontent60cm", "sandcontent100cm", "sandcontent200cm",
                 "phw0cm", "phw10cm", "phw30cm", "phw60cm", "phw100cm", "phw200cm",
                 "watercontent0cm", "watercontent10cm", "watercontent30cm", "watercontent60cm", "watercontent100cm", "watercontent200cm",
-                "carboncontent0cm", "carboncontent10cm", "carboncontent30cm", "carboncontent60cm", "carboncontent100cm", "carboncontent200cm")
+                "carboncontent0cm", "carboncontent10cm", "carboncontent30cm", "carboncontent60cm", "carboncontent100cm", "carboncontent200cm",
+                rep("ndwi", 6))
       self$SOURCE <- c(ifelse(self$aggInputs$farmername == "loewen", "srtm", "ned"),
                   ifelse(self$aggInputs$farmername == "loewen", "srtm", "ned"),
                   ifelse(self$aggInputs$farmername == "loewen", "cdem", "ned"),
@@ -178,15 +187,22 @@ AggGEE <- R6::R6Class(
                          ifelse(self$aggInputs$cy_resp == 2013, "L7", "L5")),
                   rep(ifelse(self$PY >= 2013, "L8",
                            ifelse(self$PY == 2012, "L7", "L5")), 2),
-                  rep("S2", 6), rep("smap", 4), rep("olm", 43))
+                  rep("S2", 6), rep("smap", 4), rep("olm", 43),
+                  rep("S2", 3),
+                  ifelse(self$aggInputs$cy_resp >= 2014, "L8",
+                         ifelse(self$aggInputs$cy_resp == 2013, "L7", "L5")),
+                  rep(ifelse(self$PY >= 2013, "L8",
+                             ifelse(self$PY == 2012, "L7", "L5")), 2))
       self$year <- c(rep("2015", 4), rep(c(self$aggInputs$cy_resp, self$PY), 4),
                 rep(c(self$aggInputs$cy_resp, self$PY, self$PY2), 4),
-                rep(c(self$aggInputs$cy_resp, self$PY), 2), rep("2015", 43))
+                rep(c(self$aggInputs$cy_resp, self$PY), 2), rep("2015", 43),
+                rep(c(self$aggInputs$cy_resp, self$PY, self$PY2), 2))
       if (self$aggInputs$dat_used == "decision_point") {
         self$loy <- c(rep("full", 4),
                  rep(c("mar", "full"), 4),
                  rep(c("mar", "full", "full"), 4),
-                 rep(c("mar", "full"), 2), rep("full", 43))
+                 rep(c("mar", "full"), 2), rep("full", 43),
+                 rep(c("mar", "full", "full"), 2))
       } else {
         self$loy <- rep("full", length(self$labels))
       }

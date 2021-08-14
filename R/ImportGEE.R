@@ -266,7 +266,7 @@ ImportGEE <- R6::R6Class(
                             "watercontent10cm", "watercontent30cm", "watercontent60cm", 
                             "watercontent100cm", "watercontent200cm", "carboncontent0cm", 
                             "carboncontent10cm", "carboncontent30cm", "carboncontent60cm",
-                            "carboncontent100cm", "carboncontent200cm"), 
+                            "carboncontent100cm", "carboncontent200cm", "ndwi"), 
                      collapse = "|"),
                    info$orig_file))) {
         #******************************************************************
@@ -288,7 +288,7 @@ ImportGEE <- R6::R6Class(
                                                 "watercontent10cm", "watercontent30cm", "watercontent60cm", 
                                                 "watercontent100cm", "watercontent200cm", "carboncontent0cm", 
                                                 "carboncontent10cm", "carboncontent30cm", "carboncontent60cm",
-                                                "carboncontent100cm", "carboncontent200cm"), 
+                                                "carboncontent100cm", "carboncontent200cm", "ndwi"), 
                                               collapse = "|")) # CHANGED dem to elev
         info$type <- stringr::str_sub(info$orig_file,
                                       str_locs[1],
