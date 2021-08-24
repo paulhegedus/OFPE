@@ -635,6 +635,8 @@ and provides a lavel.
   dat,
   x_var,
   x_lab = NULL,
+  color_var = NULL,
+  color_lab = NULL,
   main_label,
   out_path = self$out_path,
   save_label = NULL,
@@ -651,6 +653,11 @@ specified data.}
 \item{\code{x_var}}{The column name of the variable to plot on the x axis.}
 
 \item{\code{x_lab}}{The label to be applied to the x axis of the plot.}
+
+\item{\code{color_var}}{The variable or variables, passed in as a character string,
+to color the data by. If left NULL no coloring is applied.}
+
+\item{\code{color_lab}}{The label to be applied to the legend for the fill color.}
 
 \item{\code{main_label}}{Title for the figure.}
 

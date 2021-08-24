@@ -823,6 +823,9 @@ ObsOP <- R6::R6Class(
     #' specified data.
     #' @param x_var The column name of the variable to plot on the x axis.
     #' @param x_lab The label to be applied to the x axis of the plot.
+    #' @param color_var The variable or variables, passed in as a character string,
+    #' to color the data by. If left NULL no coloring is applied.
+    #' @param color_lab The label to be applied to the legend for the fill color.
     #' @param main_label Title for the figure.
     #' @param out_path The path to the folder in which to store and
     #' save outputs from the simulation.
@@ -834,6 +837,8 @@ ObsOP <- R6::R6Class(
     plotHistogram = function(dat,
                              x_var,
                              x_lab = NULL,
+                             color_var = NULL,
+                             color_lab = NULL,
                              main_label,
                              out_path = self$out_path,
                              save_label = NULL,
@@ -848,6 +853,7 @@ ObsOP <- R6::R6Class(
                   !is.null(SAVE))
       }
       x_col <- grep(paste0("^", x_var, "$"), names(dat))
+      color_col <- grep(paste0("^", color_var, "$"), names(dat))
       dat <- dat[!is.na(dat[, x_col]), ]
       
       if (!is.numeric(dat[, x_col])) {
@@ -855,6 +861,12 @@ ObsOP <- R6::R6Class(
           dat[, x_col] <- as.numeric(dat[, x_col])
         }
       } 
+      
+      if (!is.null(color_var)) {
+        stopifnot(is.character(color_var))
+        col_f <- grep(paste0("^", color_var, "$"), names(dat))
+        dat$Factor <- dat[, col_f]
+      }
       
       if (is.numeric(dat[, x_col])) {
         if (sd(dat[, x_col], na.rm = TRUE) == 0) {
@@ -873,20 +885,45 @@ ObsOP <- R6::R6Class(
                       DescTools::RoundTo(min(dat[, x_col], na.rm = T), x_round_to, floor)) / 10
           bin_width <- (max(dat[, x_col], na.rm = T) - min(dat[, x_col], na.rm = T)) * 0.05
         }
-        p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col])) +
-          ggplot2::geom_histogram(stat = "bin", binwidth = bin_width, na.rm = TRUE,
-                                  fill = "grey70", color = "grey30") + 
-          ggplot2::scale_x_continuous(limits = c(xMIN, xMAX),
-                                      breaks = seq(xMIN, xMAX, xSTEP),
-                                      labels = seq(xMIN, xMAX, xSTEP)) +
-          ggplot2::labs(x = x_lab, y = "Frequency") +
-          ggplot2::theme_bw()
+        if (is.null(color_var)) {
+          p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col])) +
+            ggplot2::geom_histogram(stat = "bin", binwidth = bin_width, na.rm = TRUE,
+                                    fill = "grey70", color = "grey30") + 
+            ggplot2::scale_x_continuous(limits = c(xMIN, xMAX),
+                                        breaks = seq(xMIN, xMAX, xSTEP),
+                                        labels = seq(xMIN, xMAX, xSTEP)) + 
+            ggplot2::labs(x = x_lab, y = "Frequency") +
+            ggplot2::theme_bw()
+        } else {
+          p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col])) +
+            ggplot2::geom_histogram(ggplot2::aes(fill = dat[, color_col]), 
+                                    stat = "bin", binwidth = bin_width, na.rm = TRUE,
+                                    alpha = 0.5,
+                                    position = "identity") + 
+            ggplot2::scale_x_continuous(limits = c(xMIN, xMAX),
+                                        breaks = seq(xMIN, xMAX, xSTEP),
+                                        labels = seq(xMIN, xMAX, xSTEP)) + 
+            ggplot2::labs(x = x_lab, y = "Frequency", 
+                          fill = color_lab) +
+            ggplot2::theme_bw()
+        }
       } else {
         bin_width = NULL
-        p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col])) +
-          ggplot2::geom_bar(na.rm = TRUE, fill = "grey70", color = "grey30") +
-          ggplot2::labs(x = x_lab, y = "Frequency") +
-          ggplot2::theme_bw()
+        if (is.null(color_var)) {
+          p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col])) +
+            ggplot2::geom_bar(na.rm = TRUE, fill = "grey70", color = "grey30") + 
+            ggplot2::labs(x = x_lab, y = "Frequency") +
+            ggplot2::theme_bw()
+        } else {
+          p <- ggplot2::ggplot(dat, ggplot2::aes(x = dat[, x_col])) +
+            ggplot2::geom_bar(ggplot2::aes(fill = dat[, color_col]), 
+                              alpha = 0.5,
+                              position = "identity",
+                              na.rm = TRUE) + 
+            ggplot2::labs(x = x_lab, y = "Frequency", 
+                          fill = color_lab) +
+            ggplot2::theme_bw()
+        }
       }
       
       y_vec <- ggplot2::layer_data(p, 1)$count

@@ -5,17 +5,11 @@ warnings_are_errors: true
 script:
   - R CMD build .
   - R CMD check *tar.gz --as-cran
-
-jobs:
-  include:
-    - os: linux
-      dist: xenial
-    - os: osx
-      osx_image: xcode12.5
-matrix:
-  exclude:
-    - r: devel
-      os: osx
+os:
+  - linux
+  - osx
+dist:
+  - xenial
 apt_packages:
   - gdal-bin
   - libgdal-dev
