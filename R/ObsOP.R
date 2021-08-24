@@ -944,11 +944,19 @@ ObsOP <- R6::R6Class(
       }
       
       if (SAVE) {
+        if (is.null(color_var)) {
+          paste0(out_path,
+                 save_label, "_",
+                 x_var, "_histogram.png")
+        } else {
+          paste0(out_path,
+                 save_label, "_",
+                 x_var, "_x_", color_var,
+                 "_histogram.png")
+        }
         try({dev.off()}, silent = TRUE)
         ggplot2::ggsave(
-          file = paste0(out_path,
-                        save_label, "_",
-                        x_var, "_histogram.png"),
+          file = filename,
           plot = p, device = "png",
           width = 7.5, height = 7.5, units = "in"
         )
