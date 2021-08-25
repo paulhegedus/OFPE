@@ -945,11 +945,11 @@ ObsOP <- R6::R6Class(
       
       if (SAVE) {
         if (is.null(color_var)) {
-          paste0(out_path,
+          filename <- paste0(out_path,
                  save_label, "_",
                  x_var, "_histogram.png")
         } else {
-          paste0(out_path,
+          filename <- paste0(out_path,
                  save_label, "_",
                  x_var, "_x_", color_var,
                  "_histogram.png")
