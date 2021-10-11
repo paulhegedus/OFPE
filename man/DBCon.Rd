@@ -10,6 +10,11 @@ is recommended for OFPE use and shown in the OFPE tutorials and
 vignettes. However, any database driver can be supplied. This class
 was created to consolidate database connections being supplied to
 functions and other R6 classes in the OFPE data workflow.
+
+Users can connect with any DBI compliant option. Using RPostgreSQL drivers on
+a Mac, users can provide the user, password, dbname, host, and port. If on a
+Windows computer the user just needs to set up a PostgreSQL ODBC driver, and
+supply the DSN, user, and password.
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -34,11 +39,12 @@ Create a database connection inside of the DBCon class.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBCon$new(
   drv = RPostgreSQL::PostgreSQL(),
+  dsn = NULL,
   user = NA,
   password = NA,
-  dbname = NA,
-  host = NA,
-  port = NA
+  dbname = NULL,
+  host = NULL,
+  port = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -47,6 +53,9 @@ Create a database connection inside of the DBCon class.
 \describe{
 \item{\code{drv}}{Database driver for connection. Default is PostgreSQL
 but can be overridden by passing in an argument.}
+
+\item{\code{dsn}}{Optional. If ODBC database source name is setup. Required for
+Windows users.}
 
 \item{\code{user}}{Username associated with the database owner.}
 

@@ -74,6 +74,12 @@ dbCon <- DBCon$new(
   host = "localhost", # if you made your own db
   port = "5432" # default 
 )
+## OR ## 
+dbCon <- DBCon$new(
+  dsn = "<DSN name>",
+  user = "<your username>",
+  password = "<your_password>"
+)
 ```
 
 ### (Optional) Prepare Example Data

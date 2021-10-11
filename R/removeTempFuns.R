@@ -8,7 +8,7 @@
 #' @export
 removeTempTables <- function(db) {
   ## remove old temp bboxes (user input bboxes)
-  geom_temp_exist <- as.logical(
+  geom_temp_exist <- as.logical(as.numeric(
     DBI::dbGetQuery(
       db,
       paste0("SELECT EXISTS (
@@ -16,7 +16,7 @@ removeTempTables <- function(db) {
              FROM   information_schema.tables
              WHERE  table_schema = 'all_farms'
              AND table_name = 'temp')")
-    )
+    ))
   )
   if(geom_temp_exist){
     invisible(
@@ -28,14 +28,14 @@ removeTempTables <- function(db) {
 
   }
   ## remove any temporary grids
-  grid_temp_exist <- as.logical(
+  grid_temp_exist <- as.logical(as.numeric(
     DBI::dbGetQuery(
       db,
       paste0("SELECT EXISTS (SELECT 1 FROM
              information_schema.tables
              WHERE table_schema = 'all_farms'
              AND table_name = 'gridtemp')")
-    )
+    ))
   )
   if(grid_temp_exist){
     invisible(
@@ -45,14 +45,14 @@ removeTempTables <- function(db) {
       )
     )
   }
-  rxgrid_temp_exist <- as.logical(
+  rxgrid_temp_exist <- as.logical(as.numeric(
     DBI::dbGetQuery(
       db,
       paste0("SELECT EXISTS (SELECT 1 FROM
              information_schema.tables
              WHERE table_schema = 'all_farms'
              AND table_name = 'rxgridtemp')")
-    )
+    ))
   )
   if(rxgrid_temp_exist){
     invisible(
@@ -63,14 +63,14 @@ removeTempTables <- function(db) {
     )
   }
   ## remove any temporary geetemp
-  gee_temp_exist <- as.logical(
+  gee_temp_exist <- as.logical(as.numeric(
     DBI::dbGetQuery(
       db,
       paste0("SELECT EXISTS (SELECT 1 FROM
              information_schema.tables
              WHERE table_schema = 'all_farms'
              AND table_name = 'geetemp')")
-    )
+    ))
   )
   if(gee_temp_exist){
     invisible(
@@ -93,7 +93,7 @@ removeTempTables <- function(db) {
 #' @export
 removeTempFarmerTables <- function(db, farmername) {
   ## remove old temporary tables
-  temp_exist <- as.logical(
+  temp_exist <- as.logical(as.numeric(
     DBI::dbGetQuery(
       db,
       paste0("SELECT EXISTS (
@@ -101,7 +101,7 @@ removeTempFarmerTables <- function(db, farmername) {
              FROM information_schema.tables
              WHERE table_schema = '",farmername,"_a'
              AND table_name = 'temp')")
-    )
+    ))
   )
   if(temp_exist){
     invisible(
@@ -113,7 +113,7 @@ removeTempFarmerTables <- function(db, farmername) {
       )
     )
   }
-  temp_exist <- as.logical(
+  temp_exist <- as.logical(as.numeric(
     DBI::dbGetQuery(
       db,
       paste0("SELECT EXISTS (
@@ -121,7 +121,7 @@ removeTempFarmerTables <- function(db, farmername) {
              FROM information_schema.tables
              WHERE table_schema = '",farmername,"_a'
              AND table_name = 'temp2')")
-    )
+    ))
   )
   if(temp_exist){
     invisible(
@@ -133,7 +133,7 @@ removeTempFarmerTables <- function(db, farmername) {
       )
     )
   }
-  temp_exist <- as.logical(
+  temp_exist <- as.logical(as.numeric(
     DBI::dbGetQuery(
       db,
       paste0("SELECT EXISTS (
@@ -141,7 +141,7 @@ removeTempFarmerTables <- function(db, farmername) {
              FROM information_schema.tables
              WHERE table_schema = '",farmername,"_a'
              AND table_name = 'aspect')")
-    )
+    ))
   )
   if(temp_exist){
     invisible(
@@ -153,7 +153,7 @@ removeTempFarmerTables <- function(db, farmername) {
       )
     )
   }
-  temp_exist <- as.logical(
+  temp_exist <- as.logical(as.numeric(
     DBI::dbGetQuery(
       db,
       paste0("SELECT EXISTS (
@@ -161,7 +161,7 @@ removeTempFarmerTables <- function(db, farmername) {
              FROM information_schema.tables
              WHERE table_schema = '",farmername,"_r'
              AND table_name = 'temp')")
-    )
+    ))
   )
   if(temp_exist){
     invisible(
@@ -173,7 +173,7 @@ removeTempFarmerTables <- function(db, farmername) {
       )
     )
   }
-  temp_exist <- as.logical(
+  temp_exist <- as.logical(as.numeric(
     DBI::dbGetQuery(
       db,
       paste0("SELECT EXISTS (
@@ -181,7 +181,7 @@ removeTempFarmerTables <- function(db, farmername) {
              FROM information_schema.tables
              WHERE table_schema = '",farmername,"_r'
              AND table_name = 'temp2')")
-    )
+    ))
   )
   if(temp_exist){
     invisible(
@@ -193,7 +193,7 @@ removeTempFarmerTables <- function(db, farmername) {
       )
     )
   }
-  means_exist <- as.logical(
+  means_exist <- as.logical(as.numeric(
     DBI::dbGetQuery(
       db,
       paste0("SELECT EXISTS (
@@ -201,7 +201,7 @@ removeTempFarmerTables <- function(db, farmername) {
              FROM information_schema.tables
              WHERE table_schema = '",farmername,"_r'
              AND table_name = 'means')")
-    )
+    ))
   )
   if(means_exist){
     invisible(
@@ -213,7 +213,7 @@ removeTempFarmerTables <- function(db, farmername) {
       )
     )
   }
-  exp_grid_exist <- as.logical(
+  exp_grid_exist <- as.logical(as.numeric(
     DBI::dbGetQuery(
       db,
       paste0("SELECT EXISTS (
@@ -221,7 +221,7 @@ removeTempFarmerTables <- function(db, farmername) {
              FROM information_schema.tables
              WHERE table_schema = '",farmername,"_a'
              AND table_name = 'exp_grid')")
-    )
+    ))
   )
   if(exp_grid_exist){
     invisible(
@@ -233,7 +233,7 @@ removeTempFarmerTables <- function(db, farmername) {
       )
     )
   }
-  exp_box_exist <- as.logical(
+  exp_box_exist <- as.logical(as.numeric(
     DBI::dbGetQuery(
       db,
       paste0("SELECT EXISTS (
@@ -241,7 +241,7 @@ removeTempFarmerTables <- function(db, farmername) {
              FROM information_schema.tables
              WHERE table_schema = '",farmername,"_a'
              AND table_name = 'exp_box')")
-    )
+    ))
   )
   if(exp_box_exist){
     invisible(

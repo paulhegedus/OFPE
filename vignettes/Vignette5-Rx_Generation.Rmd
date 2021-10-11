@@ -64,6 +64,12 @@ dbCon <- DBCon$new(
   host = "localhost",
   port = "5432"
 )
+## OR ## 
+dbCon <- DBCon$new(
+  dsn = "<DSN name>",
+  user = "<your username>",
+  password = "<your_password>"
+)
 ggmap::register_google(key = "your_google_key")
 OFPE::removeTempTables(dbCon$db) # removes temporary tables. good practice
 ```

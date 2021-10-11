@@ -119,32 +119,8 @@ getRxGrid <- function(db,
           WHERE rxgridtemp.cell_id = vtemp.cell_id;")
   ))
   
-  ## make temp bound with buffer to get compete blocks within 
-  OFPE::makeTempBound(db, fieldname, farmername, buffer_width)
-  invisible(DBI::dbSendQuery(
-    db,
-    paste0( "ALTER TABLE all_farms.rxgridtemp
-          ADD COLUMN id SERIAL;")
-  ))
-  invisible(DBI::dbSendQuery(
-    db,
-    paste0( "DELETE FROM all_farms.rxgridtemp  AS rxgridtemp
-          WHERE rxgridtemp.id IN (
-            SELECT a.id
-            FROM all_farms.rxgridtemp  a, (
-              SELECT ST_Union(geometry) As geometry FROM all_farms.temp
-            ) b
-          WHERE NOT ST_Within(a.geom, b.geometry)
-          );")
-  ))
-  invisible(DBI::dbSendQuery(
-    db,
-    paste0( "ALTER TABLE all_farms.rxgridtemp
-          DROP COLUMN id;")
-  ))
-  
   ## rotate rxgridtemp manually in QGIS here
-  # browser() 
+  browser() 
   
   ## rotate to heading if present
   if (heading != 0) {
@@ -177,6 +153,30 @@ getRxGrid <- function(db,
     )))
     rm(rxgridtemp, rxgridtemp_rot, cntr, theta, rot)
   }
+  
+  ## make temp bound with buffer to get compete blocks within 
+  OFPE::makeTempBound(db, fieldname, farmername, buffer_width)
+  invisible(DBI::dbSendQuery(
+    db,
+    paste0( "ALTER TABLE all_farms.rxgridtemp
+          ADD COLUMN id SERIAL;")
+  ))
+  invisible(DBI::dbSendQuery(
+    db,
+    paste0( "DELETE FROM all_farms.rxgridtemp  AS rxgridtemp
+          WHERE rxgridtemp.id IN (
+            SELECT a.id
+            FROM all_farms.rxgridtemp  a, (
+              SELECT ST_Union(geometry) As geometry FROM all_farms.temp
+            ) b
+          WHERE NOT ST_Within(a.geom, b.geometry)
+          );")
+  ))
+  invisible(DBI::dbSendQuery(
+    db,
+    paste0( "ALTER TABLE all_farms.rxgridtemp
+          DROP COLUMN id;")
+  ))
   
   ## bring in exp/prescription grid
   rx_sdt <- sf::st_read(
