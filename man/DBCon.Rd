@@ -38,25 +38,18 @@ supply the DSN, user, and password.
 Create a database connection inside of the DBCon class.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DBCon$new(
-  drv = RPostgreSQL::PostgreSQL(),
-  dsn = NULL,
   user = NA,
   password = NA,
   dbname = NULL,
   host = NULL,
-  port = NULL
+  port = NULL,
+  dsn = NULL
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{drv}}{Database driver for connection. Default is PostgreSQL
-but can be overridden by passing in an argument.}
-
-\item{\code{dsn}}{Optional. If ODBC database source name is setup. Required for
-Windows users.}
-
 \item{\code{user}}{Username associated with the database owner.}
 
 \item{\code{password}}{Password associated with the database owner.}
@@ -67,6 +60,9 @@ Windows users.}
 unless user is connecting to a non-local database.}
 
 \item{\code{port}}{The port number of the database.}
+
+\item{\code{dsn}}{Optional. If ODBC database source name is setup. Required for
+Windows users.}
 }
 \if{html}{\out{</div>}}
 }

@@ -80,22 +80,22 @@ ImportGEE <- R6::R6Class(
     #' @return See 'GEE' table in database.
     .uploadGEE = function(FILE, overwrite, db) {
       # check if table exists yet (after first upload it should)
-      gee <- as.logical(
+      gee <- as.logical(as.numeric(
         DBI::dbGetQuery(db,
                         "SELECT EXISTS (SELECT 1
                          FROM information_schema.tables
                          WHERE table_schema = 'all_farms'
                          AND table_name = 'gee')")
-      )
+      ))
       db_check <- FALSE # assumes file not in db
       if (gee) { # if GEE file exists & user selects to overwrite
         #check for if the FILE exists in db by checking 'orig_file' col
-        db_check <- as.logical(
+        db_check <- as.logical(as.numeric(
           DBI::dbGetQuery(db,
                           paste0("SELECT EXISTS (SELECT 1
                                   FROM all_farms.gee
                                  WHERE orig_file = '", FILE$name,"')"))
-        )
+        ))
         if (db_check & overwrite) {
           DBI::dbSendQuery(
             db,
