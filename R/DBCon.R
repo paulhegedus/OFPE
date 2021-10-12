@@ -55,7 +55,7 @@ DBCon <- R6::R6Class(
           !is.null(port)
         )
         self$db <- DBI::dbConnect(
-          drv = RPostgreSQL::PostgreSQL(),
+          drv = RPostgres::Postgres(), # RPostgreSQL::PostgreSQL(),
           user = user,
           password = password,
           dbname = dbname,
