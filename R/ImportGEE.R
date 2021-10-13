@@ -61,7 +61,7 @@ ImportGEE <- R6::R6Class(
     #' @return See 'GEE' table in database.
     executeUpload = function() {
       # prevents annoying and useless notices from postgresql
-      invisible(DBI::dbGetQuery(dbCon$db, "SET client_min_messages TO WARNING"))
+      invisible(DBI::dbSendQuery(dbCon$db, "SET client_min_messages TO WARNING"))
       invisible(
         apply(self$file_names,
               1,
@@ -132,12 +132,12 @@ ImportGEE <- R6::R6Class(
         ## put all data in the 'gee' table of the 'all_farms' schema in db
         if (!gee) { # if table does not exist create it
           invisible(
-            DBI::dbGetQuery(db,
+            DBI::dbSendQuery(db,
                             "CREATE TABLE all_farms.gee AS
                              SELECT * FROM all_farms.temp")
           )
           invisible(
-            DBI::dbGetQuery(
+            DBI::dbSendQuery(
               db,
               paste0("ALTER TABLE all_farms.gee
                      ADD PRIMARY KEY (rid,orig_file,year,loy,type,scale,source,farmidx,farmeridx)")
@@ -164,11 +164,11 @@ ImportGEE <- R6::R6Class(
           error=function(e) {
             print(paste0(info$orig_file, " already exists in database"))
           },
-          warning=function(w) {print()})
+          warning=function(w) {})
         }
         ## remove temp database table and remove file from working directory
         invisible(
-          DBI::dbGetQuery(db, paste0("DROP TABLE all_farms.temp"))
+          DBI::dbSendQuery(db, paste0("DROP TABLE all_farms.temp"))
         )
         file.remove(FILE$name)
         message <- paste0(FILE$name, " import complete")
@@ -349,7 +349,7 @@ ImportGEE <- R6::R6Class(
     #' @param db The connection to the OFPE database.
     #' @return Columns added to database table.
     .addColsToDB = function(info, name, db) {
-     DBI::dbGetQuery(db,
+     DBI::dbSendQuery(db,
                      paste0("ALTER TABLE all_farms.temp
                             ADD COLUMN ", name, " TEXT
                             DEFAULT '", info, "'"))
