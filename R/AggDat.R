@@ -670,10 +670,11 @@ AggDat <- R6::R6Class(
       means_sd$max_resp <- means_sd$mean_resp + (2 * means_sd$sd_resp)
       means_sd$min_resp <- 0
       means_sd$var_resp <- means_sd$sd_resp ^ 2
+      table_id <- DBI::Id(schema = paste0(farmername, "_r"), table = "means")
       invisible(
         DBI::dbWriteTable(
           db,
-          c(paste0(farmername, "_r"), "means"),
+          table_id,
           means_sd,
           row.names = FALSE)
       )
@@ -1252,10 +1253,11 @@ AggDat <- R6::R6Class(
         means_sd$min_exp <- ifelse((means_sd$mean_exp - (2 * means_sd$sd_exp)) < 0,
                                    -1, (means_sd$mean_exp - (2 * means_sd$sd_exp)))
         means_sd$var_exp <- means_sd$sd_exp ^ 2
+        table_id <- DBI::Id(schema = paste0(farmername, "_r"), table = "means")
         invisible(
           DBI::dbWriteTable(
             db,
-            c(paste0(farmername, "_r"), "means"),
+            table_id,
             means_sd,
             row.names = FALSE)
         )
