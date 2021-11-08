@@ -1881,24 +1881,27 @@ AggDat <- R6::R6Class(
                     AND year = '", self$aggInputs$cy_resp, "'
                     AND datused = '", self$aggInputs$dat_used, "';")
         ))
-        # temp_dat <- sf::st_read(
-        #   self$aggInputs$dbCon$db,
-        #   query = paste0("SELECT * FROM ",
-        #                  self$aggInputs$farmername, "_a.temp;")) %>%
-        #   sf::`st_crs<-`(4326) %>%
-        #   sf::st_transform("epsg:4326")
-        # sf::st_write(temp_dat,
-        #              self$aggInputs$dbCon$db,
-        #              c(paste0(self$aggInputs$farmername, "_a"),
-        #                self$aggInputs$respvar),
-        #              layer_options = "OVERWRITE=false",
-        #              append = TRUE)
-        invisible(DBI::dbSendQuery(
+        temp_dat <- sf::st_read(
           self$aggInputs$dbCon$db,
-          paste0("INSERT INTO ", self$aggInputs$farmername, "_a.", self$aggInputs$respvar, "
-                    SELECT *
-                    FROM ", self$aggInputs$farmername, "_a.temp;")
-        ))
+          query = paste0("SELECT * FROM ",
+                         self$aggInputs$farmername, "_a.temp;")) %>%
+          sf::`st_crs<-`(4326) %>%
+          sf::st_transform("epsg:4326")
+        table_id <- DBI::Id(
+          schema  = paste0(self$aggInputs$farmername, "_a"), 
+          table   = self$aggInputs$respvar
+        )
+        sf::st_write(temp_dat,
+                     self$aggInputs$dbCon$db,
+                     table_id,
+                     layer_options = "OVERWRITE=false",
+                     append = TRUE)
+        # invisible(DBI::dbSendQuery(
+        #   self$aggInputs$dbCon$db,
+        #   paste0("INSERT INTO ", self$aggInputs$farmername, "_a.", self$aggInputs$respvar, "
+        #             SELECT *
+        #             FROM ", self$aggInputs$farmername, "_a.temp;")
+        # ))
       }
       invisible(DBI::dbSendQuery(
         self$aggInputs$dbCon$db,
