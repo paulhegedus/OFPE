@@ -702,9 +702,11 @@ AggDat <- R6::R6Class(
           paste0("UPDATE ", farmername, "_a.temp temp
                   SET ", newcol, " = means.mean_resp
                   FROM ", farmername, "_r.means means
-                  WHERE temp.cell_id = means.cell_id;
-                  
-                  UPDATE ", farmername, "_a.temp temp
+                  WHERE temp.cell_id = means.cell_id;")
+        ))
+        invisible(DBI::dbSendQuery(
+          db,
+          paste0("UPDATE ", farmername, "_a.temp temp
                   SET var_", newcol, " = means.var_resp
                   FROM ", farmername, "_r.means means
                   WHERE temp.cell_id = means.cell_id;")
@@ -1492,9 +1494,11 @@ AggDat <- R6::R6Class(
             paste0("UPDATE ", farmername, "_a.exp_grid aggexp
                   SET exp = means.mean_exp
                   FROM ", farmername, "_r.means means
-                  WHERE aggexp.cell_id = means.cell_id;
-                  
-                  UPDATE ", farmername, "_a.exp_grid aggexp
+                  WHERE aggexp.cell_id = means.cell_id;")
+          ))
+          invisible(DBI::dbSendQuery(
+            db,
+            paste0("UPDATE ", farmername, "_a.exp_grid aggexp
                   SET var_exp = means.var_exp
                   FROM ", farmername, "_r.means means
                   WHERE aggexp.cell_id = means.cell_id;")
@@ -1589,9 +1593,11 @@ AggDat <- R6::R6Class(
           paste0("UPDATE ", farmername, "_a.temp temp
                   SET ", newcol, " = aggexp.exp
                   FROM ", farmername, "_a.exp_grid aggexp
-                  WHERE temp.cell_id = aggexp.cell_id;
-                  
-                  UPDATE ", farmername, "_a.temp temp
+                  WHERE temp.cell_id = aggexp.cell_id;")
+        ))
+        invisible(DBI::dbSendQuery(
+          db,
+          paste0("UPDATE ", farmername, "_a.temp temp
                   SET var_", newcol, " = aggexp.var_exp
                   FROM ", farmername, "_a.exp_grid aggexp
                   WHERE temp.cell_id = aggexp.cell_id;")
