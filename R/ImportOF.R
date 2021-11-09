@@ -207,6 +207,8 @@ ImportOF <- R6::R6Class(
         names(FILE)[which(names(FILE) == "orig_file")] <- "orig_filePREV"
       }
       FILE$orig_file <- paste(name)
+      
+      ## NOTE: THIS IS BRITTLE AF
       if (grepl("GMC", name, ignore.case = TRUE)) {
         FILE$farmer <- "broyles"
       }
@@ -662,6 +664,8 @@ ImportOF <- R6::R6Class(
       }
     },
     .findDtype = function(FILE, name, NAMES) {
+      ## NOTE: THIS FUNCTION IS WEAK AND NEEDS TO HAVE SOME BETTER
+      ## WAY TO IDENTIFY DATA TYPES
       dtype <- NA
       #******************************************************************
       ## < NOTE: UPDATE grepl() STATEMENTS BELOW IF NEW KEYWORDS >

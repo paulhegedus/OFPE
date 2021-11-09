@@ -12,7 +12,7 @@ setNAtoNaN <- function(dat) {
   for (j in 1:ncol(dat)) { # convert NA to NaN for db import
     if (anyNA(as.data.frame(dat[, j])[1])) {
       na_index <- which(is.na(as.data.frame(dat[, j])[1]))
-      dat[na_index[1]:na_index[length(na_index)], j] <- NaN
+      dat[na_index, j] <- NaN
     }
   }
   return(dat)
