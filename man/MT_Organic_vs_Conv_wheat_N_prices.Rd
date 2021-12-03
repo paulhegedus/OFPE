@@ -11,7 +11,10 @@ A data frame with 98 rows and 4 variables:
 \item{org}{Price of HRWW grown organically, in dollars per bushel.}
 \item{conv}{Price of HRWW grown conventionally, in dollars per bushel.}
 \item{cost}{Cost of nitrogen fertilizer, in dollars per pound.}
+<<<<<<< HEAD
 \item{FC}{Fixed costs of farm operations besides seed and fertilizer, in dollars per acre}
+=======
+>>>>>>> 176d413b3512a5bb5f454ff28059a84af69a0d4a
 }
 }
 \usage{

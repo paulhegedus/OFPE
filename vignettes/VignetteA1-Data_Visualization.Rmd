@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ---
 title: "VignetteA1-Data_Visualization"
 author: "Paul Hegedus"
@@ -223,3 +224,230 @@ Whenever a database connection is open it needs to be closed.
 ```{r, eval = FALSE}
 dbCon$disconnect()
 ```
+=======
+---
+title: "VignetteA1-Data_Visualization"
+author: "Paul Hegedus"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{VignetteA1-Data_Visualization}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+# Introduction
+The main purpose of the ObsOP (Observed Data Outputter) class is to make general visualization and data manipulation easy. The class can be initialized for general use with an OFPE database where data to be worked with is specified for each method and function. Otherwise the class can be initialized with information on where and what data to use for the methods. In that case the methods and functions can be used with minimal arguments. There are X main methods for this page. 
+
+This vignette covers initializing the class and using the tools of the class such as fetching of aggregated and raw data, kriging protein data to another dataset, creating maps, scatterplots, histograms, and boxplots of specified variable(s). The user can use multiple instantiations of this class to gather and manipulate multiple field/year specifications. 
+
+This class can be used to fetch and manipulate raw or aggregated data. This means that the user must have completed the workflows in Vignettes 2 and 3. 
+
+# Resources
+The resources below are strongly recommended as supplemental information regarding the use and intent of this vignette and associated functions.
+
+  * [OFPE Project Website](https://sites.google.com/site/ofpeframework/): Project information and products from the MSU OFPE project.
+  * [OFPE Technical Website](https://paulhegedus.github.io/OFPE-Website/index.html): Website with more detailed descriptions of the OFPE data cycle and workflow, as well as tutorials for external data processes that cannot be performed in R.
+  * [OFPE Overview](https://paulhegedus.github.io/OFPE-Website/ofpe_overview.html): Page of the OFPE Technical Website describing an overview of the OFPE data cycle and workflow.
+
+Again, it is assumed that the user has completed Vignette 1, 2, and 3 at least and understands the database creation, management, import, aggregation, and analysis/simulation methods described at this [site](https://paulhegedus.github.io/OFPE-Website/index.html).
+
+# Workflow
+This class can be initialized with arguments required to run the methods for acquiring or making figures, or can be initialized solely with a 'create' argument, described below. When an empty 'ObsOP' class is initialized, the methods must have all arguments passed, whereas if the user initializes the ObsOP class with arguments, methods can be executed with minimal other arguments.
+
+## Setup Environment
+Load packages, connect to database and clear out any temporary files, and setup your Google key.
+```{r, eval = FALSE}
+#devtools::install_github("paulhegedus/OFPE")
+library(OFPE)
+dbCon <- DBCon$new(
+  user = "postgres",
+  password = "<your_password>",
+  dbname = "<your_db_name>", 
+  host = "localhost",
+  port = "5432"
+)
+## OR ## 
+dbCon <- DBCon$new(
+  dsn = "<DSN name>",
+  user = "<your username>",
+  password = "<your_password>"
+)
+ggmap::register_google(key = "your_google_key")
+OFPE::removeTempTables(dbCon$db) # removes temporary tables. good practice
+```
+
+## Initialize for General Use
+This sections demonstrates how to setup a 'clean' ObsOP class with just a database connection. This allows the user the freedom to execute the methods of the class and pass in their data selection choices with standard function notation. The user can then run any of the functions in the class by specifying inputs to each method. The examples below show how to use the ObsOP class to manipulate and visualize various datasets using the same instantiation of the class. 
+
+First, simply create a new object of the ObsOP class.
+```{r, eval = FALSE}
+obsOP <- ObsOP$new()
+```
+
+Now the methods available in the ObsOP class are available to be used independently as a shortcut for data manipulation and visualizations. The user simply calls the method from the instantiated class and provides the necessary arguments. The following code provides examples for using each of the ObsOP methods.
+
+### Data Manipulation
+Data can be extracted from the database with either the 'fetchAggDat' or 'fetchRawDat' methods. These gather data from an OFPE formatted database by querying either aggregated or raw schemas, respectively, for a specified farmer, field, and year. The user specifies the table within the schema, and when gathering data from raw table must specify the original filename. The example below gathers data from an aggregated schema in the database.
+```{r, eval = FALSE}
+### Gather Data
+# yld and protein for a field
+# henrys
+yld <- obsOP$fetchAggDat(db = dbCon$db,
+                         farmername = 'wood',
+                         fieldname = 'henrys',
+                         year = 2020,
+                         dat_tab = 'yld',
+                         GRID = 'grid',
+                         dat_used = 'decision_point',
+                         store = FALSE)
+pro <- obsOP$fetchAggDat(db = dbCon$db,
+                         farmername = 'wood',
+                         fieldname = 'henrys',
+                         year = 2020,
+                         dat_tab = 'pro',
+                         GRID = 'grid',
+                         dat_used = 'decision_point',
+                         store = FALSE)
+```
+
+In some cases it may be useful to interpolate protein or yield data to a different dataset. Either could be interpolated to data frame the 'sat' tables in aggregated schemas or to each other. In the example below, protein data is interpolated to yield data which is used to calculate net-return. The first step below initializes another ObsOP class to gather protein data to use in the interpolation method of the ObsOP class with yield data gathered in the previous step.
+```{r, eval = FALSE}
+### Krige Protein Data
+# henrys
+yld <- obsOP$krigeDat(pro, yld, "pro")
+```
+
+The method for calculating net-return does not require both yield and protein in the specified dataset, but does require one. It also requires the specification of the column with the experimental data and economic parameters for calculating net-return, such as base prices, cost of experimental inputs, fixed costs, etc. 
+```{r, eval = FALSE}
+### Calculate Net-Return
+# henrys
+# initialize econDat to get B0pd, B1pd, B2pd
+econDat <- EconDat$new(FC = 70,
+                       ssAC = 0,
+                       Prc = "Default",
+                       PD = "Default")
+# data must be 
+yld <- obsOP$calcNR(dat = yld,
+                    yld_col_name = "yld",
+                    pro_col_name = "pro",
+                    exp_col_name = "aa_n",
+                    CEXP = 0.28,
+                    FC = 70,
+                    ssAC = 4,
+                    Bp = 4.6,
+                    B0pd = econDat$B0pd,
+                    B1pd = econDat$B1pd,
+                    B2pd = econDat$B2pd)
+```
+
+### Data Visualization
+The ObsOP class can be used to make maps. The example below shows how to map the net-returns calculated in the steps above. The class mapping class takes a specified data frame and further arguments in the plotObsMap() method of the ObsOP class. The user has to specify labels and the data to be mapped. See the method documentation for more details.
+```{r, eval = FALSE}
+### Map Data
+# Net-Return - henrys
+obsOP$plotObsMaps(yld,
+                  "netReturn",
+                  "NR",
+                  "Net-Return ($/ac)",
+                  "Net-Return",
+                  fieldname = 'henrys',
+                  year = '2020',
+                  SAVE = FALSE,
+                  farmername = 'wood',
+                  db = dbCon$db,
+                  utm_fieldname = 'henrys')
+```
+
+While other data can also be mapped, scatterplots of variables in specified datasets can be easily visualized as scatterplots, and histograms or boxplots can be made for a specified variable. Below is an example for creating a scatterplot of yield vs. elevation.
+```{r, eval = FALSE}
+### Make Scatter
+# yld vs elevation (loewen)
+yld <- obsOP$fetchRawDat(db = dbCon$db,
+                         farmername = 'loewen',
+                         dat_tab = 'yld',
+                         store = FALSE,
+                         orig_file = "Loewen Hill _Loewen Hill _Millview_Harvest_2020-09-21_00.shp")
+obsOP$plotScatters(yld,
+                   x = "elevation",
+                   y = "vryieldvol",
+                   x_lab = "Elevation (m)",
+                   y_lab = "Yield (bu/ac)",
+                   fieldname = 'millview',
+                   year = 2020,
+                   farmername = 'loewen')
+```
+
+It can be useful to visualize the distribution of a parameter. The figure below shows a histogram representing the distribution of protein percentages measured in a field. This can be useful for observing general skew and distribution of the data. This in turn helps to fit models by observing the distribution of response variables like grain protein percent below. The figure shows a slightly bimodal distribution of grain protein across this field.
+```{r, eval = FALSE}
+### Make Histogram
+# pro % (sec35mid)
+pro <- obsOP$fetchAggDat(db = dbCon$db,
+                         farmername = 'broyles',
+                         fieldname = 'sec35middle',
+                         year = 2020,
+                         dat_tab = 'pro',
+                         GRID = 'obs',
+                         dat_used = 'decision_point',
+                         store = FALSE)
+obsOP$plotHistogram(dat = pro,
+                    x_var = "pro",
+                    x_lab = "Grain Protein %",
+                    fieldname = "sec35middle",
+                    year = 2020,
+                    farmername = "broyles")
+```
+
+
+
+
+
+## Initialize with Specifications 
+The user can simplify the process of calling these individual methods by initializing an ObsOP class for specific data selections. This will store these selections within the class and used automatically when methods are called. The following examples show how to instantiate an ObsOP class with user specifications for the data and how to run the data manipulation and visualization methods with the internalized data. 
+
+Initialize an ObsOP object with specifications for the database connection, the field to gather data for, the year of data to gather, the table the data is contained in within an OFPE database, and specifications for the grid type and data used. 
+```{r, eval = FALSE}
+obsOP <- ObsOP$new()#add specs
+
+```
+
+### Data Manipulation
+Gathering data can be achieved by using the 'fetchAggDat' and 'fetchRawDat' functions to gather data from either aggregated or raw schemas. If gathering data from a raw schema, the original filename must be specified. In the case below, the table name is present in both aggregated and raw schemas, however take note that tables are not identical between the two schemas. The data tables gathered here are stored within the ObsOP class and can be accessed within the class via calling 'agg_dat' or 'raw_dat'.
+```{r, eval = FALSE}
+### Gather Data
+# yld dat sec1east & sec1west
+# raw dat example (sec1east yld etc.)
+```
+
+
+### Data Visualization
+The ObsOP classes for data visualization can be specified with minimal arguments when the ObsOP class is initialized with user inputs. This can be used to map any variables in your dataset. The example below shows how to generate a map using Daymet precipitation measurements summed from November 1st of the previous year to March 30th of the year the yield data was gathered.
+
+```{r, eval = FALSE}
+### Map Data
+# daymet precip (tot)
+
+```
+
+As shown in the previous section, scatterplots can be made to visualize the relationships between parameters in a dataset. The example below shows how to evaluate the relationship between yield and yield and as-applied nitrogen data.
+```{r, eval = FALSE}
+### Make Scatter
+# yld vs N
+
+```
+
+Histograms can be useful for looking at the distribution of any variables in your dataset. The example below creates a histogram of NDVI measurements collected two years prior to data gathered in the dataset. This represents the primary productivity of the last crop in the wheat-fallow rotation.
+```{r, eval = FALSE}
+### Make Histogram
+# 2 py NDVI
+
+```
+
+Boxplots are also nice and already made...
+
+
+# Conclusion
+Whenever a database connection is open it needs to be closed.
+```{r, eval = FALSE}
+dbCon$disconnect()
+```
+>>>>>>> 176d413b3512a5bb5f454ff28059a84af69a0d4a

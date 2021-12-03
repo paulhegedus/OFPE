@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ---
 title: "Vignette4 - Analysis & Simulations"
 author: "Paul Hegedus"
@@ -173,3 +174,180 @@ dbCon$disconnect()
 
 
 
+=======
+---
+title: "Vignette4 - Analysis & Simulations"
+author: "Paul Hegedus"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette4 - Analysis & Simulations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+# Introduction
+This tutorial covers the data analysis and simulation step of the OFPE data cycle. This step must utilize data that has been aggregated together in the process outlined in Vignette 3. This is because the data used for analysis and simulation requires all remotely sensed and on-farm data to be combined into one dataset for yield data and one dataset for protein data.
+
+Once all explanatory and covariate data is aggregated to the response data observations, it can be used to train models of crop production (yield) or quality (protein). Experimentally varying input rates (fertilizer or seed) is crucial to developing the function for the relationship between the crop response and input. These models are then used in a Monte Carlo simulation that randomly selects an economic condition (winter wheat price, price of fertilizer or seed) to generate the probability of net-return compared across management outcomes. Because the farmer has to make a decision on their input rates by March 30th for winter wheat, the farmer will not know the weather conditions for the rest of the growing season, so the user will be able to select a year or scenario to simulate. The management outcomes simulated include the site-specific optimum rates for each observed location in the field, the full-field optimum rate or the uniform rate that is considered the optimum, the farmer selected rate or the uniform rate the farmer would have applied without an experiment, applying no input (N case only), and the cost of the experiment or actual net-returns observed from the experimental rates.
+
+The process for analyzing and simulating management outcomes is outlined and a more detailed description in the activity diagram on [this page](https://paulhegedus.github.io/OFPE-Website/sim_analysis.html), where a component diagram can also be found. This vignette outlines step 4 of the OFPE data cycle, executed using the R package. This is represented by step 4 in the blue ring of the figure below. There is an associated page on the OFPE web application (green ring) that utilizes these R classes and functions to achieve the same effect in a user friendly environment.
+
+```{r, out.width='100%', fig.align='center', fig.cap='**Figure 1.** Key is found in the top right corner of the schematic. The green ring represents the R-Shiny OFPE web spplication which is driven by the OFPE R-Package (blue ring). These both require connection to a PostgreSQL spatial database with PostGIS enabled. The yellow boxes represent different pages of the OFPE web application and vignettes in the R-package. Black boxes represent user inputs and orange clouds represent cloud based tools.', echo = FALSE}
+knitr::include_graphics('ofpe_data_workflow.png')
+```
+
+# Resources
+The resources below are strongly recommended as supplemental information regarding the use and intent of this vignette and associated functions.
+
+  * [OFPE Project Website](https://sites.google.com/site/ofpeframework/): Project information and products from the MSU OFPE project.
+  * [OFPE Technical Website](https://paulhegedus.github.io/OFPE-Website/index.html): Website with more detailed descriptions of the OFPE data cycle and workflow, as well as tutorials for external data processes that cannot be performed in R.
+  * [OFPE Overview](https://paulhegedus.github.io/OFPE-Website/ofpe_overview.html): Page of the OFPE Technical Website describing an overview of the OFPE data cycle and workflow.
+  * [OFPE Data Analysis/Simulation](https://paulhegedus.github.io/OFPE-Website/sim_anal.html): Detailed description of the OFPE analysis and simulation process.
+
+Again, it is assumed that the user has completed Vignette 1, 2, and 3 and understands the database creation, management, import, and aggregation methods described at this [site](https://paulhegedus.github.io/OFPE-Website/index.html).
+
+# Workflow
+This script requires that the user has aggregated the field yield and protein data and saved in the database. If not, this script will not run. Importing a .csv is not allowed. This script only runs with cleaned and aggregated data that is available in the '*farmername*_a' schemas of an OFPE database. 
+
+The workflow begins with the selection of inputs related to the data analysis. These include the field for analysis. This can be one field, or it can be multiple fields. Selecting multiple fields is an option designed for the use case where two fields share a common border and the user desires to analyze them together as one. This came about in the case where the experimental nitrogen rates were spread across both fields and the individual fields do not have the full range of as-applied rates represented (i.e. 0 - 150 lbs N/acre). 
+
+Next, the user can choose the response variables to optimize on (e.g. yield or protein or both). This is because some farmers may not have a protein monitor and thus do not have protein data to use for analysis and simulation. This is the case for many of the organic farmers in the OFPE project at Montana State University because organic farmers do not receive the same protein premiums as conventional farmers. The user also must select the appropriate as-applied variable, (e.g. nitrogen or seeding rates). This requires the user to have an understanding of the available data for the field and which as-applied data was experimentally varied. Only one expermental variable can be selected to optimize.
+
+After the user selects the field, response variable(s), and experimental variable, the user selects the year data was gathered from that they want to use for analysis (e.g. 2019, 2017, etc.). Then the user selects more data specific inputs, such as whether to use data that has been aggregated to a grid or observed response data (see Vignette 3 or the 'AggInputs' R6 class). Finally, the user can select the length of data used from the current year, whether the March 30th decision point that farmers have to make their as-applied input decisions or with data through harvest that a farmer would not have access to (again, see Vignette 3 or the 'AggInputs' R6 class).
+
+The user then has analysis inputs to select from. The first option relates to how the data is used for analysis, whether to center explanatory data around each explanatory variables mean or to use the raw observed explanatory variable data. Centering is recommended as it puts variables on similar scales and makes the model fitting process less error prone. The user also has the option to select the optimization method. There are two current options, 'Maximum' or 'Derivative'. Both methods select the optimum as-applied rate at each location in the field based on calculating the net-return at each point under a sequence of as-applied rates. Selecting 'Maximum' selects the optimum rate as the as-applied rate with the highest calculated net-return. The 'Derivative' approach calculates the first derivatives (slope) at each as-applied rate at each point and selects the optimum as the as-applied rate where an increase of one unit of the as-applied input results does not result in an increase in net-return that exceeds the cost of one unit of the as-applied input. For example, at one point in the field, if the net-return is \$100 at 20 lbs N/acre and \$101 at 21 lbs N/acre where N costs \$1.50 per lbs, the 'Maximum' approach would consider 21 lbs N/acre the optimum at that point because \$100 < \$101, whereas the 'Derivative' approach would select 20 lbs N/acre the optimum because the $1 increase between 20 and 21 lbs N/acre is less than the \$1.50 cost for the 1 unit increase in N. 
+
+The user also must select simulation inputs. These include the weather and economic scenarios to simulate management outcomes under. The weather condition selected is used to modify temporal data for the simulation, including the precipitation in the current and previous year, the growing degree days in the current and previous year, and vegetation indices. The user CAN ONLY select years that they have aggregated data using the 'Satellite' option in Vignette 3 that gathers all remotely sensed data to a grid. It is STRONGLY recommended that the user takes the time to aggregate multiple years worth of 'Satellite' data to use for analysis and simulation because this is the only method for which the vegetation index data is modified appropriately. The user is encouraged to aggregate 'Satellite' data for years the user perceives as 'wet', 'dry', or 'average' years and to use those for their analysis. The user will have the option of selecting from the years that they have aggregated 'Satellite' data for or for selecting a 'LikeYear' option which runs analysis based off of the 'Satellite' years available for the specified field in the database. This will return the year considered the driest, wettest, and most average, as well as the year considered to be most like the upcoming year. The upcoming year is identified based off of what year was most like the most recent year 'Satellite' data is collected and then selects the year. See the 'LikeYear' class documentation for more information.
+
+Other analysis inputs the user must select are which vegetation index to use, selecting from 'NDVI', 'NDRE', and 'CIRE', all of which are gathered from the Google Earth Engine script provided in this [tutorial](https://paulhegedus.github.io/OFPE-Website/run_gee.html) and required for the completion of Vignette 3. The user must also select the satellite source for precipitation and growing degree days ([Daymet V3](https://developers.google.com/earth-engine/datasets/catalog/NASA_ORNL_DAYMET_V3) or [Gridmet](https://developers.google.com/earth-engine/datasets/catalog/IDAHO_EPSCOR_GRIDMET)). This selection is for the users preference, but note that the other source will be used if the selected source is unavailable. The user is also required to provide other simulation and analysis inputs related to management, such as the as-applied rate the farmer would have applied to the field if an experiment wasn't performed (e.g. 70 lbs N/acre), the minimum as-applied rate to simulate outcomes under (e.g. 0 lbs N/acre or 25 lbs seed/acre), and the maximum as-applied rate to simulate outcomes under (e.g. 200 lbs N/acre).
+
+The user is also required to select inputs related to the economic data used in the simulation and analysis. The first of these include the cost of site-specific technology or how much the farmer spends per acre on applying variable rate technology (e.g. \$4/acre), and fixed ownership costs or the cost of everything related to production not related to the as-applied inputs (e.g. \$75/acre). 
+
+Data from the Billings, MT elevator contain variables that can be varied to get estimate of probability of net return such as base price (Bp) for winter wheat in \$/bu and prices received for winter wheat and cost of N in last 16 years to create variation. Additionally, Billings premium and dockage information are used to fit a protein premium/dockage function for 2016. These create the economic inputs that are used in the Monte Carlo simulation where a random year is selected from 2000 - 2016 and the cost of nitrogen and price of wheat are used to calculate net-returns. *These are the default values in the app. eventually these economic options need to evolve, such as web scraping econ data from Anton's app option https://django.msu.montana.edu/econ/prices/grain/ some other options would be a mean price/cost and sd, or the user providing a table of prices.*
+
+The activity workflow for analyzing and simulating data and a more detailed description is described on [this page](https://paulhegedus.github.io/OFPE-Website/sim_analysis.html), where a component diagram can also be found.
+
+## 1.0 Set-Up
+The user must have access to an OFPE formatted database for using the vignette below. If using your own data and database, modify the pertinent information to your paths and file/folder/database names. This vignette does not use the OFPEDATA package directly, however references data from the package that was imported to the example database in Vignettes 1 and 2 and aggregated in Vignette 3.
+
+### 1.1 Load Packages
+
+```{r setup, message = FALSE, eval = FALSE}
+#devtools::install_github("paulhegedus/OFPE")
+library(OFPE)
+```
+
+
+### 1.2 Connect to Database
+First, a connection is formed to the database created in this [tutorial](https://paulhegedus.github.io/OFPE-Website/postgres_setup.html). This vignette, and the rest of the vignettes are working with an example database named 'OFPE' (as named in the tutorial above and exemplified in Vignettes 1, 2, and 3). This class defaults to a PostgreSQL database.
+
+The user must also provide their Google key and register it to be able to plot maps of their data. See https://github.com/dkahle/ggmap for instructions on acquiring and registering a Google API key.
+
+```{r, eval = FALSE}
+dbCon <- DBCon$new(
+  user = "postgres",
+  password = "<your_password>",
+  dbname = "<your_db_name>", 
+  host = "localhost",
+  port = "5432"
+)
+## OR ## 
+dbCon <- DBCon$new(
+  dsn = "<DSN name>",
+  user = "<your username>",
+  password = "<your_password>"
+)
+ggmap::register_google(key = "your_google_key")
+```
+
+## 2.0 Select User Inputs
+The user must instantiate all input classes required for the analysis and simulation steps. This includes instantiating the 'DatClass', 'SimClass', and the 'EconData' classes.
+
+#### 2.1 Create DatClass Object
+The 'DatObject' class is used for the analysis/simulation and Rx building steps of the OFPE data cycle. This object includes user selections such as the field and year of data to export from an OFPE database and the type of data (grid or observed) for analysis and simulation/prescription generation. Inputs can be supplied directly to this class during instantiation, however this is NOT recommended except for advanced users. It is recommended that the user supplies the database connection and uses the interactive selection methods to select user inputs. This class is passed to the 'DatObject' class that executes the methods for exporting data from the database and processing the data for analysis, simulation, and prescription building.
+
+```{r, eval = FALSE}
+datClass <- DatClass$new(dbCon)
+datClass$selectInputs()
+```
+
+#### 2.2 Create SimClass Object
+The 'SimClass' class is used for the analysis/simulation and Rx building steps of the OFPE data cycle. This object includes user selections such as the model to use for fitting crop response functions for analysis, the number of iterations to run the simulation, the optimization method, the year(s) to use as an estimated weather scenario in which to simulate management outcomes, the farmer controlled fertilizer rate, the maximum amount of the input to simulate management to, and the minimum amount of the input to simulate from. Inputs can be supplied directly to this class during instantiation, however this is NOT recommended except for advanced users. It is recommended that the user supplies the database connection and farmer name and uses the interactive selection methods to select user inputs. This class is passed to the 'SimClass' and model classes that executes the methods for analysis, simulation, and subsequent prescription generation.
+
+```{r, eval = FALSE}
+simClass <- SimClass$new(dbCon)
+simClass$selectInputs(datClass$farmername, datClass$fieldname)
+```
+
+#### 2.3 Create ModClass Object
+The 'ModClass' is an R6 object that holds the inputs necessary for loading the selected model to use for the response variables selected in the 'DatClass' class. Inputs can be supplied directly to this class during instantiation, however this is NOT recommended except for advanced users. It is recommended that the user uses the interactive selection methods to select user inputs. The user will be asked to provide the name of the function they would like to use to fit a crop response model to the experimental and covariate data for each response variable, allowing different models to be used for yield and/or protein. Advanced users can write their own model R6 class and will be required to provide the path to the folder that they have stored the script for the R6 model class.  If a user writes their own model class please contact the developer for testing and inclusion in the OFPE package. If the user chooses to use either a 'GAM' or 'NonLinear_Logistic' model, they will not have to provide a path to these scripts because they are built into this package. The user will have to provide the path to store model outputs such as diagnostic and validation plots.
+
+```{r, eval = FALSE}
+modClass <- ModClass$new()
+modClass$selectInputs(datClass$respvar)
+```
+
+#### 2.4 Create EconDat Class
+The 'EconDat' class is used to store economic parameters and data used in the OFPE Monte Carlo simulation. This class includes selections for parameters such as the fixed costs associated with production, not including the input, the cost of applying variable rate or site-specific technology per acre, and the option to use default economic data or for the user to provide their own economic conditions to simulate or their own protein premium/dockage data to use to fit a model of protein premium/dockages that is used in the Monte Carlo simulation to estimate net-return. Inputs can be supplied directly to this class during instantiation, however this is NOT recommended except for advanced users. It is recommended that the user uses the interactive selection methods to select user inputs. This class is passed to the 'SimClass' executes the methods for the simulation and subsequent prescription generation.
+
+```{r, eval = FALSE}
+econDat <- EconDat$new()
+econDat$selectInputs()
+```
+
+
+## 3.0 Set Up Analysis
+Based on the user inputs above in the 'DatClass' class, gather and process data from the database. This includes the export of data from the database based on user inputs, the subsetting of columns needed for analysis based on the data sources the user selected for the vegetation index, precipitation, and growing degree days. The processing of the data also includes the centering, if selected, and splitting of the data into training and validation datasets. The objects created in the data gather and process include a named list with training and validation data, called 'mod_dat', for each response variable ('yld' and/or 'pro'), and a named list ('yld' and/or 'pro') for the simulation and prescription building process, called 'sim_dat'.
+
+```{r, eval = FALSE}
+invisible(datClass$setupDat())
+```
+
+Then call the method to create the folder for outputs. This will not be executed if the user specified otherwise or the user passes in FALSE as an argument to the setupOP method, this will then disable all subsequent plotting from the analysis step. Then, setup the model class by passing in the data. This is the process used to setup the GAM. This initializes the specified model for each response variable. The initialization of each model creates a table of the parameters and associated information related to the specific model.
+```{r, eval = FALSE}
+modClass$setupOP()
+modClass$setupMod(datClass)
+```
+
+## 4.0 Analysis
+The 'fitModels' method of the modClass object calls the specific model class' method for executing the model fitting function. This can differ between model types and is thus model specific. The model is fit with the training data and then the fitted model is used to predict values in a validation dataset. These are used to asses the model ability to predict new values. The 'savePlots' method calls the model specific execution of it's 'saveDiagnostics' method to produce and save diagnostic plots of the model, and then executes a 'plotValidation' method to compare the observed vs. predicted values and show a scatterplot of the observed and predicted values vs. the experimental variable.
+
+```{r, eval = FALSE}
+# 0.5min for nonlinear yield & gam protein, ~10min GAM, >0.5min for nonlinear
+invisible(modClass$fitModels()) 
+invisible(modClass$savePlots())
+```
+
+## 5.0 Set Up Simulation
+At this point, the user can either go back and reselect inputs in order to analyze the data in a different way, or can proceed to the simulation. The 'setupOP' method creates the output folders for the simulation. If the user
+
+The first step is to setup the simulation. The user supplies the DatClass, ModClass, and EconDat R6 classes the user initialized and/or used in prior steps. These are passed into the SimClass 'SetupSim' method, where the data from the user specified simulation years are gathered and processed to the user specifications (i.e. prec and gdd sources, center) in the DatClass, and the ModClass is used to predict crop responses at each location of all the simulation data for every as-applied rate in the range specified by the user. This process will take some time depending on the range of experimental values to simulate over, especially for GAM's.
+
+```{r, eval = FALSE}
+invisible(simClass$setupSim(datClass, modClass, econDat))
+```
+
+## 6.0 Simulation
+After the SimClass has been initialized and setup with DatClass, ModClass, and EconDat objects, the user can execute the Monte Carlo simulation for comparing management scenarios under a range of economic conditions for each of the simulation years specified. If the user has not selected otherwise, outputs from the simulations will be generated and saved to the 'Outputs' folder in the user specified path when the SimOP class is used to make outputs. 
+
+```{r, eval = FALSE}
+simClass$executeSim()
+simOP <- SimOP$new(simClass, create = TRUE)
+invisible(simOP$savePlots())
+```
+
+# Conclusion
+At this point, the user can either go back and reselect inputs and test out different scenarios, or proceed on to the generation of a prescription. This can be done by initializing an RxClass object with a SimClass and other user specifications. See Vignette 5. If the user specified to save outputs, the user can find analysis and simulation results in a folder called 'Outputs' in the specified file path. 
+
+A diagram demonstrating the implementation and existence of modules related to the data analysis and simulation step can be seen [here](https://paulhegedus.github.io/OFPE-Website/sim_analysis.html), diagramming the relationship of the classes used in this step. 
+
+Whenever a database connection is open it needs to be closed.
+```{r, eval = FALSE}
+dbCon$disconnect()
+```
+
+
+
+
+
+>>>>>>> 176d413b3512a5bb5f454ff28059a84af69a0d4a
