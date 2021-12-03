@@ -105,10 +105,6 @@ EconDat <- R6::R6Class(
                           ssAC = NULL,
                           Prc = NULL,
                           PD = NULL) {
-      if (!is.null(FC)) {
-        stopifnot(is.numeric(FC))
-        self$FC <- FC
-      }
       if (!is.null(ssAC)) {
         stopifnot(is.numeric(ssAC))
         self$ssAC <- ssAC
@@ -124,11 +120,15 @@ EconDat <- R6::R6Class(
           self$Prc <- Prc
         } else {
           self$Prc <- MT_Organic_vs_Conv_wheat_N_prices
+          if (!is.null(FC)) {
+            stopifnot(is.numeric(FC))
+            self$Prc$FC <- FC
+          }
         }
       }
       if (!is.null(PD)) {
         if (PD == "Default") {
-          self$PD <- Billings_PremDock_2016
+          self$PD <- Billings_PremDock_2021
           private$.fitPremDock()
         } else {
           PD <- as.data.frame(PD)
@@ -212,7 +212,7 @@ EconDat <- R6::R6Class(
         title = "Select whether to use default protein premium/dockage data for HRWW from Billings, MT (2016) or select 'None' to skip because protein is not used for optimization. "
       ))
       if (PD_option == "Default") {
-        self$PD <- Billings_PremDock_2016
+        self$PD <- Billings_PremDock_2021
         private$.fitPremDock()
       }
     },
