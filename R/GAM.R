@@ -142,8 +142,7 @@ GAM <- R6::R6Class(
       self$dat$val$pred <- self$predResps(self$dat$val, self$m)
       self$dat$val <- OFPE::valPrep(self$dat$val,
                                     self$respvar,
-                                    self$expvar,
-                                    self$num_means)
+                                    self$expvar)
       self$fieldname <- OFPE::uniqueFieldname(self$dat$val)
       return(self$m)
     },

@@ -82,27 +82,6 @@ DatClass <- R6::R6Class(
     #' simulation, and prescription building steps. See the 'AggInputs' class
     #' documentation for more information on the 'dat_used' selection.
     dat_used = NULL,
-    #' @field veg_index Option for the vegetation index data to use for analysis,
-    #' simulation, and prescription building steps. Select from 'NDVI', 'NDRE',
-    #' and 'CIRE'. These are the three vegetation indices downloaded from
-    #' Google Earth Engine and used to enrich yield and protein datasets in the
-    #' aggregation step.
-    veg_index = NULL,
-    #' @field prec_source Option for the satellite source of precipitation data
-    #' to use for analysis, simulation, and prescription building steps. Select
-    #' from 'Daymet' or 'Gridmet'. These are the sources of precipitation data
-    #' downloaded from Google Earth Engine and used to enrich yield and protein
-    #' datasets in the aggregation step. This selection is for the users preference,
-    #' but note that the other source will be used if the selected source is
-    #' unavailable.
-    prec_source = NULL,
-    #' @field gdd_source Option for the satellite source of growing degree day (GDD)
-    #' data to use for analysis, simulation, and prescription building steps. Select
-    #' from 'Daymet' or 'Gridmet'. These are the sources of GDD data downloaded from
-    #' Google Earth Engine and used to enrich yield and protein datasets in the
-    #' aggregation step. This selection is for the users preference, but note that
-    #' the other source will be used if the selected source is unavailable.
-    gdd_source = NULL,
     #' @field center TRUE/FALSE. Option for whether to center explanatory data around
     #' each explanatory variables mean or to use the raw observed explanatory varaible
     #' data. Centering is recommended as it puts variables on similar scales and makes
@@ -193,24 +172,6 @@ DatClass <- R6::R6Class(
     #' @param dat_used Option for the length of year to use data in the analysis,
     #' simulation, and prescription building steps. See the 'AggInputs' class
     #' documentation for more information on the 'dat_used' selection.
-    #' @param veg_index Option for the vegetation index data to use for analysis,
-    #' simulation, and prescription building steps. Select from 'NDVI', 'NDRE',
-    #' and 'CIRE'. These are the three vegetation indices downloaded from
-    #' Google Earth Engine and used to enrich yield and protein datasets in the
-    #' aggregation step.
-    #' @param prec_source Option for the satellite source of precipitation data
-    #' to use for analysis, simulation, and prescription building steps. Select
-    #' from 'Daymet' or 'Gridmet'. These are the sources of precipitation data
-    #' downloaded from Google Earth Engine and used to enrich yield and protein
-    #' datasets in the aggregation step. This selection is for the users preference,
-    #' but note that the other source will be used if the selected source is
-    #' unavailable.
-    #' @param gdd_source Option for the satellite source of growing degree day (GDD)
-    #' data to use for analysis, simulation, and prescription building steps. Select
-    #' from 'Daymet' or 'Gridmet'. These are the sources of GDD data downloaded from
-    #' Google Earth Engine and used to enrich yield and protein datasets in the
-    #' aggregation step. This selection is for the users preference, but note that
-    #' the other source will be used if the selected source is unavailable.
     #' @param center TRUE/FALSE. Option for whether to center explanatory data around
     #' each explanatory variables mean or to use the raw observed explanatory varaible
     #' data. Centering is recommended as it puts variables on similar scales and makes
@@ -237,9 +198,6 @@ DatClass <- R6::R6Class(
                           proyears = NULL,
                           mod_grid = NULL,
                           dat_used = NULL,
-                          veg_index = NULL,
-                          prec_source = NULL,
-                          gdd_source = NULL,
                           center = NULL,
                           split_pct = NULL,
                           clean_rate = NULL) {
@@ -294,22 +252,6 @@ DatClass <- R6::R6Class(
         self$dat_used <- ifelse(dat_used == "Decision Point",
                                 "decision_point",
                                 "full_year")
-      }
-      if (!is.null(veg_index)) {
-        stopifnot(is.character(veg_index),
-                  grepl("NDVI|NDRE|CIRE", veg_index))
-        self$veg_index <- ifelse(veg_index == "NDVI", "ndvi",
-                                ifelse(veg_index == "NDRE", "ndre", "cire"))
-      }
-      if (!is.null(prec_source)) {
-        stopifnot(is.character(prec_source),
-                  grepl("Daymet|Gridmet", prec_source))
-        self$prec_source <- ifelse(prec_source == "Daymet", "daymet", "gridmet")
-      }
-      if (!is.null(gdd_source)) {
-        stopifnot(is.character(gdd_source),
-                  grepl("Daymet|Gridmet", gdd_source))
-        self$gdd_source <- ifelse(gdd_source == "Daymet", "daymet", "gridmet")
       }
       if (!is.null(center)) {
         stopifnot(is.logical(center))
@@ -377,9 +319,6 @@ DatClass <- R6::R6Class(
       private$.selectSystemType()
       private$.selectAggLocs()
       private$.selectAggLOY()
-      private$.selectVegIndex()
-      private$.selectPrecSource()
-      private$.selectGddSource()
       private$.selectCenter()
       private$.selectDatSplitPct()
       private$.selectCleanRate()
@@ -570,28 +509,6 @@ DatClass <- R6::R6Class(
                               "decision_point",
                               "full_year")
     },
-    .selectVegIndex = function() {
-      veg_index <- as.character(select.list(
-        c("NDVI", "NDRE", "CIRE"),
-        title = paste0("Select the vegetation index to use for analysis and simulation.")
-      ))
-      self$veg_index <- ifelse(veg_index == "NDVI", "ndvi",
-                               ifelse(veg_index == "NDRE", "ndre", "cire"))
-    },
-    .selectPrecSource = function() {
-      prec_source <- as.character(select.list(
-        c("Daymet", "Gridmet"),
-        title = paste0("Select the source of precipitation data to use for analysis and simulation.")
-      ))
-      self$prec_source <- ifelse(prec_source == "Daymet", "daymet", "gridmet")
-    },
-    .selectGddSource = function() {
-      gdd_source <- as.character(select.list(
-        c("Daymet", "Gridmet"),
-        title = paste0("Select the source of growing degree day data to use for analysis and simulation.")
-      ))
-      self$gdd_source <- ifelse(gdd_source == "Daymet", "daymet", "gridmet")
-    },
     .selectCenter = function() {
       self$center <- as.logical(select.list(
         c(TRUE, FALSE),
@@ -713,162 +630,6 @@ DatClass <- R6::R6Class(
     },
     .trimCols = function(dat, trim_cols) {
       return(dat[, !(names(dat) %in% trim_cols), with = FALSE])
-    },
-    .selectDat = function(dat) {
-      sub_cols <- c("prec_cy_d", "prec_py_d", "gdd_cy_d", "gdd_py_d",
-                    "prec_cy_g", "prec_py_g", "gdd_cy_g", "gdd_py_g",
-                    "ndvi_cy_s", "ndvi_py_s", "ndvi_2py_s",
-                    "ndvi_cy_l", "ndvi_py_l", "ndvi_2py_l",
-                    "ndre_cy", "ndre_py", "ndre_2py",
-                    "cire_cy", "cire_py", "cire_2py")
-      sub_dat <- dat[, sub_cols, with = FALSE] %>%
-        apply(2, as.numeric) %>%
-        `names<-`(sub_cols)
-
-      prec_key <- ifelse(self$prec_source == "daymet", "d", "g")
-      alt_prec_key <- ifelse(self$prec_source == "daymet", "g", "d")
-      gdd_key <- ifelse(self$gdd_source == "daymet", "d", "g")
-      alt_gdd_key <- ifelse(self$gdd_source == "daymet", "g", "d")
-
-      df <- OFPE::selectDatCpp(
-        as.matrix(sub_dat),
-        nrow(sub_dat),
-        grep(paste0("prec_cy_", prec_key),  names(sub_dat)) - 1,
-        grep(paste0("prec_cy_", alt_prec_key), names(sub_dat)) - 1,
-        grep(paste0("prec_py_", prec_key), names(sub_dat)) - 1,
-        grep(paste0("prec_py_", alt_prec_key), names(sub_dat)) - 1,
-        grep(paste0("gdd_cy_", gdd_key), names(sub_dat)) - 1,
-        grep(paste0("gdd_cy_", alt_gdd_key), names(sub_dat)) - 1,
-        grep(paste0("gdd_py_", gdd_key), names(sub_dat)) - 1,
-        grep(paste0("gdd_py_", alt_gdd_key), names(sub_dat)) - 1,
-        grep(paste0(self$veg_index, "_cy_s"), names(sub_dat)) - 1,
-        grep(paste0(self$veg_index, "_cy_l"), names(sub_dat)) - 1,
-        grep(paste0(self$veg_index, "_py_s"), names(sub_dat)) - 1,
-        grep(paste0(self$veg_index, "_py_l"), names(sub_dat)) - 1,
-        grep(paste0(self$veg_index, "_2py_s"), names(sub_dat)) - 1,
-        grep(paste0(self$veg_index, "_2py_l"), names(sub_dat)) - 1
-      ) %>%
-        as.data.frame() %>%
-        `names<-`(c("prec_cy","prec_py","gdd_cy","gdd_py",
-                    "veg_cy","veg_py","veg_2py"))
-      dat <- private$.trimCols(
-        dat,
-        c("prec_cy_d", "prec_py_d", "gdd_cy_d", "gdd_py_d",
-          "prec_cy_g", "prec_py_g", "gdd_cy_g", "gdd_py_g",
-          "ndvi_cy_s", "ndvi_py_s", "ndvi_2py_s",
-          "ndvi_cy_l", "ndvi_py_l", "ndvi_2py_l",
-          "ndre_cy", "ndre_py", "ndre_2py",
-          "cire_cy", "cire_py", "cire_2py")
-      )
-      dat <- cbind(dat, df)
-      return(dat)
-    },
-    .selectSatDat = function(dat) {
-      sub_cols <- c("prec_cy_d", "prec_py_d", "gdd_cy_d", "gdd_py_d",
-                    "prec_cy_g", "prec_py_g", "gdd_cy_g", "gdd_py_g",
-                    "ndvi_cy_s", "ndvi_py_s", "ndvi_2py_s",
-                    "ndvi_cy_l", "ndvi_py_l", "ndvi_2py_l",
-                    "ndre_cy", "ndre_py", "ndre_2py",
-                    "cire_cy", "cire_py", "cire_2py")
-      sub_dat <- dat[, sub_cols, with = FALSE] %>%
-        apply(2, as.numeric) %>%
-        `names<-`(sub_cols)
-
-      prec_key <- ifelse(self$prec_source == "daymet", "d", "g")
-      alt_prec_key <- ifelse(self$prec_source == "daymet", "g", "d")
-      gdd_key <- ifelse(self$gdd_source == "daymet", "d", "g")
-      alt_gdd_key <- ifelse(self$gdd_source == "daymet", "g", "d")
-
-      df <- OFPE::selectDatCpp(
-        as.matrix(sub_dat),
-        nrow(sub_dat),
-        grep(paste0("prec_cy_", prec_key),  names(sub_dat)) - 1,
-        grep(paste0("prec_cy_", alt_prec_key), names(sub_dat)) - 1,
-        grep(paste0("prec_py_", prec_key), names(sub_dat)) - 1,
-        grep(paste0("prec_py_", alt_prec_key), names(sub_dat)) - 1,
-        grep(paste0("gdd_cy_", gdd_key), names(sub_dat)) - 1,
-        grep(paste0("gdd_cy_", alt_gdd_key), names(sub_dat)) - 1,
-        grep(paste0("gdd_py_", gdd_key), names(sub_dat)) - 1,
-        grep(paste0("gdd_py_", alt_gdd_key), names(sub_dat)) - 1,
-        grep(paste0(self$veg_index, "_cy_s"), names(sub_dat)) - 1,
-        grep(paste0(self$veg_index, "_cy_l"), names(sub_dat)) - 1,
-        grep(paste0(self$veg_index, "_py_s"), names(sub_dat)) - 1,
-        grep(paste0(self$veg_index, "_py_l"), names(sub_dat)) - 1,
-        grep(paste0(self$veg_index, "_2py_s"), names(sub_dat)) - 1,
-        grep(paste0(self$veg_index, "_2py_l"), names(sub_dat)) - 1
-      ) %>%
-        as.data.frame() %>%
-        `names<-`(c("prec_cy","prec_py","gdd_cy","gdd_py",
-                    "veg_cy","veg_py","veg_2py"))
-      df$field <- dat$field
-      ## impute missing data
-      any_na <- apply(df, 2, function(x) all(is.na(x)))
-      if (any(any_na)) {
-        na_cols <- which(any_na)
-        impute_dat <- self$mod_dat[[1]]$trn
-        impute_years <- levels(impute_dat$year)
-        for (i in 1:length(na_cols)) {
-          dat_name <- names(na_cols[i])
-          dat_col <- grep(dat_name, names(impute_dat))
-          cov_sumry <- by(impute_dat[, dat_col, with = FALSE][[1]],
-                          impute_dat$year,
-                          summary) %>%
-            `attributes<-`(NULL) %>%
-            lapply(`attributes<-`, NULL) %>%
-            lapply(t) %>%
-            lapply(data.table::as.data.table) %>%
-            data.table::rbindlist(fill = TRUE)
-          cov_miss <- apply(cov_sumry, 1, function(x) all(is.na(x)))
-          if (all(cov_miss)) {
-            df[, na_cols[i]] <- NA
-          } else {
-            names(cov_miss) <- levels(impute_dat$year)
-            cov_miss <- cov_miss[!cov_miss]
-            cy <- max(as.numeric(as.character(names(cov_miss))))
-            cols <- c(dat_col, grep("field", names(impute_dat)))
-            imp_dat <- impute_dat[impute_dat$year == cy, cols, with = FALSE]
-            imp_dat_means <-
-              self$mod_num_means[[1]][[grep(cy, names(self$mod_num_means[[1]]))]]
-            uncenter_val <- imp_dat_means[grep(dat_name, names(imp_dat_means))] %>%
-              as.numeric()
-            imp_dat[[1]] <- imp_dat[[1]] + uncenter_val
-            means <- by(eval(parse(text = paste0("imp_dat$", dat_name))),
-                        imp_dat$field,
-                        mean,
-                        na.rm = TRUE)
-            sds <- by(eval(parse(text = paste0("imp_dat$", dat_name))),
-                      imp_dat$field,
-                      sd,
-                      na.rm = TRUE)
-            imp_tab <- data.frame(field = levels(imp_dat$field),
-                                  means = as.numeric(means),
-                                  sds = as.numeric(sds))
-            for (j in 1:nrow(imp_tab)) {
-              if (!is.na(imp_tab[j, "means"]) |
-                  !is.na(imp_tab[j, "sds"])) {
-                if (!is.nan(imp_tab[j, "means"]) |
-                    !is.nan(imp_tab[j, "sds"])) {
-                  obs <- nrow(df[df$field == imp_tab[j, 1], ])
-                  df[df$field == imp_tab[j, 1], as.numeric(na_cols[i])] <-
-                    rnorm(obs, imp_tab[j, 2], imp_tab[j, 3])
-                }
-              }
-            }
-          }
-        }
-      }
-      df$field <- NULL
-      dat <- private$.trimCols(
-        dat,
-        c("prec_cy_d", "prec_py_d", "gdd_cy_d", "gdd_py_d",
-          "prec_cy_g", "prec_py_g", "gdd_cy_g", "gdd_py_g",
-          "ndvi_cy_s", "ndvi_py_s", "ndvi_2py_s",
-          "ndvi_cy_l", "ndvi_py_l", "ndvi_2py_l",
-          "ndre_cy", "ndre_py", "ndre_2py",
-          "cire_cy", "cire_py", "cire_2py")
-      )
-      dat <- cbind(dat, df)
-      return(dat)
     },
     .makeFactors = function(dat) {
       dat$field <- factor(dat$field)

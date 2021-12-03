@@ -117,14 +117,9 @@ findBadParms <- function(parm_df, dat) {
 #' the validation data that the model will be tested on.
 #' @param respvar Character, the response variable of interest.
 #' @param expvar Character, the experimental variable of interest.
-#' @param num_means Named vector of the means for each numerical covariate, including
-#' the experimental variable. This is used for converting centered data back to the
-#' original form. The centering process does not center three numerical variables; the
-#' x and y coordinates, and the response variable (yld/pro). This is for the data specified
-#' from the analysis data inputs (grid specific).
 #' @return Updated 'parm_df' table.
 #' @export
-valPrep <- function(dat, respvar, expvar, num_means) {
+valPrep <- function(dat, respvar, expvar) {
   stopifnot(data.table::is.data.table(dat),
             any(grepl("pred", names(dat))))
   dat$field <- as.character(dat$field)
