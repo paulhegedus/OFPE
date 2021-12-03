@@ -4,7 +4,7 @@
 \alias{valPrep}
 \title{Prepare validation data for plotting.}
 \usage{
-valPrep(dat, respvar, expvar, num_means)
+valPrep(dat, respvar, expvar)
 }
 \arguments{
 \item{dat}{Data.table with the data to check validity of parameters in. Typically
@@ -13,12 +13,6 @@ the validation data that the model will be tested on.}
 \item{respvar}{Character, the response variable of interest.}
 
 \item{expvar}{Character, the experimental variable of interest.}
-
-\item{num_means}{Named vector of the means for each numerical covariate, including
-the experimental variable. This is used for converting centered data back to the
-original form. The centering process does not center three numerical variables; the
-x and y coordinates, and the response variable (yld/pro). This is for the data specified
-from the analysis data inputs (grid specific).}
 }
 \value{
 Updated 'parm_df' table.

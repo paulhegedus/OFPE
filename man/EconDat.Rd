@@ -42,8 +42,11 @@ dockage data.
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{FC}}{Fixed costs ($/acre) associated with production, not including
-the input of interest. This includes things like the cost of labor, fuel, etc.}
+\item{\code{FC}}{Optional. Fixed costs ($/acre) associated with production, not including
+the input of interest. This includes things like the cost of labor, fuel, etc. If
+this parameter is not supplied the fixed costs in the Prc data frame is used,
+otherwise the provided FC value here overwrites all FC values in the Prc data frame.
+Providing this parameter keeps FC constant in the economic simulation.}
 
 \item{\code{ssAC}}{The cost ($/acre) of using site-specific technology or variable rate
 applications. For farmers that have variable rate technology this cost may be zero,

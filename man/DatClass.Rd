@@ -88,27 +88,6 @@ data, and for the simulation to be performed with 'Grid' data.}
 simulation, and prescription building steps. See the 'AggInputs' class
 documentation for more information on the 'dat_used' selection.}
 
-\item{\code{veg_index}}{Option for the vegetation index data to use for analysis,
-simulation, and prescription building steps. Select from 'NDVI', 'NDRE',
-and 'CIRE'. These are the three vegetation indices downloaded from
-Google Earth Engine and used to enrich yield and protein datasets in the
-aggregation step.}
-
-\item{\code{prec_source}}{Option for the satellite source of precipitation data
-to use for analysis, simulation, and prescription building steps. Select
-from 'Daymet' or 'Gridmet'. These are the sources of precipitation data
-downloaded from Google Earth Engine and used to enrich yield and protein
-datasets in the aggregation step. This selection is for the users preference,
-but note that the other source will be used if the selected source is
-unavailable.}
-
-\item{\code{gdd_source}}{Option for the satellite source of growing degree day (GDD)
-data to use for analysis, simulation, and prescription building steps. Select
-from 'Daymet' or 'Gridmet'. These are the sources of GDD data downloaded from
-Google Earth Engine and used to enrich yield and protein datasets in the
-aggregation step. This selection is for the users preference, but note that
-the other source will be used if the selected source is unavailable.}
-
 \item{\code{center}}{TRUE/FALSE. Option for whether to center explanatory data around
 each explanatory variables mean or to use the raw observed explanatory varaible
 data. Centering is recommended as it puts variables on similar scales and makes
@@ -184,9 +163,6 @@ passed to C++ functions as purely numeric matrices.}
   proyears = NULL,
   mod_grid = NULL,
   dat_used = NULL,
-  veg_index = NULL,
-  prec_source = NULL,
-  gdd_source = NULL,
   center = NULL,
   split_pct = NULL,
   clean_rate = NULL
@@ -246,27 +222,6 @@ be performed with 'Grid' data.}
 \item{\code{dat_used}}{Option for the length of year to use data in the analysis,
 simulation, and prescription building steps. See the 'AggInputs' class
 documentation for more information on the 'dat_used' selection.}
-
-\item{\code{veg_index}}{Option for the vegetation index data to use for analysis,
-simulation, and prescription building steps. Select from 'NDVI', 'NDRE',
-and 'CIRE'. These are the three vegetation indices downloaded from
-Google Earth Engine and used to enrich yield and protein datasets in the
-aggregation step.}
-
-\item{\code{prec_source}}{Option for the satellite source of precipitation data
-to use for analysis, simulation, and prescription building steps. Select
-from 'Daymet' or 'Gridmet'. These are the sources of precipitation data
-downloaded from Google Earth Engine and used to enrich yield and protein
-datasets in the aggregation step. This selection is for the users preference,
-but note that the other source will be used if the selected source is
-unavailable.}
-
-\item{\code{gdd_source}}{Option for the satellite source of growing degree day (GDD)
-data to use for analysis, simulation, and prescription building steps. Select
-from 'Daymet' or 'Gridmet'. These are the sources of GDD data downloaded from
-Google Earth Engine and used to enrich yield and protein datasets in the
-aggregation step. This selection is for the users preference, but note that
-the other source will be used if the selected source is unavailable.}
 
 \item{\code{center}}{TRUE/FALSE. Option for whether to center explanatory data around
 each explanatory variables mean or to use the raw observed explanatory varaible

@@ -1,15 +1,13 @@
 .Rproj.user
 .Rhistory
 .RData
-<<<<<<< HEAD
 .Ruserdata
 src/*.o
 src/*.so
 src/*.dll
-=======
 inst/doc
 doc
 Meta
 .Rproj
 travis copy.yml.txt
->>>>>>> 176d413b3512a5bb5f454ff28059a84af69a0d4a
+
