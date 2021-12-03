@@ -312,7 +312,6 @@ SimClass <- R6::R6Class(
         !is.null(modClass$mod_list),
         # needs not null mod_list, ...
         any(grepl("EconDat", class(econDat))),
-        !is.null(econDat$FC),
         !is.null(econDat$ssAC),
         !is.null(econDat$Prc),
         !is.null(econDat$B0pd),
@@ -984,6 +983,7 @@ SimClass <- R6::R6Class(
         Bp_col <- grep(self$datClass$sys_type, names(self$econDat$Prc))
         Bp <- as.numeric(self$econDat$Prc[rp, Bp_col])
         CEXP <- as.numeric(self$econDat$Prc[rp, "cost"])
+        FC <- as.numeric(self$econDat$Prc[rp, "FC"])
         BpOpp_col <- grep(self$datClass$opp_sys_type, names(self$econDat$Prc))
         BpOpp <- as.numeric(self$econDat$Prc[rp, BpOpp_col])
         self$sim_list <-
@@ -996,7 +996,7 @@ SimClass <- R6::R6Class(
                  self$econDat$B2pd,
                  CEXP,
                  BpOpp,
-                 self$econDat$FC,
+                 FC,
                  self$fs,
                  self$econDat$ssAC,
                  ifelse(any(self$datClass$respvar == "pro"), 1, 0),
@@ -1068,7 +1068,7 @@ SimClass <- R6::R6Class(
         Bp.var[1, "NR.ffopt"] <- NRffmax[, "NR.ff"] / rr
         Bp.var[1, "NR.opp"] <- mean(NRopt[, "NR.opp"], na.rm = T)
 
-        NRopt <- private$.calcNRact(NRopt, self$sim_list[[1]]$year[1], Bp, CEXP)
+        NRopt <- private$.calcNRact(NRopt, self$sim_list[[1]]$year[1], Bp, CEXP, FC)
         Bp.var[1, "NR.act"] <- mean(NRopt[, "NR.act"], na.rm = T)
         Bp.var[1, "sim"] <- bp
         # fill out rest
@@ -1147,7 +1147,7 @@ SimClass <- R6::R6Class(
       NRcol <- dat$NR
       return(NRcol)
     },
-    .calcNRact = function(NRopt, year, Bp, CEXP) {
+    .calcNRact = function(NRopt, year, Bp, CEXP, FC) {
       ## calculates the NR for the sim year if the experiment from
       ## the most recent year in the observed data were applied in the
       ## sim year. B/c sim year is not always an observed year we have
@@ -1275,7 +1275,7 @@ SimClass <- R6::R6Class(
                                self$econDat$B1pd,
                                self$econDat$B2pd,
                                CEXP,
-                               self$econDat$FC,
+                               FC,
                                self$econDat$ssAC)
         ## put NR in the NRopt data for export
         NRopt_list[[i]]$NR.act <- sim_dat_list[[i]][
@@ -1345,11 +1345,16 @@ SimClass <- R6::R6Class(
         BpOpp = mean(
           self$econDat$Prc[, BpOpp_col],
           na.rm = TRUE
+        ),
+        FC = mean(
+          self$econDat$Prc[, "FC"],
+          na.rm = TRUE
         )
       )
       ## apply NRcalcCpp fxn to dnr with the cd econ scenario
       self$Bp <- cd$Bp
       self$CEXP <- cd$CEXP
+      self$FC <- cd$FC
       BpOpp <- cd$BpOpp
       rr <- nrow(self$sim_list[[1]])
       ## Calc NR for every point for every EXP rate (calc NR0 and NRorg for N = 0)
@@ -1362,7 +1367,7 @@ SimClass <- R6::R6Class(
                self$econDat$B2pd,
                self$CEXP,
                BpOpp,
-               self$econDat$FC,
+               self$FC,
                self$fs,
                self$econDat$ssAC,
                ifelse(any(self$datClass$respvar == "pro"), 1, 0),
@@ -1448,6 +1453,7 @@ SimClass <- R6::R6Class(
       cd <- cd[cd$Year == max(cd$Year), ]
       Bp <- cd[, grep(self$datClass$sys_type, names(cd))]
       CEXP <- cd[, "cost"]
+      FC <- cd[, "FC"]
       for (i in 1:length(years)) {
         self$plotActNR(dat,
                        years[i],
@@ -1456,7 +1462,7 @@ SimClass <- R6::R6Class(
                        self$econDat$B1pd,
                        self$econDat$B2pd,
                        CEXP,
-                       self$econDat$FC,
+                       FC,
                        self$econDat$ssAC,
                        self$datClass$respvar,
                        self$datClass$expvar,
