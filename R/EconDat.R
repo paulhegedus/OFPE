@@ -36,8 +36,11 @@
 EconDat <- R6::R6Class(
   "EconDat",
   public = list(
-    #' @field FC Fixed costs ($/acre) associated with production, not including
-    #' the input of interest. This includes things like the cost of labor, fuel, etc.
+    #' @field FC Optional. Fixed costs ($/acre) associated with production, not including
+    #' the input of interest. This includes things like the cost of labor, fuel, etc. If 
+    #' this parameter is not supplied the fixed costs in the Prc data frame is used, 
+    #' otherwise the provided FC value here overwrites all FC values in the Prc data frame.
+    #' Providing this parameter keeps FC constant in the economic simulation.
     FC = NULL,
     #' @field ssAC The cost ($/acre) of using site-specific technology or variable rate
     #' applications. For farmers that have variable rate technology this cost may be zero,
@@ -183,7 +186,7 @@ EconDat <- R6::R6Class(
   private = list(
     .selectFC = function() {
       self$FC <- as.numeric(readline(
-        "Input the fixed ownership costs associated with production, not including the input of interest. This includes things like the cost of labor, fuel, etc.: "
+        "Optional, provide NULL to use defaults. Otherwise input the fixed ownership costs associated with production, not including the input of interest. This includes things like the cost of labor, fuel, etc. This will keep the FC constant across the simulation: "
       ))
     },
     .selectSSAC = function() {
