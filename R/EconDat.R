@@ -140,6 +140,7 @@ EconDat <- R6::R6Class(
                     any(names(PD) == "pro"),
                     any(names(PD) == "PremDock"))
           self$PD <- PD
+          private$.fitPremDock()
         }
       }
     },

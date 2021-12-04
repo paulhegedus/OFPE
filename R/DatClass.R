@@ -647,30 +647,28 @@ DatClass <- R6::R6Class(
     },
     ## take the mean of each OLM data by depth
     .makeOLMmeans = function(dat) {
-      browser()
-      
       cols <- grep("bulkdensity", names(dat))
-      dat$bulkdensity <- rowMeans(dat[, ..cols], na.rm = TRUE)
+      dat$bulkdensity <- rowMeans(dat[, cols, with = FALSE], na.rm = TRUE)
       
       cols <- grep("claycontent", names(dat))
-      dat$claycontent <- rowMeans(dat[, ..cols], na.rm = TRUE)
+      dat$claycontent <- rowMeans(dat[, cols, with = FALSE], na.rm = TRUE)
       
       cols <- grep("sandcontent", names(dat))
-      dat$sandcontent <- rowMeans(dat[, ..cols], na.rm = TRUE)
+      dat$sandcontent <- rowMeans(dat[, cols, with = FALSE], na.rm = TRUE)
       
       cols <- grep("phw", names(dat))
-      dat$phw <- rowMeans(dat[, ..cols], na.rm = TRUE)
+      dat$phw <- rowMeans(dat[, cols, with = FALSE], na.rm = TRUE)
       
       cols <- grep("watercontent", names(dat))
-      dat$watercontent <- rowMeans(dat[, ..cols], na.rm = TRUE)
+      dat$watercontent <- rowMeans(dat[, cols, with = FALSE], na.rm = TRUE)
       
       cols <- grep("carboncontent", names(dat))
-      dat$carboncontent <- rowMeans(dat[, ..cols], na.rm = TRUE)
+      dat$carboncontent <- rowMeans(dat[, cols, with = FALSE], na.rm = TRUE)
       
       cols <- grep("texture", names(dat))
-      dat$texture <- apply(dat[, ..cols], 1, private$.Mode)
+      dat$texture <- apply(dat[, cols, with = FALSE], 1, private$.Mode)
       
-      return(x)
+      return(dat)
     },
     .Mode = function(x, na.rm = FALSE) {
       if(na.rm){
@@ -708,10 +706,24 @@ DatClass <- R6::R6Class(
     .centerFun = function(subdat, num_means) {
       num_names <- names(num_means)
       if (self$center) {
-        for (i in 1:length(num_names)) {
-          subdat[, grep(paste0("^", num_names[i], "$"), names(subdat))] <-
-            subdat[, names(subdat) %in% num_names[i], with = FALSE] - num_means[i]
+        no_cent_cols <- c("^x$", "^y$", "cell_id", "field", 
+                          "size", "grid", "datused", "farmer",
+                          "year", "prev_year", "geometry",
+                          "grtgroup", "texture0cm", "texture10cm",
+                          "texture30cm", "texture60cm",
+                          "texture100cm", "texture200cm", "musym",
+                          "texture")
+        no_cent_col_ids <- grep(paste(no_cent_cols, collapse = "|"), names(subdat))
+        dfc <- subdat %>% dplyr::select(-no_cent_col_ids) %>% 
+          as.data.frame()
+        for (i in 1:ncol(dfc)) {
+          if (is.numeric(dfc[, i])) {
+            dfc[, i] <- dfc[, i] - mean(dfc[, i], na.rm = T)
+          }
         }
+        names(dfc) <- paste0(names(dfc), "_cent")
+        subdat <- cbind(subdat, dfc)
+        rm(dfc) # save space in mem
       }
       return(subdat)
     },

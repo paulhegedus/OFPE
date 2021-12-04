@@ -68,7 +68,8 @@ ModClass <- R6::R6Class(
     #' as the only argument to the 'setupOP' method. The user can also select
     #' to save/not save individual figures.
     SAVE = NULL,
-    #' @field covars Character vector of covariates to use for training the model.
+    #' @field covars List of character vector of covariates to use for training the model.
+    #' Must be named by respvar, in the same order.
     covars = NULL,
     #' @field mod_list List containing the initialized R6 class for the specified
     #' models. All model classes follow the same interface with standardized
@@ -188,9 +189,14 @@ ModClass <- R6::R6Class(
     #' parameters and associated information related to the specific model.
     #' @param datClass datClass class object. Stores the data and inputs
     #' necessary for initializing the model.
-    #' @param covars Character vector of covariates to use for training the model.
+    #' @param covars List of character vector of covariates to use for training the model.
+    #' Must be named by respvar, in the same order.
     #' @return An instantiated model for each response variable.
     setupMod = function(datClass, covars = NULL) {
+      stopifnot(
+        length(datClass$respvar) == length(covars),
+        is.list(covars)
+      )
       if (!is.null(covars)) {
         self$covars <- covars
       }
@@ -281,12 +287,17 @@ ModClass <- R6::R6Class(
         self$fxn_path <- NULL
       }
     },
-    .selectCovars = function() {
-      self$covars <- as.character(select.list(
-        names(datClass$mod_dat$trn),
-        title = "Select covariates to use in the model. The experimental variable will be included by default. ",
-        multiple = TRUE
-      ))
+    .selectCovars = function(datClass) {
+      covars <- as.list(datClass$respvar) %>% 
+        `names<-`(datClass$respvar)
+      for (i in 1:length(datClass$respvar)) {
+        covars[[i]] <- as.character(select.list(
+          names(datClass$mod_dat$trn),
+          title = paste0("Select covariates to use in the", datClass$respvar[i]," model. The experimental variable will be included by default. "),
+          multiple = TRUE
+        ))
+      }
+      self$covars <- covars
     },
     .selectOutPath = function() {
       self$SAVE <- as.character(select.list(
