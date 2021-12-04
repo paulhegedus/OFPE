@@ -3,11 +3,13 @@
 #' @description R6 class for for storing economic data that is used in the
 #' simulation and prescription building steps of the OFPE data cycle. This
 #' class has methods for gathering economic data or using the default economic
-#' data on prices received for conventional and organic winter wheat, and the
-#' cost of nitrogen. The default data is gathered from the Billings, MT grain
-#' elevator from 2000 - 2016. This class also can receive data to model
+#' data on prices received for conventional and organic winter wheat, the
+#' cost of nitrogen, and fixed costs. The default data is gathered from 2000-2021
+#' from MSU for prices and USDA ERS for fixed costs. This class also can receive data to model
 #' protein premiums/dockages or uses the default data from the Billings, MT
-#' grain elevator in 2016.
+#' grain elevator in 2016 or 2021. Both have a base protein of 11.5% where 
+#' the 2016 premium/dockages range from 7-15% protein with a 15 cent premium per half, 
+#' while 2021 premium/dockages range from 9.5-14% protein with a 2 cent premium per half.
 #'
 #' Thes user has the option of providing their own data to use for the simulation
 #' that feeds into the prescription generation in order to simulate a specific
@@ -64,7 +66,7 @@ EconDat <- R6::R6Class(
     #' user must supply a data frame with a column name 'pro' with the protein level
     #' and a column named 'PremDock' with the premium(+)/dockage(-) price. Alternatively,
     #' the user can elect to use the default premium/dockage data gathered from the Billings,
-    #' MT elevator in 2016.
+    #' MT elevator in 2021.
     PD = NULL,
     #' @field B0pd Intercept for the protein premium/dockage model fit to protein premium/dockage
     #' data. Used to calculate estimated net-return based off of predicted protein in the OFPE
@@ -92,17 +94,17 @@ EconDat <- R6::R6Class(
     #' the crop grown organically , a column named 'conv' for the price received per bushel
     #' for a conventionally grown crop, and a column named 'cost' with the cost per pound of
     #' the user's seed or nitrogen fertilizer. Alternatively, the user can elect to use
-    #' the default economic conditions gathered from the Billings, MT elevator that conatin
-    #' data from 2000 - 2016 on the price received for organic and conventionally grown hard
-    #' red winter wheat and the cost of nitrogen fertilizer. This option can be accessed
+    #' the default economic conditions gathered from the MSU and USDA that conatin
+    #' data from 2000 - 2021 on the price received for organic and conventionally grown hard
+    #' red winter wheat, the cost of nitrogen fertilizer, and fixed costs. This option can be accessed
     #' with the interactive selection method or by passing in 'Default' to this parameter.
     #' @param PD Data frame containing information on the protein premium/dockage received
     #' for the user's crop. To specify the protein premium and dockage function, the
     #' user must supply a data frame with a column name 'pro' with the protein level
     #' and a column named 'PremDock' with the premium(+)/dockage(-) price. Alternatively,
     #' the user can elect to use the default premium/dockage data gathered from the Billings,
-    #' MT elevator in 2016. This option can be accessed with the interactive selection method
-    #' or by passing in 'Default' to this parameter.
+    #' MT elevator in 2016 or 2021. This option can be accessed with the interactive selection method
+    #' or by passing in '2016' or '2021' to this parameter.
     #' @return A new 'EconDat' object.
     initialize = function(FC = NULL,
                           ssAC = NULL,
@@ -131,16 +133,21 @@ EconDat <- R6::R6Class(
         }
       }
       if (!is.null(PD)) {
-        if (PD == "Default") {
+        if (PD == "2021") {
           self$PD <- Billings_PremDock_2021
           private$.fitPremDock()
         } else {
-          PD <- as.data.frame(PD)
-          stopifnot(is.data.frame(PD),
-                    any(names(PD) == "pro"),
-                    any(names(PD) == "PremDock"))
-          self$PD <- PD
-          private$.fitPremDock()
+          if (PD == "2016") {
+            self$PD <- Billings_PremDock_2016
+            private$.fitPremDock()
+          } else {
+            PD <- as.data.frame(PD)
+            stopifnot(is.data.frame(PD),
+                      any(names(PD) == "pro"),
+                      any(names(PD) == "PremDock"))
+            self$PD <- PD
+            private$.fitPremDock()
+          }
         }
       }
     },
@@ -213,10 +220,14 @@ EconDat <- R6::R6Class(
     },
     .selectPD = function() {
       PD_option <- as.character(select.list(
-        c("Default", "None"),
-        title = "Select whether to use default protein premium/dockage data for HRWW from Billings, MT (2016) or select 'None' to skip because protein is not used for optimization. "
+        c("2016", "2021", "None"),
+        title = "Select whether to use default protein premium/dockage data for HRWW from Billings, MT (2016 or 2021) or select 'None' to skip because protein is not used for optimization. "
       ))
-      if (PD_option == "Default") {
+      if (PD_option == "2016") {
+        self$PD <- Billings_PremDock_2016
+        private$.fitPremDock()
+      }
+      if (PD_option == "2021") {
         self$PD <- Billings_PremDock_2021
         private$.fitPremDock()
       }

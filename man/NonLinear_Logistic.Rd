@@ -44,11 +44,7 @@ datasets with the response, experimental, and remotely sensed variables.}
 
 \item{\code{expvar}}{Character, the experimental variable of interest.}
 
-\item{\code{num_means}}{List for each year in the data with a named vector of the means
-for each numerical covariate, including the experimental variable. This is used for
-converting centered data back to the original form. The centering process does not
-center three numerical variables; the x and y coordinates, and the response variable
-(yld/pro). This is for the data specified from the analysis data inputs (grid specific).}
+\item{\code{covars}}{Character vector of covariates to use for training the model.}
 
 \item{\code{m}}{Fitted non-linear logistic model.}
 
@@ -89,7 +85,7 @@ the criteria to be omitted from the model, making it a 'bad_parm'. The criteria 
 this is over 30\% of data for a given year missing for a parameter or a standard
 deviation of zero, indicating singularity.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{NonLinear_Logistic$new(dat, respvar, expvar, num_means)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{NonLinear_Logistic$new(dat, respvar, expvar, covars)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -102,11 +98,7 @@ datasets with the response, experimental, and remotely sensed variables.}
 
 \item{\code{expvar}}{Character, the experimental variable of interest.}
 
-\item{\code{num_means}}{List for each year in the data with a named vector of the means
-for each numerical covariate, including the experimental variable. This is used for
-converting centered data back to the original form. The centering process does not
-center three numerical variables; the x and y coordinates, and the response variable
-(yld/pro). This is for the data specified from the analysis data inputs (grid specific).}
+\item{\code{covars}}{Character vector of covariates to use for training the model.}
 }
 \if{html}{\out{</div>}}
 }

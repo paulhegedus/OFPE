@@ -74,6 +74,9 @@ otherwise. This will be triggered to FALSE if the user passes FALSE
 as the only argument to the 'setupOP' method. The user can also select
 to save/not save individual figures.}
 
+\item{\code{covars}}{List of character vector of covariates to use for training the model.
+Must be named by respvar, in the same order.}
+
 \item{\code{mod_list}}{List containing the initialized R6 class for the specified
 models. All model classes follow the same interface with standardized
 field and method names. This class is accessed in the analysis and
@@ -205,7 +208,7 @@ Method used to setup the model. This initializes the specified model for each
 response variable. The initialization of each model creates a table of the
 parameters and associated information related to the specific model.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ModClass$setupMod(datClass)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ModClass$setupMod(datClass, covars = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -213,6 +216,9 @@ parameters and associated information related to the specific model.
 \describe{
 \item{\code{datClass}}{datClass class object. Stores the data and inputs
 necessary for initializing the model.}
+
+\item{\code{covars}}{List of character vector of covariates to use for training the model.
+Must be named by respvar, in the same order.}
 }
 \if{html}{\out{</div>}}
 }
