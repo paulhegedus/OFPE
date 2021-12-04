@@ -1,5 +1,5 @@
 Package: OFPE
-Version: 1.7.2
+Version: 1.7.3
 Title: On-Farm Precision Experiments (OFPE) Data Management and Analysis Tools
 Description: The MT OFPE project lays out a concenptual framework for a data 
     intensive field management approach to dryland winter wheat production in
@@ -36,7 +36,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 VignetteBuilder: knitr
 Imports: 
     DBI,

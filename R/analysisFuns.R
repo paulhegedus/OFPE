@@ -98,7 +98,7 @@ findBadParms <- function(parm_df, dat) {
 #' vector of covariate names that correspond to column names in the data. Only observations 
 #' from these columns are removed.
 #' @param dat Data.table or data.frame to remove missing values from.
-#' @param respvar Character vector, the column names to look and remove missing observations
+#' @param covars Character vector, the column names to look and remove missing observations
 #' from.
 #' @return Data.table with missing observations removed from specified columns.
 #' @export

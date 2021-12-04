@@ -32,7 +32,9 @@ dataset.
 }
 \seealso{
 \code{\link{ModClass}} for the class that calls the ModClass interface,
-\code{\link{GAM}} for the alternative class that fits a generalized additive model.
+\code{\link{GAM}}, \code{\link{RF}},
+\code{\link{SVR}}, and \code{\link{Bayes}}
+for alternative model classes.
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}

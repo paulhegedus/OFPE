@@ -9,7 +9,7 @@ removeNAfromCovars(dat, covars)
 \arguments{
 \item{dat}{Data.table or data.frame to remove missing values from.}
 
-\item{respvar}{Character vector, the column names to look and remove missing observations
+\item{covars}{Character vector, the column names to look and remove missing observations
 from.}
 }
 \value{

@@ -263,29 +263,31 @@ ModClass <- R6::R6Class(
       self$fxn <- as.list(respvar) %>%
         `names<-`(respvar)
       for (i in 1:length(self$fxn)) {
-        self$fxn[[i]] <- as.character(readline(
-          paste0("Provide the name of the model to use for ",ifelse(respvar[i] == "yld", "yield", "protein")," responses (i.e. 'GAM' or 'NonLinear_Logistic'). Omit the file extension (.R).: ")
+        self$fxn[[i]] <- as.character(select.list(
+          c("GAM", "RF", "SVR", "Bayes", "NonLinear_Logistic"), # , "Use my own"
+          multiple = FALSE,
+          title = paste0("Select the model to use for ",ifelse(respvar[i] == "yld", "yield", "protein")," responses: ")
         ))
-        if (!grepl("GAM|NonLinear_Logistic", self$fxn[[i]])) {
-          .selectFxnPath(respvar[i])
-        }
+        # if (self$fxn[[i]] == "Use my own") {
+        #   .selectFxnPath(respvar[i])
+        # }
       }
     },
     .selectFxnPath = function(respvar) {
-      self$fxn_path <- as.list(respvar) %>%
-        `names<-`(respvar)
-      for (i in 1:length(self$fxn_path)) {
-        if (!grepl("GAM|NonLinear_Logistic", self$fxn[[i]])) {
-          self$fxn_path[[i]] <- as.character(readline(
-            paste0("Provide the path to a folder where the desired model script for fitting ",ifelse(self$fxn_path[[i]] == "yld", "yield", "protein")," responses is stored (i.e. '~/path/to/folder' or 'C:/path/to/folder'): ")
-          ))
-        } else {
-          self$fxn_path[[i]] <- NA
-        }
-      }
-      if (all(is.na(self$fxn_path))) {
-        self$fxn_path <- NULL
-      }
+      # self$fxn_path <- as.list(respvar) %>%
+      #   `names<-`(respvar)
+      # for (i in 1:length(self$fxn_path)) {
+      #   if (!grepl("GAM|NonLinear_Logistic", self$fxn[[i]])) {
+      #     self$fxn_path[[i]] <- as.character(readline(
+      #       paste0("Provide the path to a folder where the desired model script for fitting ",ifelse(self$fxn_path[[i]] == "yld", "yield", "protein")," responses is stored (i.e. '~/path/to/folder' or 'C:/path/to/folder'): ")
+      #     ))
+      #   } else {
+      #     self$fxn_path[[i]] <- NA
+      #   }
+      # }
+      # if (all(is.na(self$fxn_path))) {
+      #   self$fxn_path <- NULL
+      # }
     },
     .selectCovars = function(datClass) {
       covars <- as.list(datClass$respvar) %>% 

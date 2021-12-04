@@ -30,8 +30,8 @@ dataset.
 }
 \seealso{
 \code{\link{ModClass}} for the class that calls the ModClass interface,
-\code{\link{NonLinear_Logistic}}, \code{\link{RandomForest}},
-\code{\link{SupportVectorRegression}}, and \code{\link{Bayesian}}
+\code{\link{NonLinear_Logistic}}, \code{\link{RF}},
+\code{\link{SVR}}, and \code{\link{Bayes}}
 for alternative model classes.
 }
 \section{Public fields}{
