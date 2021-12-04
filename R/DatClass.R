@@ -615,16 +615,16 @@ DatClass <- R6::R6Class(
     .processDat = function(dat) {
       dat <- private$.trimCols(
         dat, c("grid", "size", "datused", "farmer", "prev_year")) %>%
-        private$.selectDat() %>%
         private$.makeFactors() %>%
+        private$.makeOLMmeans() %>%
         private$.cleanDat()
       return(dat)
     },
     .processSatDat = function(dat) {
       dat <- private$.trimCols(
         dat, c("grid", "size", "datused", "farmer", "prev_year")) %>%
-        private$.selectSatDat() %>%
         private$.makeFactors() %>%
+        private$.makeOLMmeans() %>%
         private$.cleanDat()
       return(dat)
     },
@@ -644,6 +644,40 @@ DatClass <- R6::R6Class(
       dat$texture200cm <- factor(dat$texture200cm)
 
       return(dat)
+    },
+    ## take the mean of each OLM data by depth
+    .makeOLMmeans = function(dat) {
+      browser()
+      
+      cols <- grep("bulkdensity", names(dat))
+      dat$bulkdensity <- rowMeans(dat[, ..cols], na.rm = TRUE)
+      
+      cols <- grep("claycontent", names(dat))
+      dat$claycontent <- rowMeans(dat[, ..cols], na.rm = TRUE)
+      
+      cols <- grep("sandcontent", names(dat))
+      dat$sandcontent <- rowMeans(dat[, ..cols], na.rm = TRUE)
+      
+      cols <- grep("phw", names(dat))
+      dat$phw <- rowMeans(dat[, ..cols], na.rm = TRUE)
+      
+      cols <- grep("watercontent", names(dat))
+      dat$watercontent <- rowMeans(dat[, ..cols], na.rm = TRUE)
+      
+      cols <- grep("carboncontent", names(dat))
+      dat$carboncontent <- rowMeans(dat[, ..cols], na.rm = TRUE)
+      
+      cols <- grep("texture", names(dat))
+      dat$texture <- apply(dat[, ..cols], 1, private$.Mode)
+      
+      return(x)
+    },
+    .Mode = function(x, na.rm = FALSE) {
+      if(na.rm){
+        x = x[!is.na(x)]
+      }
+      ux <- unique(x)
+      return(ux[which.max(tabulate(match(x, ux)))])
     },
     .cleanDat = function(dat) {
       if (any(grepl("aa_n|aa_sr|yld|pro", names(dat)))) {

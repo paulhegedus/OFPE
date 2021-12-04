@@ -119,7 +119,8 @@ EconDat <- R6::R6Class(
                     any(names(Prc) == "Year"),
                     any(names(Prc) == "org"),
                     any(names(Prc) == "conv"),
-                    any(names(Prc) == "cost"))
+                    any(names(Prc) == "cost"),
+                    any(names(Prc) == "FC"))
           self$Prc <- Prc
         } else {
           self$Prc <- MT_Organic_vs_Conv_wheat_N_prices

@@ -23,22 +23,6 @@ findBadParms <- function(parm_df, dat) {
             any(grepl("bad_parms", names(parm_df))),
             any(grepl("means", names(parm_df))),
             any(grepl("sd", names(parm_df))))
-
-  ## TEMP - REMOVING PARMS THAT NOT ALWAYS PRESENT
-  parm_df[grep("prev_", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("ssm_", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("susm_", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("var_", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("grtgroup", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("texture", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("bulkdensity", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("claycontent", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("sandcontent", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("phw", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("watercontent", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("carboncontent", parm_df$parms), "bad_parms"] <- TRUE
-  parm_df[grep("musym", parm_df$parms), "bad_parms"] <- TRUE
-
   # check each var
   obs_num <- by(dat, dat$year, nrow) %>%
     lapply(as.numeric) %>%
@@ -104,8 +88,33 @@ findBadParms <- function(parm_df, dat) {
   if (!is.null(m0$Complete)) {
     parm_df[parm_df$parms %in% row.names(m0$Complete), "bad_parms"] <- TRUE
   }
-
+  
   return(parm_df)
+}
+
+#' @title Remove NA values from covariate columns.
+#' @description Function for removing missing values from columns of a data.frame
+#' or data.table. Must pass in the data to remove missing values from and a character
+#' vector of covariate names that correspond to column names in the data. Only observations 
+#' from these columns are removed.
+#' @param dat Data.table or data.frame to remove missing values from.
+#' @param respvar Character vector, the column names to look and remove missing observations
+#' from.
+#' @return Data.table with missing observations removed from specified columns.
+#' @export
+removeNAfromCovars <- function(dat, covars) {
+  stopifnot(
+    is.data.frame(dat) | data.table::is.data.table(dat),
+    is.character(covars),
+    all(covars %in% names(dat))
+  )
+  dat <- data.table::as.data.table(dat)
+  for (i in 1:length(covars)) {
+    covar_col <- covars[i]
+    good_rows <- !is.na(dat[, covar_col, with = FALSE])
+    dat <- dat[good_rows[, covar_col], ]
+  }
+  return(dat)
 }
 #' @title Prepare validation data for plotting.
 #' @description Adds a column to the data.table/data.frame with a unique year and field

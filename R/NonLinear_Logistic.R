@@ -38,12 +38,8 @@ NonLinear_Logistic <- R6::R6Class(
     respvar = NULL,
     #' @field expvar Character, the experimental variable of interest.
     expvar = NULL,
-    #' @field num_means List for each year in the data with a named vector of the means
-    #' for each numerical covariate, including the experimental variable. This is used for
-    #' converting centered data back to the original form. The centering process does not
-    #' center three numerical variables; the x and y coordinates, and the response variable
-    #' (yld/pro). This is for the data specified from the analysis data inputs (grid specific).
-    num_means = NULL,
+    #' @field covars Character vector of covariates to use for training the model.
+    covars = NULL,
 
     #' @field m Fitted non-linear logistic model.
     m = NULL,
@@ -73,31 +69,26 @@ NonLinear_Logistic <- R6::R6Class(
     #' datasets with the response, experimental, and remotely sensed variables.
     #' @param respvar Character, the response variable of interest.
     #' @param expvar Character, the experimental variable of interest.
-    #' @param num_means List for each year in the data with a named vector of the means
-    #' for each numerical covariate, including the experimental variable. This is used for
-    #' converting centered data back to the original form. The centering process does not
-    #' center three numerical variables; the x and y coordinates, and the response variable
-    #' (yld/pro). This is for the data specified from the analysis data inputs (grid specific).
+    #' @param covars Character vector of covariates to use for training the model.
     #' @return A instantiated 'NonLinear_Logistic' object.
-    initialize = function(dat, respvar, expvar, num_means) {
+    initialize = function(dat, respvar, expvar, covars) {
       stopifnot(any(grepl("trn", names(dat)), grepl("val", names(dat))),
                 is.character(respvar),
                 is.character(expvar),
-                is.list(num_means)
+                is.character(covars)
       )
-      num_names <- do.call(rbind, num_means) %>% as.data.frame() %>% names()
       for (i in 1:length(dat)) {
         stopifnot(any(grepl(paste0("^", respvar, "$"), names(dat[[i]]))),
                   any(grepl(paste0("^", expvar, "$"), names(dat[[i]]))),
-                  all(names(num_names) %in% names(dat[[i]])))
+                  all(covars %in% names(dat[[i]])))
       }
       self$dat <- dat
       self$respvar <- respvar
       self$expvar <- expvar
-      self$num_means <- num_means
+      self$covars <- covars
 
       self$parm_df <- data.frame(
-        parms = c(expvar, num_names[-which(num_names %in% expvar)]),
+        parms = c(expvar, covars[-which(covars %in% expvar)]),
         fxn_comp = NA,
         coef_id = NA,
         bad_parms = FALSE,

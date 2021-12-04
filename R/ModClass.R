@@ -68,7 +68,8 @@ ModClass <- R6::R6Class(
     #' as the only argument to the 'setupOP' method. The user can also select
     #' to save/not save individual figures.
     SAVE = NULL,
-
+    #' @field covars Character vector of covariates to use for training the model.
+    covars = NULL,
     #' @field mod_list List containing the initialized R6 class for the specified
     #' models. All model classes follow the same interface with standardized
     #' field and method names. This class is accessed in the analysis and
@@ -187,8 +188,15 @@ ModClass <- R6::R6Class(
     #' parameters and associated information related to the specific model.
     #' @param datClass datClass class object. Stores the data and inputs
     #' necessary for initializing the model.
+    #' @param covars Character vector of covariates to use for training the model.
     #' @return An instantiated model for each response variable.
-    setupMod = function(datClass) {
+    setupMod = function(datClass, covars = NULL) {
+      if (!is.null(covars)) {
+        self$covars <- covars
+      }
+      if (is.null(self$covars)) {
+        private$.selectCovars(datClass)
+      }
       self$mod_list <- as.list(self$fxn) %>%
         `names<-`(names(self$fxn))
       respvar <- as.list(datClass$respvar)
@@ -199,14 +207,14 @@ ModClass <- R6::R6Class(
                                 datClass$mod_dat,
                                 as.list(datClass$respvar),
                                 as.list(datClass$expvar),
-                                datClass$mod_num_means)
+                                self$covars)
       } else {
         self$mod_list <- mapply(private$.loadModules,
                                 self$mod_list,
                                 datClass$mod_dat,
                                 as.list(datClass$respvar),
                                 as.list(datClass$expvar),
-                                datClass$mod_num_means,
+                                self$covars,
                                 self$fxn_path)
       }
     },
@@ -252,6 +260,9 @@ ModClass <- R6::R6Class(
         self$fxn[[i]] <- as.character(readline(
           paste0("Provide the name of the model to use for ",ifelse(respvar[i] == "yld", "yield", "protein")," responses (i.e. 'GAM' or 'NonLinear_Logistic'). Omit the file extension (.R).: ")
         ))
+        if (!grepl("GAM|NonLinear_Logistic", self$fxn[[i]])) {
+          .selectFxnPath(respvar[i])
+        }
       }
     },
     .selectFxnPath = function(respvar) {
@@ -270,6 +281,13 @@ ModClass <- R6::R6Class(
         self$fxn_path <- NULL
       }
     },
+    .selectCovars = function() {
+      self$covars <- as.character(select.list(
+        names(datClass$mod_dat$trn),
+        title = "Select covariates to use in the model. The experimental variable will be included by default. ",
+        multiple = TRUE
+      ))
+    },
     .selectOutPath = function() {
       self$SAVE <- as.character(select.list(
         c(TRUE, FALSE),
@@ -282,11 +300,11 @@ ModClass <- R6::R6Class(
         self$SAVE <- FALSE
       }
     },
-    .loadModules = function(fxn, dat, respvar, expvar, num_means, fxn_path = NULL) {
+    .loadModules = function(fxn, dat, respvar, expvar, covars, fxn_path = NULL) {
       if (!is.null(fxn_path)) {
         source(paste0(fxn_path, fxn, ".R"))
       }
-      init_text <- "$new(dat, respvar, expvar, num_means)"
+      init_text <- "$new(dat, respvar, expvar, covars)"
       return(eval(parse(text = paste0(fxn, init_text))))
     },
     .saveDiagnostics = function(m, SAVE) {
@@ -318,7 +336,12 @@ ModClass <- R6::R6Class(
         ggplot2::labs(y = ifelse(m$respvar == "yld", "Yield (bu/ac)", "Grain Protein Content (%)"),
              x=paste0(ifelse(m$expvar == "aa_n", "Nitrogen", "Seed"), " (lbs/ac)")) +
         ggplot2::ggtitle(paste0(m$fieldname," ", m$mod_type ," Analysis"),
-                subtitle = paste0("AIC = ", round(AIC(m$m), 4))) +
+                subtitle = paste0("RMSE = ", 
+                                  suppressWarnings(round(Metrics::rmse(
+                                    na.omit(m$dat$val[, which(names(m$dat$val) %in% m$respvar), with = FALSE][[1]]),
+                                    na.omit(m$dat$val$pred)),
+                                    4
+                                  )))) +
         ggplot2::geom_point(data = m$dat$val,
                    ggplot2::aes(x = get(m$expvar), y = pred,
                        col = cols[2],
