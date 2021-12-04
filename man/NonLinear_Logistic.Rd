@@ -33,7 +33,7 @@ dataset.
 \seealso{
 \code{\link{ModClass}} for the class that calls the ModClass interface,
 \code{\link{GAM}}, \code{\link{RF}},
-\code{\link{SVR}}, and \code{\link{Bayes}}
+\code{\link{SVR}}, and \code{\link{BayesLinear}}
 for alternative model classes.
 }
 \section{Public fields}{

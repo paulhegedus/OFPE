@@ -25,7 +25,7 @@
 #' dataset.
 #' @seealso \code{\link{ModClass}} for the class that calls the ModClass interface,
 #' \code{\link{NonLinear_Logistic}}, \code{\link{RF}}, 
-#' \code{\link{SVR}}, and \code{\link{Bayes}}
+#' \code{\link{SVR}}, and \code{\link{BayesLinear}}
 #' for alternative model classes.
 #' @export
 GAM <- R6::R6Class(

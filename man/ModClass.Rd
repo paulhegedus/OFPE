@@ -38,8 +38,11 @@ to select user inputs.
 \seealso{
 \code{\link{DatClass}} for data required for model fitting and validation,
 \code{\link{SimClass}} for simulation class that rely on models from ModClass,
-\code{\link{GAM}} for the class used for fitting a generalized additive model, and
-\code{\link{NonLinear_Logistic}} for the class that fits a non-linear logistic model.
+\code{\link{GAM}} for the class used for fitting a generalized additive model,
+\code{\link{NonLinear_Logistic}} for the class that fits a non-linear logistic model,
+\code{\link{RF}} for the class used for fitting a random fores model,
+\code{\link{SVR}} for the class used for fitting a support vector regression model,
+\code{\link{BayesLinear}} for the class used for fitting a Bayesian model.
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
