@@ -26,8 +26,7 @@
 #' identifying a field name to use for plotting that reflects all fields in the
 #' dataset.
 #' @seealso \code{\link{ModClass}} for the class that calls the ModClass interface,
-#' \code{\link{GAM}}, \code{\link{RF}}, 
-#' \code{\link{SVR}}, and \code{\link{BayesLinear}}
+#' \code{\link{GAM}}, \code{\link{RF}}, and \code{\link{BayesLinear}}
 #' for alternative model classes. 
 #' @export
 NonLinear_Logistic <- R6::R6Class(

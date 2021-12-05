@@ -124,6 +124,8 @@ folder, else to the getwd().}
 \item{\code{Bp}}{Mean base price of the crop grown in the system type.}
 
 \item{\code{CEXP}}{Mean cost of the as-applied experimental input.}
+
+\item{\code{FC}}{The fixed costs of operations besides fertilizer and seed..}
 }
 \if{html}{\out{</div>}}
 }

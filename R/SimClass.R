@@ -120,6 +120,8 @@ SimClass <- R6::R6Class(
     Bp = NULL,
     #' @field CEXP Mean cost of the as-applied experimental input.
     CEXP = NULL,
+    #' @field FC The fixed costs of operations besides fertilizer and seed..
+    FC = NULL,
 
     #' @param dbCon Database connection object connected to an OFPE formatted
     #' database, see DBCon class.
@@ -325,7 +327,6 @@ SimClass <- R6::R6Class(
       unique_fxn <- do.call(rbind, self$modClass$fxn)
       self$unique_fxn <- paste0(row.names(unique_fxn), unique_fxn[, 1]) %>%
         paste(collapse = "-")
-
       if (self$SAVE) {
         private$.setupOP()
         self$dat_path <- paste0(self$out_path, "/Outputs/SimData/")
@@ -1251,11 +1252,20 @@ SimClass <- R6::R6Class(
           self$datClass$expvar
         ## for all response variables, predict yield and protein for all points
         for (j in 1:length(self$datClass$respvar)) {
-          sim_dat_list[[i]]$pred <-
-            self$modClass$mod_list[[j]]$predResps(sim_dat_list[[i]],
-                                                  self$modClass$mod_list[[j]]$m) %>%
-            as.numeric()
-          # sim_dat_list[[i]]$pred <- exp(sim_dat_list[[i]]$pred)
+          sim_dat_list[[i]]$fid <- 1:nrow(sim_dat_list[[i]]) # add column with rownumber
+          exp_col <- grep(self$datClass$expvar, names(sim_dat_list[[i]]))
+          new_data_na <- sim_dat_list[[i]][is.na(sim_dat_list[[i]][, exp_col, with = FALSE][[1]])] # save those rows with NA in separate data.frame
+          new_data_complete <- sim_dat_list[[i]][!is.na(sim_dat_list[[i]][, exp_col, with = FALSE][[1]])] # keep only those rows with no NA
+          new_data_complete$predicted <- self$modClass$mod_list[[j]]$predResps(new_data_complete,
+                                                self$modClass$mod_list[[j]]$m) %>%
+            as.numeric() # make predictions
+          new_data_na$predicted <- NA # ensure that that NA is the same data type
+          new_data_predicted <- rbind(new_data_na, new_data_complete) %>%  # bind rows
+            dplyr::arrange(fid) # return data to original order
+          
+          sim_dat_list[[i]]$pred <- new_data_predicted$predicted
+          sim_dat_list[[i]]$fid <- NULL
+          rm(exp_col, new_data_na, new_data_complete, new_data_predicted)
 
           names(sim_dat_list[[i]])[grep("^pred$", names(sim_dat_list[[i]]))] <-
             paste0("pred_", self$datClass$respvar[j])

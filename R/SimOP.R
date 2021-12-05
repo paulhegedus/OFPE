@@ -572,7 +572,7 @@ SimOP <- R6::R6Class(
           ggplot2::theme_bw() +
           ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
                          axis.title = ggplot2::element_text(size = 14))
-      if (any(Bp.plot$NR < 0)) {
+      if (any(Bp.plot$NR < 0, na.rm = TRUE)) {
         p <- p +
           ggplot2::geom_hline(yintercept = 0, color = "red", linetype = 2)
       }

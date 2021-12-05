@@ -163,4 +163,71 @@ uniqueFieldname <- function(dat) {
   return(fieldname)
 }
 
+#' @title Take random subset of n samples.
+#' @description Function for taking a random subset of the data. Used for 
+#' top-down selection in model fitting to speed up processes. This creates
+#' a representative sample across fields and years if they're present.
+#' @param x data.frame or data.table.
+#' @param respvar Character, the response variable column name.
+#' @param sub_n Numeric, the number of random observations to take.
+#' @return A random subset of the data.
+#' @export
+takeSubset <- function(x, respvar, sub_n = 1250) {
+  stopifnot(any(grepl("field", names(x))),
+            any(grepl("year", names(x))))
+  
+  nrows_x <- nrow(x)
+  if (length(unique(x$field)) > 1) {
+    if (length(unique(x$year)) > 1) {
+      # multi field, multi years
+      x <- split(x, list(x$field, x$year))
+      pct_dat <- lapply(x, dim) %>% 
+        lapply(function(x) x[1]) %>% 
+        lapply(function(x) x / nrows_x)
+      n_sub <- ceiling(unlist(pct_dat) * sub_n)
+      
+      for (i in 1:length(x)) {
+        if (n_sub[i] != 0) {
+          x[[i]]$fid <- 1:nrow(x[[i]])
+          resp_col <- grep(paste0("^", respvar, "$"), names(x[[i]]))
+          resp_rows <- na.omit(x[[i]], resp_col)
+          sub_row_fids <- resp_rows[sample(nrow(resp_rows), n_sub[i])][["fid"]]
+          x[[i]] <- x[[i]][sub_row_fids, ]
+          x[[i]]$fid <- NULL 
+        }
+      }
+      x <- data.table::rbindlist(x)
+    }
+  } else {
+    # one field, multi years
+    if (length(unique(x$year)) > 1) {
+      x <- split(x, list(x$year))
+      pct_dat <- lapply(x, dim) %>% 
+        lapply(function(x) x[1]) %>% 
+        lapply(function(x) x / nrows_x)
+      n_sub <- ceiling(unlist(pct_dat) * sub_n)
+      
+      for (i in 1:length(x)) {
+        if (n_sub[i] != 0) {
+          x[[i]]$fid <- 1:nrow(x[[i]])
+          resp_col <- grep(paste0("^", respvar, "$"), names(x[[i]]))
+          resp_rows <- na.omit(x[[i]], resp_col)
+          sub_row_fids <- resp_rows[sample(nrow(resp_rows), n_sub[i])][["fid"]]
+          x[[i]] <- x[[i]][sub_row_fids, ]
+          x[[i]]$fid <- NULL 
+        }
+      }
+      x <- data.table::rbindlist(x)
+    } else {
+      # if one field or year
+      x$fid <- 1:nrow(x)
+      resp_col <- grep(paste0("^", respvar, "$"), names(x))
+      resp_rows <- na.omit(x, resp_col)
+      sub_row_fids <- resp_rows[sample(nrow(resp_rows), sub_n)][["fid"]]
+      x <- x[sub_row_fids, ]
+      x$fid <- NULL 
+    }
+  }
+  return(x)
+}
 

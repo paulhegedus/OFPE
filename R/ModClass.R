@@ -34,8 +34,7 @@
 #' \code{\link{SimClass}} for simulation class that rely on models from ModClass,
 #' \code{\link{GAM}} for the class used for fitting a generalized additive model,
 #' \code{\link{NonLinear_Logistic}} for the class that fits a non-linear logistic model,
-#' \code{\link{RF}} for the class used for fitting a random fores model,
-#' \code{\link{SVR}} for the class used for fitting a support vector regression model,
+#' \code{\link{RF}} for the class used for fitting a random fores model, and
 #' \code{\link{BayesLinear}} for the class used for fitting a Bayesian model.
 #' @export
 ModClass <- R6::R6Class(
@@ -267,7 +266,7 @@ ModClass <- R6::R6Class(
         `names<-`(respvar)
       for (i in 1:length(self$fxn)) {
         self$fxn[[i]] <- as.character(select.list(
-          c("GAM", "RF", "SVR", "Bayes", "NonLinear_Logistic"), # , "Use my own"
+          c("GAM", "RF", "BayesLinear", "NonLinear_Logistic"), # , "Use my own"
           multiple = FALSE,
           title = paste0("Select the model to use for ",ifelse(respvar[i] == "yld", "yield", "protein")," responses: ")
         ))

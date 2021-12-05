@@ -679,17 +679,19 @@ DatClass <- R6::R6Class(
     },
     .cleanDat = function(dat) {
       if (any(grepl("aa_n|aa_sr|yld|pro", names(dat)))) {
-        col <- names(dat)[grep("aa_n|aa_sr", names(dat))]
+        col <- names(dat)[grep("^aa_n$|^aa_sr$", names(dat))]
         for(i in 1:length(col)){
-          rows <- which(dat[, names(dat) %in% col[i], with = FALSE] < self$clean_rate |
-                          is.na(dat[, names(dat) %in% col[i], with = FALSE]))
+          rows <- which(dat[, names(dat) %in% col[i], with = FALSE] < self$clean_rate)
           dat <- dat[rows, ]
+          rows <- which(dat[, names(dat) %in% col[i], with = FALSE] >= 0)
+          dat <- dat[rows, ]
+          dat <- na.omit(dat, col)
         }
-        col <- names(dat)[grep("yld|pro", names(dat))]
+        col <- names(dat)[grep("^yld$|^pro$", names(dat))]
         for(i in 1:length(col)){
-          rows <- which(dat[, names(dat) %in% col[i], with = FALSE] > 0 |
-                          is.na(dat[, names(dat) %in% col[i], with = FALSE]))
+          rows <- which(dat[, names(dat) %in% col[i], with = FALSE] > 0)
           dat <- dat[rows, ]
+          dat <- na.omit(dat, col)
         }
       }
       return(dat)
