@@ -123,58 +123,58 @@ BayesLinear <- R6::R6Class(
     #' @return A fitted BayesLinear model.
     fitMod = function() {
       self$parm_df <- OFPE::findBadParms(self$parm_df, self$dat$trn)
-      subdat <- lapply(self$dat, OFPE::takeSubset, self$respvar, 500)
-      
-      form <- private$.makeFormula(parms = self$parm_df[!self$parm_df$bad_parms, "parms"],
-                                   respvar = self$respvar)
-      ## simultaneous autoregressive model 
-      xy_sub <- subdat$trn[, c("x", "y")]
-      xy_sf <- sf::st_as_sf(xy_sub, coords = c("x", "y"))
-      nn <- suppressWarnings(spdep::knn2nb(spdep::knearneigh(x = xy_sf, k = 4)))
-      
-      m <- invisible(suppressWarnings(suppressMessages(brms::brm(
-        brms::brmsformula(as.formula(form),
-                          nl = FALSE,
-                          autocor = ~ brms::sar(nn)),
-        data = subdat$trn, family = gaussian(),
-        control = list(adapt_delta = 0.99),
-        iter = 6000,
-        warmup = 2000
-      ))))
-      subdat$val$preds <- predict(m, subdat$val)[,1]
-      get_cols <- c(self$respvar, "preds")
-      preds <- subdat$val[!is.na(subdat$val$preds), get_cols, with = FALSE]
-      init_rmse <- Metrics::rmse(preds[[1]], preds$preds) %>% round(4)
-      
-      ## do top-down RMSE based feature selection
-      for (i in 1:nrow(self$parm_df)) {
-        if (self$parm_df$parms[i] != self$expvar) {
-          self$parm_df$bad_parms[i] <- TRUE
-          
-          form <- private$.makeFormula(parms = self$parm_df$parms[!self$parm_df$bad_parms],
-                                       respvar = self$respvar)
-          m <- invisible(suppressWarnings(suppressMessages(brms::brm(
-            brms::brmsformula(as.formula(form),
-                              nl = FALSE,
-                              autocor = ~ brms::sar(nn)),
-            data = subdat$trn, family = gaussian(),
-            control = list(adapt_delta = 0.99),
-            iter = 6000,
-            warmup = 2000
-          ))))
-          subdat$val$preds <- predict(m, subdat$val)[,1]
-          get_cols <- c(self$respvar, "preds")
-          preds <- subdat$val[!is.na(subdat$val$preds), get_cols, with = FALSE]
-          diff_rmse <- Metrics::rmse(preds[[1]], preds$preds) %>% round(4) - init_rmse
-          if (diff_rmse < 0) {
-            init_rmse <- Metrics::rmse(preds[[1]], preds$preds) %>% round(4)
-          } else {
-            self$parm_df$bad_parms[i] <- FALSE
-          }
-        }
-        rm(m)
-      }
-      gc()
+      # subdat <- lapply(self$dat, OFPE::takeSubset, self$respvar, 500)
+      # 
+      # form <- private$.makeFormula(parms = self$parm_df[!self$parm_df$bad_parms, "parms"],
+      #                              respvar = self$respvar)
+      # ## simultaneous autoregressive model 
+      # xy_sub <- subdat$trn[, c("x", "y")]
+      # xy_sf <- sf::st_as_sf(xy_sub, coords = c("x", "y"))
+      # nn <- suppressWarnings(spdep::knn2nb(spdep::knearneigh(x = xy_sf, k = 4)))
+      # 
+      # m <- invisible(suppressWarnings(suppressMessages(brms::brm(
+      #   brms::brmsformula(as.formula(form),
+      #                     nl = FALSE,
+      #                     autocor = ~ brms::sar(nn)),
+      #   data = subdat$trn, family = gaussian(),
+      #   control = list(adapt_delta = 0.99),
+      #   iter = 6000,
+      #   warmup = 2000
+      # ))))
+      # subdat$val$preds <- predict(m, subdat$val)[,1]
+      # get_cols <- c(self$respvar, "preds")
+      # preds <- subdat$val[!is.na(subdat$val$preds), get_cols, with = FALSE]
+      # init_rmse <- Metrics::rmse(preds[[1]], preds$preds) %>% round(4)
+      # 
+      # ## do top-down RMSE based feature selection
+      # for (i in 1:nrow(self$parm_df)) {
+      #   if (self$parm_df$parms[i] != self$expvar) {
+      #     self$parm_df$bad_parms[i] <- TRUE
+      #     
+      #     form <- private$.makeFormula(parms = self$parm_df$parms[!self$parm_df$bad_parms],
+      #                                  respvar = self$respvar)
+      #     m <- invisible(suppressWarnings(suppressMessages(brms::brm(
+      #       brms::brmsformula(as.formula(form),
+      #                         nl = FALSE,
+      #                         autocor = ~ brms::sar(nn)),
+      #       data = subdat$trn, family = gaussian(),
+      #       control = list(adapt_delta = 0.99),
+      #       iter = 6000,
+      #       warmup = 2000
+      #     ))))
+      #     subdat$val$preds <- predict(m, subdat$val)[,1]
+      #     get_cols <- c(self$respvar, "preds")
+      #     preds <- subdat$val[!is.na(subdat$val$preds), get_cols, with = FALSE]
+      #     diff_rmse <- Metrics::rmse(preds[[1]], preds$preds) %>% round(4) - init_rmse
+      #     if (diff_rmse < 0) {
+      #       init_rmse <- Metrics::rmse(preds[[1]], preds$preds) %>% round(4)
+      #     } else {
+      #       self$parm_df$bad_parms[i] <- FALSE
+      #     }
+      #   }
+      #   rm(m)
+      # }
+      # gc()
       
       ## simultaneous autoregressive model 
       xy_sub <- self$dat$trn[, c("x", "y")]
