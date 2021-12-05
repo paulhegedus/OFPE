@@ -207,6 +207,7 @@ BayesLinear <- R6::R6Class(
     #' @return Vector of predicted values for each location in 'dat'.
     predResps = function(dat, m) {
       pred <- predict(m, dat)[,1]
+      gc()
       return(pred)
     },
     #' @description

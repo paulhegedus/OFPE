@@ -389,6 +389,7 @@ SimClass <- R6::R6Class(
                 self$sim_years,
                 MoreArgs = list(EXPvec = EXPvec),
                 SIMPLIFY = FALSE))
+      gc()
       # tryCatch({
       #   # Actual NR (both years from mod fitting)
       #   # Get all of the observed data (trn + val) from the more
@@ -595,6 +596,7 @@ SimClass <- R6::R6Class(
             dat, modClass$mod_list[[miss_index]]$m
           )
           names(dat)[grep("^pred$", names(dat))] <- respvar[miss_index]
+          gc()
         }
       }
       # calculate NR for each point
@@ -787,6 +789,7 @@ SimClass <- R6::R6Class(
                            private$.predResps,
                            self$modClass$mod_list[[i]],
                            respvar[i])
+        gc()
       }
     },
     .predResps = function(dat, m, respvar) {
@@ -794,33 +797,37 @@ SimClass <- R6::R6Class(
       dat$pred <- ifelse(dat$pred < 0, NA, dat$pred)
       dat$pred <- ifelse(dat$pred > 1000, NA, dat$pred)
       names(dat)[grep("^pred$", names(dat))] <- paste0("pred_", respvar)
+      gc()
       return(dat)
     },
     .yearSim = function(sim_dat, sim_year, EXPvec) {
-      tryCatch({
-        # add cols for NR & make list with df's for each N rate
-        self$sim_list <- private$.setupSimDat(sim_dat) %>%
-          list() %>%
-          rep(length(EXPvec))
-        ## add exp rates to lists
-        self$sim_list <- mapply(private$.addExpCols,
-                                self$sim_list,
-                                EXPvec,
-                                SIMPLIFY = FALSE)
-        # for all years, location, & each rate predict repsonses
-        private$.simResponses(self$datClass$respvar)
-        # get rid of unneccessary columns for the simulation
-        self$sim_list <- lapply(self$sim_list,
-                                private$.trimSimCols)
-        # do simulation & find opt. etc. for each sim_year save to written files
-        # returns the sim_list for plotEstsVsExp() for each pred year
-        private$.runSim(sim_year)
-        },
-        error = function(e) {
-          print(paste0("ERROR SIMULATING ",
-                       sim_year, " FOR ",
-                       self$unique_fieldname, "!!!"))
-      })
+      # add cols for NR & make list with df's for each N rate
+      self$sim_list <- private$.setupSimDat(sim_dat) %>%
+        list() %>%
+        rep(length(EXPvec))
+      ## add exp rates to lists
+      self$sim_list <- mapply(private$.addExpCols,
+                              self$sim_list,
+                              EXPvec,
+                              SIMPLIFY = FALSE)
+      # for all years, location, & each rate predict repsonses
+      private$.simResponses(self$datClass$respvar)
+      gc()
+      # get rid of unneccessary columns for the simulation
+      self$sim_list <- lapply(self$sim_list,
+                              private$.trimSimCols)
+      # do simulation & find opt. etc. for each sim_year save to written files
+      # returns the sim_list for plotEstsVsExp() for each pred year
+      private$.runSim(sim_year)
+      gc()
+      # tryCatch({
+      #   
+      #   },
+      #   error = function(e) {
+      #     print(paste0("ERROR SIMULATING ",
+      #                  sim_year, " FOR ",
+      #                  self$unique_fieldname, "!!!"))
+      # })
       if (self$SAVE) {
         tryCatch({
           self$plotEstsVsExp( # plotEstsVsExp
@@ -877,6 +884,7 @@ SimClass <- R6::R6Class(
                        Bp.var_con,
                        NRffmax_con,
                        NRopt_con))
+      gc()
       ## close connections
       close(Bp.var_con)
       close(NRffmax_con)
@@ -884,6 +892,7 @@ SimClass <- R6::R6Class(
 
       ## calculate NR with mean prices for plotEstsVsExp()
       private$.meanSimList(sim_list_names)
+      gc()
     },
     .setupOutFiles = function(sim_year) {
       # Bp.var
@@ -1007,6 +1016,7 @@ SimClass <- R6::R6Class(
                  grep("NRopp", sim_list_names) - 1,
                  grep("NRfs", sim_list_names) - 1,
                  self$AAmin)
+        gc()
         self$sim_list <- lapply(self$sim_list, function(x) data.table::as.data.table(x) %>%
                                   `names<-`(sim_list_names)) %>%
           lapply(private$.cleanNRdat)
@@ -1055,6 +1065,7 @@ SimClass <- R6::R6Class(
                             EXP.rate.ffopt = ffopt_rate)
         NRopt[,c("EXP.rate.ssopt", "NR.ssopt", "yld.opt", "pro.opt")] <-
           private$.getNRopt(CEXP)
+        gc()
         NRopt <- apply(NRopt, 2, as.numeric)
         ## Fill in Bp.var
         Bp.var[1, "BaseP"] <- Bp
@@ -1067,6 +1078,7 @@ SimClass <- R6::R6Class(
         Bp.var[1, "NR.opp"] <- mean(NRopt[, "NR.opp"], na.rm = T)
 
         NRopt <- private$.calcNRact(NRopt, self$sim_list[[1]]$year[1], Bp, CEXP, FC)
+        gc()
         Bp.var[1, "NR.act"] <- mean(NRopt[, "NR.act"], na.rm = T)
         Bp.var[1, "sim"] <- bp
         # fill out rest
@@ -1088,6 +1100,7 @@ SimClass <- R6::R6Class(
               file = NRffmax_con,
               append = TRUE,
               sep = ",")
+        gc()
         # NRopt
         for (i in 1:nrow(NRopt)) {
           write(toString(NRopt[i, ]),
@@ -1095,6 +1108,7 @@ SimClass <- R6::R6Class(
                 append = TRUE,
                 sep = ",")
         }
+        gc()
       },
       warning = function(w) {return(print(paste0("warning at ", sim_year, " bp = ", bp)))},
       error = function(e) {return(print(paste0("error at ", sim_year, " bp = ", bp)))})
@@ -1269,6 +1283,7 @@ SimClass <- R6::R6Class(
 
           names(sim_dat_list[[i]])[grep("^pred$", names(sim_dat_list[[i]]))] <-
             paste0("pred_", self$datClass$respvar[j])
+          gc()
         }
         ## change col name from the name needed for the model back to 'exp'
         names(sim_dat_list[[i]])[grep(self$datClass$expvar,
@@ -1284,6 +1299,7 @@ SimClass <- R6::R6Class(
                                CEXP,
                                FC,
                                self$econDat$ssAC)
+        gc()
         ## put NR in the NRopt data for export
         NRopt_list[[i]]$NR.act <- sim_dat_list[[i]][
           match(NRopt_list[[i]]$cell_id, sim_dat_list[[i]]$cell_id), "NR"
@@ -1298,6 +1314,7 @@ SimClass <- R6::R6Class(
           ]
           names(NRopt_list[[i]])[grep("^pred$", names(NRopt_list[[i]]))] <-
             paste0(self$datClass$respvar[j], ".act")
+          gc()
         }
         if (!any(grepl("yld.act", names(NRopt_list[[i]])))) {
           NRopt_list[[i]]$yld.act <- NA
@@ -1306,11 +1323,13 @@ SimClass <- R6::R6Class(
           NRopt_list[[i]]$pro.act <- NA
         }
         NRopt_list[[i]]$cell_id <- NULL
+        gc()
       }
       ## recompile the NRoptlist to combine the unique field and years
       NRopt <- data.table::rbindlist(NRopt_list) %>%
         as.matrix() %>%
         apply(2, as.numeric)
+      gc()
       return(NRopt)
     },
     .gatherFieldSize = function() {
