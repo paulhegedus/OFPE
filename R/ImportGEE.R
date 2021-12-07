@@ -37,8 +37,6 @@ ImportGEE <- R6::R6Class(
     #' database.
     #' @return A new 'ImportGEE' object.
     initialize = function(dbCon, dat_path, overwrite) {
-      browser()
-      
       OFPE::removeTempTables(dbCon$db) # removes temporary tables
       stopifnot(
         is.character(dat_path),
