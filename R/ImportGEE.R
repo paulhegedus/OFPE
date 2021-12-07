@@ -37,6 +37,8 @@ ImportGEE <- R6::R6Class(
     #' database.
     #' @return A new 'ImportGEE' object.
     initialize = function(dbCon, dat_path, overwrite) {
+      browser()
+      
       OFPE::removeTempTables(dbCon$db) # removes temporary tables
       stopifnot(
         is.character(dat_path),
@@ -46,6 +48,15 @@ ImportGEE <- R6::R6Class(
       self$dat_path <- dat_path
       self$overwrite <- overwrite
       self$file_names <- invisible(googledrive::drive_ls(self$dat_path))
+      
+      if (!self$overwrite) {
+        gee_in_db <- DBI::dbGetQuery(dbCon$db, 
+                                     "SELECT DISTINCT orig_file 
+                                   FROM all_farms.gee;")
+        gd_in_db <- self$file_names$name %in% gee_in_db$orig_file
+        self$file_names <- self$file_names[!gd_in_db, ]
+      }
+      
       self$file_names$id <- as.character(self$file_names$id)
 
       self$farmers <- DBI::dbGetQuery(self$dbCon$db,
@@ -121,7 +132,7 @@ ImportGEE <- R6::R6Class(
         ## upload to temp database folder
         invisible(
           suppressMessages(
-            rpostgis::pgWriteRast(db, c("all_farms", "temp"), tif)
+            rpostgis::pgWriteRast(db, c("all_farms", "temp"), tif) 
           )
         )
         ## add and fill info columns in temp table
