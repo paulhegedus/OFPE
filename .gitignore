@@ -1,8 +1,7 @@
 .Rproj.user
 .Rhistory
 .RData
-inst/doc
-doc
-Meta
-.Rproj
-travis copy.yml.txt
+.Ruserdata
+src/*.o
+src/*.so
+src/*.dll

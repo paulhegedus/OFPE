@@ -675,8 +675,7 @@ ImportOF <- R6::R6Class(
       }
       # RX or ssopt data
       if (is.na(dtype)) {
-        if (any(grepl("RX|ssopt", name, ignore.case = TRUE)|
-                any(grepl("RX|ssopt", NAMES, ignore.case = TRUE)))) {
+        if (any(grepl("RX|Exp", name, ignore.case = FALSE))) {
           if (any(grepl("poly",
                         class(sf::st_geometry(sf::st_as_sf(FILE))),
                         ignore.case = TRUE))) {
