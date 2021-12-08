@@ -173,7 +173,11 @@ ImportGEE <- R6::R6Class(
           error=function(e) {
             print(paste0(info$orig_file, " already exists in database"))
           },
-          warning=function(w) {})
+          warning=function(w) {
+            DBI::dbSendQuery(db,
+                             paste0("INSERT INTO all_farms.gee
+                                    SELECT * FROM all_farms.temp"))
+          })
         }
         ## remove temp database table and remove file from working directory
         invisible(
