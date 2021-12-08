@@ -87,7 +87,7 @@ ImportGEE <- R6::R6Class(
     #' @param overwrite Logical, whether to overwrite when data already present.
     #' @param db Connection to an OFPE formatted database.
     #' @return See 'GEE' table in database.
-    .uploadGEE = function(FILE, overwrite, db) {
+    .uploadGEE = function(FILE, overwrite, db) { 
       # check if table exists yet (after first upload it should)
       gee <- as.logical(as.numeric(
         DBI::dbGetQuery(db,
