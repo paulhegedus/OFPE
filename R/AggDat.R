@@ -1435,6 +1435,11 @@ AggDat <- R6::R6Class(
       ))
       # buff exp_grid within 5m of boundary?
       
+      
+      # browser()
+      ## TODO: MAKE TABLE WITH SUM OF ORIG_FILE IN r.temp BY CELL ID
+      ##       EXTRACT SUM OF CELL_ID TO EXP_GRID CELL_ID
+      
       if (grepl("MULTIPOLYGON", is_poly)) {
         ## if polygon
         invisible(DBI::dbSendQuery(

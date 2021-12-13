@@ -321,6 +321,10 @@ SimClass <- R6::R6Class(
       self$modClass <- modClass
       self$econDat <- econDat
       self$datClass$getSimDat(self$sim_years)
+      
+      # impute NA from covars in simulated data
+      self$datClass$sim_dat <- private$.imputeDat()
+      
       self$fieldsize <- private$.gatherFieldSize()
 
       self$unique_fieldname <- OFPE::uniqueFieldname(self$datClass$fieldname)
@@ -1509,6 +1513,48 @@ SimClass <- R6::R6Class(
                      dat[, NRcols[j]] < 50000, ]
       }
       return(dat)
+    },
+    .imputeDat = function() {
+      covars <- do.call(c, self$modClass$covars) %>% unique()
+      if (self$datClass$expvar %in% covars) {
+        covars <- covars[-grep(self$datClass$expvar, covars)]
+      }
+      dat <- data.table::rbindlist(self$datClass$sim_dat)
+      parm_df <- data.frame(
+        parms = covars,
+        bad_parms = FALSE,
+        means = NA,
+        sd = NA
+      )
+      parm_df <- OFPE::findBadParms(parm_df, dat)
+      # get number of NA's in data
+      nas <- sapply(dat[, covars, with = FALSE], summary)
+      # impute vars with NA
+      dat <- as.data.frame(dat)
+      for (i in 1:length(nas)) {
+        if (any(grepl("NA's", names(nas[[i]])))) {
+          bad_col <- grep(paste0("^", names(nas)[i], "$"), names(dat))
+          if (sum(is.na(dat[, bad_col])) != nrow(dat)) {
+            pred_vars <- parm_df$parms[!parm_df$bad_parms]
+            if (any(grepl(paste0("^", names(nas)[i], "$"), pred_vars))) {
+              pred_vars <- pred_vars[-grep(names(nas)[i], pred_vars)]
+            }
+            form <- paste(pred_vars, collapse = " + ") %>% 
+              paste0(names(nas)[i], " ~ ", .)
+            
+            m0 <- lm(as.formula(form), data = dat)
+            preds <- suppressWarnings(predict(m0, dat))
+            na_rows <- is.na(dat[, bad_col])
+            dat[na_rows, bad_col] <- preds[na_rows]
+          } else {
+            stop(print(paste0(names(nas)[i], " is missing in all simulation datasets.")))
+          }
+        }
+      }
+      sim_dat <- split(dat, dat$year) %>% 
+        lapply(data.table::as.data.table)
+      
+      return(sim_dat)
     }
   )
 )

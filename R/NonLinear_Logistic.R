@@ -87,6 +87,10 @@ NonLinear_Logistic <- R6::R6Class(
       self$respvar <- respvar
       self$expvar <- expvar
       self$covars <- covars
+      
+      self$dat <- lapply(self$dat, 
+                         OFPE::removeNAfromCovars, 
+                         c(self$expvar, self$covars))
 
       self$parm_df <- data.frame(
         parms = c(expvar, covars[-which(covars %in% expvar)]),

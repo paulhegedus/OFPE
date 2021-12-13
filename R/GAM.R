@@ -86,7 +86,9 @@ GAM <- R6::R6Class(
       self$expvar <- expvar
       self$covars <- covars
       
-      self$dat <- lapply(self$dat, OFPE::removeNAfromCovars, self$covars)
+      self$dat <- lapply(self$dat, 
+                         OFPE::removeNAfromCovars, 
+                         c(self$expvar, self$covars))
       
       init_k <- ifelse(nrow(self$dat$trn) < 1000 | nrow(self$dat$val) < 1000,
                        50,
