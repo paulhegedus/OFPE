@@ -62,35 +62,38 @@ ManageFarmers <- R6::R6Class(
     #' @param farmer Name of a farmer for upload into 'all_farms.farmers'.
     #' @return Farmer upload into database.
     .uploadFarmers = function(farmer, db) {
-      DBI::dbSendQuery(
+      tt <- DBI::dbSendQuery(
         db,
         paste0("INSERT INTO all_farms.farmers(farmer)
                VALUES ('", farmer, "')
                ON CONFLICT ON CONSTRAINT norepfarmers
                DO UPDATE SET farmer = EXCLUDED.farmer;")
       )
+      DBI::dbClearResult(tt)
       # if no schema exists, make them
-      raw_schema <- as.logical(
-        DBI::dbGetQuery(
-          db,
-          paste0("SELECT exists(select schema_name
+      raw_schema <- DBI::dbGetQuery(
+        db,
+        paste0("SELECT exists(select schema_name
                  FROM information_schema.schemata
                  WHERE schema_name = '", farmer, "_r');")
-        )
-      )
-      agg_schema <- as.logical(
-        DBI::dbGetQuery(
-          db,
-          paste0("SELECT exists(select schema_name
+      ) %>% 
+        as.numeric() %>% 
+        as.logical()
+      agg_schema <- DBI::dbGetQuery(
+        db,
+        paste0("SELECT exists(select schema_name
                  FROM information_schema.schemata
                  WHERE schema_name = '", farmer, "_a');")
-        )
-      )
+      ) %>% 
+        as.numeric() %>% 
+        as.logical()
       if (!raw_schema) {
-        DBI::dbSendQuery(db, paste0("CREATE SCHEMA ", farmer, "_r;"))
+        tt <- DBI::dbSendQuery(db, paste0("CREATE SCHEMA ", farmer, "_r;"))
+        DBI::dbClearResult(tt)
       }
       if (!agg_schema) {
-        DBI::dbSendQuery(db, paste0("CREATE SCHEMA ", farmer, "_a;"))
+        tt <- DBI::dbSendQuery(db, paste0("CREATE SCHEMA ", farmer, "_a;"))
+        DBI::dbClearResult(tt)
       }
     }
   )

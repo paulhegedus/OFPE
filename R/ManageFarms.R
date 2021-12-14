@@ -134,11 +134,12 @@ ManageFarms <- R6::R6Class(
                            partial.match = TRUE,
                            upsert.using = c("farm", "farmeridx"))
       )
-      DBI::dbSendQuery(
+      tt <- DBI::dbSendQuery(
         db,
         "UPDATE all_farms.farms
           SET area = ST_AREA(geom::geography) * 0.000247105;"
       )
+      DBI::dbClearResult(tt)
     }
   )
 )

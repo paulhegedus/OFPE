@@ -22,9 +22,7 @@ BuildDB <- R6::R6Class(
     #' @param farmers Vector of farmer names to use for building initial schemas.
     #' @return A new 'BuildDB' object.
     initialize = function(dbCon, postgis_version, farmers) {
-      stopifnot(
-        class(farmers) == "character"
-      )
+      stopifnot(class(farmers) == "character")
       self$dbCon <- dbCon
       self$postgis_version <- postgis_version
       self$farmers <- farmers
@@ -63,20 +61,24 @@ BuildDB <- R6::R6Class(
 
       if (as.numeric(postgis_version) >= 3) {
         if (!any(grepl("postgis", extensions$extname))) {
-          DBI::dbSendQuery(db, paste0("CREATE EXTENSION postgis;"))
-          DBI::dbSendQuery(db, paste0("CREATE EXTENSION postgis_raster;"))
+          tt <- DBI::dbSendQuery(db, paste0("CREATE EXTENSION postgis;"))
+          DBI::dbClearResult(tt)
+          tt <- DBI::dbSendQuery(db, paste0("CREATE EXTENSION postgis_raster;"))
+          DBI::dbClearResult(tt)
         } else {
           if (!any(grepl("postgis_raster", extensions$extname))) {
-            DBI::dbSendQuery(db,
+            tt <- DBI::dbSendQuery(db,
                              paste0("CREATE EXTENSION postgis_raster;"))
+            DBI::dbClearResult(tt)
           }
         }
       } else {
         if (!any(grepl("postgis", extensions$extname))) {
-          DBI::dbSendQuery(db, paste0("CREATE EXTENSION postgis;"))
+          tt <- DBI::dbSendQuery(db, paste0("CREATE EXTENSION postgis;"))
+          DBI::dbClearResult(tt)
         }
       }
-      DBI::dbSendQuery(
+      tt <- DBI::dbSendQuery(
         db,
         paste0("
           CREATE OR REPLACE FUNCTION ST_CreateFishnet(
@@ -96,6 +98,7 @@ BuildDB <- R6::R6Class(
           $$ LANGUAGE sql IMMUTABLE STRICT;
         ")
       )
+      DBI::dbClearResult(tt)
     },
     #' @description
     #' Builds the skeleton of the database. Two schemas for each farmer supplied
@@ -122,7 +125,8 @@ BuildDB <- R6::R6Class(
       schemas <- c("all_farms", farmSchemas)
 
       for (i in 1:length(schemas)) {
-        DBI::dbSendQuery(db, paste0("CREATE SCHEMA ", schemas[i]))
+        tt <- DBI::dbSendQuery(db, paste0("CREATE SCHEMA ", schemas[i]))
+        DBI::dbClearResult(tt)
       }
     },
     #' @description
@@ -144,14 +148,15 @@ BuildDB <- R6::R6Class(
       if (is.null(db)) {
         db <- self$dbCon$db
       }
-      DBI::dbSendQuery(
+      tt <- DBI::dbSendQuery(
         db,
         "CREATE TABLE all_farms.farmers (
            farmeridx SERIAL PRIMARY KEY,
            farmer VARCHAR(100) NOT NULL,
            CONSTRAINT norepfarmers UNIQUE (farmer));"
       )
-      DBI::dbSendQuery(
+      DBI::dbClearResult(tt)
+      tt <- DBI::dbSendQuery(
         db,
         "CREATE TABLE all_farms.farms (
            farmidx SERIAL PRIMARY KEY,
@@ -161,14 +166,16 @@ BuildDB <- R6::R6Class(
            utm_epsg INTEGER,
            CONSTRAINT norepfarms UNIQUE (farm, farmeridx));"
       )
-      DBI::dbSendQuery(
+      DBI::dbClearResult(tt)
+      tt <- DBI::dbSendQuery(
         db,
         "CREATE TABLE all_farms.field_ids (
            fieldidx SERIAL PRIMARY KEY,
            fieldname VARCHAR(100) NOT NULL,
            CONSTRAINT norepfieldids UNIQUE (fieldname));"
       )
-      DBI::dbSendQuery(
+      DBI::dbClearResult(tt)
+      tt <- DBI::dbSendQuery(
         db,
         "CREATE TABLE all_farms.fields (
           fieldidx INTEGER REFERENCES all_farms.field_ids(fieldidx),
@@ -180,8 +187,17 @@ BuildDB <- R6::R6Class(
           CONSTRAINT norepfields UNIQUE (wfid, fieldname),
           PRIMARY KEY (wfid, fieldname));"
       )
-      DBI::dbSendQuery(db, "ALTER TABLE all_farms.farms ADD COLUMN geom geometry")
-      DBI::dbSendQuery(db, "ALTER TABLE all_farms.fields ADD COLUMN geom geometry")
+      DBI::dbClearResult(tt)
+      tt <- DBI::dbSendQuery(
+        db, 
+        "ALTER TABLE all_farms.farms ADD COLUMN geom geometry"
+      )
+      DBI::dbClearResult(tt)
+      tt <- DBI::dbSendQuery(
+        db, 
+        "ALTER TABLE all_farms.fields ADD COLUMN geom geometry"
+      )
+      DBI::dbClearResult(tt)
     },
     #' @description
     #' Builds spatial indexes on the tabels created in the 'all_farms' schema.
@@ -196,18 +212,20 @@ BuildDB <- R6::R6Class(
       if (is.null(db)) {
         db <- self$dbCon$db
       }
-      DBI::dbSendQuery(
+      tt <- DBI::dbSendQuery(
         db,
         "CREATE INDEX farms_geom_idx
           ON all_farms.farms
           USING GIST (geom);"
       )
-      DBI::dbSendQuery(
+      DBI::dbClearResult(tt)
+      tt <- DBI::dbSendQuery(
         db,
         "CREATE INDEX fields_geom_idx
           ON all_farms.fields
           USING GIST (geom);"
       )
+      DBI::dbClearResult(tt)
     }
   )
 )

@@ -473,6 +473,8 @@ SimClass <- R6::R6Class(
                              out_path,
                              Bp,
                              CEXP) {
+      # browser()
+      
       nr_plot <- private$.estsVsExpPlot("NR",
                                         expvar,
                                         fieldname,
@@ -484,12 +486,13 @@ SimClass <- R6::R6Class(
                                         fxn)
       if (SAVE) {
         try({dev.off()}, silent = TRUE)
-        ggplot2::ggsave(paste0(out_path, "/Outputs/Predictions/",
+        invisible(suppressWarnings(suppressMessages(
+          ggplot2::ggsave(paste0(out_path, "/Outputs/Predictions/",
                                fieldname, "_NRvs",
                                ifelse(expvar == "aa_n","N","SR"),
                                "_", fxn, "_", sim_year, ".png"),
                         plot = nr_plot, device = "png", scale = 1,
-                        width = 7.5, height = 5, units = "in")
+                        width = 7.5, height = 5, units = "in"))))
       }
       resp_plots <- lapply(respvar,
                            private$.estsVsExpPlot,
@@ -504,12 +507,13 @@ SimClass <- R6::R6Class(
       if (SAVE) {
         for (i in 1:length(resp_plots)) {
           try({dev.off()}, silent = TRUE)
-          ggplot2::ggsave(paste0(out_path, "/Outputs/Predictions/",
-                                 fieldname, "_", toupper(respvar[i]), "vs",
-                                 ifelse(expvar == "aa_n","N","SR"),
-                                 "_", fxn, "_", sim_year, ".png"),
-                          plot = resp_plots[[i]], device = "png", scale = 1,
-                          width = 7.5, height = 5, units = "in")
+          invisible(suppressWarnings(suppressMessages(
+            ggplot2::ggsave(paste0(out_path, "/Outputs/Predictions/",
+                                   fieldname, "_", toupper(respvar[i]), "vs",
+                                   ifelse(expvar == "aa_n","N","SR"),
+                                   "_", fxn, "_", sim_year, ".png"),
+                            plot = resp_plots[[i]], device = "png", scale = 1,
+                            width = 7.5, height = 5, units = "in"))))
         }
       }
       resp_plots$nr <- nr_plot
@@ -677,16 +681,16 @@ SimClass <- R6::R6Class(
             title = "Select whether to choose a year(s) to simulate based off of 'Satellite' data aggrgated in the user's OFPE database. Otherwise, elect to run the 'LikeYear' analysis to identify and select from the wettest, driest, average, and predicted year to follow a user selected year. "
       ))
       if (sim_years == "Select Year") {
-        sat_exist <- as.logical(
-          DBI::dbGetQuery(
-            self$dbCon$db,
-            paste0("SELECT EXISTS (
+        sat_exist <- DBI::dbGetQuery(
+          self$dbCon$db,
+          paste0("SELECT EXISTS (
              SELECT 1
              FROM information_schema.tables
              WHERE table_schema = '",farmername,"_a'
              AND table_name = 'sat')")
-          )
-        )
+        ) %>% 
+          as.numeric() %>% 
+          as.logical()
         if (sat_exist) {
           sim_years <- as.list(fieldname) %>%
             `names<-`(fieldname)
@@ -822,6 +826,9 @@ SimClass <- R6::R6Class(
                               private$.trimSimCols)
       # do simulation & find opt. etc. for each sim_year save to written files
       # returns the sim_list for plotEstsVsExp() for each pred year
+      
+      # browser()
+      
       private$.runSim(sim_year)
       gc()
       # tryCatch({
@@ -856,6 +863,8 @@ SimClass <- R6::R6Class(
       return(invisible())
     },
     .runSim = function(sim_year) {
+      # browser()
+      
       rr <- nrow(self$sim_list[[1]])
       sim_list_names <- names(self$sim_list[[1]])
       ## make connections and clean files
@@ -893,6 +902,9 @@ SimClass <- R6::R6Class(
       close(Bp.var_con)
       close(NRffmax_con)
       close(NRopt_con)
+      
+      ## 1 rep sim with actual economic data from that year
+      private$.simActEconConds(rr, sim_list_names, sim_year)
 
       ## calculate NR with mean prices for plotEstsVsExp()
       private$.meanSimList(sim_list_names)
@@ -985,6 +997,8 @@ SimClass <- R6::R6Class(
     },
     .simFunIter = function(bp, rr, sim_list_names, sim_year,
                            Bp.var_con, NRffmax_con, NRopt_con) {
+      # browser()
+      
       tryCatch({
         Bp.var <- matrix(0, nrow = 1, ncol = 10)
         colnames(Bp.var) <- c("BaseP", "EXP.cost", "NR.ssopt", "NR.min", "NR.fs",
@@ -1359,6 +1373,8 @@ SimClass <- R6::R6Class(
       return(dat)
     },
     .meanSimList = function(sim_list_names) {
+      # browser()
+      
       Bp_col <- grep(self$datClass$sys_type,
                      names(self$econDat$Prc))
       BpOpp_col <- grep(self$datClass$opp_sys_type,
@@ -1555,6 +1571,167 @@ SimClass <- R6::R6Class(
         lapply(data.table::as.data.table)
       
       return(sim_dat)
+    },
+    .simActEconConds = function(rr, sim_list_names, sim_year) {
+      # browser()
+      
+      tryCatch({
+        Bp.var <- matrix(0, nrow = 1, ncol = 10)
+        colnames(Bp.var) <- c("BaseP", "EXP.cost", "NR.ssopt", "NR.min", "NR.fs",
+                              "ffopt.EXPrate", "NR.ffopt", "NR.act", "NR.opp", "sim")
+        
+        if (any(self$econDat$Prc$Year == sim_year)) {
+          rp <- which(self$econDat$Prc$Year == sim_year)
+        } else {
+          if (sim_year < min(self$econDat$Prc$Year)) {
+            rp <- which(self$econDat$Prc$Year == min(self$econDat$Prc$Year))
+          }
+          if (sim_year > max(self$econDat$Prc$Year)) {
+            rp <- which(self$econDat$Prc$Year == max(self$econDat$Prc$Year))
+          }
+        }
+        
+        Bp_col <- grep(self$datClass$sys_type,
+                       names(self$econDat$Prc))
+        BpOpp_col <- grep(self$datClass$opp_sys_type,
+                          names(self$econDat$Prc))
+        Bp <- mean(
+          self$econDat$Prc[rp, Bp_col],
+          na.rm = TRUE
+        )
+        CEXP <- mean(
+          self$econDat$Prc[rp, "cost"],
+          na.rm = TRUE
+        )
+        BpOpp <- mean(
+          self$econDat$Prc[rp, BpOpp_col],
+          na.rm = TRUE
+        )
+        FC <- mean(
+          self$econDat$Prc[rp, "FC"],
+          na.rm = TRUE
+        )
+        
+        ## apply NRcalcCpp fxn to dnr with the cd econ scenario
+        self$sim_list <-
+          lapply(self$sim_list, function(x) as.matrix(x) %>% `colnames<-`(NULL)) %>%
+          lapply(function(x) apply(x, 2, as.numeric)) %>%
+          lapply(OFPE::NRcalcCpp,
+                 Bp,
+                 self$econDat$B0pd,
+                 self$econDat$B1pd,
+                 self$econDat$B2pd,
+                 CEXP,
+                 BpOpp,
+                 FC,
+                 self$fs,
+                 self$econDat$ssAC,
+                 ifelse(any(self$datClass$respvar == "pro"), 1, 0),
+                 rr,
+                 grep(paste0("^", self$datClass$expvar, "$"), sim_list_names) - 1,
+                 grep("pred_yld", sim_list_names) - 1,
+                 grep("pred_pro", sim_list_names) - 1,
+                 grep("^NR$", sim_list_names) - 1,
+                 grep("NRmin", sim_list_names) - 1,
+                 grep("NRopp", sim_list_names) - 1,
+                 grep("NRfs", sim_list_names) - 1,
+                 self$AAmin)
+        gc()
+        self$sim_list <- lapply(self$sim_list, function(x) data.table::as.data.table(x) %>%
+                                  `names<-`(sim_list_names)) %>%
+          lapply(private$.cleanNRdat)
+        NRff <- data.frame(EXP.rate = self$AAmin:self$AArateCutoff, NR.ff = NA)
+        NRff$NR.ff <- lapply(self$sim_list, function(x) sum(x$NR, na.rm = TRUE))
+        NRff <- apply(NRff, 2, as.numeric) %>% as.data.frame()
+        if (self$opt == "max") {
+          NRffmax <- subset(NRff,
+                            NRff[, "NR.ff"] == max(na.omit(NRff[, "NR.ff"])))
+        } else {
+          if (self$opt == "deriv") {
+            NRff <- NRff %>% `names<-`(NULL) %>% as.matrix()
+            NRffmax <- OFPE::derivFFoptCpp(NRff,
+                                           nrow(NRff),
+                                           self$fieldsize,
+                                           CEXP) %>%
+              as.data.frame() %>%
+              `names<-`(c("EXP.rate", "NR.ff"))
+          } # else some other opt method (i.e. not max or deriv)
+        }
+        ffopt_rate <- NRffmax[1, "EXP.rate"]
+        invisible(ifelse(self$datClass$sys_type == "conv",
+                         NR.opp <- self$sim_list[[1]]$NRopp,
+                         NR.opp <- self$sim_list[[self$fs + 1]]$NRopp))
+        NRopt <- data.frame(BaseP = rep(Bp, rr),
+                            EXP.cost = rep(CEXP, rr),
+                            x = self$sim_list[[1]]$x,
+                            y = self$sim_list[[1]]$y,
+                            row = self$sim_list[[1]]$row,
+                            col = self$sim_list[[1]]$col,
+                            field = self$sim_list[[1]]$field,
+                            EXP.rate.ssopt = NA,
+                            NR.ssopt = NA,
+                            NR.min = self$sim_list[[1]]$NRmin,
+                            NR.opp = NR.opp,
+                            NR.fs = self$sim_list[[self$fs + 1]]$NRfs,
+                            yld.opt = NA,
+                            yld.min = self$sim_list[[1]]$pred_yld,
+                            yld.fs = self$sim_list[[self$fs + 1]]$pred_yld,
+                            pro.opt = NA,
+                            pro.min = self$sim_list[[1]]$pred_pro,
+                            pro.fs = self$sim_list[[self$fs + 1]]$pred_pro,
+                            NR.ffopt = self$sim_list[[ffopt_rate + 1]]$NR,
+                            yld.ffopt = self$sim_list[[ffopt_rate + 1]]$pred_yld,
+                            pro.ffopt = self$sim_list[[ffopt_rate + 1]]$pred_pro,
+                            EXP.rate.ffopt = ffopt_rate)
+        NRopt[,c("EXP.rate.ssopt", "NR.ssopt", "yld.opt", "pro.opt")] <-
+          private$.getNRopt(CEXP)
+        gc()
+        NRopt <- apply(NRopt, 2, as.numeric)
+        ## Fill in Bp.var
+        Bp.var[1, "BaseP"] <- Bp
+        Bp.var[1, "EXP.cost"] <- CEXP
+        Bp.var[1, "NR.ssopt"] <- mean(NRopt[, "NR.ssopt"], na.rm = T)
+        Bp.var[1, "NR.min"] <- mean(NRopt[, "NR.min"], na.rm = T)
+        Bp.var[1, "NR.fs"] <- mean(NRopt[, "NR.fs"], na.rm = T)
+        Bp.var[1, "ffopt.EXPrate"] <- NRffmax[, "EXP.rate"]
+        Bp.var[1, "NR.ffopt"] <- NRffmax[, "NR.ff"] / rr
+        Bp.var[1, "NR.opp"] <- mean(NRopt[, "NR.opp"], na.rm = T)
+        
+        NRopt <- private$.calcNRact(NRopt, self$sim_list[[1]]$year[1], Bp, CEXP, FC)
+        gc()
+        Bp.var[1, "NR.act"] <- mean(NRopt[, "NR.act"], na.rm = T)
+        Bp.var[1, "sim"] <- paste0(sim_year, "EconCondition")
+        # fill out rest
+        NRopt <- data.table::as.data.table(NRopt)
+        NRopt$field <-
+          self$datClass$fieldname_codes[
+            match(NRopt$field, self$datClass$fieldname_codes$field_code),
+            "field"]
+        NRopt$sim <- paste0(sim_year, "EconCondition")
+        NRffmax$sim <- paste0(sim_year, "EconCondition")
+        
+        Bp.var <- data.table::as.data.table(Bp.var)
+        NRffmax <- data.table::as.data.table(NRffmax)
+        ## save data & append to tables
+        data.table::fwrite(Bp.var, paste0(self$dat_path,
+                              self$unique_fieldname, "_BpVar_",
+                              self$unique_fxn, "_SimYr",
+                              sim_year, "EconCond_",
+                              self$opt, ".csv"))
+        data.table::fwrite(NRopt, paste0(self$dat_path,
+                             self$unique_fieldname, "_NRopt_",
+                             self$unique_fxn, "_SimYr",
+                             sim_year, "EconCond_",
+                             self$opt, ".csv"))
+        data.table::fwrite(NRffmax, paste0(self$dat_path,
+                               self$unique_fieldname, "_NRffMaxData_",
+                               self$unique_fxn, "_SimYr",
+                               sim_year, "EconCond_",
+                               self$opt, ".csv"))
+        gc()
+      },
+      warning = function(w) {return(print(paste0("warning with actual economics for ", sim_year)))},
+      error = function(e) {return(print(paste0("error with actual economics for ", sim_year)))})
     }
   )
 )

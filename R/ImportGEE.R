@@ -48,17 +48,30 @@ ImportGEE <- R6::R6Class(
       self$file_names <- invisible(googledrive::drive_ls(self$dat_path))
       
       if (!self$overwrite) {
-        gee_in_db <- DBI::dbGetQuery(dbCon$db, 
-                                     "SELECT DISTINCT orig_file 
-                                   FROM all_farms.gee;")
-        gd_in_db <- self$file_names$name %in% gee_in_db$orig_file
-        self$file_names <- self$file_names[!gd_in_db, ]
+        gee <- DBI::dbGetQuery(self$dbCon$db,
+                               "SELECT EXISTS (SELECT 1
+                              FROM information_schema.tables
+                              WHERE table_schema = 'all_farms'
+                              AND table_name = 'gee')") %>% 
+          as.numeric() %>% 
+          as.logical()
+        if (gee) {
+          gee_in_db <- DBI::dbGetQuery(
+            self$dbCon$db, 
+            "SELECT DISTINCT orig_file 
+           FROM all_farms.gee;"
+          )
+          gd_in_db <- self$file_names$name %in% gee_in_db$orig_file
+          self$file_names <- self$file_names[!gd_in_db, ]
+        }
       }
       
       self$file_names$id <- as.character(self$file_names$id)
 
-      self$farmers <- DBI::dbGetQuery(self$dbCon$db,
-                                      "SELECT * FROM all_farms.farmers")
+      self$farmers <- DBI::dbGetQuery(
+        self$dbCon$db,
+        "SELECT * FROM all_farms.farmers"
+      )
       self$farms <- sf::st_read(self$dbCon$db,
                                 query = "SELECT * FROM all_farms.farms") %>%
         sf::`st_crs<-`(4326) %>%
@@ -70,7 +83,11 @@ ImportGEE <- R6::R6Class(
     #' @return See 'GEE' table in database.
     executeUpload = function() {
       # prevents annoying and useless notices from postgresql
-      invisible(DBI::dbSendQuery(dbCon$db, "SET client_min_messages TO WARNING"))
+      tt <- invisible(DBI::dbSendQuery(
+        dbCon$db, 
+        "SET client_min_messages TO WARNING"
+      ))
+      DBI::dbClearResult(tt)
       invisible(
         apply(self$file_names,
               1,
@@ -89,28 +106,30 @@ ImportGEE <- R6::R6Class(
     #' @return See 'GEE' table in database.
     .uploadGEE = function(FILE, overwrite, db) { 
       # check if table exists yet (after first upload it should)
-      gee <- as.logical(as.numeric(
-        DBI::dbGetQuery(db,
-                        "SELECT EXISTS (SELECT 1
-                         FROM information_schema.tables
-                         WHERE table_schema = 'all_farms'
-                         AND table_name = 'gee')")
-      ))
+      gee <- DBI::dbGetQuery(db,
+                             "SELECT EXISTS (SELECT 1
+                              FROM information_schema.tables
+                              WHERE table_schema = 'all_farms'
+                              AND table_name = 'gee')") %>% 
+        as.numeric() %>% 
+        as.logical()
       db_check <- FALSE # assumes file not in db
       if (gee) { # if GEE file exists & user selects to overwrite
         #check for if the FILE exists in db by checking 'orig_file' col
-        db_check <- as.logical(as.numeric(
-          DBI::dbGetQuery(db,
-                          paste0("SELECT EXISTS (SELECT 1
-                                  FROM all_farms.gee
-                                 WHERE orig_file = '", FILE$name,"')"))
-        ))
+        db_check <- DBI::dbGetQuery(
+          db,
+          paste0("SELECT EXISTS (SELECT 1
+                  FROM all_farms.gee 
+                  WHERE orig_file = '", FILE$name,"')")) %>% 
+          as.numeric() %>% 
+          as.logical()
         if (db_check & overwrite) {
-          DBI::dbSendQuery(
+          tt <- DBI::dbSendQuery(
             db,
             paste0("DELETE FROM all_farms.gee
-                    WHERE orig_file = '", FILE$name,"'")
+                   WHERE orig_file = '", FILE$name,"'")
           )
+          DBI::dbClearResult(tt)
           db_check <- FALSE
         }
       }
@@ -140,49 +159,55 @@ ImportGEE <- R6::R6Class(
                          MoreArgs = list(db = db)))
         ## put all data in the 'gee' table of the 'all_farms' schema in db
         if (!gee) { # if table does not exist create it
-          invisible(
+          tt <- invisible(
             DBI::dbSendQuery(db,
                             "CREATE TABLE all_farms.gee AS
                              SELECT * FROM all_farms.temp")
           )
-          invisible(
+          DBI::dbClearResult(tt)
+          tt <- invisible(
             DBI::dbSendQuery(
               db,
               paste0("ALTER TABLE all_farms.gee
                      ADD PRIMARY KEY (rid,orig_file,year,loy,type,scale,source,farmidx,farmeridx)")
             )
           )
+          DBI::dbClearResult(tt)
           # create spatial index
           tryCatch({
-            invisible(
+            tt <- invisible(
               DBI::dbSendQuery(db,
                                paste0("CREATE INDEX gee_rast_idx",
                                       " ON all_farms.gee",
                                       " USING GIST (ST_ConvexHull(rast))"))
-            )},
+            )
+            DBI::dbClearResult(tt)},
             error=function(e) {
               print(paste0("error creating spatial index for all_farms.gee"))
             }
           )
         } else { # otherwise append to it
           tryCatch({
-            DBI::dbSendQuery(db,
+            tt <- DBI::dbSendQuery(db,
                              paste0("INSERT INTO all_farms.gee
                                     SELECT * FROM all_farms.temp"))
+            DBI::dbClearResult(tt)
           },
           error=function(e) {
             print(paste0(info$orig_file, " already exists in database"))
           },
           warning=function(w) {
-            DBI::dbSendQuery(db,
+            tt <- DBI::dbSendQuery(db,
                              paste0("INSERT INTO all_farms.gee
                                     SELECT * FROM all_farms.temp"))
+            DBI::dbClearResult(tt)
           })
         }
         ## remove temp database table and remove file from working directory
-        invisible(
+        tt <- invisible(
           DBI::dbSendQuery(db, paste0("DROP TABLE all_farms.temp"))
         )
+        DBI::dbClearResult(tt)
         file.remove(FILE$name)
         message <- paste0(FILE$name, " import complete")
       } else {
@@ -362,10 +387,11 @@ ImportGEE <- R6::R6Class(
     #' @param db The connection to the OFPE database.
     #' @return Columns added to database table.
     .addColsToDB = function(info, name, db) {
-     DBI::dbSendQuery(db,
+      tt <- DBI::dbSendQuery(db,
                      paste0("ALTER TABLE all_farms.temp
                             ADD COLUMN ", name, " TEXT
                             DEFAULT '", info, "'"))
+      DBI::dbClearResult(tt)
     }
   )
 )

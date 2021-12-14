@@ -131,13 +131,14 @@ ManageFields <- R6::R6Class(
     .uploadFields = function(field, db) {
       # field_ids upsert
       field_name <- unique(field$fieldname)
-      DBI::dbSendQuery(
+      tt <- DBI::dbSendQuery(
         db,
         paste0("INSERT INTO all_farms.field_ids(fieldname)
                VALUES ('", field_name, "')
                ON CONFLICT ON CONSTRAINT norepfieldids
                DO UPDATE SET fieldname = EXCLUDED.fieldname;")
       )
+      DBI::dbClearResult(tt)
       # fields upsert
       field$farmeridx <- DBI::dbGetQuery(
         db,
@@ -159,18 +160,20 @@ ManageFields <- R6::R6Class(
                            partial.match = TRUE,
                            upsert.using = c("wfid", "fieldname"))
       )
-      DBI::dbSendQuery(
+      tt <- DBI::dbSendQuery(
         db,
         "UPDATE all_farms.fields
           SET farmidx = farms.farmidx
           FROM all_farms.farms
           WHERE ST_INTERSECTS(farms.geom, fields.geom);"
       )
-      DBI::dbSendQuery(
+      DBI::dbClearResult(tt)
+      tt <- DBI::dbSendQuery(
         db,
         "UPDATE all_farms.fields
           SET area = ST_AREA(geom::geography) * 0.000247105;"
       )
+      DBI::dbClearResult(tt)
     }
   )
 )

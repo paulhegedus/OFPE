@@ -451,7 +451,8 @@ ImportOF <- R6::R6Class(
       if (!tab_exist) { # if exists = false this returns true
         FILE <- OFPE::setNAtoNaN(FILE)
         OFPE::importNewDat(db, FILE, schema, dtype)
-        invisible(DBI::dbGetQuery(db, query))
+        tt <- invisible(DBI::dbSendQuery(db, query))
+        DBI::dbClearResult(tt)
         geom_idx <- paste0(dtype, "_geom_idx")
         OFPE::makeDBcolsText(db, NAMES, schema, dtype)
         OFPE::convPolyToMulti(db, FILE, schema, dtype)

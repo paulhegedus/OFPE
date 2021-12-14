@@ -48,6 +48,7 @@ DBCon <- R6::R6Class(
           password = password,
           maxvarcharsize = 0
         )
+        print("Warning: Using an odbc driver will not work with data imports. This includes field and farm boundary imports, on-farm data and Google Earth Engine data imports, and importing prescriptions.")
       } else {
         stopifnot(
           !is.null(dbname),

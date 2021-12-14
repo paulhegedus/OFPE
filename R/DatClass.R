@@ -427,16 +427,16 @@ DatClass <- R6::R6Class(
     .selectField = function(db) {
       flds <- rep(list(NA), length(self$respvar))
       for (i in 1:length(flds)) {
-        tabExist <- as.logical(DBI::dbGetQuery(
+        tabExist <- DBI::dbGetQuery(
           db,
           paste0("SELECT EXISTS (
                  SELECT 1
                  FROM information_schema.tables
                  WHERE table_schema = '", self$farmername, "_a'
                  AND table_name = '", self$respvar[i], "')"
-              )
-            )
-          )
+          )) %>% 
+          as.numeric() %>% 
+          as.logical()
         if (tabExist) {
           flds[[i]] <- DBI::dbGetQuery(
               db,
@@ -563,7 +563,7 @@ DatClass <- R6::R6Class(
     },
     .getDBdat = function(year, respvar, fieldname, GRID) {
       OFPE::removeTempFarmerTables(self$dbCon$db, self$farmername)
-      invisible(
+      tt <- invisible(
         DBI::dbSendQuery(
           self$dbCon$db,
           paste0(
@@ -576,7 +576,8 @@ DatClass <- R6::R6Class(
           )
         )
       )
-      invisible(
+      DBI::dbClearResult(tt)
+      tt <- invisible(
         DBI::dbSendQuery(
           self$dbCon$db,
           paste0(
@@ -586,20 +587,22 @@ DatClass <- R6::R6Class(
           )
         )
       )
+      DBI::dbClearResult(tt)
       db_dat <- invisible(
         DBI::dbGetQuery(
           self$dbCon$db,
           paste0("SELECT * FROM ", self$farmername, "_a.temp;")
         )
       )
-      invisible(
-        DBI::dbGetQuery(
+      tt <- invisible(
+        DBI::dbSendQuery(
           self$dbCon$db,
           paste0(
             "DROP TABLE ", self$farmername, "_a.temp;"
           )
         )
       )
+      DBI::dbClearResult(tt)
 
       ## TEMP - REMOVE!
       # set.seed(342134)

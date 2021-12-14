@@ -765,7 +765,7 @@ AggInputs <- R6::R6Class(
           )
         )
         ## copy field boundary to temp file for later queries
-        invisible(
+        tt <- invisible(
           DBI::dbSendQuery(
             db,
             paste0("CREATE TABLE all_farms.temp AS
@@ -773,13 +773,15 @@ AggInputs <- R6::R6Class(
                    WHERE fields.fieldname = '", self$fieldname, "';")
           )
         )
-        invisible(
+        DBI::dbClearResult(tt)
+        tt <- invisible(
           DBI::dbSendQuery(
             db,
             paste0("ALTER TABLE all_farms.temp
                    RENAME COLUMN geom TO geometry;")
           )
         )
+        DBI::dbClearResult(tt)
       } else {
         ## enter filename for bounding box
         self$boundary_location <- readline(

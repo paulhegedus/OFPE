@@ -35,9 +35,10 @@ setNAtoNaN <- function(dat) {
 makeDBcolsText = function(db, dat_names, schema, dtype) {
   for (j in 1:length(dat_names)) {
     tryCatch({
-      DBI::dbSendQuery(db,
+      tt <- DBI::dbSendQuery(db,
                        paste0("ALTER TABLE ", schema, ".", dtype,
                               " ALTER COLUMN ", dat_names[j], " TYPE TEXT"))
+      DBI::dbClearResult(tt)
     },
     error = function(e) {print(paste0("warning in column ", dat_names[j]))})
   }
@@ -61,17 +62,19 @@ convPolyToMulti = function(db, dat, schema, dtype) {
                 ignore.case = TRUE))) {
     if (!any(grepl("multi", class(sf::st_geometry(sf::st_as_sf(dat))),
                    ignore.case = TRUE))) {
-      invisible(DBI::dbGetQuery(
+      tt <- invisible(DBI::dbSendQuery(
         db,
         paste0("ALTER TABLE ", schema, ".", dtype, " ALTER COLUMN geometry
                SET DATA TYPE geometry;")
       ))
-      invisible(DBI::dbGetQuery(
+      DBI::dbClearResult(tt)
+      tt <- invisible(DBI::dbSendQuery(
         db,
         paste0("ALTER TABLE ", schema, ".", dtype, "
                ALTER COLUMN geometry TYPE geometry(MultiPolygon, 4326)
                USING ST_Multi(geometry)")
       ))
+      DBI::dbClearResult(tt)
     }
   }
 }
@@ -91,12 +94,13 @@ convPolyToMulti = function(db, dat, schema, dtype) {
 #' @export
 makeSpatialIndex = function(db, index_name, schema, dtype) {
   tryCatch({
-    invisible(DBI::dbSendQuery(
+    tt <- invisible(DBI::dbSendQuery(
       db,
       paste0("CREATE INDEX ", index_name,
              " ON ", schema, ".", dtype,
              " USING GIST (geometry)")
-    ))},
+    ))
+    DBI::dbClearResult(tt)},
     error = function(e) {
       print(paste0("Error creating spatial index for ", schema, ".", dtype))
     }
@@ -160,9 +164,10 @@ standardizeColNames <- function(db, dat, schema, dtype) {
   }
   if (length(in_df) > 0) {
     for (j in 1:length(in_df)) {
-      DBI::dbGetQuery(db,
+      tt <- DBI::dbSendQuery(db,
                       paste0("ALTER TABLE ", schema, ".", dtype,
                              " ADD COLUMN \"", in_df[j], "\" TEXT"))
+      DBI::dbClearResult(tt)
     }
   }
   return(dat)
@@ -195,14 +200,16 @@ noMatch = function(source_vec, target_vec) {
 #' @return Logical, if table exists in database.
 #' @export
 tabExist <- function(db, schema, dtype) {
-  tab_exist <- as.logical(DBI::dbGetQuery(
+  tab_exist <- DBI::dbGetQuery(
     db,
     paste0("SELECT EXISTS (
                   SELECT 1
                   FROM information_schema.tables
                   WHERE table_schema = '", schema, "'
                   AND table_name = '", dtype, "')")
-  ))
+  ) %>% 
+    as.numeric() %>% 
+    as.logical()
   return(tab_exist)
 }
 #' @title Add data to an existing table
@@ -269,5 +276,6 @@ importMulti <- function(db, dat, schema, dtype) {
   error = function(e) {
     print(paste0("Data already exists in ", schema, ".", dtype))
   })
-  invisible(DBI::dbGetQuery(db, paste0("DROP TABLE ", schema, ".temp2")))
+  tt <- invisible(DBI::dbSendQuery(db, paste0("DROP TABLE ", schema, ".temp2")))
+  DBI::dbClearResult(tt)
 }

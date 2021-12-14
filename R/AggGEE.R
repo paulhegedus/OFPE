@@ -54,7 +54,7 @@ AggGEE <- R6::R6Class(
       self$aggInputs <- aggInputs
       self$farmidx <- farmidx
       self$farmeridx <- farmeridx
-      invisible(
+      tt <- invisible(
         DBI::dbSendQuery(
           self$aggInputs$dbCon$db,
           paste0("ALTER TABLE ", self$aggInputs$farmername, "_a.temp
@@ -137,13 +137,15 @@ AggGEE <- R6::R6Class(
                   ADD COLUMN ndwi_2py_l REAL;")
         )
       )
-      invisible(
+      DBI::dbClearResult(tt)
+      tt <- invisible(
         DBI::dbSendQuery(
           self$aggInputs$dbCon$db,
           paste0("VACUUM ANALYZE ",
                  self$aggInputs$farmername, "_a.temp")
         )
       )
+      DBI::dbClearResult(tt)
       self$PY <-  as.character(as.numeric(self$aggInputs$cy_resp) - 1 )
       self$PY2 <-  as.character(as.numeric(self$aggInputs$cy_resp) - 2 )
       self$labels <- c("aspect_rad", "slope", "elev", "tpi",
@@ -286,7 +288,7 @@ AggGEE <- R6::R6Class(
       )
       if (length(file_exist) != 0) { # if a file exists
         # make temporary table
-        invisible(
+        tt <- invisible(
           DBI::dbSendQuery(
             db,
             paste0("CREATE TABLE all_farms.geetemp AS
@@ -295,15 +297,17 @@ AggGEE <- R6::R6Class(
                     WHERE orig_file = '", file_exist, "'")
           )
         )
+        DBI::dbClearResult(tt)
         # clip raster
-        invisible(
+        tt <- invisible(
           DBI::dbSendQuery(
             db,
             paste0("ALTER TABLE all_farms.geetemp
                     ADD COLUMN id SERIAL;")
           )
         )
-        invisible(
+        DBI::dbClearResult(tt)
+        tt <- invisible(
           DBI::dbSendQuery(
             db,
             paste0("DELETE FROM all_farms.geetemp AS geetemp
@@ -316,15 +320,17 @@ AggGEE <- R6::R6Class(
                     );")
           )
         )
-        invisible(
+        DBI::dbClearResult(tt)
+        tt <- invisible(
           DBI::dbSendQuery(
             db,
             paste0("ALTER TABLE all_farms.geetemp
                     DROP COLUMN id;")
           )
         )
+        DBI::dbClearResult(tt)
         # extract values
-        invisible(
+        tt <- invisible(
           DBI::dbSendQuery(
             db,
             paste0("WITH temp AS (SELECT * FROM ", farmername, "_a.temp)
@@ -334,22 +340,25 @@ AggGEE <- R6::R6Class(
                     WHERE ST_Intersects(geetemp.rast, temp.geometry);")
           )
         )
+        DBI::dbClearResult(tt)
         if (grepl("phw", type)) {
-          invisible(
+          tt <- invisible(
             DBI::dbSendQuery(
               db,
               paste0("UPDATE ", farmername, "_a.temp
                     SET ", label, " = ", label, " / 10;")
             )
           )
+          DBI::dbClearResult(tt)
         }
         if (type == "aspect_rad") {
-          invisible(DBI::dbSendQuery(
+          tt <- invisible(DBI::dbSendQuery(
             db,
             paste0("ALTER TABLE ", farmername, "_a.temp
                ADD COLUMN aspect_cos REAL,
                ADD COLUMN aspect_sin REAL;")
           ))
+          DBI::dbClearResult(tt)
           aspect_vec <- DBI::dbGetQuery(
             db,
             paste0("SELECT aspect_rad
@@ -358,20 +367,23 @@ AggGEE <- R6::R6Class(
           aspect <- data.frame(aspect_rad = aspect_vec)
           aspect$aspect_cos <- cos(aspect$aspect_rad)
           aspect$aspect_sin <- sin(aspect$aspect_rad)
-          invisible(DBI::dbSendQuery(
+          tt <- invisible(DBI::dbSendQuery(
             db,
             paste0("UPDATE ", farmername, "_a.temp temp
                   SET aspect_cos = cos(temp.aspect_rad);")
           ))
-          invisible(DBI::dbSendQuery(
+          DBI::dbClearResult(tt)
+          tt <- invisible(DBI::dbSendQuery(
             db,
             paste0("UPDATE ", farmername, "_a.temp temp
                   SET aspect_sin = sin(temp.aspect_rad);")
           ))
+          DBI::dbClearResult(tt)
         }
-        invisible(
+        tt <- invisible(
           DBI::dbSendQuery(db, paste0("DROP TABLE all_farms.geetemp;"))
         )
+        DBI::dbClearResult(tt)
       }
     }
   )

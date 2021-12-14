@@ -343,8 +343,8 @@ SimOP <- R6::R6Class(
             sim_year = self$sim_years[i]
           )
 
-          #### Maps ####
-          ## SSOPT N map (avg all sim)
+          #### Maps (avg all sim) ####
+          ## SSOPT N map 
           temp_plot <- self$plotSimMaps(
             dat = NRopt,
             var = paste0("SSOPT_", ifelse(self$expvar == "aa_n", "N", "SR")),
@@ -503,10 +503,177 @@ SimOP <- R6::R6Class(
               var_main_label = paste0("Protein with uniform minimum rate in ", self$sim_years[i], " conditions"),
               sim_year = self$sim_years[i]
             )
-
-
           }
-        }
+          #### END Maps (avg all sim) ####
+          
+          #### Maps (actual econ conditions of sim year) ####
+          NRopt <- data.table::fread(paste0(self$dat_path,
+                                            self$unique_fieldname, "_NRopt_",
+                                            self$unique_fxn, "_SimYr",
+                                            self$sim_years[i], "EconCond_",
+                                            self$opt, ".csv"))
+          ## SSOPT N map 
+          temp_plot <- self$plotSimMaps(
+            dat = NRopt,
+            var = paste0("SimYrEconCond_SSOPT_", ifelse(self$expvar == "aa_n", "N", "SR")),
+            var_col_name = "EXP.rate.ssopt",
+            var_label = paste0(ifelse(self$expvar == "aa_n", "N", "Seed Rate"), " Rate (lbs/ac)"),
+            var_main_label = paste0("SS.opt ", ifelse(self$expvar == "aa_n", "N", "Seed"), " rates for ", self$sim_years[i], " conditions"),
+            sim_year = self$sim_years[i]
+          )
+          
+          ## NR maps
+          # SSOPT NR map
+          temp_plot <- self$plotSimMaps(
+            dat = NRopt,
+            var = "SimYrEconCond_SSOPTNR",
+            var_col_name = "NR.ssopt",
+            var_label = "Net Return ($/ac)",
+            var_main_label = paste0("SS.Opt NR for ", self$sim_years[i], " conditions"),
+            sim_year = self$sim_years[i]
+          )
+          # FFOPT NR map
+          temp_plot <- self$plotSimMaps(
+            dat = NRopt,
+            var = "SimYrEconCond_FFOPTNR",
+            var_col_name = "NR.ffopt",
+            var_label = "Net Return ($/ac)",
+            var_main_label = paste0("FF.Opt NR (", NRopt$EXP.rate.ffopt[1], " lbs/ac) for ", self$sim_years[i], " conditions"),
+            sim_year = self$sim_years[i]
+          )
+          # FS NR map
+          temp_plot <- self$plotSimMaps(
+            dat = NRopt,
+            var = "SimYrEconCond_FSNR",
+            var_col_name = "NR.fs",
+            var_label = "Net Return ($/ac)",
+            var_main_label = paste0("FS NR for ", self$sim_years[i], " conditions"),
+            sim_year = self$sim_years[i]
+          )
+          # Act NR map
+          temp_plot <- self$plotSimMaps(
+            dat = NRopt,
+            var = "SimYrEconCond_ActNR",
+            var_col_name = "NR.act",
+            var_label = "Net Return ($/ac)",
+            var_main_label = paste0("NR if exp in ", self$sim_years[i], " conditions (NR.act)"),
+            sim_year = self$sim_years[i]
+          )
+          # Min NR map
+          temp_plot <- self$plotSimMaps(
+            dat = NRopt,
+            var = "SimYrEconCond_MinNR",
+            var_col_name = "NR.min",
+            var_label = "Net Return ($/ac)",
+            var_main_label = paste0("NR with uniform minimum rate in ", self$sim_years[i], " conditions (NR.min)"),
+            sim_year = self$sim_years[i]
+          )
+          # Opp NR map
+          temp_plot <- self$plotSimMaps(
+            dat = NRopt,
+            var = "SimYrEconCond_OppNR",
+            var_col_name = "NR.opp",
+            var_label = "Net Return ($/ac)",
+            var_main_label = paste0("NR with opposite system pricing in ", self$sim_years[i], " conditions (NR.opp)"),
+            sim_year = self$sim_years[i]
+          )
+          
+          ## Yld maps
+          # SSOPT Est. Yld map
+          temp_plot <- self$plotSimMaps(
+            dat = NRopt,
+            var = "SimYrEconCond_estYldOpt",
+            var_col_name = "yld.opt",
+            var_label = "Yield (bu/ac)",
+            var_main_label = paste0("SS.Opt. predicted yield for ", self$sim_years[i], " conditions"),
+            sim_year = self$sim_years[i]
+          )
+          # FS Est. Yld map
+          temp_plot <- self$plotSimMaps(
+            dat = NRopt,
+            var = "SimYrEconCond_estYldFS",
+            var_col_name = "yld.fs",
+            var_label = "Yield (bu/ac)",
+            var_main_label = paste0("FS predicted yield for ", self$sim_years[i], " conditions"),
+            sim_year = self$sim_years[i]
+          )
+          # Act Est. Yld map
+          temp_plot <- self$plotSimMaps(
+            dat = NRopt,
+            var = "SimYrEconCond_estYldAct",
+            var_col_name = "yld.act",
+            var_label = "Yield (bu/ac)",
+            var_main_label = paste0("Yield if exp in ", self$sim_years[i], " conditions"),
+            sim_year = self$sim_years[i]
+          )
+          # FFOPT Est. Yld map
+          temp_plot <- self$plotSimMaps(
+            dat = NRopt,
+            var = "SimYrEconCond_estYldFFOPT",
+            var_col_name = "yld.ffopt",
+            var_label = "Yield (bu/ac)",
+            var_main_label = paste0("FF.Opt predicted yield (", NRopt$EXP.rate.ffopt[1], " lbs/ac) for ", self$sim_years[i], " conditions"),
+            sim_year = self$sim_years[i]
+          )
+          # Min Est. Yld map
+          temp_plot <- self$plotSimMaps(
+            dat = NRopt,
+            var = "SimYrEconCond_estYldMin",
+            var_col_name = "yld.min",
+            var_label = "Yield (bu/ac)",
+            var_main_label =  paste0("Yield with uniform minimum rate in ", self$sim_years[i], " conditions"),
+            sim_year = self$sim_years[i]
+          )
+          
+          if (any(grepl("pro", self$respvar))) {
+            # SSOPT Est. Pro map
+            temp_plot <- self$plotSimMaps(
+              dat = NRopt,
+              var = "SimYrEconCond_estProOpt",
+              var_col_name = "pro.opt",
+              var_label = "Protein (%)",
+              var_main_label = paste0("SS.Opt. predicted protein for ", self$sim_years[i], " conditions"),
+              sim_year = self$sim_years[i]
+            )
+            # FS Est. Pro map
+            temp_plot <- self$plotSimMaps(
+              dat = NRopt,
+              var = "SimYrEconCond_estProFS",
+              var_col_name = "pro.fs",
+              var_label = "Protein (%)",
+              var_main_label = paste0("FS predicted protein for ", self$sim_years[i], " conditions"),
+              sim_year = self$sim_years[i]
+            )
+            # FFOPT Est. Pro map
+            temp_plot <- self$plotSimMaps(
+              dat = NRopt,
+              var = "SimYrEconCond_estProFFOPT",
+              var_col_name = "pro.ffopt",
+              var_label = "Protein (%)",
+              var_main_label = paste0("FF.Opt predicted protein (", NRopt$EXP.rate.ffopt[1], " lbs/ac) for ", self$sim_years[i], " conditions"),
+              sim_year = self$sim_years[i]
+            )
+            # Act Est. Pro map
+            temp_plot <- self$plotSimMaps(
+              dat = NRopt,
+              var = "SimYrEconCond_estProAct",
+              var_col_name = "pro.act",
+              var_label = "Protein (%)",
+              var_main_label = paste0("Protein if exp in ", self$sim_years[i], " conditions"),
+              sim_year = self$sim_years[i]
+            )
+            # Min Est. Pro map
+            temp_plot <- self$plotSimMaps(
+              dat = NRopt,
+              var = "SimYrEconCond_estProMin",
+              var_col_name = "pro.min",
+              var_label = "Protein (%)",
+              var_main_label = paste0("Protein with uniform minimum rate in ", self$sim_years[i], " conditions"),
+              sim_year = self$sim_years[i]
+            )
+          }
+          #### END Maps (actual econ conditions of sim year) ####
+        } # End sim year loop
         rm(NRopt, TF4, temp_plot)
       } else{
         if (!is.null(self$simClass)) {
