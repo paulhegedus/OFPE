@@ -86,15 +86,11 @@ GAM <- R6::R6Class(
       self$expvar <- expvar
       self$covars <- covars
       
-      self$dat <- lapply(self$dat, 
-                         OFPE::removeNAfromCovars, 
-                         c(self$expvar, self$covars))
-      
       init_k <- ifelse(nrow(self$dat$trn) < 1000 | nrow(self$dat$val) < 1000,
                        50,
                        init_k)
-      if (expvar %in% covars) {
-        covars <- covars[-grep(expvar, covars)]
+      if (self$expvar %in% self$covars) {
+        covars <- self$covars[-grep(self$expvar, self$covars)]
       }
       self$parm_df <- data.frame(
         parms = c(expvar, covars),
@@ -103,6 +99,11 @@ GAM <- R6::R6Class(
         means = NA,
         sd = NA
       )
+      
+      self$parm_df <- OFPE::findBadParms(self$parm_df, self$dat$trn)
+      self$dat <- lapply(self$dat, 
+                         OFPE::removeNAfromCovars, 
+                         self$parm_df$parms[!self$parm_df$bad_parms])
     },
     #' @description
     #' Method for fitting the GAM to response variables using experimental and
@@ -130,7 +131,6 @@ GAM <- R6::R6Class(
     #' @param None Parameters provided upon class instantiation.
     #' @return A fitted GAM.
     fitMod = function() {
-      self$parm_df <- OFPE::findBadParms(self$parm_df, self$dat$trn)
       private$.findK()
       self$form <- private$.makeFormula()
       self$m <- mgcv::bam(as.formula(self$form),

@@ -322,8 +322,25 @@ SimClass <- R6::R6Class(
       self$econDat <- econDat
       self$datClass$getSimDat(self$sim_years)
       
-      # impute NA from covars in simulated data
-      self$datClass$sim_dat <- private$.imputeDat()
+      # check degree of NA's from covars in simulated data
+      mod_covars <- mapply(
+        function(x, y) {stringr::str_extract_all(x, paste(y, collapse = "|"))},
+        lapply(self$modClass$mod_list, function(x) x$form),
+        self$modClass$covars
+      ) %>% 
+        do.call(c, .) %>% 
+        unique()
+      if (any(grepl(paste0("^x$|^x$y|", self$datClass$expvar), mod_covars))) {
+        mod_covars <- mod_covars[-grep(paste0("^x$|^x$y|", self$datClass$expvar),
+                                       mod_covars)]
+      }
+      self$datClass$sim_dat <- mapply(private$.checkSimDat,
+                                      self$datClass$sim_dat,
+                                      self$sim_years,
+                                      MoreArgs = list(mod_covars = mod_covars)) %>% 
+        .[!unlist(lapply(., is.null))]
+      
+      
       
       self$fieldsize <- private$.gatherFieldSize()
 
@@ -473,8 +490,6 @@ SimClass <- R6::R6Class(
                              out_path,
                              Bp,
                              CEXP) {
-      # browser()
-      
       nr_plot <- private$.estsVsExpPlot("NR",
                                         expvar,
                                         fieldname,
@@ -827,8 +842,6 @@ SimClass <- R6::R6Class(
       # do simulation & find opt. etc. for each sim_year save to written files
       # returns the sim_list for plotEstsVsExp() for each pred year
       
-      # browser()
-      
       private$.runSim(sim_year)
       gc()
       # tryCatch({
@@ -863,8 +876,6 @@ SimClass <- R6::R6Class(
       return(invisible())
     },
     .runSim = function(sim_year) {
-      # browser()
-      
       rr <- nrow(self$sim_list[[1]])
       sim_list_names <- names(self$sim_list[[1]])
       ## make connections and clean files
@@ -997,8 +1008,6 @@ SimClass <- R6::R6Class(
     },
     .simFunIter = function(bp, rr, sim_list_names, sim_year,
                            Bp.var_con, NRffmax_con, NRopt_con) {
-      # browser()
-      
       tryCatch({
         Bp.var <- matrix(0, nrow = 1, ncol = 10)
         colnames(Bp.var) <- c("BaseP", "EXP.cost", "NR.ssopt", "NR.min", "NR.fs",
@@ -1373,8 +1382,6 @@ SimClass <- R6::R6Class(
       return(dat)
     },
     .meanSimList = function(sim_list_names) {
-      # browser()
-      
       Bp_col <- grep(self$datClass$sys_type,
                      names(self$econDat$Prc))
       BpOpp_col <- grep(self$datClass$opp_sys_type,
@@ -1530,51 +1537,73 @@ SimClass <- R6::R6Class(
       }
       return(dat)
     },
-    .imputeDat = function() {
-      covars <- do.call(c, self$modClass$covars) %>% unique()
-      if (self$datClass$expvar %in% covars) {
-        covars <- covars[-grep(self$datClass$expvar, covars)]
-      }
-      dat <- data.table::rbindlist(self$datClass$sim_dat)
+    # .imputeDat = function() {
+    #   covars <- do.call(c, self$modClass$covars) %>% unique()
+    #   if (self$datClass$expvar %in% covars) {
+    #     covars <- covars[-grep(self$datClass$expvar, covars)]
+    #   }
+    #   dat <- data.table::rbindlist(self$datClass$sim_dat)
+    #   parm_df <- data.frame(
+    #     parms = covars,
+    #     bad_parms = FALSE,
+    #     means = NA,
+    #     sd = NA
+    #   )
+    #   parm_df <- OFPE::findBadParms(parm_df, dat)
+    #   # get number of NA's in data
+    #   nas <- sapply(dat[, covars, with = FALSE], summary)
+    #   # impute vars with NA
+    #   dat <- as.data.frame(dat)
+    #   for (i in 1:length(nas)) {
+    #     if (any(grepl("NA's", names(nas[[i]])))) {
+    #       bad_col <- grep(paste0("^", names(nas)[i], "$"), names(dat))
+    #       if (sum(is.na(dat[, bad_col])) != nrow(dat)) {
+    #         pred_vars <- parm_df$parms[!parm_df$bad_parms]
+    #         if (any(grepl(paste0("^", names(nas)[i], "$"), pred_vars))) {
+    #           pred_vars <- pred_vars[-grep(names(nas)[i], pred_vars)]
+    #         }
+    #         form <- paste(pred_vars, collapse = " + ") %>% 
+    #           paste0(names(nas)[i], " ~ ", .)
+    #         
+    #         m0 <- lm(as.formula(form), data = dat)
+    #         preds <- suppressWarnings(predict(m0, dat))
+    #         na_rows <- is.na(dat[, bad_col])
+    #         dat[na_rows, bad_col] <- preds[na_rows]
+    #       } else {
+    #         stop(print(paste0(names(nas)[i], " is missing in all simulation datasets.")))
+    #       }
+    #     }
+    #   }
+    #   sim_dat <- split(dat, dat$year) %>% 
+    #     lapply(data.table::as.data.table)
+    #   
+    #   return(sim_dat)
+    # },
+    .checkSimDat = function(sim_dat, sim_year, mod_covars) {
+      ## check that all the covars in the data 
       parm_df <- data.frame(
-        parms = covars,
+        parms = mod_covars,
         bad_parms = FALSE,
         means = NA,
         sd = NA
       )
-      parm_df <- OFPE::findBadParms(parm_df, dat)
-      # get number of NA's in data
-      nas <- sapply(dat[, covars, with = FALSE], summary)
-      # impute vars with NA
-      dat <- as.data.frame(dat)
-      for (i in 1:length(nas)) {
-        if (any(grepl("NA's", names(nas[[i]])))) {
-          bad_col <- grep(paste0("^", names(nas)[i], "$"), names(dat))
-          if (sum(is.na(dat[, bad_col])) != nrow(dat)) {
-            pred_vars <- parm_df$parms[!parm_df$bad_parms]
-            if (any(grepl(paste0("^", names(nas)[i], "$"), pred_vars))) {
-              pred_vars <- pred_vars[-grep(names(nas)[i], pred_vars)]
-            }
-            form <- paste(pred_vars, collapse = " + ") %>% 
-              paste0(names(nas)[i], " ~ ", .)
-            
-            m0 <- lm(as.formula(form), data = dat)
-            preds <- suppressWarnings(predict(m0, dat))
-            na_rows <- is.na(dat[, bad_col])
-            dat[na_rows, bad_col] <- preds[na_rows]
-          } else {
-            stop(print(paste0(names(nas)[i], " is missing in all simulation datasets.")))
-          }
-        }
+      parm_df <- OFPE::findBadParms(parm_df, sim_dat)
+      ##  if any covars used in model are bad, then skip that sim year
+      if (any(parm_df$bad_parms)) {
+        warning(paste0("Warning: Cannot simulate ", sim_year, ". Missing ",
+                       paste(parm_df$parms[parm_df$bad_parms], collapse = ", "), 
+                       ". Skipping ", sim_year, ". Choosing another year to simulate is recommended."))
+        self$sim_years <- self$sim_years[-grep(sim_year, self$sim_years)]
+        self$datClass$sim_dat[[grep(sim_year, names(self$datClass$sim_dat))]] <- NULL
+        return(NULL)
+      } else {
+        ##  else remove NA from covars
+        mod_covars <- parm_df$parms[!parm_df$bad_parms]
+        sim_dat <- OFPE::removeNAfromCovars(sim_dat, mod_covars)
+        return(sim_dat)
       }
-      sim_dat <- split(dat, dat$year) %>% 
-        lapply(data.table::as.data.table)
-      
-      return(sim_dat)
     },
     .simActEconConds = function(rr, sim_list_names, sim_year) {
-      # browser()
-      
       tryCatch({
         Bp.var <- matrix(0, nrow = 1, ncol = 10)
         colnames(Bp.var) <- c("BaseP", "EXP.cost", "NR.ssopt", "NR.min", "NR.fs",

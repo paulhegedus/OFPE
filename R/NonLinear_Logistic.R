@@ -88,10 +88,9 @@ NonLinear_Logistic <- R6::R6Class(
       self$expvar <- expvar
       self$covars <- covars
       
-      self$dat <- lapply(self$dat, 
-                         OFPE::removeNAfromCovars, 
-                         c(self$expvar, self$covars))
-
+      if (self$expvar %in% self$covars) {
+        covars <- self$covars[-grep(self$expvar, self$covars)]
+      }
       self$parm_df <- data.frame(
         parms = c(expvar, covars[-which(covars %in% expvar)]),
         fxn_comp = NA,
@@ -100,6 +99,11 @@ NonLinear_Logistic <- R6::R6Class(
         means = NA,
         sd = NA
       )
+      
+      self$parm_df <- OFPE::findBadParms(self$parm_df, self$dat$trn)
+      self$dat <- lapply(self$dat, 
+                         OFPE::removeNAfromCovars, 
+                         self$parm_df$parms[!self$parm_df$bad_parms])
 
       ## TEMP - NEEDS UPDATING BASED ON MODEL
       alpha_comps <- c("a0", paste0("prev_", self$expvar), paste0("prev_", self$respvar),

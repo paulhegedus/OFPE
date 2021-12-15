@@ -83,10 +83,6 @@ BayesLinear <- R6::R6Class(
       self$expvar <- expvar
       self$covars <- covars
       
-      self$dat <- lapply(self$dat, 
-                         OFPE::removeNAfromCovars, 
-                         c(self$expvar, self$covars))
-      
       if (self$expvar %in% self$covars) {
         covars <- self$covars[-grep(self$expvar, self$covars)]
       }
@@ -96,6 +92,11 @@ BayesLinear <- R6::R6Class(
         means = NA,
         sd = NA
       )
+      
+      self$parm_df <- OFPE::findBadParms(self$parm_df, self$dat$trn)
+      self$dat <- lapply(self$dat, 
+                         OFPE::removeNAfromCovars, 
+                         self$parm_df$parms[!self$parm_df$bad_parms])
     },
     #' @description
     #' Method for fitting the Bayesian linear model to response variables using 
@@ -107,9 +108,10 @@ BayesLinear <- R6::R6Class(
     #' The criteria for this is over 30% of data for a given year missing for a parameter or a
     #' standard deviation of zero, indicating singularity.
     #' 
-    #' A subset of 1000 observations is taken to perform top-down feature
+    #' OLD: A subset of 1000 observations is taken to perform top-down feature
     #' selection based on the RMSE from predictions to a holdout set. If a covariate
     #' lowers the RMSE when removed, it is flagged as 'bad'. 
+    #' NEW: No feature selection is performed due to computing time.
     #'
     #' The process then creates a formula for a final model with all parameters that
     #' are not considered 'bad'. This is used to fit the final model that is returned

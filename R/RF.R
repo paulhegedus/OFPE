@@ -83,10 +83,6 @@ RF <- R6::R6Class(
       self$expvar <- expvar
       self$covars <- covars
       
-      self$dat <- lapply(self$dat, 
-                         OFPE::removeNAfromCovars, 
-                         c(self$expvar, self$covars))
-      
       if (self$expvar %in% self$covars) {
         covars <- self$covars[-grep(self$expvar, self$covars)]
       }
@@ -96,6 +92,11 @@ RF <- R6::R6Class(
         means = NA,
         sd = NA
       )
+      
+      self$parm_df <- OFPE::findBadParms(self$parm_df, self$dat$trn)
+      self$dat <- lapply(self$dat, 
+                         OFPE::removeNAfromCovars, 
+                         self$parm_df$parms[!self$parm_df$bad_parms])
     },
     #' @description
     #' Method for fitting the RF to response variables using experimental and
