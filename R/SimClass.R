@@ -337,10 +337,9 @@ SimClass <- R6::R6Class(
       self$datClass$sim_dat <- mapply(private$.checkSimDat,
                                       self$datClass$sim_dat,
                                       self$sim_years,
-                                      MoreArgs = list(mod_covars = mod_covars)) %>% 
+                                      MoreArgs = list(mod_covars = mod_covars),
+                                      SIMPLIFY = FALSE) %>% 
         .[!unlist(lapply(., is.null))]
-      
-      
       
       self$fieldsize <- private$.gatherFieldSize()
 
@@ -1600,6 +1599,15 @@ SimClass <- R6::R6Class(
         ##  else remove NA from covars
         mod_covars <- parm_df$parms[!parm_df$bad_parms]
         sim_dat <- OFPE::removeNAfromCovars(sim_dat, mod_covars)
+        
+        # columns needed for the simulation
+        keep_columns <- c("x", "y", "row", "col", "field", "year", mod_covars)
+        # get rid of columns not in the keep vector
+        bad_columns <- names(sim_dat)[!names(sim_dat) %in% keep_columns]
+        for (i in 1:length(bad_columns)) {
+          remove_var <- bad_columns[i]
+          sim_dat <- sim_dat[, (remove_var):= NULL]
+        }
         return(sim_dat)
       }
     },
