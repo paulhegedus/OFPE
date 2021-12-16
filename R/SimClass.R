@@ -611,7 +611,7 @@ SimClass <- R6::R6Class(
         }
       }
       # calculate NR for each point
-      names(dat)[grep(expvar, names(dat))] <- "exp"
+      names(dat)[grep(paste0("^", expvar, "$"), names(dat))] <- "exp"
       if (any(respvar == "pro")) {
         P <- Bp + (B0pd + B1pd * dat$pro + B2pd * dat$pro^2)
         dat$NR <- (dat$yld * P) - (CEXP * dat$exp) - FC - ssAC
@@ -843,9 +843,9 @@ SimClass <- R6::R6Class(
       ## if response values are negative or above 1000, 
       ## impute by taking random number from distribution of 
       ## responses at closest exp rate
-      sim_exp_rate <- dat[, grep(self$datClass$expvar, names(dat)), with = FALSE][[1]] %>% 
+      sim_exp_rate <- dat[, grep(paste0("^", self$datClass$expvar, "$"), names(dat)), with = FALSE][[1]] %>% 
         unique()
-      og_dat <- self$datClass$mod_dat[[grep(respvar, names(self$datClass$mod_dat))]] %>% 
+      og_dat <- self$datClass$mod_dat[[grep(paste0("^", respvar, "$"), names(self$datClass$mod_dat))]] %>% 
         data.table::rbindlist() 
       og_exp_col <- grep(paste0("^", self$datClass$expvar, "$"), names(og_dat))
       og_dat[[og_exp_col]] <- og_dat[[og_exp_col]] %>% 
@@ -859,7 +859,9 @@ SimClass <- R6::R6Class(
       
       bad_dim <- sum(dat$pred < 0 | dat$pred > 1000)
       dat$pred <- ifelse(dat$pred < 0 | dat$pred > 1000, 
-                         rnorm(bad_dim, mean_resp, sd_resp),
+                         rgamma(bad_dim, 
+                                (mean_resp / sd_resp)^2, 
+                                mean_resp / sd_resp^2),
                          dat$pred)
       
       names(dat)[grep("^pred$", names(dat))] <- paste0("pred_", respvar)
@@ -1109,7 +1111,7 @@ SimClass <- R6::R6Class(
         ffopt_rate <- NRffmax[1, "EXP.rate"]
         invisible(ifelse(self$datClass$sys_type == "conv",
                          NR.opp <- self$sim_list[[1]]$NRopp,
-                         NR.opp <- self$sim_list[[grep(self$fs, names(self$sim_list))]]$NRopp))
+                         NR.opp <- self$sim_list[[grep(paste0("^", self$fs, "$"), names(self$sim_list))]]$NRopp))
         NRopt <- data.frame(BaseP = rep(Bp, rr),
                             EXP.cost = rep(CEXP, rr),
                             x = self$sim_list[[1]]$x,
@@ -1121,16 +1123,16 @@ SimClass <- R6::R6Class(
                             NR.ssopt = NA,
                             NR.min = self$sim_list[[1]]$NRmin,
                             NR.opp = NR.opp,
-                            NR.fs = self$sim_list[[grep(self$fs, names(self$sim_list))]]$NRfs,
+                            NR.fs = self$sim_list[[grep(paste0("^", self$fs, "$"), names(self$sim_list))]]$NRfs,
                             yld.opt = NA,
                             yld.min = self$sim_list[[1]]$pred_yld,
-                            yld.fs = self$sim_list[[grep(self$fs, names(self$sim_list))]]$pred_yld,
+                            yld.fs = self$sim_list[[grep(paste0("^", self$fs, "$"), names(self$sim_list))]]$pred_yld,
                             pro.opt = NA,
                             pro.min = self$sim_list[[1]]$pred_pro,
-                            pro.fs = self$sim_list[[grep(self$fs, names(self$sim_list))]]$pred_pro,
-                            NR.ffopt = self$sim_list[[grep(ffopt_rate, names(self$sim_list))]]$NR,
-                            yld.ffopt = self$sim_list[[grep(ffopt_rate, names(self$sim_list))]]$pred_yld,
-                            pro.ffopt = self$sim_list[[grep(ffopt_rate, names(self$sim_list))]]$pred_pro,
+                            pro.fs = self$sim_list[[grep(paste0("^", self$fs, "$"), names(self$sim_list))]]$pred_pro,
+                            NR.ffopt = self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$NR,
+                            yld.ffopt = self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$pred_yld,
+                            pro.ffopt = self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$pred_pro,
                             EXP.rate.ffopt = ffopt_rate)
         NRopt[,c("EXP.rate.ssopt", "NR.ssopt", "yld.opt", "pro.opt")] <-
           private$.getNRopt(CEXP)
@@ -1217,9 +1219,9 @@ SimClass <- R6::R6Class(
       NRoptDat$pro.opt <- NA
       for (i in 1:nrow(NRoptDat)) {
         NRoptDat$yld.opt[i] <-
-          self$sim_list[[grep(NRoptDat$EXP.rate.ssopt[i], names(self$sim_list))]]$pred_yld[i]
-        NRoptDat$pro.opt[i] <-
-          self$sim_list[[grep(NRoptDat$EXP.rate.ssopt[i], names(self$sim_list))]]$pred_pro[i]
+          self$sim_list[[grep(paste0("^", NRoptDat$EXP.rate.ssopt[i], "$"), names(self$sim_list))]]$pred_yld[i]
+        NRoptDat$pro.opt[i] <- 
+          self$sim_list[[grep(paste0("^", NRoptDat$EXP.rate.ssopt[i], "$"), names(self$sim_list))]]$pred_pro[i]
       }
       return(NRoptDat)
     },
@@ -1259,8 +1261,8 @@ SimClass <- R6::R6Class(
       ## will use data from yield if possible, else, use protein.
       ## b/c spatial resolution
       sim_dat_index <- ifelse(any(grepl("yld", names(self$datClass$mod_dat))),
-                          "yld",
-                          "pro")
+                          "^yld$",
+                          "^pro$")
       ## get yield or protein observed data that was used to fit the model
       sim_dat_index <- grep(sim_dat_index, names(self$datClass$mod_dat))
       ## get the observed data
@@ -1330,12 +1332,12 @@ SimClass <- R6::R6Class(
           temp_list[[i]][match(sim_dat_list[[i]]$cell_id,
                                temp_list[[i]]$cell_id), "exp"]
         ## change the exp col to the actual expvar name (aa_n or aa_sr)
-        names(sim_dat_list[[i]])[grep("exp", names(sim_dat_list[[i]]))] <-
+        names(sim_dat_list[[i]])[grep("^exp$", names(sim_dat_list[[i]]))] <-
           self$datClass$expvar
         ## for all response variables, predict yield and protein for all points
         for (j in 1:length(self$datClass$respvar)) {
           sim_dat_list[[i]]$fid <- 1:nrow(sim_dat_list[[i]]) # add column with rownumber
-          exp_col <- grep(self$datClass$expvar, names(sim_dat_list[[i]]))
+          exp_col <- grep(paste0("^", self$datClass$expvar, "$"), names(sim_dat_list[[i]]))
           new_data_na <- sim_dat_list[[i]][is.na(sim_dat_list[[i]][, exp_col, with = FALSE][[1]])] # save those rows with NA in separate data.frame
           new_data_complete <- sim_dat_list[[i]][!is.na(sim_dat_list[[i]][, exp_col, with = FALSE][[1]])] # keep only those rows with no NA
           new_data_complete$predicted <- self$modClass$mod_list[[j]]$predResps(new_data_complete,
@@ -1354,7 +1356,7 @@ SimClass <- R6::R6Class(
           gc()
         }
         ## change col name from the name needed for the model back to 'exp'
-        names(sim_dat_list[[i]])[grep(self$datClass$expvar,
+        names(sim_dat_list[[i]])[grep(paste0("^", self$datClass$expvar, "$"),
                                   names(sim_dat_list[[i]]))] <- "exp"
         ## calculate 'actual' NR based on the predicted yield and protein with
         ## observed as-applied rates in the given simulation year
@@ -1500,7 +1502,7 @@ SimClass <- R6::R6Class(
       yMIN <- DescTools::RoundTo(min(DNR$var, na.rm = T), step_by, floor)
       yMAX <- DescTools::RoundTo(max(DNR$var, na.rm = T), step_by, ceiling)
       ySTEP <- (yMAX - yMIN) / step_by
-      names(DNR)[grep(expvar, names(DNR))] <- "exp"
+      names(DNR)[grep(paste0("^", expvar, "$"), names(DNR))] <- "exp"
       var_color <- ifelse(grepl("NR", var), "green",
                           ifelse(grepl("yld", var), "red",
                                  "cyan"))
@@ -1739,7 +1741,7 @@ SimClass <- R6::R6Class(
         ffopt_rate <- NRffmax[1, "EXP.rate"]
         invisible(ifelse(self$datClass$sys_type == "conv",
                          NR.opp <- self$sim_list[[1]]$NRopp,
-                         NR.opp <- self$sim_list[[grep(self$fs, names(self$sim_list))]]$NRopp))
+                         NR.opp <- self$sim_list[[grep(paste0("^", self$fs, "$"), names(self$sim_list))]]$NRopp))
         NRopt <- data.frame(BaseP = rep(Bp, rr),
                             EXP.cost = rep(CEXP, rr),
                             x = self$sim_list[[1]]$x,
@@ -1751,16 +1753,16 @@ SimClass <- R6::R6Class(
                             NR.ssopt = NA,
                             NR.min = self$sim_list[[1]]$NRmin,
                             NR.opp = NR.opp,
-                            NR.fs = self$sim_list[[grep(self$fs, names(self$sim_list))]]$NRfs,
+                            NR.fs = self$sim_list[[grep(paste0("^", self$fs, "$"), names(self$sim_list))]]$NRfs,
                             yld.opt = NA,
                             yld.min = self$sim_list[[1]]$pred_yld,
-                            yld.fs = self$sim_list[[grep(self$fs, names(self$sim_list))]]$pred_yld,
+                            yld.fs = self$sim_list[[grep(paste0("^", self$fs, "$"), names(self$sim_list))]]$pred_yld,
                             pro.opt = NA,
                             pro.min = self$sim_list[[1]]$pred_pro,
-                            pro.fs = self$sim_list[[grep(self$fs, names(self$sim_list))]]$pred_pro,
-                            NR.ffopt = self$sim_list[[grep(ffopt_rate, names(self$sim_list))]]$NR,
-                            yld.ffopt = self$sim_list[[grep(ffopt_rate, names(self$sim_list))]]$pred_yld,
-                            pro.ffopt = self$sim_list[[grep(ffopt_rate, names(self$sim_list))]]$pred_pro,
+                            pro.fs = self$sim_list[[grep(paste0("^", self$fs, "$"), names(self$sim_list))]]$pred_pro,
+                            NR.ffopt = self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$NR,
+                            yld.ffopt = self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$pred_yld,
+                            pro.ffopt = self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$pred_pro,
                             EXP.rate.ffopt = ffopt_rate)
         NRopt[,c("EXP.rate.ssopt", "NR.ssopt", "yld.opt", "pro.opt")] <-
           private$.getNRopt(CEXP)
