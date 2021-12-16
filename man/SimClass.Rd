@@ -67,11 +67,14 @@ year. See the 'LikeYear' class for more information on this option.}
 to the field if an experiment was not conducted (i.e. 70 lbs N or SR/acre).
 fs = Farmer Selected.}
 
-\item{\code{AArateCutoff}}{Select the maximum as-applied rate to simulate management
+\item{\code{AArateCutoff}}{The maximum as-applied rate to simulate management
 outcomues to (i.e. 200 lbs N or seed per acre).}
 
-\item{\code{AAmin}}{Select the minimum as-applied rate to simulate management
+\item{\code{AAmin}}{The minimum as-applied rate to simulate management
 outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
+
+\item{\code{EXPvec}}{Vector of the experimental rates to simulate over. This
+must begin with the AAmin and end with the AArateCutoff.}
 
 \item{\code{SAVE}}{Logical, whether to save figures. Autofilled to FALSE if
 a user selects NA in the 'out_path' or is NULL. Autofilled to TRUE
@@ -103,7 +106,7 @@ n lists of that year's satellite data for n experimental rates. This
 can be thought of as an array with the x dimension representing each
 centroid location of the simulation year 'sat' data, and the y dimension
 as each covariate value. The z dimension replicates the x and y dimensions
-for each experimental rate from 'AAmin' to 'AArateCutoff'. Predicted
+for each experimental rate from 'AAmin' to 'AArateCutoff' as given by 'EXPvec'. Predicted
 yield and/or protein and net-returns are estimated for every data point
 in the array (list of lists), and are used to estimate net-returns for
 every data point, which are used to identify the optimum experimental
@@ -153,8 +156,7 @@ folder, else to the getwd().}
   opt = NULL,
   sim_years = NULL,
   fs = NULL,
-  AArateCutoff = NULL,
-  AAmin = NULL,
+  EXPvec = NULL,
   SAVE = NULL,
   out_path = NULL
 )}\if{html}{\out{</div>}}
@@ -199,11 +201,8 @@ year. See the 'LikeYear' class for more information on this option.}
 to the field if an experiment was not conducted (i.e. 70 lbs N or SR/acre).
 fs = Farmer Selected.}
 
-\item{\code{AArateCutoff}}{Select the maximum as-applied rate to simulate management
-outcomues to (i.e. 200 lbs N or seed per acre).}
-
-\item{\code{AAmin}}{Select the minimum as-applied rate to simulate management
-outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
+\item{\code{EXPvec}}{Vector of the experimental rates to simulate over. This
+must begin with the AAmin and end with the AArateCutoff.}
 
 \item{\code{SAVE}}{Logical, whether to save figures. Autofilled to FALSE if
 a user selects NA in the 'out_path' or is NULL. Autofilled to TRUE
@@ -422,10 +421,8 @@ predicted protein) for every point for every experimental rate. The
 mean response across rates is shown as a colored line.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{SimClass$plotEstsVsExp(
-  AAmin,
   respvar,
   expvar,
-  AArateCutoff,
   fieldname,
   fxn,
   sim_year,
@@ -439,9 +436,6 @@ mean response across rates is shown as a colored line.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{AAmin}}{Minimum as-applied rate used in simulation of management
-outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
-
 \item{\code{respvar}}{Response variable(s) used to optimize experimental inputs based
 off of. The user can select 'Yield' and/or 'Protein' based on data
 availability.}
@@ -450,9 +444,6 @@ availability.}
 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
 input that was experimentally varied across the field as part of the
 on-farm experimentation.}
-
-\item{\code{AArateCutoff}}{The maximum as-applied rate to simulate management
-outcomues to (i.e. 200 lbs N or seed per acre).}
 
 \item{\code{fieldname}}{Unique field name corresponding to all fields used in the simulation.}
 
@@ -469,9 +460,6 @@ save outputs from the simulation.}
 \item{\code{Bp}}{The mean base price used to plot net-returns vs as-applied data.}
 
 \item{\code{CEXP}}{The mean cost of the as-applied experimental input.}
-
-\item{\code{sim_list}}{List for every rate simulated over with data.tables
-for every point in the simulation year.}
 }
 \if{html}{\out{</div>}}
 }
