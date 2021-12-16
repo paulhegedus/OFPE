@@ -115,9 +115,10 @@ each parameter meets the criteria to be omitted from the model, making it a 'bad
 The criteria for this is over 30\% of data for a given year missing for a parameter or a
 standard deviation of zero, indicating singularity.
 
-A subset of 1000 observations is taken to perform top-down feature
+OLD: A subset of 1000 observations is taken to perform top-down feature
 selection based on the RMSE from predictions to a holdout set. If a covariate
 lowers the RMSE when removed, it is flagged as 'bad'.
+NEW: No feature selection is performed due to computing time.
 
 The process then creates a formula for a final model with all parameters that
 are not considered 'bad'. This is used to fit the final model that is returned

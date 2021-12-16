@@ -12,8 +12,8 @@ A data frame with 98 rows and 4 variables:
 \item{conv}{Price of HRWW grown conventionally, in dollars per bushel.}
 \item{cost}{Cost of nitrogen fertilizer, in dollars per pound.}
 \item{FC}{Fixed costs of farm operations besides seed and fertilizer, in dollars per acre.
-This includes chemicals besides fertilizer, fuel, lube, electricity, repairs,
-variable expenses, interest, taxes, and general overhead.}
+This includes chemicals (besides fertilizer), fuel, lube, electricity, repairs,
+variable expenses, interest, taxes, general overhead, and capital recovery of equipment.}
 }
 }
 \usage{

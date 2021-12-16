@@ -61,12 +61,15 @@ SimClass <- R6::R6Class(
     #' to the field if an experiment was not conducted (i.e. 70 lbs N or SR/acre).
     #' fs = Farmer Selected.
     fs = NULL,
-    #' @field AArateCutoff Select the maximum as-applied rate to simulate management
+    #' @field AArateCutoff The maximum as-applied rate to simulate management
     #' outcomues to (i.e. 200 lbs N or seed per acre).
     AArateCutoff = NULL,
-    #' @field AAmin Select the minimum as-applied rate to simulate management
+    #' @field AAmin The minimum as-applied rate to simulate management
     #' outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).
     AAmin = NULL,
+    #' @field EXPvec Vector of the experimental rates to simulate over. This 
+    #' must begin with the AAmin and end with the AArateCutoff.
+    EXPvec = NULL,
     #' @field SAVE Logical, whether to save figures. Autofilled to FALSE if
     #' a user selects NA in the 'out_path' or is NULL. Autofilled to TRUE
     #' otherwise. This will be triggered to FALSE if the user passes FALSE
@@ -98,7 +101,7 @@ SimClass <- R6::R6Class(
     #' can be thought of as an array with the x dimension representing each
     #' centroid location of the simulation year 'sat' data, and the y dimension
     #' as each covariate value. The z dimension replicates the x and y dimensions
-    #' for each experimental rate from 'AAmin' to 'AArateCutoff'. Predicted
+    #' for each experimental rate from 'AAmin' to 'AArateCutoff' as given by 'EXPvec'. Predicted
     #' yield and/or protein and net-returns are estimated for every data point
     #' in the array (list of lists), and are used to estimate net-returns for
     #' every data point, which are used to identify the optimum experimental
@@ -154,10 +157,8 @@ SimClass <- R6::R6Class(
     #' @param fs Input the uniform as-applied rate the farmer would have applied
     #' to the field if an experiment was not conducted (i.e. 70 lbs N or SR/acre).
     #' fs = Farmer Selected.
-    #' @param AArateCutoff Select the maximum as-applied rate to simulate management
-    #' outcomues to (i.e. 200 lbs N or seed per acre).
-    #' @param AAmin Select the minimum as-applied rate to simulate management
-    #' outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).
+    #' @param EXPvec Vector of the experimental rates to simulate over. This 
+    #' must begin with the AAmin and end with the AArateCutoff.
     #' @param SAVE Logical, whether to save figures. Autofilled to FALSE if
     #' a user selects NA in the 'out_path' or is NULL. Autofilled to TRUE
     #' otherwise. This will be triggered to FALSE if the user passes FALSE
@@ -176,8 +177,7 @@ SimClass <- R6::R6Class(
                           opt = NULL,
                           sim_years = NULL,
                           fs = NULL,
-                          AArateCutoff = NULL,
-                          AAmin = NULL,
+                          EXPvec = NULL,
                           SAVE = NULL,
                           out_path = NULL) {
       stopifnot(!is.null(dbCon))
@@ -202,16 +202,12 @@ SimClass <- R6::R6Class(
         stopifnot(is.numeric(fs))
         self$fs <- fs
       }
-      if (!is.null(AArateCutoff)) {
-        stopifnot(is.numeric(AArateCutoff))
-        self$AArateCutoff <- AArateCutoff
-      }
-      if (!is.null(AAmin)) {
-        stopifnot(is.numeric(AAmin))
-        if (!is.null(AArateCutoff)) {
-          stopifnot(self$AArateCutoff > AAmin)
-        }
-        self$AAmin <- AAmin
+      if (!is.null(EXPvec)) {
+        stopifnot(is.numeric(EXPvec), 
+                  self$fs %in% EXPvec)
+        self$AAmin <- EXPvec[1]
+        self$AArateCutoff <- EXPvec[length(EXPvec)]
+        self$EXPvec <- EXPvec
       }
       if (!is.null(SAVE)) {
         stopifnot(is.logical(SAVE))
@@ -275,8 +271,7 @@ SimClass <- R6::R6Class(
       private$.selectOpt()
       private$.selectSimYear(self$dbCon$db, farmername, fieldname)
       private$.selectFcr()
-      private$.selectAArateCutoff()
-      private$.selectAAmin()
+      private$.selectEXPvec()
       private$.selectOutPath()
     },
     #' @description
@@ -401,13 +396,13 @@ SimClass <- R6::R6Class(
     #' simulation year.
     executeSim = function() {
       ## for all sim years rep sim dat for length of EXP rate range & add EXP val
-      EXPvec <- seq(self$AAmin, self$AArateCutoff, 1)
+      # EXPvec <- seq(self$AAmin, self$AArateCutoff, 1)
 
       ## run simulation for each year -
       invisible(mapply(private$.yearSim,
                 self$datClass$sim_dat,
                 self$sim_years,
-                MoreArgs = list(EXPvec = EXPvec),
+                MoreArgs = list(EXPvec = self$EXPvec),
                 SIMPLIFY = FALSE))
       gc()
       # tryCatch({
@@ -428,21 +423,23 @@ SimClass <- R6::R6Class(
     #' @return Any temporary files deleted.
     cleanUp = function() {
       if (!self$SAVE) {
-        file.remove(paste0(self$dat_path,
-                           self$unique_fieldname, "_BpVar_",
-                           self$unique_fxn, "_",
-                           sim_year, "_",
-                           self$opt, ".csv"))
-        file.remove(paste0(self$dat_path,
-                           self$unique_fieldname, "_NRffMaxData_",
-                           self$unique_fxn, "_",
-                           sim_year, "_",
-                           self$opt, ".csv"))
-        file.remove(paste0(self$dat_path,
-                           self$unique_fieldname, "_NRopt_",
-                           self$unique_fxn, "_",
-                           sim_year, "_",
-                           self$opt, ".csv"))
+        for (i in 1:length(self$sim_years)) {
+          file.remove(paste0(self$dat_path, self$sim_years[i], "/",
+                             self$unique_fieldname, "_BpVar_",
+                             self$unique_fxn, "_",
+                             sim_year, "_",
+                             self$opt, ".csv"))
+          file.remove(paste0(self$dat_path, self$sim_years[i], "/",
+                             self$unique_fieldname, "_NRffMaxData_",
+                             self$unique_fxn, "_",
+                             sim_year, "_",
+                             self$opt, ".csv"))
+          file.remove(paste0(self$dat_path, self$sim_years[i], "/",
+                             self$unique_fieldname, "_NRopt_",
+                             self$unique_fxn, "_",
+                             sim_year, "_",
+                             self$opt, ".csv"))
+        }
       }
     },
     #' @description
@@ -455,10 +452,6 @@ SimClass <- R6::R6Class(
     #' Figure shows the selected response (net-return or predicted yield or
     #' predicted protein) for every point for every experimental rate. The
     #' mean response across rates is shown as a colored line.
-    #' @param sim_list List for every rate simulated over with data.tables
-    #' for every point in the simulation year.
-    #' @param AAmin Minimum as-applied rate used in simulation of management
-    #' outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).
     #' @param respvar Response variable(s) used to optimize experimental inputs based
     #' off of. The user can select 'Yield' and/or 'Protein' based on data
     #' availability.
@@ -466,8 +459,6 @@ SimClass <- R6::R6Class(
     #' 'As-Applied Nitrogen' or 'As-Applied Seed Rate'. This is the type of
     #' input that was experimentally varied across the field as part of the
     #' on-farm experimentation.
-    #' @param AArateCutoff The maximum as-applied rate to simulate management
-    #' outcomues to (i.e. 200 lbs N or seed per acre).
     #' @param fieldname Unique field name corresponding to all fields used in the simulation.
     #' @param fxn The functional form of the models used for analysis.
     #' @param sim_year Year that the simulation was performed for. Indicates the
@@ -478,10 +469,8 @@ SimClass <- R6::R6Class(
     #' @param Bp The mean base price used to plot net-returns vs as-applied data.
     #' @param CEXP The mean cost of the as-applied experimental input.
     #' @return Data saved in 'Outputs/Predictions'.
-    plotEstsVsExp = function(AAmin,
-                             respvar,
+    plotEstsVsExp = function(respvar,
                              expvar,
-                             AArateCutoff,
                              fieldname,
                              fxn,
                              sim_year,
@@ -495,13 +484,13 @@ SimClass <- R6::R6Class(
                                         sim_year,
                                         Bp,
                                         CEXP,
-                                        AAmin,
-                                        AArateCutoff,
+                                        self$AAmin,
+                                        self$AArateCutoff,
                                         fxn)
       if (SAVE) {
         try({dev.off()}, silent = TRUE)
         invisible(suppressWarnings(suppressMessages(
-          ggplot2::ggsave(paste0(out_path, "/Outputs/Predictions/",
+          ggplot2::ggsave(paste0(out_path, "/Outputs/Predictions/", sim_year, "/",
                                fieldname, "_NRvs",
                                ifelse(expvar == "aa_n","N","SR"),
                                "_", fxn, "_", sim_year, ".png"),
@@ -515,14 +504,14 @@ SimClass <- R6::R6Class(
                            sim_year,
                            Bp,
                            CEXP,
-                           AAmin,
-                           AArateCutoff,
+                           self$AAmin,
+                           self$AArateCutoff,
                            fxn)
       if (SAVE) {
         for (i in 1:length(resp_plots)) {
           try({dev.off()}, silent = TRUE)
           invisible(suppressWarnings(suppressMessages(
-            ggplot2::ggsave(paste0(out_path, "/Outputs/Predictions/",
+            ggplot2::ggsave(paste0(out_path, "/Outputs/Predictions/", sim_year, "/",
                                    fieldname, "_", toupper(respvar[i]), "vs",
                                    ifelse(expvar == "aa_n","N","SR"),
                                    "_", fxn, "_", sim_year, ".png"),
@@ -662,17 +651,53 @@ SimClass <- R6::R6Class(
       if (!file.exists(cwd)) {
         dir.create(cwd)
         dir.create(paste0(cwd, "/", "Predictions"))
+        for (i in 1:length(self$sim_years)) {
+          dir.create(paste0(cwd, "/", "Predictions/", self$sim_years[i]))
+        }
         dir.create(paste0(cwd, "/", "SimData"))
+        for (i in 1:length(self$sim_years)) {
+          dir.create(paste0(cwd, "/", "SimData/", self$sim_years[i]))
+        }
         dir.create(paste0(cwd, "/", "Maps"))
+        for (i in 1:length(self$sim_years)) {
+          dir.create(paste0(cwd, "/", "Maps/", self$sim_years[i]))
+        }
       } else {
         if (!file.exists(paste0(cwd, "/", "Predictions"))) {
           dir.create(paste0(cwd, "/", "Predictions"))
+          for (i in 1:length(self$sim_years)) {
+            dir.create(paste0(cwd, "/", "Predictions/", self$sim_years[i]))
+          }
+        } else {
+          for (i in 1:length(self$sim_years)) {
+            if (!file.exists(paste0(cwd, "/", "Predictions/", self$sim_years[i]))) {
+              dir.create(paste0(cwd, "/", "Predictions/", self$sim_years[i]))
+            }
+          }
         }
         if (!file.exists(paste0(cwd, "/", "SimData"))) {
           dir.create(paste0(cwd, "/", "SimData"))
+          for (i in 1:length(self$sim_years)) {
+            dir.create(paste0(cwd, "/", "SimData/", self$sim_years[i]))
+          }
+        } else {
+          for (i in 1:length(self$sim_years)) {
+            if (!file.exists(paste0(cwd, "/", "SimData/", self$sim_years[i]))) {
+              dir.create(paste0(cwd, "/", "SimData/", self$sim_years[i]))
+            }
+          }
         }
         if (!file.exists(paste0(cwd, "/", "Maps"))) {
           dir.create(paste0(cwd, "/", "Maps"))
+          for (i in 1:length(self$sim_years)) {
+            dir.create(paste0(cwd, "/", "Maps/", self$sim_years[i]))
+          }
+        } else {
+          for (i in 1:length(self$sim_years)) {
+            if (!file.exists(paste0(cwd, "/", "Maps/", self$sim_years[i]))) {
+              dir.create(paste0(cwd, "/", "Maps/", self$sim_years[i]))
+            }
+          }
         }
       }
     },
@@ -747,16 +772,15 @@ SimClass <- R6::R6Class(
         "Input the uniform as-applied rate the farmer would have applied to the field if an experiment was not conducted (i.e. 70 lbs N or SR/acre): "
       ))
     },
-    .selectAArateCutoff = function() {
-      self$AArateCutoff <- as.numeric(readline(
-        "Select the maximum as-applied rate to simulate management outcomues to (i.e. 200 lbs N or seed per acre): "
-      ))
-    },
-    .selectAAmin = function() {
-      self$AAmin <- as.numeric(readline(
-        "Select the minimum as-applied rate to simulate management outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre): "
-      ))
-      stopifnot(self$AArateCutoff > self$AAmin)
+    .selectEXPvec = function() {
+      EXPvec <- readline(
+        "Provide a vector of experimental rates to simulate over. Separate with commas: "
+      )
+      EXPvec <- as.numeric(unlist(strsplit(EXPvec, ",")));
+      self$AAmin <- EXPvec[1]
+      self$AArateCutoff <- EXPvec[length(EXPvec)]
+      self$EXPvec <- EXPvec
+      stopifnot(self$fs %in% self$EXPvec)
     },
     .selectOutPath = function() {
       self$SAVE <- as.character(select.list(
@@ -816,8 +840,28 @@ SimClass <- R6::R6Class(
     },
     .predResps = function(dat, m, respvar) {
       dat$pred <- m$predResps(dat, m$m)
-      dat$pred <- ifelse(dat$pred < 0, NA, dat$pred)
-      dat$pred <- ifelse(dat$pred > 1000, NA, dat$pred)
+      ## if response values are negative or above 1000, 
+      ## impute by taking random number from distribution of 
+      ## responses at closest exp rate
+      sim_exp_rate <- dat[, grep(self$datClass$expvar, names(dat)), with = FALSE][[1]] %>% 
+        unique()
+      og_dat <- self$datClass$mod_dat[[grep(respvar, names(self$datClass$mod_dat))]] %>% 
+        data.table::rbindlist() 
+      og_exp_col <- grep(paste0("^", self$datClass$expvar, "$"), names(og_dat))
+      og_dat[[og_exp_col]] <- og_dat[[og_exp_col]] %>% 
+        round()
+      og_dat <- og_dat[which(abs(og_dat[[og_exp_col]] - sim_exp_rate) == 
+                                  min(abs(og_dat[[og_exp_col]] - sim_exp_rate))), ]
+      resp_col <- grep(paste0("^", respvar, "$"), names(og_dat))
+      mean_resp <- mean(og_dat[[resp_col]], na.rm = TRUE)
+      sd_resp <- sd(og_dat[[resp_col]], na.rm = TRUE)
+      sd_resp <- ifelse(is.na(sd_resp), 0.1, sd_resp)
+      
+      bad_dim <- sum(dat$pred < 0 | dat$pred > 1000)
+      dat$pred <- ifelse(dat$pred < 0 | dat$pred > 1000, 
+                         rnorm(bad_dim, mean_resp, sd_resp),
+                         dat$pred)
+      
       names(dat)[grep("^pred$", names(dat))] <- paste0("pred_", respvar)
       gc()
       return(dat)
@@ -826,7 +870,8 @@ SimClass <- R6::R6Class(
       # add cols for NR & make list with df's for each N rate
       self$sim_list <- private$.setupSimDat(sim_dat) %>%
         list() %>%
-        rep(length(EXPvec))
+        rep(length(EXPvec)) %>% 
+        `names<-`(EXPvec)
       ## add exp rates to lists
       self$sim_list <- mapply(private$.addExpCols,
                               self$sim_list,
@@ -854,10 +899,8 @@ SimClass <- R6::R6Class(
       if (self$SAVE) {
         tryCatch({
           self$plotEstsVsExp( # plotEstsVsExp
-            self$AAmin,
             self$datClass$respvar,
             self$datClass$expvar,
-            self$AArateCutoff,
             self$unique_fieldname,
             self$unique_fxn,
             sim_year,
@@ -880,19 +923,19 @@ SimClass <- R6::R6Class(
       ## make connections and clean files
       private$.setupOutFiles(sim_year)
       ## on.exit(closeAllConnections())
-      Bp.var_con <- file(paste0(self$dat_path,
+      Bp.var_con <- file(paste0(self$dat_path, sim_year, "/",
                                 self$unique_fieldname, "_BpVar_",
                                 self$unique_fxn, "_",
                                 sim_year, "_",
                                 self$opt, ".csv"),
                          "at")
-      NRffmax_con <- file(paste0(self$dat_path,
+      NRffmax_con <- file(paste0(self$dat_path, sim_year, "/",
                                  self$unique_fieldname, "_NRffMaxData_",
                                  self$unique_fxn, "_",
                                  sim_year, "_",
                                  self$opt, ".csv"),
                           "at")
-      NRopt_con <- file(paste0(self$dat_path,
+      NRopt_con <- file(paste0(self$dat_path, sim_year, "/",
                                self$unique_fieldname, "_NRopt_",
                                self$unique_fxn, "_",
                                sim_year, "_",
@@ -923,14 +966,14 @@ SimClass <- R6::R6Class(
     .setupOutFiles = function(sim_year) {
       # Bp.var
       if (file.exists(
-        paste0(self$dat_path,
+        paste0(self$dat_path, sim_year, "/",
                self$unique_fieldname, "_BpVar_",
                self$unique_fxn, "_",
                sim_year, "_",
                self$opt, ".csv")
       )) {
         file.remove(
-          paste0(self$dat_path,
+          paste0(self$dat_path, sim_year, "/",
                  self$unique_fieldname, "_BpVar_",
                  self$unique_fxn, "_",
                  sim_year, "_",
@@ -942,7 +985,7 @@ SimClass <- R6::R6Class(
       df <- as.data.frame(matrix(vector(), 0, length(x)))
       names(df) <- x
       write.csv(df,
-                paste0(self$dat_path,
+                paste0(self$dat_path, sim_year, "/",
                        self$unique_fieldname, "_BpVar_",
                        self$unique_fxn, "_",
                        sim_year, "_",
@@ -951,14 +994,14 @@ SimClass <- R6::R6Class(
 
       # NRffmax
       if (file.exists(
-        paste0(self$dat_path,
+        paste0(self$dat_path, sim_year, "/",
                self$unique_fieldname, "_NRffMaxData_",
                self$unique_fxn, "_",
                sim_year, "_",
                self$opt, ".csv")
       )) {
         file.remove(
-          paste0(self$dat_path,
+          paste0(self$dat_path, sim_year, "/",
                  self$unique_fieldname, "_NRffMaxData_",
                  self$unique_fxn, "_",
                  sim_year, "_",
@@ -969,7 +1012,7 @@ SimClass <- R6::R6Class(
       df <- as.data.frame(matrix(vector(), 0, length(x)))
       names(df) <- x
       write.csv(df,
-                paste0(self$dat_path,
+                paste0(self$dat_path, sim_year, "/",
                        self$unique_fieldname, "_NRffMaxData_",
                        self$unique_fxn, "_",
                        sim_year, "_",
@@ -977,14 +1020,14 @@ SimClass <- R6::R6Class(
                 row.names = FALSE)
       # NRopt
       if (file.exists(
-        paste0(self$dat_path,
+        paste0(self$dat_path, sim_year, "/",
                self$unique_fieldname, "_NRopt_",
                self$unique_fxn, "_",
                sim_year, "_",
                self$opt, ".csv")
       )) {
         file.remove(
-          paste0(self$dat_path,
+          paste0(self$dat_path, sim_year, "/",
                  self$unique_fieldname, "_NRopt_",
                  self$unique_fxn, "_",
                  sim_year, "_",
@@ -998,7 +1041,7 @@ SimClass <- R6::R6Class(
       df <- as.data.frame(matrix(vector(), 0, length(x)))
       names(df) <- x
       write.csv(df,
-                paste0(self$dat_path,
+                paste0(self$dat_path, sim_year, "/",
                        self$unique_fieldname, "_NRopt_",
                        self$unique_fxn, "_",
                        sim_year, "_",
@@ -1046,7 +1089,7 @@ SimClass <- R6::R6Class(
         self$sim_list <- lapply(self$sim_list, function(x) data.table::as.data.table(x) %>%
                                   `names<-`(sim_list_names)) %>%
           lapply(private$.cleanNRdat)
-        NRff <- data.frame(EXP.rate = self$AAmin:self$AArateCutoff, NR.ff = NA)
+        NRff <- data.frame(EXP.rate = self$EXPvec, NR.ff = NA)
         NRff$NR.ff <- lapply(self$sim_list, function(x) sum(x$NR, na.rm = TRUE))
         NRff <- apply(NRff, 2, as.numeric) %>% as.data.frame()
         if (self$opt == "max") {
@@ -1066,7 +1109,7 @@ SimClass <- R6::R6Class(
         ffopt_rate <- NRffmax[1, "EXP.rate"]
         invisible(ifelse(self$datClass$sys_type == "conv",
                          NR.opp <- self$sim_list[[1]]$NRopp,
-                         NR.opp <- self$sim_list[[self$fs + 1]]$NRopp))
+                         NR.opp <- self$sim_list[[grep(self$fs, names(self$sim_list))]]$NRopp))
         NRopt <- data.frame(BaseP = rep(Bp, rr),
                             EXP.cost = rep(CEXP, rr),
                             x = self$sim_list[[1]]$x,
@@ -1078,16 +1121,16 @@ SimClass <- R6::R6Class(
                             NR.ssopt = NA,
                             NR.min = self$sim_list[[1]]$NRmin,
                             NR.opp = NR.opp,
-                            NR.fs = self$sim_list[[self$fs + 1]]$NRfs,
+                            NR.fs = self$sim_list[[grep(self$fs, names(self$sim_list))]]$NRfs,
                             yld.opt = NA,
                             yld.min = self$sim_list[[1]]$pred_yld,
-                            yld.fs = self$sim_list[[self$fs + 1]]$pred_yld,
+                            yld.fs = self$sim_list[[grep(self$fs, names(self$sim_list))]]$pred_yld,
                             pro.opt = NA,
                             pro.min = self$sim_list[[1]]$pred_pro,
-                            pro.fs = self$sim_list[[self$fs + 1]]$pred_pro,
-                            NR.ffopt = self$sim_list[[ffopt_rate + 1]]$NR,
-                            yld.ffopt = self$sim_list[[ffopt_rate + 1]]$pred_yld,
-                            pro.ffopt = self$sim_list[[ffopt_rate + 1]]$pred_pro,
+                            pro.fs = self$sim_list[[grep(self$fs, names(self$sim_list))]]$pred_pro,
+                            NR.ffopt = self$sim_list[[grep(ffopt_rate, names(self$sim_list))]]$NR,
+                            yld.ffopt = self$sim_list[[grep(ffopt_rate, names(self$sim_list))]]$pred_yld,
+                            pro.ffopt = self$sim_list[[grep(ffopt_rate, names(self$sim_list))]]$pred_pro,
                             EXP.rate.ffopt = ffopt_rate)
         NRopt[,c("EXP.rate.ssopt", "NR.ssopt", "yld.opt", "pro.opt")] <-
           private$.getNRopt(CEXP)
@@ -1144,9 +1187,9 @@ SimClass <- R6::R6Class(
                              NR.ssopt = rep(NA, nrow(self$sim_list[[1]])))
       # get NR optimum and EXP rate optimum
       NRdf <- matrix(nrow = nrow(self$sim_list[[1]]),
-                     ncol = (length(self$AAmin:self$AArateCutoff))) %>%
+                     ncol = (length(self$EXPvec))) %>%
         as.data.frame()
-      names(NRdf) <- self$AAmin:self$AArateCutoff
+      names(NRdf) <- self$EXPvec
       NRdf[, 1:ncol(NRdf)] <- lapply(self$sim_list, private$.getNR)
 
       if (self$opt == "max") {
@@ -1156,7 +1199,7 @@ SimClass <- R6::R6Class(
         NRoptDat <- sapply(NRoptDat, as.numeric) %>% as.data.frame()
       } else {
         if (self$opt == "deriv") {
-          Nrates <- data.frame(Nrates = self$AAmin:self$AArateCutoff)
+          Nrates <- data.frame(Nrates = self$EXPvec)
           rr <- nrow(NRdf)
           cc <- ncol(NRdf)
           NRdf <- as.matrix(NRdf)
@@ -1172,12 +1215,11 @@ SimClass <- R6::R6Class(
       }
       NRoptDat$yld.opt <- NA
       NRoptDat$pro.opt <- NA
-      loc_correct <- self$AAmin - 1
       for (i in 1:nrow(NRoptDat)) {
         NRoptDat$yld.opt[i] <-
-          self$sim_list[[NRoptDat$EXP.rate.ssopt[i] - loc_correct]]$pred_yld[i]
+          self$sim_list[[grep(NRoptDat$EXP.rate.ssopt[i], names(self$sim_list))]]$pred_yld[i]
         NRoptDat$pro.opt[i] <-
-          self$sim_list[[NRoptDat$EXP.rate.ssopt[i] - loc_correct]]$pred_pro[i]
+          self$sim_list[[grep(NRoptDat$EXP.rate.ssopt[i], names(self$sim_list))]]$pred_pro[i]
       }
       return(NRoptDat)
     },
@@ -1677,7 +1719,7 @@ SimClass <- R6::R6Class(
         self$sim_list <- lapply(self$sim_list, function(x) data.table::as.data.table(x) %>%
                                   `names<-`(sim_list_names)) %>%
           lapply(private$.cleanNRdat)
-        NRff <- data.frame(EXP.rate = self$AAmin:self$AArateCutoff, NR.ff = NA)
+        NRff <- data.frame(EXP.rate = self$EXPvec, NR.ff = NA)
         NRff$NR.ff <- lapply(self$sim_list, function(x) sum(x$NR, na.rm = TRUE))
         NRff <- apply(NRff, 2, as.numeric) %>% as.data.frame()
         if (self$opt == "max") {
@@ -1697,7 +1739,7 @@ SimClass <- R6::R6Class(
         ffopt_rate <- NRffmax[1, "EXP.rate"]
         invisible(ifelse(self$datClass$sys_type == "conv",
                          NR.opp <- self$sim_list[[1]]$NRopp,
-                         NR.opp <- self$sim_list[[self$fs + 1]]$NRopp))
+                         NR.opp <- self$sim_list[[grep(self$fs, names(self$sim_list))]]$NRopp))
         NRopt <- data.frame(BaseP = rep(Bp, rr),
                             EXP.cost = rep(CEXP, rr),
                             x = self$sim_list[[1]]$x,
@@ -1709,16 +1751,16 @@ SimClass <- R6::R6Class(
                             NR.ssopt = NA,
                             NR.min = self$sim_list[[1]]$NRmin,
                             NR.opp = NR.opp,
-                            NR.fs = self$sim_list[[self$fs + 1]]$NRfs,
+                            NR.fs = self$sim_list[[grep(self$fs, names(self$sim_list))]]$NRfs,
                             yld.opt = NA,
                             yld.min = self$sim_list[[1]]$pred_yld,
-                            yld.fs = self$sim_list[[self$fs + 1]]$pred_yld,
+                            yld.fs = self$sim_list[[grep(self$fs, names(self$sim_list))]]$pred_yld,
                             pro.opt = NA,
                             pro.min = self$sim_list[[1]]$pred_pro,
-                            pro.fs = self$sim_list[[self$fs + 1]]$pred_pro,
-                            NR.ffopt = self$sim_list[[ffopt_rate + 1]]$NR,
-                            yld.ffopt = self$sim_list[[ffopt_rate + 1]]$pred_yld,
-                            pro.ffopt = self$sim_list[[ffopt_rate + 1]]$pred_pro,
+                            pro.fs = self$sim_list[[grep(self$fs, names(self$sim_list))]]$pred_pro,
+                            NR.ffopt = self$sim_list[[grep(ffopt_rate, names(self$sim_list))]]$NR,
+                            yld.ffopt = self$sim_list[[grep(ffopt_rate, names(self$sim_list))]]$pred_yld,
+                            pro.ffopt = self$sim_list[[grep(ffopt_rate, names(self$sim_list))]]$pred_pro,
                             EXP.rate.ffopt = ffopt_rate)
         NRopt[,c("EXP.rate.ssopt", "NR.ssopt", "yld.opt", "pro.opt")] <-
           private$.getNRopt(CEXP)
@@ -1750,17 +1792,17 @@ SimClass <- R6::R6Class(
         Bp.var <- data.table::as.data.table(Bp.var)
         NRffmax <- data.table::as.data.table(NRffmax)
         ## save data & append to tables
-        data.table::fwrite(Bp.var, paste0(self$dat_path,
+        data.table::fwrite(Bp.var, paste0(self$dat_path, sim_year, "/",
                               self$unique_fieldname, "_BpVar_",
                               self$unique_fxn, "_SimYr",
                               sim_year, "EconCond_",
                               self$opt, ".csv"))
-        data.table::fwrite(NRopt, paste0(self$dat_path,
+        data.table::fwrite(NRopt, paste0(self$dat_path, sim_year, "/",
                              self$unique_fieldname, "_NRopt_",
                              self$unique_fxn, "_SimYr",
                              sim_year, "EconCond_",
                              self$opt, ".csv"))
-        data.table::fwrite(NRffmax, paste0(self$dat_path,
+        data.table::fwrite(NRffmax, paste0(self$dat_path, sim_year, "/",
                                self$unique_fieldname, "_NRffMaxData_",
                                self$unique_fxn, "_SimYr",
                                sim_year, "EconCond_",

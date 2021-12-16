@@ -507,7 +507,7 @@ SimOP <- R6::R6Class(
           #### END Maps (avg all sim) ####
           
           #### Maps (actual econ conditions of sim year) ####
-          NRopt <- data.table::fread(paste0(self$dat_path,
+          NRopt <- data.table::fread(paste0(self$dat_path, self$sim_years[i], "/",
                                             self$unique_fieldname, "_NRopt_",
                                             self$unique_fxn, "_SimYr",
                                             self$sim_years[i], "EconCond_",
@@ -1271,7 +1271,7 @@ SimOP <- R6::R6Class(
       if (SAVE) {
         try({dev.off()}, silent = TRUE)
         ggplot2::ggsave(
-          file = paste0(out_path, "/Outputs/Maps/",
+          file = paste0(out_path, "/Outputs/Maps/", sim_year, "/",
                       fieldname, "_", tolower(var),
                       "_map_", fxn, "_", sim_year, "_", opt, ".png"),
           plot = p, device = "png",
@@ -1304,7 +1304,7 @@ SimOP <- R6::R6Class(
                          sim_year,
                          opt = self$opt) {
       Bp.var <- data.table::fread(
-        paste0(dat_path,
+        paste0(dat_path, sim_year, "/",
                unique_fieldname, "_BpVar_",
                unique_fxn, "_",
                sim_year, "_",
@@ -1334,7 +1334,7 @@ SimOP <- R6::R6Class(
                            sim_year,
                            opt = self$opt) {
       NRffmax <- data.table::fread(
-        paste0(dat_path,
+        paste0(dat_path, sim_year, "/",
                unique_fieldname, "_NRffMaxData_",
                unique_fxn, "_",
                sim_year, "_",
@@ -1402,7 +1402,7 @@ SimOP <- R6::R6Class(
                          opt = self$opt) {
       on.exit(closeAllConnections())
       ## get col names
-      NRopt_names <- read.csv(file = paste0(dat_path,
+      NRopt_names <- read.csv(file = paste0(dat_path, sim_year, "/",
                                             unique_fieldname, "_NRopt_",
                                             unique_fxn, "_",
                                             sim_year, "_",
@@ -1416,7 +1416,7 @@ SimOP <- R6::R6Class(
       avg_query <- paste0("AVG([", NRopt_names, "])") %>%
         paste(collapse = ", ")
       NRopt <- sqldf::read.csv.sql(
-        paste0(dat_path,
+        paste0(dat_path, sim_year, "/",
                unique_fieldname, "_NRopt_",
                unique_fxn, "_",
                sim_year, "_",
@@ -1440,6 +1440,9 @@ SimOP <- R6::R6Class(
         dir.create(cwd)
         #dir.create(paste0(cwd, "/", "Exploratory"))
         dir.create(paste0(cwd, "/", "Maps"))
+        for (i in 1:length(self$sim_years)) {
+          dir.create(paste0(cwd, "/", "Maps/", self$sim_years[i]))
+        }
         dir.create(paste0(cwd, "/", "EXP"))
         dir.create(paste0(cwd, "/", "EXP/ffoptEXP"))
         dir.create(paste0(cwd, "/", "EXP/ssoptEXP"))
@@ -1454,6 +1457,15 @@ SimOP <- R6::R6Class(
         # }
         if (!file.exists(paste0(cwd, "/", "Maps"))) {
           dir.create(paste0(cwd, "/", "Maps"))
+          for (i in 1:length(self$sim_years)) {
+            dir.create(paste0(cwd, "/", "Maps/", self$sim_years[i]))
+          }
+        } else {
+          for (i in 1:length(self$sim_years)) {
+            if (!file.exists(paste0(cwd, "/", "Maps/", self$sim_years[i]))) {
+              dir.create(paste0(cwd, "/", "Maps/", self$sim_years[i]))
+            }
+          }
         }
         if (!file.exists(paste0(cwd, "/", "EXP"))) {
           dir.create(paste0(cwd, "/", "EXP"))
