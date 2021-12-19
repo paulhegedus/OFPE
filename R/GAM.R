@@ -175,13 +175,13 @@ GAM <- R6::R6Class(
       ## brute force method for finding a reasonable 'k' estimate.
       good_parms <- self$parm_df[!self$parm_df$bad_parms, "parms"]
       
-      unq_vals <- unique(
-        self$dat$trn[, which(names(self$dat$trn) %in% as.character(good_parms[i])),
-            with = FALSE][[1]],
-        na.rm = TRUE
-      )
-      if (length(unq_vals) <= 5) {
-        for (i in 1:length(good_parms)) {
+      for (i in 1:length(good_parms)) {
+        unq_vals <- unique(
+          self$dat$trn[, which(names(self$dat$trn) %in% as.character(good_parms[i])),
+                       with = FALSE][[1]],
+          na.rm = TRUE
+        )
+        if (length(unq_vals) <= 5) {
           tryK <- c(4, 3, 2, 1)
           for (j in 1:length(tryK)) {
             if (!exists("foundK")) { foundK <- FALSE }
@@ -226,11 +226,8 @@ GAM <- R6::R6Class(
             }
           }
           rm(foundK) # remove the indicator for the next var in loop
-          
-        } # end parms
-      } else {
-        if (length(unq_vals) <= 10 & length(unq_vals) > 5) {
-          for (i in 1:length(good_parms)) {
+        } else {
+          if (length(unq_vals) <= 10 & length(unq_vals) > 5) {
             tryK <- c(10, 8, 6, 4)
             for (j in 1:length(tryK)) {
               if (!exists("foundK")) { foundK <- FALSE }
@@ -275,8 +272,8 @@ GAM <- R6::R6Class(
               }
             }
             rm(foundK) # remove the indicator for the next var in loop
-          } # end parms
-        } 
+          } 
+        }
       }
     },
     .makeFormula = function(parms = NULL, K = NULL, BS = "ts", xyK = 20) {
