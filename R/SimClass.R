@@ -857,12 +857,22 @@ SimClass <- R6::R6Class(
       sd_resp <- sd(og_dat[[resp_col]], na.rm = TRUE)
       sd_resp <- ifelse(is.na(sd_resp), 0.1, sd_resp)
       
-      bad_dim <- sum(dat$pred < 0 | dat$pred > 1000)
-      dat$pred <- ifelse(dat$pred < 0 | dat$pred > 1000, 
-                         rgamma(bad_dim, 
-                                (mean_resp / sd_resp)^2, 
-                                mean_resp / sd_resp^2),
-                         dat$pred)
+      if (respvar == "yld") {
+        bad_dim <- sum(dat$pred < 0 | dat$pred > 250)
+        dat$pred <- ifelse(dat$pred < 0 | dat$pred > 250, 
+                           rgamma(bad_dim, 
+                                  (mean_resp / sd_resp)^2, 
+                                  mean_resp / sd_resp^2),
+                           dat$pred)
+      }
+      if (respvar == "pro") {
+        bad_dim <- sum(dat$pred < 0 | dat$pred > 30)
+        dat$pred <- ifelse(dat$pred < 0 | dat$pred > 30, 
+                           rgamma(bad_dim, 
+                                  (mean_resp / sd_resp)^2, 
+                                  mean_resp / sd_resp^2),
+                           dat$pred)
+      }
       
       names(dat)[grep("^pred$", names(dat))] <- paste0("pred_", respvar)
       gc()

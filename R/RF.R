@@ -140,27 +140,27 @@ RF <- R6::R6Class(
       init_rmse <- Metrics::rmse(preds[[1]], preds$preds) %>% round(4)
       
       ## do top-down RMSE based feature selection
-      for (i in 1:nrow(self$parm_df)) {
-        if (self$parm_df$parms[i] != self$expvar) {
-          self$parm_df$bad_parms[i] <- TRUE
-          
-          form <- private$.makeFormula(parms = self$parm_df$parms[!self$parm_df$bad_parms],
-                                  respvar = self$respvar)
-          m <- ranger::ranger(as.formula(form),
-                                          data = subdat$trn,
-                                          replace = TRUE)
-          subdat$val$preds <- predict(m, subdat$val)$predictions
-          get_cols <- c(self$respvar, "preds")
-          preds <- subdat$val[!is.na(subdat$val$preds), get_cols, with = FALSE]
-          diff_rmse <- Metrics::rmse(preds[[1]], preds$preds) %>% round(4) - init_rmse
-          if (diff_rmse < 0) {
-            init_rmse <- Metrics::rmse(preds[[1]], preds$preds) %>% round(4)
-          } else {
-            self$parm_df$bad_parms[i] <- FALSE
-          }
-        }
-        rm(m)
-      }
+      # for (i in 1:nrow(self$parm_df)) {
+      #   if (self$parm_df$parms[i] != self$expvar) {
+      #     self$parm_df$bad_parms[i] <- TRUE
+      #     
+      #     form <- private$.makeFormula(parms = self$parm_df$parms[!self$parm_df$bad_parms],
+      #                             respvar = self$respvar)
+      #     m <- ranger::ranger(as.formula(form),
+      #                                     data = subdat$trn,
+      #                                     replace = TRUE)
+      #     subdat$val$preds <- predict(m, subdat$val)$predictions
+      #     get_cols <- c(self$respvar, "preds")
+      #     preds <- subdat$val[!is.na(subdat$val$preds), get_cols, with = FALSE]
+      #     diff_rmse <- Metrics::rmse(preds[[1]], preds$preds) %>% round(4) - init_rmse
+      #     if (diff_rmse < 0) {
+      #       init_rmse <- Metrics::rmse(preds[[1]], preds$preds) %>% round(4)
+      #     } else {
+      #       self$parm_df$bad_parms[i] <- FALSE
+      #     }
+      #   }
+      #   rm(m)
+      # }
       gc()
       ## now tune the model, starting with the number of trees
       treeCheck <- data.frame(rftrees = seq.int(100, 3000, by = 100), rmse = NA)
@@ -206,7 +206,8 @@ RF <- R6::R6Class(
       self$m <- ranger::ranger(as.formula(self$form),
                                       data = self$dat$trn,
                                       num.trees = opt_n_tree,
-                                      mtry = opt_mtry)
+                                      mtry = opt_mtry,
+                                      replace = TRUE)
       
       self$dat$val$pred <- self$predResps(self$dat$val, self$m)
       self$dat$val <- OFPE::valPrep(self$dat$val,
