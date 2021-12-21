@@ -129,7 +129,8 @@ GAM <- R6::R6Class(
     #' @return A fitted GAM.
     fitMod = function() {
       private$.findK()
-      self$form <- private$.makeFormula()
+      xyK <- ifelse(nrow(self$dat$trn) < 200, 4, 20)
+      self$form <- private$.makeFormula(xyK = xyK)
       self$m <- mgcv::bam(as.formula(self$form),
                           data = self$dat$trn)
 

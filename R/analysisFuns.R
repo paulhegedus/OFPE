@@ -90,6 +90,9 @@ findBadParms <- function(parm_df, dat) {
       parm_df[parm_df$parms %in% row.names(m0$Complete), "bad_parms"] <- TRUE
     }
   }
+  if (nrow(dat) < 200) {
+    parm_df[2:nrow(parm_df), "bad_parms"] <- TRUE
+  }
   
   return(parm_df)
 }
