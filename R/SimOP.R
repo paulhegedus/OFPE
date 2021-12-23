@@ -112,10 +112,14 @@ SimOP <- R6::R6Class(
     #' @field opt The optimization method used in the simulation. Used to identify
     #' and label data. Must be in the same format as from the 'SimClass', e.g. "deriv".
     opt = NULL,
-    #' @field fieldsize Size of the field in acres.
+    #' @field fieldsize Size of the field. Note: this must be 
+    #' in the same units as those specified in DatClass. i.e. if DatClass$SI == TRUE 
+    #' than fieldsize should be in hectares, else in acres.
     fieldsize = NULL,
     #' @field fs The uniform rate of the experimental input that the farmer would
-    #' have applied in the absence of variable rate application.
+    #' have applied in the absence of variable rate application. Note: this rate must be 
+    #' in the same units as those specified in DatClass. i.e. if DatClass$SI == TRUE 
+    #' than fs should be in kg/ha, else in lbs/ac.
     fs = NULL,
     #' @field expvar The OFPE experimental input code for the experimental variable,
     #' i.e. "aa_n" for as-applied nitrogen fertilizer or "aa_sr" for as-applied
@@ -1257,6 +1261,7 @@ SimOP <- R6::R6Class(
                            out_path = self$out_path,
                            db = self$db,
                            utm_fieldname = self$utm_fieldname) {
+
       utm_zone <- OFPE::findUTMzone(db,
                                     fieldname = utm_fieldname)
       p <- OFPE::plotMaps(dat,

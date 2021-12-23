@@ -153,7 +153,6 @@ NonLinear_Logistic <- R6::R6Class(
     #' @param None Put parameters here
     #' @return A fitted logistic model.
     fitMod = function() {
-      self$parm_df <- OFPE::findBadParms(self$parm_df, self$dat$trn)
       self$parm_df <- rbind(subset(self$parm_df, self$parm_df$fxn_comp == "EXP"),
                             data.frame(parms = "a0", fxn_comp = "alpha", coef_id = "a0",
                                        bad_parms = "FALSE", means = 1, sd = 1),

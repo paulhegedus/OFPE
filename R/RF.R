@@ -126,7 +126,6 @@ RF <- R6::R6Class(
     #' @param None Parameters provided upon class instantiation.
     #' @return A fitted RF.
     fitMod = function() {
-      self$parm_df <- OFPE::findBadParms(self$parm_df, self$dat$trn)
       subdat <- lapply(self$dat, OFPE::takeSubset, self$respvar)
         
       form <- private$.makeFormula(parms = self$parm_df[!self$parm_df$bad_parms, "parms"],

@@ -59,7 +59,9 @@ SimClass <- R6::R6Class(
     sim_years = NULL,
     #' @field fs Input the uniform as-applied rate the farmer would have applied
     #' to the field if an experiment was not conducted (i.e. 70 lbs N or SR/acre).
-    #' fs = Farmer Selected.
+    #' fs = Farmer Selected. Note: this rate must be in the same units as those 
+    #' specified in DatClass. i.e. if DatClass$SI == TRUE than fs should be in kg/ha, 
+    #' else in lbs/ac.
     fs = NULL,
     #' @field AArateCutoff The maximum as-applied rate to simulate management
     #' outcomues to (i.e. 200 lbs N or seed per acre).
@@ -68,7 +70,9 @@ SimClass <- R6::R6Class(
     #' outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).
     AAmin = NULL,
     #' @field EXPvec Vector of the experimental rates to simulate over. This 
-    #' must begin with the AAmin and end with the AArateCutoff.
+    #' must begin with the AAmin and end with the AArateCutoff. Note: this vector 
+    #' must be in the same units as those specified in DatClass. i.e. if DatClass$SI 
+    #' == TRUE than EXPvec should be in kg/ha, else in lbs/ac.
     EXPvec = NULL,
     #' @field SAVE Logical, whether to save figures. Autofilled to FALSE if
     #' a user selects NA in the 'out_path' or is NULL. Autofilled to TRUE
@@ -156,9 +160,13 @@ SimClass <- R6::R6Class(
     #' year. See the 'LikeYear' class for more information on this option.
     #' @param fs Input the uniform as-applied rate the farmer would have applied
     #' to the field if an experiment was not conducted (i.e. 70 lbs N or SR/acre).
-    #' fs = Farmer Selected.
+    #' fs = Farmer Selected. Note: this rate must be in the same units as those 
+    #' specified in DatClass. i.e. if DatClass$SI == TRUE than fs should be in kg/ha, 
+    #' else in lbs/ac.
     #' @param EXPvec Vector of the experimental rates to simulate over. This 
-    #' must begin with the AAmin and end with the AArateCutoff.
+    #' must begin with the AAmin and end with the AArateCutoff. Note: this vector 
+    #' must be in the same units as those specified in DatClass. i.e. if DatClass$SI 
+    #' == TRUE than EXPvec should be in kg/ha, else in lbs/ac.
     #' @param SAVE Logical, whether to save figures. Autofilled to FALSE if
     #' a user selects NA in the 'out_path' or is NULL. Autofilled to TRUE
     #' otherwise. This will be triggered to FALSE if the user passes FALSE
@@ -315,6 +323,23 @@ SimClass <- R6::R6Class(
       self$datClass <- datClass
       self$modClass <- modClass
       self$econDat <- econDat
+      if (self$datClass$SI) {
+        # convert costs to SI units
+        if (!is.null(self$econDat$FC)) {
+          # multiply $/ac by (1 ac / 0.404686 ha) for $/ha
+          self$econDat$FC <- self$econDat$FC / 0.404686
+        }
+        # multiply $/ac by (1 ac / 0.404686 ha) for $/ha
+        self$econDat$ssAC <- self$econDat$ssAC / 0.404686
+        # multiply $/bu by (1 bu / 60 lbs) by (1 lbs / 0.453592 kg) for $/kg
+        self$econDat$Prc$org <- self$econDat$Prc$org / (60 * 0.453592)
+        self$econDat$Prc$conv <- self$econDat$Prc$conv / (60 * 0.453592)
+        # multiply $/lbs by (1 lbs / 0.453592 kg) for $/kg
+        self$econDat$Prc$cost <- self$econDat$Prc$cost / 0.453592
+        # multiply $/ac by (1 ac / 0.404686 ha) for $/ha
+        self$econDat$Prc$FC <- self$econDat$Prc$FC / 0.404686
+      }
+      
       self$datClass$getSimDat(self$sim_years)
       
       # check degree of NA's from covars in simulated data
@@ -337,6 +362,11 @@ SimClass <- R6::R6Class(
         .[!unlist(lapply(., is.null))]
       
       self$fieldsize <- private$.gatherFieldSize()
+      
+      if (self$datClass$SI) {
+        # 1 ac = 0.404686 ha
+        self$fieldsize <- self$fieldsize * 0.404686
+      }
 
       self$unique_fieldname <- OFPE::uniqueFieldname(self$datClass$fieldname)
       unique_fxn <- do.call(rbind, self$modClass$fxn)
@@ -549,9 +579,9 @@ SimClass <- R6::R6Class(
     #' @param B2pd The coefficient for protein squared for the protein
     #' premium/dockage equation.
     #' @param CEXP The cost of the experimental input.
-    #' @param FC Fixed costs ($/acre) associated with production, not including
+    #' @param FC Fixed costs ($/area) associated with production, not including
     #' the input of interest. This includes things like the cost of labor, fuel, etc.
-    #' @param ssAC The cost ($/acre) of using site-specific technology or variable rate
+    #' @param ssAC The cost ($/area) of using site-specific technology or variable rate
     #' applications. For farmers that have variable rate technology this cost may be zero,
     #' otherwise is the cost per acre to hire the equipment/operators with variable rate
     #' technology.
@@ -594,6 +624,20 @@ SimClass <- R6::R6Class(
                          out_path,
                          db,
                          utm_fieldname) {
+      if (self$datClass$SI) {
+        nr_lab <- "ha"
+        yld_lab <- "(kg/ha)"
+        exp_lab <- "(kg/ha)"
+        bp_denom <- "kg"
+        exp_denom <- "kg"
+      } else {
+        nr_lab <- "ac"
+        yld_lab <- "(bu/ac)"
+        exp_lab <- "(lbs/ac)"
+        bp_denom <- "bu"
+        exp_denom <- "lbs"
+      }
+      
       dat <- dat[which(dat$year == year), ]
 
       # if respvar > 1 and all(respvar ! in names(dat))
@@ -620,7 +664,7 @@ SimClass <- R6::R6Class(
       }
       # pass to plot sim maps
       var_col_name <- "NR"
-      var_label <- "Net-return ($/ac)"
+      var_label <- paste0("Net-return ($/", nr_lab, ")")
       var_main_label <- paste0("Observed net-return in ", year)
       utm_zone <- OFPE::findUTMzone(db, fieldname = utm_fieldname)
       p <- OFPE::plotMaps(dat,
@@ -769,12 +813,12 @@ SimClass <- R6::R6Class(
     },
     .selectFcr = function() {
       self$fs <- as.numeric(readline(
-        "Input the uniform as-applied rate the farmer would have applied to the field if an experiment was not conducted (i.e. 70 lbs N or SR/acre): "
+        "Input the uniform as-applied rate the farmer would have applied to the field if an experiment was not conducted (i.e. 70 lbs N or SR/acre). Should be in the same units specified in the SI argument of DatClass (e.g. kg/ha or lbs/ac): "
       ))
     },
     .selectEXPvec = function() {
       EXPvec <- readline(
-        "Provide a vector of experimental rates to simulate over. Separate with commas: "
+        "Provide a vector of experimental rates to simulate over. Separate with commas. Should be in the same units specified in the SI argument of DatClass (e.g. kg/ha or lbs/ac): "
       )
       EXPvec <- as.numeric(unlist(strsplit(EXPvec, ",")));
       self$AAmin <- EXPvec[1]
@@ -858,8 +902,9 @@ SimClass <- R6::R6Class(
       sd_resp <- ifelse(is.na(sd_resp), 0.1, sd_resp)
       
       if (respvar == "yld") {
-        bad_dim <- sum(dat$pred < 0 | dat$pred > 250)
-        dat$pred <- ifelse(dat$pred < 0 | dat$pred > 250, 
+        max_yld <- ifelse(self$datClass$SI, 250 * 67.251, 250)
+        bad_dim <- sum(dat$pred < 0 | dat$pred > max_yld)
+        dat$pred <- ifelse(dat$pred < 0 | dat$pred > max_yld, 
                            rgamma(bad_dim, 
                                   (mean_resp / sd_resp)^2, 
                                   mean_resp / sd_resp^2),
@@ -1347,8 +1392,9 @@ SimClass <- R6::R6Class(
         sd_resp <- ifelse(is.na(sd_resp), 0.1, sd_resp)
         
         if (self$datClass$respvar[i] == "yld") {
-          bad_dim <- sum(sim_dat$pred < 0 | sim_dat$pred > 250)
-          sim_dat$pred <- ifelse(sim_dat$pred < 0 | sim_dat$pred > 250, 
+          max_yld <- ifelse(self$datClass$SI, 250 * 67.251, 250)
+          bad_dim <- sum(sim_dat$pred < 0 | sim_dat$pred > max_yld)
+          sim_dat$pred <- ifelse(sim_dat$pred < 0 | sim_dat$pred > max_yld, 
                              rgamma(bad_dim, 
                                     (mean_resp / sd_resp)^2, 
                                     mean_resp / sd_resp^2),
@@ -1385,6 +1431,7 @@ SimClass <- R6::R6Class(
       
       ## report yld pro & NR
       NRopt <- as.data.frame(NRopt)
+      names_order <- names(as.data.frame(NRopt))
       # make the cell_id column
       NRopt$cell_id <- paste0(NRopt$row, "_", NRopt$col)
       # change field codes to field names (useful if multiple fields)
@@ -1407,6 +1454,9 @@ SimClass <- R6::R6Class(
       NRopt$cell_id <- NULL
       NRopt <- apply(NRopt, 2, as.numeric)
       
+      # put back in correct order
+      names_order <- c(names_order, "NR.act", "yld.act", "pro.act")
+      NRopt <- NRopt[, names_order]
       gc()
       return(NRopt)
     },
@@ -1495,6 +1545,20 @@ SimClass <- R6::R6Class(
                               AAmin,
                               AArateCutoff,
                               fxn) {
+      if (self$datClass$SI) {
+        nr_lab <- "ha"
+        yld_lab <- "(kg/ha)"
+        exp_lab <- "(kg/ha)"
+        bp_denom <- "kg"
+        exp_denom <- "kg"
+      } else {
+        nr_lab <- "ac"
+        yld_lab <- "(bu/ac)"
+        exp_lab <- "(lbs/ac)"
+        bp_denom <- "bu"
+        exp_denom <- "lbs"
+      }
+      
       DNR <- data.table::rbindlist(self$sim_list)
       DNR <- DNR[runif(nrow(DNR) * 0.25, 1, nrow(DNR)), ]
       stopifnot(any(grepl("NR|yld|pro", var)))
@@ -1514,14 +1578,14 @@ SimClass <- R6::R6Class(
       var_color <- ifelse(grepl("NR", var), "green",
                           ifelse(grepl("yld", var), "red",
                                  "cyan"))
-      y_lab <- ifelse(grepl("NR", var), "Estimated Net-Return ($)",
-                      ifelse(grepl("yld", var), "Predicted Yield (bu/ac)",
+      y_lab <- ifelse(grepl("NR", var), paste0("Estimated Net-Return ($/", nr_lab, ")"),
+                      ifelse(grepl("yld", var), paste0("Predicted Yield ", yld_lab),
                              "Predicted Grain Protein %"))
-      x_lab <- paste0(ifelse(expvar == "aa_n", "Nitrogen",  "Seed"), " (lbs/ac)")
+      x_lab <- paste0(ifelse(expvar == "aa_n", "Nitrogen",  "Seed"), " ", exp_lab)
       sub_title <-  paste0(fxn, " : Base Price = $",
-                           round(Bp, 2), ", ",
+                           round(Bp, 2), "/", bp_denom, ", ",
                            ifelse(expvar == "aa_n", "N", "Seed"),
-                           " Cost = $", round(CEXP, 2))
+                           " Cost = $", round(CEXP, 2), "/", exp_denom)
       var_plot <-
         ggplot2::ggplot(DNR, ggplot2::aes(x = exp, y = var)) +
         ggplot2::geom_point(shape = 1) +

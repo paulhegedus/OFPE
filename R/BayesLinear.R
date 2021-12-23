@@ -124,7 +124,6 @@ BayesLinear <- R6::R6Class(
     #' @param None Parameters provided upon class instantiation.
     #' @return A fitted BayesLinear model.
     fitMod = function() {
-      self$parm_df <- OFPE::findBadParms(self$parm_df, self$dat$trn)
       # subdat <- lapply(self$dat, OFPE::takeSubset, self$respvar, 500)
       # 
       # form <- private$.makeFormula(parms = self$parm_df[!self$parm_df$bad_parms, "parms"],
@@ -208,7 +207,9 @@ BayesLinear <- R6::R6Class(
     #' variable for each observation in 'dat'.
     #' @return Vector of predicted values for each location in 'dat'.
     predResps = function(dat, m) {
-      pred <- predict(m, dat)[,1]
+      
+      pred_df <- predict(m, dat) %>% as.data.frame()
+      pred <- apply(pred_df, 1, function(x) rgamma(1, (x[1] / x[2])^2, x[1] / x[2]^2))
       gc()
       return(pred)
     },

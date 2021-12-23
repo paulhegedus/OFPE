@@ -130,6 +130,10 @@ DatClass <- R6::R6Class(
     #' by the user and a corresponding code. This is used in the simulation data when being
     #' passed to C++ functions as purely numeric matrices.
     fieldname_codes = NULL,
+    #' @field SI Logical, whether to use SI units. If TRUE, yield and experimental data are 
+    #' converted to kg/ha. If FALSE, the default values from the database are used. These are
+    #' bu/ac for yield and lbs/ac for experimental data (nitrogen or seed).
+    SI = NULL,
 
     #' @param dbCon Database connection object connected to an OFPE formatted
     #' database, see DBCon class.
@@ -180,13 +184,18 @@ DatClass <- R6::R6Class(
     #' in the analysis step. The training dataset is used to fit the model to each
     #' of the crop responses. The difference will be split into a validation dataset
     #' that is used to evaluate the model performance on data it has not 'seen' before.
+    #' @param SI Logical, whether to use SI units. If TRUE, yield and experimental data are 
+    #' converted to kg/ha. If FALSE, the default values from the database are used. These are
+    #' bu/ac for yield and lbs/ac for experimental data (nitrogen or seed).
     #' @param clean_rate Select the maximum rate that could be realistically be applied
     #' by the application equipment (sprayer or seeder). This is used for a rudimentary
     #' cleaning of the data that removes observations with as-applied rates above this
     #' user supplied threshold. Rates above this threshold should be able to be classified
     #' as machine measurement errors. For example, based on knowledge of the prescription/
     #' experiment applied and taking into account double applications on turns, a rate
-    #' for as-applied nitrogen might be something like 300 - 400 lbs N/acre.
+    #' for as-applied nitrogen might be something like 300 - 400 lbs N/acre. NOTE: make sure to
+    #' specify in the correct units, for example if SI = FALSE specify in lbs/ac, otherwise 
+    #' in kg/ha.
     #' @return A new 'AggInputs' object.
     initialize = function(dbCon,
                           farmername = NULL,
@@ -200,6 +209,7 @@ DatClass <- R6::R6Class(
                           dat_used = NULL,
                           center = NULL,
                           split_pct = NULL,
+                          SI = FALSE,
                           clean_rate = NULL) {
       stopifnot(!is.null(dbCon))
       self$dbCon <- dbCon
@@ -276,6 +286,8 @@ DatClass <- R6::R6Class(
         stopifnot(is.numeric(clean_rate))
         self$clean_rate <- clean_rate
       }
+      stopifnot(is.logical(SI))
+      self$SI <- SI
     },
     #' @description
     #' Interactive method for selecting inputs related to the data used in the
@@ -321,6 +333,7 @@ DatClass <- R6::R6Class(
       private$.selectAggLOY()
       private$.selectCenter()
       private$.selectDatSplitPct()
+      private$.selectSI()
       private$.selectCleanRate()
     },
     #' @description
@@ -520,6 +533,12 @@ DatClass <- R6::R6Class(
         "Provide the percentage of data to use as a training dataset for model fitting. The rest of the data will be witheld for model validation: "
       ))
     },
+    .selectSI = function() {
+      self$SI <- as.logical(select.list(
+        c(TRUE, FALSE),
+        title = paste0("Select whether to use SI units. If so, yield and experimental data will be converted to kg/ha. Otherwise the default is bu/ac and lbs/ac.")
+      ))
+    },
     .selectCleanRate = function() {
       self$clean_rate <- as.numeric(readline(
         "Provide the threshold for as-applied rates above which are obvious machine measurment errors (e.g. 350 lbs/N/acre): "
@@ -620,6 +639,7 @@ DatClass <- R6::R6Class(
         dat, c("grid", "size", "datused", "farmer", "prev_year")) %>%
         private$.makeFactors() %>%
         private$.makeOLMmeans() %>%
+        private$.convertRespAndExpDat() %>%
         private$.cleanDat()
       return(dat)
     },
@@ -680,6 +700,25 @@ DatClass <- R6::R6Class(
       ux <- unique(x)
       return(ux[which.max(tabulate(match(x, ux)))])
     },
+    .convertRespAndExpDat = function(dat) {
+      if (self$SI) {
+        cols <- grep("aa_n|aa_sr", names(dat))
+        for (i in 1:length(cols)) {
+          # 1 lbs/ac = 1.12085 kg/ha
+          nm <- as.symbol(cols[i])
+          dat <- dat[,(cols[i]) := dat[, cols[i], with = FALSE][[1]] * 1.12085]
+        }
+        if (any(grepl("yld", names(dat)))) {
+          cols <- grep("yld", names(dat))
+          for (i in 1:length(cols)) {
+            # 1 bu/ac (assuming 60lbs/bu) = 67.251 kg/ha
+            nm <- as.symbol(cols[i])
+            dat <- dat[,(cols[i]) := dat[, cols[i], with = FALSE][[1]] * 67.251]
+          }
+        }
+      }
+      return(dat)
+    }, 
     .cleanDat = function(dat) {
       if (any(grepl("aa_n|aa_sr|yld|pro", names(dat)))) {
         col <- names(dat)[grep("^aa_n$|^aa_sr$", names(dat))]

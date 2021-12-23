@@ -181,6 +181,10 @@ takeSubset <- function(x, respvar, sub_n = 1250) {
   stopifnot(any(grepl("field", names(x))),
             any(grepl("year", names(x))))
   
+  if (nrow(x) < sub_n) {
+    sub_n <- nrow(x)
+  }
+  
   nrows_x <- nrow(x)
   if (length(unique(x$field)) > 1) {
     if (length(unique(x$year)) > 1) {

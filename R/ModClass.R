@@ -78,6 +78,10 @@ ModClass <- R6::R6Class(
     #' field and method names. This class is accessed in the analysis and
     #' simulation steps.
     mod_list = NULL,
+    #' @field SI Logical, whether to use SI units. If TRUE, yield and experimental data are 
+    #' converted to kg/ha. If FALSE, the default values from the database are used. These are
+    #' bu/ac for yield and lbs/ac for experimental data (nitrogen or seed).
+    SI = NULL,
 
     #' @param respvar Response variable(s) to optimize on, input
     #' 'Yield' or 'Protein'. Multiple options allowed. This can be passed in
@@ -225,6 +229,7 @@ ModClass <- R6::R6Class(
                                 self$covars,
                                 self$fxn_path)
       }
+      self$SI <- datClass$SI
     },
     #' @description
     #' Method for calling the specific model class' method for executing the model
@@ -329,9 +334,18 @@ ModClass <- R6::R6Class(
       if (SAVE) {
         private$.plotObsPredRespVsExp(m, self$out_path, SAVE)
         private$.plotObsVsPred(m, self$out_path, SAVE)
+        private$.plotResidsVsExp(m, self$out_path, SAVE)
       }
     },
     .plotObsPredRespVsExp = function(m, out_path, SAVE) {
+      if (self$SI) {
+        yld_metric <- "(kg/ha)"
+        exp_metric <- "(kg/ha)"
+      } else {
+        yld_metric <- "(bu/ac)"
+        exp_metric <- "(lbs/ac)"
+      }
+      
       set.seed(13113)
       if (m$respvar == "yld") {
         cols <- c("black", "red")
@@ -348,8 +362,10 @@ ModClass <- R6::R6Class(
       p <- ggplot2::ggplot() +
         ggplot2::geom_point(data = m$dat$val,
                    ggplot2::aes(x = get(m$expvar), y = get(m$respvar), col = cols[1], shape = year.field)) +
-        ggplot2::labs(y = ifelse(m$respvar == "yld", "Yield (bu/ac)", "Grain Protein Content (%)"),
-             x=paste0(ifelse(m$expvar == "aa_n", "Nitrogen", "Seed"), " (lbs/ac)")) +
+        ggplot2::labs(y = ifelse(m$respvar == "yld", 
+                                 paste0("Yield ", yld_metric), 
+                                 "Grain Protein Content (%)"),
+             x=paste0(ifelse(m$expvar == "aa_n", "Nitrogen", "Seed"), " ", exp_metric)) +
         ggplot2::ggtitle(paste0(m$fieldname," ", m$mod_type ," Analysis"),
                 subtitle = paste0("RMSE = ", 
                                   suppressWarnings(round(Metrics::rmse(
@@ -378,6 +394,12 @@ ModClass <- R6::R6Class(
       return(p)
     },
     .plotObsVsPred = function(m, out_path, SAVE) {
+      if (self$SI) {
+        yld_metric <- "(kg/ha)"
+      } else {
+        yld_metric <- "(bu/ac)"
+      }
+      
       set.seed(13113)
       shps <- as.integer(runif(length(unique(m$dat$val$year.field)), 1, 10))
 
@@ -390,13 +412,13 @@ ModClass <- R6::R6Class(
       p <- ggplot2::ggplot(data = m$dat$val) +
         ggplot2::geom_point(ggplot2::aes(x = get(m$respvar), y = m$dat$val$pred, shape = year.field)) +
         ggplot2::geom_abline(intercept = 0, slope = 1, color = ifelse(m$respvar == "yld", "red", "cyan")) +
-        ggplot2::labs(x = paste0("Observed ", ifelse(m$respvar == "yld", "Yield", "Protein")),
-             y = paste0("Predicted ", ifelse(m$respvar == "yld", "Yield", "Protein"))) +
+        ggplot2::labs(x = paste0("Observed ", ifelse(m$respvar == "yld", paste0("Yield ", yld_metric), "Protein (%)")),
+             y = paste0("Predicted ", ifelse(m$respvar == "yld", paste0("Yield ", yld_metric), "Protein (%)"))) +
         ggplot2::scale_shape_manual(name = "", values = shps) +
         ggplot2::scale_y_continuous(limits = c(MIN, MAX), breaks = seq(MIN, MAX, (MAX - MIN) / 10)) +
         ggplot2::scale_x_continuous(limits = c(MIN, MAX), breaks = seq(MIN, MAX, (MAX - MIN) / 10)) +
         ggplot2::theme_bw() +
-        ggplot2::ggtitle(paste0("Predicted vs. Observed ", ifelse(m$respvar=="yld", "Yield", "Protein")),
+        ggplot2::ggtitle(paste0("Predicted vs. Observed ", ifelse(m$respvar == "yld", "Yield", "Protein")),
                 subtitle = paste0("Line = 1:1, RMSE = ",
                                   suppressWarnings(round(Metrics::rmse(
                                     na.omit(m$dat$val[, which(names(m$dat$val) %in% m$respvar), with = FALSE][[1]]),
@@ -411,6 +433,56 @@ ModClass <- R6::R6Class(
                       m$fieldname, "_", m$mod_type, "_predVSobs_", m$respvar, ".png"),
                plot = p, device = "png", scale = 1, width = 7.5, height = 5, units = "in"
         )
+      }
+      return(p)
+    },
+    .plotResidsVsExp = function(m, out_path, SAVE) {
+      if (self$SI) {
+        yld_metric <- "(kg/ha)"
+        exp_metric <- "(kg/ha)"
+      } else {
+        yld_metric <- "(bu/ac)"
+        exp_metric <- "(lbs/ac)"
+      }
+      
+      # calc residuals 
+      m$dat$val$resids <- m$dat$val[, which(names(m$dat$val) %in% m$respvar), with = FALSE][[1]] - m$dat$val$pred
+      
+      set.seed(13113)
+      shps <- as.integer(runif(length(unique(m$dat$val$year.field)), 1, 10))
+      yMIN <- DescTools::RoundTo(min(m$dat$val$resids, na.rm = T), 5, floor)
+      yMAX <- DescTools::RoundTo(max(m$dat$val$resids, na.rm = T), 5, ceiling)
+      ySTEP <- (yMAX -  yMIN) / 10
+      xMIN <- DescTools::RoundTo(min(m$dat$val[, which(names(m$dat$val) %in% m$expvar), with = FALSE][[1]], na.rm = T), 5, floor)
+      xMAX <- DescTools::RoundTo(max(m$dat$val[, which(names(m$dat$val) %in% m$expvar), with = FALSE][[1]], na.rm = T), 5, ceiling)
+      xSTEP <- (xMAX - xMIN) / 10
+      p <- ggplot2::ggplot() +
+        ggplot2::geom_point(data = m$dat$val,
+                            ggplot2::aes(x = get(m$expvar), y = resids, shape = year.field)) +
+        ggplot2::geom_abline(intercept = 0, slope = 0, color = ifelse(m$respvar == "yld", "red", "cyan")) +
+        ggplot2::labs(y = ifelse(m$respvar == "yld", 
+                                 paste0("Yield ", yld_metric, " Residuals"), 
+                                 "Grain Protein Content (%) Residuals"),
+                      x=paste0(ifelse(m$expvar == "aa_n", "Nitrogen", "Seed"), " ", exp_metric)) +
+        ggplot2::ggtitle(paste0(m$fieldname," ", m$mod_type ," Residuals"),
+                         subtitle = paste0("RMSE = ", 
+                                           suppressWarnings(round(Metrics::rmse(
+                                             na.omit(m$dat$val[, which(names(m$dat$val) %in% m$respvar), with = FALSE][[1]]),
+                                             na.omit(m$dat$val$pred)),
+                                             4
+                                           )))) +
+        ggplot2::scale_shape_manual(name = "", values = shps) +
+        ggplot2::scale_y_continuous(limits = c(yMIN, yMAX), breaks = seq(yMIN, yMAX, ySTEP)) +
+        ggplot2::scale_x_continuous(limits = c(xMIN, xMAX), breaks = seq(xMIN, xMAX, xSTEP)) +
+        ggplot2::theme_bw() +
+        ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
+                       axis.title = ggplot2::element_text(size = 14))
+      if (SAVE) {
+        try({dev.off()}, silent = TRUE)
+        ggplot2::ggsave(paste0(out_path, "/Outputs/Validation/",
+                               m$fieldname, "_", m$mod_type, "_resid_", m$respvar, "_vs_",
+                               ifelse(m$expvar == "aa_n", "N", "SR"), ".png"),
+                        plot = p, device = "png", scale = 1, width = 7.5, height = 5, units = "in")
       }
       return(p)
     }

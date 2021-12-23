@@ -107,7 +107,7 @@ EconDat <- R6::R6Class(
     #' or by passing in '2016' or '2021' to this parameter.
     #' @return A new 'EconDat' object.
     initialize = function(FC = NULL,
-                          ssAC = NULL,
+                          ssAC = 0,
                           Prc = NULL,
                           PD = NULL) {
       if (!is.null(ssAC)) {
