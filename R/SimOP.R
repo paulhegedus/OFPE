@@ -91,6 +91,9 @@ SimOP <- R6::R6Class(
     #' choice. If not NULL and is logical, argument replaces previously set SAVE
     #' options for the entire class.
     SAVE = NULL,
+    #' @field SI Logical, whether to plot in SI units. Defaults to FALSE where imperial
+    #' units (lbs, ac, bu) are used. If TRUE kg and ha are used.
+    SI = NULL,
 
     #' @field dat_path The path to where the data from the simulation was exported.
     #' Must contain 'Bp.var', 'NRffmax', and 'NRopt' tables exported from the
@@ -139,6 +142,9 @@ SimOP <- R6::R6Class(
     #' case of multiple fields (i.e. "sec1east & sec1west") choose one because
     #' their UTM code will be the same.
     utm_fieldname = NULL,
+    #' @field AAmin The minimum as-applied rate to simulate management
+    #' outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).
+    AAmin = NULL,
 
     #' @description
     #' Use this class to save figures and tables from simulations performed using
@@ -178,10 +184,13 @@ SimOP <- R6::R6Class(
     #' @param create create Logical, whether to create the 'Output' folder and save
     #' figures, maps, and tables. Default is TRUE, pass FALSE to skip output folder
     #' step and prevent any output generation.
+    #' @param SI Logical, whether to plot in SI units. Defaults to FALSE where imperial
+    #' units (lbs, ac, bu) are used. If TRUE kg and ha are used.
     #' @return A folder created in the path for model output figures.
     initialize = function(simClass = NULL,
                           input_list = NULL,
-                          create = TRUE) {
+                          create = TRUE,
+                          SI = FALSE) {
       stopifnot(
         is.logical(create)
       )
@@ -199,6 +208,7 @@ SimOP <- R6::R6Class(
           !is.null(input_list$opt),
           !is.null(input_list$fieldsize),
           !is.null(input_list$fs),
+          !is.null(input_list$EXPvec),
           !is.null(input_list$expvar),
           !is.null(input_list$farmername),
           !is.null(input_list$respvar),
@@ -233,6 +243,9 @@ SimOP <- R6::R6Class(
         self$fs <- ifelse(!is.null(self$simClass),
                           self$simClass$fs,
                           self$input_list$fs)
+        self$AAmin <- ifelse(!is.null(self$simClass),
+                          self$simClass$EXPvec[1],
+                          self$input_list$EXPvec[1])
         self$expvar <- ifelse(!is.null(self$simClass),
                               self$simClass$datClass$expvar,
                               self$input_list$expvar)
@@ -258,6 +271,8 @@ SimOP <- R6::R6Class(
       } else {
         self$SAVE <- FALSE
       }
+      stopifnot(is.logical(SI))
+      self$SI <- SI
     },
     #' @description
     #' Method for saving simulation output plots (see below). This method is used
@@ -296,6 +311,16 @@ SimOP <- R6::R6Class(
         stopifnot(is.logical(SAVE))
         self$SAVE <- SAVE
       }
+      if (self$SI) {
+        exp_lab <- "kg/ha"
+        nr_lab <- "$/ha"
+        yld_lab <- "kg/ha"
+      } else {
+        exp_lab <- "lbs/ac"
+        nr_lab <- "$/ac"
+        yld_lab <- "bu/ac"
+      }
+      
 
       if (self$SAVE) {
         for (i in 1:length(self$sim_years)) {
@@ -346,14 +371,14 @@ SimOP <- R6::R6Class(
             TF4 = TF4,
             sim_year = self$sim_years[i]
           )
-
+      
           #### Maps (avg all sim) ####
           ## SSOPT N map 
           temp_plot <- self$plotSimMaps(
             dat = NRopt,
             var = paste0("SSOPT_", ifelse(self$expvar == "aa_n", "N", "SR")),
             var_col_name = "EXP.rate.ssopt",
-            var_label = paste0(ifelse(self$expvar == "aa_n", "N", "Seed Rate"), " Rate (lbs/ac)"),
+            var_label = paste0(ifelse(self$expvar == "aa_n", "N", "Seed Rate"), " (", exp_lab, ")"),
             var_main_label = paste0("SS.opt ", ifelse(self$expvar == "aa_n", "N", "Seed"), " rates for ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
@@ -364,7 +389,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "SSOPTNR",
             var_col_name = "NR.ssopt",
-            var_label = "Net Return ($/ac)",
+            var_label = paste0("Net Return (", nr_lab, ")"),
             var_main_label = paste0("SS.Opt NR for ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
@@ -373,8 +398,8 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "FFOPTNR",
             var_col_name = "NR.ffopt",
-            var_label = "Net Return ($/ac)",
-            var_main_label = paste0("FF.Opt NR (", NRopt$EXP.rate.ffopt[1], " lbs/ac) for ", self$sim_years[i], " conditions"),
+            var_label = paste0("Net Return (", nr_lab, ")"),
+            var_main_label = paste0("FF.Opt NR (", NRopt$EXP.rate.ffopt[1], " ", exp_lab, ") for ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
           # FS NR map
@@ -382,7 +407,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "FSNR",
             var_col_name = "NR.fs",
-            var_label = "Net Return ($/ac)",
+            var_label = paste0("Net Return (", nr_lab, ")"),
             var_main_label = paste0("FS NR for ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
@@ -391,7 +416,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "ActNR",
             var_col_name = "NR.act",
-            var_label = "Net Return ($/ac)",
+            var_label = paste0("Net Return (", nr_lab, ")"),
             var_main_label = paste0("NR if exp in ", self$sim_years[i], " conditions (NR.act)"),
             sim_year = self$sim_years[i]
           )
@@ -400,7 +425,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "MinNR",
             var_col_name = "NR.min",
-            var_label = "Net Return ($/ac)",
+            var_label = paste0("Net Return (", nr_lab, ")"),
             var_main_label = paste0("NR with uniform minimum rate in ", self$sim_years[i], " conditions (NR.min)"),
             sim_year = self$sim_years[i]
           )
@@ -409,7 +434,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "OppNR",
             var_col_name = "NR.opp",
-            var_label = "Net Return ($/ac)",
+            var_label = paste0("Net Return (", nr_lab, ")"),
             var_main_label = paste0("NR with opposite system pricing in ", self$sim_years[i], " conditions (NR.opp)"),
             sim_year = self$sim_years[i]
           )
@@ -420,7 +445,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "estYldOpt",
             var_col_name = "yld.opt",
-            var_label = "Yield (bu/ac)",
+            var_label = paste0("Yield (", yld_lab, ")"),
             var_main_label = paste0("SS.Opt. predicted yield for ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
@@ -429,7 +454,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "estYldFS",
             var_col_name = "yld.fs",
-            var_label = "Yield (bu/ac)",
+            var_label = paste0("Yield (", yld_lab, ")"),
             var_main_label = paste0("FS predicted yield for ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
@@ -438,7 +463,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "estYldAct",
             var_col_name = "yld.act",
-            var_label = "Yield (bu/ac)",
+            var_label = paste0("Yield (", yld_lab, ")"),
             var_main_label = paste0("Yield if exp in ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
@@ -447,8 +472,8 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "estYldFFOPT",
             var_col_name = "yld.ffopt",
-            var_label = "Yield (bu/ac)",
-            var_main_label = paste0("FF.Opt predicted yield (", NRopt$EXP.rate.ffopt[1], " lbs/ac) for ", self$sim_years[i], " conditions"),
+            var_label = paste0("Yield (", yld_lab, ")"),
+            var_main_label = paste0("FF.Opt predicted yield (", NRopt$EXP.rate.ffopt[1], " ", exp_lab,") for ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
           # Min Est. Yld map
@@ -456,7 +481,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "estYldMin",
             var_col_name = "yld.min",
-            var_label = "Yield (bu/ac)",
+            var_label = paste0("Yield (", yld_lab, ")"),
             var_main_label =  paste0("Yield with uniform minimum rate in ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
@@ -486,7 +511,7 @@ SimOP <- R6::R6Class(
               var = "estProFFOPT",
               var_col_name = "pro.ffopt",
               var_label = "Protein (%)",
-              var_main_label = paste0("FF.Opt predicted protein (", NRopt$EXP.rate.ffopt[1], " lbs/ac) for ", self$sim_years[i], " conditions"),
+              var_main_label = paste0("FF.Opt predicted protein (", NRopt$EXP.rate.ffopt[1], " ", exp_lab, ") for ", self$sim_years[i], " conditions"),
               sim_year = self$sim_years[i]
             )
             # Act Est. Pro map
@@ -521,7 +546,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = paste0("SimYrEconCond_SSOPT_", ifelse(self$expvar == "aa_n", "N", "SR")),
             var_col_name = "EXP.rate.ssopt",
-            var_label = paste0(ifelse(self$expvar == "aa_n", "N", "Seed Rate"), " Rate (lbs/ac)"),
+            var_label = paste0(ifelse(self$expvar == "aa_n", "N", "Seed Rate"), " (", exp_lab, ")"),
             var_main_label = paste0("SS.opt ", ifelse(self$expvar == "aa_n", "N", "Seed"), " rates for ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
@@ -532,7 +557,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "SimYrEconCond_SSOPTNR",
             var_col_name = "NR.ssopt",
-            var_label = "Net Return ($/ac)",
+            var_label = paste0("Net Return (", nr_lab, ")"),
             var_main_label = paste0("SS.Opt NR for ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
@@ -541,8 +566,8 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "SimYrEconCond_FFOPTNR",
             var_col_name = "NR.ffopt",
-            var_label = "Net Return ($/ac)",
-            var_main_label = paste0("FF.Opt NR (", NRopt$EXP.rate.ffopt[1], " lbs/ac) for ", self$sim_years[i], " conditions"),
+            var_label = paste0("Net Return (", nr_lab, ")"),
+            var_main_label = paste0("FF.Opt NR (", NRopt$EXP.rate.ffopt[1], " ", exp_lab, ") for ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
           # FS NR map
@@ -550,7 +575,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "SimYrEconCond_FSNR",
             var_col_name = "NR.fs",
-            var_label = "Net Return ($/ac)",
+            var_label = paste0("Net Return (", nr_lab, ")"),
             var_main_label = paste0("FS NR for ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
@@ -559,7 +584,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "SimYrEconCond_ActNR",
             var_col_name = "NR.act",
-            var_label = "Net Return ($/ac)",
+            var_label = paste0("Net Return (", nr_lab, ")"),
             var_main_label = paste0("NR if exp in ", self$sim_years[i], " conditions (NR.act)"),
             sim_year = self$sim_years[i]
           )
@@ -568,7 +593,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "SimYrEconCond_MinNR",
             var_col_name = "NR.min",
-            var_label = "Net Return ($/ac)",
+            var_label = paste0("Net Return (", nr_lab, ")"),
             var_main_label = paste0("NR with uniform minimum rate in ", self$sim_years[i], " conditions (NR.min)"),
             sim_year = self$sim_years[i]
           )
@@ -577,7 +602,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "SimYrEconCond_OppNR",
             var_col_name = "NR.opp",
-            var_label = "Net Return ($/ac)",
+            var_label = paste0("Net Return (", nr_lab, ")"),
             var_main_label = paste0("NR with opposite system pricing in ", self$sim_years[i], " conditions (NR.opp)"),
             sim_year = self$sim_years[i]
           )
@@ -588,7 +613,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "SimYrEconCond_estYldOpt",
             var_col_name = "yld.opt",
-            var_label = "Yield (bu/ac)",
+            var_label = paste0("Yield (", yld_lab, ")"),
             var_main_label = paste0("SS.Opt. predicted yield for ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
@@ -597,7 +622,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "SimYrEconCond_estYldFS",
             var_col_name = "yld.fs",
-            var_label = "Yield (bu/ac)",
+            var_label = paste0("Yield (", yld_lab, ")"),
             var_main_label = paste0("FS predicted yield for ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
@@ -606,7 +631,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "SimYrEconCond_estYldAct",
             var_col_name = "yld.act",
-            var_label = "Yield (bu/ac)",
+            var_label = paste0("Yield (", yld_lab, ")"),
             var_main_label = paste0("Yield if exp in ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
@@ -615,8 +640,8 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "SimYrEconCond_estYldFFOPT",
             var_col_name = "yld.ffopt",
-            var_label = "Yield (bu/ac)",
-            var_main_label = paste0("FF.Opt predicted yield (", NRopt$EXP.rate.ffopt[1], " lbs/ac) for ", self$sim_years[i], " conditions"),
+            var_label = paste0("Yield (", yld_lab, ")"),
+            var_main_label = paste0("FF.Opt predicted yield (", NRopt$EXP.rate.ffopt[1], " ", exp_lab, ") for ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
           # Min Est. Yld map
@@ -624,7 +649,7 @@ SimOP <- R6::R6Class(
             dat = NRopt,
             var = "SimYrEconCond_estYldMin",
             var_col_name = "yld.min",
-            var_label = "Yield (bu/ac)",
+            var_label = paste0("Yield (", yld_lab, ")"),
             var_main_label =  paste0("Yield with uniform minimum rate in ", self$sim_years[i], " conditions"),
             sim_year = self$sim_years[i]
           )
@@ -654,7 +679,7 @@ SimOP <- R6::R6Class(
               var = "SimYrEconCond_estProFFOPT",
               var_col_name = "pro.ffopt",
               var_label = "Protein (%)",
-              var_main_label = paste0("FF.Opt predicted protein (", NRopt$EXP.rate.ffopt[1], " lbs/ac) for ", self$sim_years[i], " conditions"),
+              var_main_label = paste0("FF.Opt predicted protein (", NRopt$EXP.rate.ffopt[1], " ", exp_lab, ") for ", self$sim_years[i], " conditions"),
               sim_year = self$sim_years[i]
             )
             # Act Est. Pro map
@@ -708,6 +733,12 @@ SimOP <- R6::R6Class(
                          opt = self$opt,
                          SAVE = self$SAVE,
                          out_path = self$out_path) {
+      if (self$SI) {
+        nr_lab <- "$/ha"
+      } else {
+        nr_lab <- "$/ac"
+      }
+      
       Bp.plot <- as.data.frame(Bp.var)
       Bp.plot <- tidyr::pivot_longer(Bp.plot,
                                      -c("BaseP", "ffopt.EXPrate", "EXP.cost", "sim"),
@@ -736,7 +767,7 @@ SimOP <- R6::R6Class(
           ggplot2::geom_boxplot(ggplot2::aes(x = Method, y = NR),
                                 fill = "green3",
                                 notch = FALSE) +
-          ggplot2::scale_y_continuous(name =  "Average Net Return ($/acre)",
+          ggplot2::scale_y_continuous(name =  paste0("Average Net Return (", nr_lab, ")"),
                                       limits = c(yMIN, yMAX),
                                       breaks = seq(yMIN, yMAX, ySTEP)) +
           ggplot2::scale_x_discrete(name = "Management Strategy", labels = mgmt_labels) +
@@ -842,6 +873,12 @@ SimOP <- R6::R6Class(
                          opt = self$opt,
                          SAVE = self$SAVE,
                          out_path = self$out_path) {
+      if (self$SI) {
+        nr_lab <- "$/ha"
+      } else {
+        nr_lab <- "$/ac"
+      }
+      
       Bp.var <- as.data.frame(Bp.var)
       #Average net return over the field for the different N application methods without organic
       TF3 <- data.frame(NR.ssopt = mean(Bp.var[, 'NR.ssopt'], na.rm = TRUE),
@@ -877,7 +914,7 @@ SimOP <- R6::R6Class(
 
 
       if (any(any(na.omit(TF3$min) < 0) | any(na.omit(TF3$max) > 0))) { # if means above and below zero
-        MIN <- DescTools::RoundTo((min(TF3$MeanNR, na.rm = T) +
+        MIN <- DescTools::RoundTo((min(TF3$MeanNR, na.rm = T) -
                                      (1.96 * min(TF3$SDNR, na.rm = T) / 10)),
                                   5, floor)
         MAX <- DescTools::RoundTo((max(TF3$MeanNR, na.rm = T) +
@@ -911,7 +948,7 @@ SimOP <- R6::R6Class(
           ggplot2::geom_errorbar(ggplot2::aes(ymin = MeanNR - (1.96 * SDNR / 10),
                                      ymax = MeanNR + (1.96 * SDNR / 10)),
                                  width = .2) + #
-          ggplot2::scale_y_continuous(name = "Average net return ($/acre)",
+          ggplot2::scale_y_continuous(name = paste0("Average net return (", nr_lab, ")"),
                                limits = c(MIN, MAX),
                                breaks = seq(MIN, MAX, STEP)) +
           ggplot2::scale_x_discrete(name = "Management Strategy",
@@ -963,6 +1000,12 @@ SimOP <- R6::R6Class(
                               opt = self$opt,
                               SAVE = self$SAVE,
                               out_path = self$out_path) {
+      if (self$SI) {
+        exp_lab <- "kg"
+      } else {
+        exp_lab <- "lbs"
+      }
+      
       if (TF4[which(TF4$Method == "EXP.ffopt"), "EXP"] == 0) {
         txt <- "FF.Opt Rate = 0"
       } else {
@@ -984,7 +1027,7 @@ SimOP <- R6::R6Class(
         }
       }
       y_lab <- paste0(ifelse(expvar == "aa_n", "Nitrogen", "Seed"),
-                      " used on field (lbs/field)")
+                      " used on field (", exp_lab, "/field)")
       yMIN <- 0
       yMAX <- DescTools::RoundTo(max(TF4$EXP, na.rm = TRUE), 5, ceiling)
       ySTEP <- (yMAX - yMIN) / 10
@@ -1049,6 +1092,12 @@ SimOP <- R6::R6Class(
                              opt = self$opt,
                              SAVE = self$SAVE,
                              out_path = self$out_path) {
+      if (self$SI) {
+        exp_lab <- "kg/ha"
+      } else {
+        exp_lab <- "lbs/acre"
+      }
+      
       NRopt <- as.data.frame(NRopt)
       gg_title <- paste0("Site-specific profit maximizing ",
                          ifelse(expvar=="aa_n", "nitrogen", "seed"), " rates")
@@ -1056,9 +1105,9 @@ SimOP <- R6::R6Class(
                            ifelse(expvar == "aa_n", "N", "Seed"),
                            " Rate = ",
                            round(mean(NRopt$EXP.rate.ssopt, na.rm = TRUE), 2),
-                           " lbs/acre, SD = ",
+                           " ", exp_lab, ", SD = ",
                            round(sd(NRopt$EXP.rate.ssopt, na.rm = TRUE), 2),
-                           " lbs/acre")
+                           " ", exp_lab)
       if (TF4[which(TF4$Method == "EXP.ssopt"), "EXP"] == 0) {
         p <-
           ggplot2::ggplot(NRopt) +
@@ -1067,7 +1116,7 @@ SimOP <- R6::R6Class(
                            col = "white",
                            fill = "blue",
                            na.rm = TRUE) +
-            ggplot2::labs(x = "lbs/acre") +
+            ggplot2::labs(x = exp_lab) +
             ggplot2::theme_bw() +
             ggplot2::ggtitle(gg_title, subtitle = sub_title) +
             ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
@@ -1087,7 +1136,7 @@ SimOP <- R6::R6Class(
                                     col = "white",
                                     fill = "blue",
                                     na.rm = TRUE)  +
-            ggplot2::scale_x_continuous(name = "lbs/acre",
+            ggplot2::scale_x_continuous(name = exp_lab,
                                limits = c(xMIN, xMAX),
                                breaks = seq(xMIN, xMAX, xSTEP),
                                oob = scales::squish) +
@@ -1149,10 +1198,16 @@ SimOP <- R6::R6Class(
                              opt = self$opt,
                              SAVE = self$SAVE,
                              out_path = self$out_path) {
+      if (self$SI) {
+        exp_lab <- "kg/ha"
+      } else {
+        exp_lab <- "lbs/acre"
+      }
+      
       Bp.var <- as.data.frame(Bp.var)
       x_lab <- paste0("Profit Maximizing Top-Dress ",
                       ifelse(expvar == "aa_n", "N", "Seed"),
-                      " Rate (lbs/acre)")
+                      " Rate (", exp_lab, ")")
       gg_title <- paste0("Variation in best full-field uniform ",
                          ifelse(expvar == "aa_n", "N", "seed"),
                          " rate over years")
@@ -1160,9 +1215,9 @@ SimOP <- R6::R6Class(
                           ifelse(expvar == "aa_n", "N", "Seed"),
                           " Rate = ",
                           round(mean(Bp.var[, "ffopt.EXPrate"], na.rm = TRUE), 2),
-                          " lbs/ac, SD = ",
+                          " ", exp_lab, ", SD = ",
                           round(sd(Bp.var[, "ffopt.EXPrate"], na.rm = TRUE), 2),
-                          " lbs/ac")
+                          " ", exp_lab)
       if (TF4[which(TF4$Method == "EXP.ffopt"), "EXP"] == 0) {
         p <-
           ggplot2::ggplot(Bp.var) +
@@ -1367,7 +1422,7 @@ SimOP <- R6::R6Class(
                        fs = self$fs) {
       TF4 <- data.frame(EXP.ssopt = (sum(NRopt[,'EXP.rate.ssopt'], na.rm = T) *
                                        fieldsize) / nrow(NRopt),
-                        EXP.min = 0,
+                        EXP.min = self$AAmin * fieldsize,
                         EXP.fs = fs * fieldsize,
                         EXP.ffopt = mean(NRffmax$EXP.rate, na.rm = T) * fieldsize)
       TF4 <- tidyr::pivot_longer(TF4,
