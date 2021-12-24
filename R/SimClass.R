@@ -1444,9 +1444,10 @@ SimClass <- R6::R6Class(
       keep_cols <- grep("field|cell_id|^NR$|pred_", names(sim_dat))
       sim_dat <- sim_dat[, keep_cols, with = FALSE]
       # change NR to NR.act
-      for (i in 1:length(self$datClass$respvar)) {
-        names(sim_dat)[grep(paste0("pred_", self$datClass$respvar[i]), names(sim_dat))] <- 
-          paste0(self$datClass$respvar[i], ".act")
+      resps <- c("yld", "pro")
+      for (i in 1:length(resps)) {
+        names(sim_dat)[grep(paste0("pred_", resps[i]), names(sim_dat))] <- 
+          paste0(resps[i], ".act")
       }
       names(sim_dat)[grep("^NR$", names(sim_dat))] <- "NR.act"
       
