@@ -250,7 +250,7 @@ getColorRamp <- function(var) {
   if (any(grepl("pro", var, ignore.case = T))) {
     color <- RColorBrewer::brewer.pal(15, "RdYlGn")
   } else {
-    if (any(grepl("yld", var, ignore.case = T))) {
+    if (any(grepl("yld|pred|resid", var, ignore.case = T))) {
       color <- RColorBrewer::brewer.pal(15, "RdYlGn")
     } else {
       if (any(grepl("NR", var))) {
