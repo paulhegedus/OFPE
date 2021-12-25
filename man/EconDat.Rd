@@ -101,7 +101,7 @@ protein in the OFPE Monte Carlo simulation.}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{EconDat$new(FC = NULL, ssAC = NULL, Prc = NULL, PD = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{EconDat$new(FC = NULL, ssAC = 0, Prc = NULL, PD = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

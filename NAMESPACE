@@ -3,6 +3,7 @@
 export(AggDat)
 export(AggGEE)
 export(AggInputs)
+export(BayesLawrence)
 export(BayesLinear)
 export(BuildDB)
 export(DBCon)

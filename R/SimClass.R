@@ -1434,7 +1434,7 @@ SimClass <- R6::R6Class(
       names_order <- names(as.data.frame(NRopt))
       # make the cell_id column
       NRopt$cell_id <- paste0(NRopt$row, "_", NRopt$col)
-      # change field codes to field names (useful if multiple fields)
+      # change field names to field codes 
       sim_dat$field <-
         self$datClass$fieldname_codes[match(
           sim_dat$field, self$datClass$fieldname_codes$field

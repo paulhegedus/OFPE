@@ -83,6 +83,10 @@ Must be named by respvar, in the same order.}
 models. All model classes follow the same interface with standardized
 field and method names. This class is accessed in the analysis and
 simulation steps.}
+
+\item{\code{SI}}{Logical, whether to use SI units. If TRUE, yield and experimental data are
+converted to kg/ha. If FALSE, the default values from the database are used. These are
+bu/ac for yield and lbs/ac for experimental data (nitrogen or seed).}
 }
 \if{html}{\out{</div>}}
 }

@@ -134,6 +134,10 @@ simulation.}
 \item{\code{fieldname_codes}}{Data.frame with a column for the names of the fields selected
 by the user and a corresponding code. This is used in the simulation data when being
 passed to C++ functions as purely numeric matrices.}
+
+\item{\code{SI}}{Logical, whether to use SI units. If TRUE, yield and experimental data are
+converted to kg/ha. If FALSE, the default values from the database are used. These are
+bu/ac for yield and lbs/ac for experimental data (nitrogen or seed).}
 }
 \if{html}{\out{</div>}}
 }
@@ -165,6 +169,7 @@ passed to C++ functions as purely numeric matrices.}
   dat_used = NULL,
   center = NULL,
   split_pct = NULL,
+  SI = FALSE,
   clean_rate = NULL
 )}\if{html}{\out{</div>}}
 }
@@ -233,13 +238,19 @@ in the analysis step. The training dataset is used to fit the model to each
 of the crop responses. The difference will be split into a validation dataset
 that is used to evaluate the model performance on data it has not 'seen' before.}
 
+\item{\code{SI}}{Logical, whether to use SI units. If TRUE, yield and experimental data are
+converted to kg/ha. If FALSE, the default values from the database are used. These are
+bu/ac for yield and lbs/ac for experimental data (nitrogen or seed).}
+
 \item{\code{clean_rate}}{Select the maximum rate that could be realistically be applied
 by the application equipment (sprayer or seeder). This is used for a rudimentary
 cleaning of the data that removes observations with as-applied rates above this
 user supplied threshold. Rates above this threshold should be able to be classified
 as machine measurement errors. For example, based on knowledge of the prescription/
 experiment applied and taking into account double applications on turns, a rate
-for as-applied nitrogen might be something like 300 - 400 lbs N/acre.}
+for as-applied nitrogen might be something like 300 - 400 lbs N/acre. NOTE: make sure to
+specify in the correct units, for example if SI = FALSE specify in lbs/ac, otherwise
+in kg/ha.}
 }
 \if{html}{\out{</div>}}
 }

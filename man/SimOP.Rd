@@ -97,6 +97,9 @@ a 'SimClass' object or an optional 'input_list' field upon initialization.}
 choice. If not NULL and is logical, argument replaces previously set SAVE
 options for the entire class.}
 
+\item{\code{SI}}{Logical, whether to plot in SI units. Defaults to FALSE where imperial
+units (lbs, ac, bu) are used. If TRUE kg and ha are used.}
+
 \item{\code{dat_path}}{The path to where the data from the simulation was exported.
 Must contain 'Bp.var', 'NRffmax', and 'NRopt' tables exported from the
 'SimClass'. This class requires file names to be in the same format as
@@ -117,10 +120,14 @@ the simulation must be labeled with these years as exported from the
 \item{\code{opt}}{The optimization method used in the simulation. Used to identify
 and label data. Must be in the same format as from the 'SimClass', e.g. "deriv".}
 
-\item{\code{fieldsize}}{Size of the field in acres.}
+\item{\code{fieldsize}}{Size of the field. Note: this must be
+in the same units as those specified in DatClass. i.e. if DatClass$SI == TRUE
+than fieldsize should be in hectares, else in acres.}
 
 \item{\code{fs}}{The uniform rate of the experimental input that the farmer would
-have applied in the absence of variable rate application.}
+have applied in the absence of variable rate application. Note: this rate must be
+in the same units as those specified in DatClass. i.e. if DatClass$SI == TRUE
+than fs should be in kg/ha, else in lbs/ac.}
 
 \item{\code{expvar}}{The OFPE experimental input code for the experimental variable,
 i.e. "aa_n" for as-applied nitrogen fertilizer or "aa_sr" for as-applied
@@ -139,6 +146,9 @@ or 'c("yld", "pro")'.}
 OFPE database) that should be used for identifying the UTM zone. In the
 case of multiple fields (i.e. "sec1east & sec1west") choose one because
 their UTM code will be the same.}
+
+\item{\code{AAmin}}{The minimum as-applied rate to simulate management
+outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
 }
 \if{html}{\out{</div>}}
 }
@@ -193,7 +203,7 @@ and 'NRprobabilities'. The two former contain figures, and the latter contains
 a table with the probability that the SSOPT strategy yields a higher net-return
 than each of the other management strategies.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{SimOP$new(simClass = NULL, input_list = NULL, create = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{SimOP$new(simClass = NULL, input_list = NULL, create = TRUE, SI = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -211,6 +221,9 @@ needed if a 'SimClass' object is not passed into class.}
 \item{\code{create}}{create Logical, whether to create the 'Output' folder and save
 figures, maps, and tables. Default is TRUE, pass FALSE to skip output folder
 step and prevent any output generation.}
+
+\item{\code{SI}}{Logical, whether to plot in SI units. Defaults to FALSE where imperial
+units (lbs, ac, bu) are used. If TRUE kg and ha are used.}
 }
 \if{html}{\out{</div>}}
 }
