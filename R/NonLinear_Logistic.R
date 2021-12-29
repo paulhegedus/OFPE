@@ -1,4 +1,4 @@
-#' @title R6 Class for NonLinear_Logistic modeling of crop responses
+#' @title R6 Class for NonLinear_Logistic modeling of crop responses (deprecated)
 #'
 #' @description R6 class using non-linear logistic regression (NonLinear_Logistic) to
 #' model a crop response model with the experimental variable and remotely sensed covariate
@@ -73,6 +73,9 @@ NonLinear_Logistic <- R6::R6Class(
     #' @param covars Character vector of covariates to use for training the model.
     #' @return A instantiated 'NonLinear_Logistic' object.
     initialize = function(dat, respvar, expvar, covars) {
+      
+      .Deprecated(msg = "'NonLinear_Logistic' is not developed and is not guaranteed to work.")
+      
       stopifnot(any(grepl("trn", names(dat)), grepl("val", names(dat))),
                 is.character(respvar),
                 is.character(expvar),

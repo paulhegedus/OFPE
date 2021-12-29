@@ -1,5 +1,5 @@
 Package: OFPE
-Version: 1.8.5
+Version: 1.8.6
 Title: On-Farm Precision Experiments (OFPE) Data Management and Analysis Tools
 Description: The MT OFPE project lays out a concenptual framework for a data 
     intensive field management approach to dryland winter wheat production in
@@ -69,7 +69,8 @@ Imports:
     odbc,
     ranger,
     brms,
-    mgcv
+    mgcv,
+    minpack.lm
 LinkingTo: 
     Rcpp, 
     RcppArmadillo
