@@ -200,7 +200,7 @@ takeSubset <- function(x, respvar, sub_n = 1250) {
           x[[i]]$fid <- 1:nrow(x[[i]])
           resp_col <- grep(paste0("^", respvar, "$"), names(x[[i]]))
           resp_rows <- na.omit(x[[i]], resp_col)
-          sub_row_fids <- resp_rows[sample(nrow(resp_rows), n_sub[i])][["fid"]]
+          sub_row_fids <- resp_rows[sample(nrow(resp_rows), n_sub[i], replace = TRUE)][["fid"]]
           x[[i]] <- x[[i]][sub_row_fids, ]
           x[[i]]$fid <- NULL 
         }
@@ -221,7 +221,7 @@ takeSubset <- function(x, respvar, sub_n = 1250) {
           x[[i]]$fid <- 1:nrow(x[[i]])
           resp_col <- grep(paste0("^", respvar, "$"), names(x[[i]]))
           resp_rows <- na.omit(x[[i]], resp_col)
-          sub_row_fids <- resp_rows[sample(nrow(resp_rows), n_sub[i])][["fid"]]
+          sub_row_fids <- resp_rows[sample(nrow(resp_rows), n_sub[i], replace = TRUE)][["fid"]]
           x[[i]] <- x[[i]][sub_row_fids, ]
           x[[i]]$fid <- NULL 
         }
@@ -232,7 +232,7 @@ takeSubset <- function(x, respvar, sub_n = 1250) {
       x$fid <- 1:nrow(x)
       resp_col <- grep(paste0("^", respvar, "$"), names(x))
       resp_rows <- na.omit(x, resp_col)
-      sub_row_fids <- resp_rows[sample(nrow(resp_rows), sub_n)][["fid"]]
+      sub_row_fids <- resp_rows[sample(nrow(resp_rows), sub_n, replace = TRUE)][["fid"]]
       x <- x[sub_row_fids, ]
       x$fid <- NULL 
     }
