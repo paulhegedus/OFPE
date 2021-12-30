@@ -124,7 +124,8 @@ BayesLawrence <- R6::R6Class(
                           B2 ~ 1,
                           B3 ~ 1,
                           nl = TRUE,
-                          autocor = ~ brms::sar(nn)),
+                          autocor = ~ brms::sar(nn),
+                          decomp = "QR"),
         data = self$dat$trn, family = gaussian(),
         prior = c(
           brms::prior(normal(0, 1000), nlpar = "Bmax", lb = 0),
@@ -135,7 +136,8 @@ BayesLawrence <- R6::R6Class(
         ),
         control = list(adapt_delta = 0.99),
         iter = 6000,
-        warmup = 2000
+        warmup = 2000,
+        normalize = FALSE
       ))))
       
       self$dat$val$pred <- self$predResps(self$dat$val, self$m)
@@ -152,8 +154,8 @@ BayesLawrence <- R6::R6Class(
     #' variable for each observation in 'dat'.
     #' @return Vector of predicted values for each location in 'dat'.
     predResps = function(dat, m) {
-      pred_df <- predict(m, dat) %>% as.data.frame()
-      pred <- apply(pred_df, 1, function(x) rnorm(1, x[1], x[2]))
+      pred_df <- predict(m, dat, ndraws = 100) 
+      pred <- apply(pred_df, 1, function(x) rgamma(1, (x[1] / x[2])^2, (x[1] / x[2]^2)))
       gc()
       return(pred)
     },

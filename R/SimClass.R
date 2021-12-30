@@ -884,6 +884,7 @@ SimClass <- R6::R6Class(
     },
     .predResps = function(dat, m, respvar) {
       dat$pred <- m$predResps(dat, m$m)
+      gc()
       ## if response values are negative or above 1000, 
       ## impute by taking random number from distribution of 
       ## responses at closest exp rate
