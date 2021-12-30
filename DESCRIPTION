@@ -74,5 +74,5 @@ LinkingTo:
     Rcpp, 
     RcppArmadillo
 Remotes:
-    github::dkahle/ggmap
+    github::dkahle/ggmap,
     github::paul-buerkner/brms
