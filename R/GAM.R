@@ -132,7 +132,8 @@ GAM <- R6::R6Class(
       xyK <- ifelse(nrow(self$dat$trn) < 200, 4, 20)
       self$form <- private$.makeFormula(xyK = xyK)
       self$m <- mgcv::bam(as.formula(self$form),
-                          data = self$dat$trn)
+                          data = self$dat$trn,
+                          family = Gamma(link = "log"))
 
       self$dat$val$pred <- self$predResps(self$dat$val, self$m)
       self$dat$val <- OFPE::valPrep(self$dat$val,
@@ -149,7 +150,7 @@ GAM <- R6::R6Class(
     #' @return Vector of predicted values for each location in 'dat'.
     predResps = function(dat, m) {
       pred <- mgcv::predict.bam(m, dat) %>% as.numeric()
-      return(pred)
+      return(exp(pred))
     },
     #' @description
     #' Method for saving diagnostic plots of the fitted model. These include residual

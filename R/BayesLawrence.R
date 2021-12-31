@@ -137,7 +137,8 @@ BayesLawrence <- R6::R6Class(
         control = list(adapt_delta = 0.99),
         iter = 6000,
         warmup = 2000,
-        normalize = FALSE
+        normalize = FALSE,
+        cores = ifelse(parallel::detectCores() > 4, 4, parallel::detectCores())
       ))))
       
       self$dat$val$pred <- self$predResps(self$dat$val, self$m)
@@ -155,7 +156,7 @@ BayesLawrence <- R6::R6Class(
     #' @return Vector of predicted values for each location in 'dat'.
     predResps = function(dat, m) {
       pred_df <- predict(m, dat, ndraws = 100) 
-      pred <- apply(pred_df, 1, function(x) rgamma(1, (x[1] / x[2])^2, (x[1] / x[2]^2)))
+      pred <- apply(pred_df, 1, function(x) rnorm(1, x[1], x[2]))
       gc()
       return(pred)
     },

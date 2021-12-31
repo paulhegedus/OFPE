@@ -188,11 +188,12 @@ BayesLinear <- R6::R6Class(
                           nl = FALSE,
                           autocor = ~ brms::sar(nn),
                           decomp = "QR"),
-        data = self$dat$trn, family = gaussian(),
+        data = self$dat$trn, family = Gamma(link = "log"),
         control = list(adapt_delta = 0.99),
         iter = 6000,
         warmup = 2000,
-        normalize = FALSE
+        normalize = FALSE,
+        cores = ifelse(parallel::detectCores() > 4, 4, parallel::detectCores())
       ))))
       
       self$dat$val$pred <- self$predResps(self$dat$val, self$m)

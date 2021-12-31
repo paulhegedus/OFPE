@@ -95,7 +95,7 @@ NonLinear_Beta <- R6::R6Class(
       if (self$expvar %in% self$covars) {
         covars <- self$covars[-grep(self$expvar, self$covars)]
       }
-      covars <- c("x", "y", covars)
+      # covars <- c("x", "y", covars)
       self$parm_df <- data.frame(
         parms = c(self$expvar, covars),
         fxn_comp = NA,
@@ -113,7 +113,7 @@ NonLinear_Beta <- R6::R6Class(
       ## TEMP - NEEDS UPDATING BASED ON MODEL
       alpha_comps <- c("aspect", "slope", "elev", "tpi", "_py_", "_2py_", 
                        "bulkdensity", "claycontent", "sandcontent", 
-                       "phw", "watercontent", "carboncontent", "^x$", "^y$") %>% 
+                       "phw", "watercontent", "carboncontent") %>% 
         paste(collapse = "|")
       beta_comps <- c("_cy_") %>% 
         paste(collapse = "|")
@@ -229,14 +229,14 @@ NonLinear_Beta <- R6::R6Class(
     }
   ),
   private = list(
-    BetaFun = function(Alpha, Beta, delta1, delta2, EXP) {
+    BetaFun = function(Alpha, Beta, delta1, delta2, EXP, x , y) {
       ###### Beta function ######
       #### Alpha => baseline effect (value when nitrogen=0)
       #### Beta => max fertilizer effect (asymptote)
       #### delta1 => inflection point 1
       #### delta2 => experimental rate where rate Beta found
       #### EXP => experimental input applied
-      r <- Alpha + ((Beta - Alpha) * (1 + (delta2 - EXP) / (delta2 - delta1)) * (EXP / delta2)^(delta2 / (delta2 - delta1)))
+      r <- Alpha + ((Beta - Alpha) * (1 + (delta2 - EXP) / (delta2 - delta1)) * (EXP / delta2)^(delta2 / (delta2 - delta1))) + (cos(y) * cos(x)) + (cos(y) * sin(x))   
       return(r)
     },
     .fitFinalMod = function(Alpha, Beta) {
@@ -294,7 +294,7 @@ NonLinear_Beta <- R6::R6Class(
       # make function statement
       fxn <- paste0("private$BetaFun(", paste(alpha, collapse = " + "), ", ",
                     paste(beta, collapse = " + "), ", ", "Delta, ", "Delta2, ",
-                    self$expvar, ")")
+                    self$expvar, ", x, y)")
       fxn <- paste0(ifelse(self$respvar == "yld", "yld", "pro"), " ~ ", fxn)
       return(fxn)
     }
