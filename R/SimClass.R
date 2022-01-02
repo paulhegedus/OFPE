@@ -1697,6 +1697,10 @@ SimClass <- R6::R6Class(
     #   return(sim_dat)
     # },
     .checkSimDat = function(sim_dat, sim_year, mod_covars) {
+      if (any(unlist(self$modClass$fxn) == "BayesLawrence")) {
+        mod_covars <- c("prec_py_g", "claycontent")
+      }
+      
       ## check that all the covars in the data 
       parm_df <- data.frame(
         parms = mod_covars,
@@ -1705,6 +1709,9 @@ SimClass <- R6::R6Class(
         sd = NA
       )
       parm_df <- OFPE::findBadParms(parm_df, sim_dat)
+      if (any(unlist(self$modClass$fxn) == "BayesLawrence")) {
+        parm_df$bad_parms <- FALSE
+      }
       ##  if any covars used in model are bad, then skip that sim year
       if (any(parm_df$bad_parms)) {
         warning(paste0("Warning: Cannot simulate ", sim_year, ". Missing ",
