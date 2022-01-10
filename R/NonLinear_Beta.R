@@ -153,9 +153,9 @@ NonLinear_Beta <- R6::R6Class(
     fitMod = function() {
       # adjust coefficients to realistic values to setup the logistic curve using the
       # summary of the response variable
-      self$parm_df$est <- ifelse(self$parm_df$means > 1000, 0.0001,
-                                 ifelse(self$parm_df$means > 100, 0.001,
-                                        ifelse(self$parm_df$means > 10, 0.01, 0.1)))
+      self$parm_df$est <- ifelse(self$parm_df$means > 1000, 0.00001,
+                                 ifelse(self$parm_df$means > 100, 0.0001,
+                                        ifelse(self$parm_df$means > 10, 0.001, 0.01)))
       resp_col <- grep(paste0("^", self$respvar, "$"), names(self$dat$trn))
       exp_col <- grep(paste0("^", self$expvar, "$"), names(self$dat$trn))
       Alpha <- summary(self$dat$trn[, resp_col, with = FALSE][[1]])[2] %>% 
@@ -204,21 +204,21 @@ NonLinear_Beta <- R6::R6Class(
       if (SAVE) {
         try({dev.off()}, silent = TRUE)
         ## Save main diagnostics
-        std_res <- self$m$m$resid()/sigma(self$m)
+        std_res <- self$m$residuals/sigma(self$m)
         png(paste0(out_path, "/Outputs/Diagnostics/", self$respvar, "_",
                    self$fieldname, "_NonLinear_Beta_diagnostics.png"),
             width = 10, height = 10, units = 'in', res = 100)
         par(mfrow=c(2,2))
         qqnorm(std_res, ylab = "Standardized Residuals")
-        plot(self$m$m$fitted(),
-             self$m$m$resid(),
+        plot(self$m$fitted,
+             self$m$residuals,
              pch=1,
              xlab = "Fitted Values",
              ylab = "Residuals",
              main = "Residuals vs Fitted Values")
         hist(residuals(self$m),
              xlab = "Residuals")
-        plot(self$m$m$fitted(),
+        plot(self$m$fitted,
              std_res,
              pch = 1,
              xlab = "Fitted Values",
@@ -229,14 +229,14 @@ NonLinear_Beta <- R6::R6Class(
     }
   ),
   private = list(
-    BetaFun = function(Alpha, Beta, delta1, delta2, EXP, x , y) {
+    .BetaFun = function(Alpha, Beta, delta1, delta2, EXP) {
       ###### Beta function ######
       #### Alpha => baseline effect (value when nitrogen=0)
       #### Beta => max fertilizer effect (asymptote)
       #### delta1 => inflection point 1
       #### delta2 => experimental rate where rate Beta found
       #### EXP => experimental input applied
-      r <- Alpha + ((Beta - Alpha) * (1 + (delta2 - EXP) / (delta2 - delta1)) * (EXP / delta2)^(delta2 / (delta2 - delta1))) + (cos(y) * cos(x)) + (cos(y) * sin(x))   
+      r <- Alpha + ((Beta - Alpha) * (1 + (delta2 - EXP) / (delta2 - delta1)) * (EXP / delta2)^(delta2 / (delta2 - delta1)))   
       return(r)
     },
     .fitFinalMod = function(Alpha, Beta) {
@@ -257,10 +257,24 @@ NonLinear_Beta <- R6::R6Class(
             parm_list <- as.list(new_parm_df[, "est"] %>% as.numeric) %>% 
               `names<-`(new_parm_df[, "coef_id"])
             start_list <- c(start_list, parm_list)
-            self$m <- minpack.lm::nlsLM(as.formula(self$form),
-                                        data = self$dat$trn,
-                                        control = nls.control(maxiter = 500, minFactor = 1e-10),
-                                        start = start_list)
+            m <- minpack.lm::nlsLM(as.formula(self$form),
+                                 data = self$dat$trn,
+                                 control = stats::nls.control(maxiter = 500, minFactor = 1e-10),
+                                 start = start_list)
+            self$m <- nlme::gnls(as.formula(self$form),
+                            data = self$dat$trn,
+                            start = coef(m),
+                            control = nlme::gnlsControl(maxIter = 500, tolerance = 10000))
+            self$m$call[["model"]] <- as.call(list(model = as.formula(self$form)))[[1]]
+            Alpha <- coef(self$m)["a0"] %>% as.numeric()
+            Beta <- coef(self$m)["b0"] %>% as.numeric()
+            self$parm_df[self$parm_df$parms == "Delta", "est"] <- coef(self$m)["Delta"] %>%
+              as.numeric()
+            self$parm_df[self$parm_df$parms == "Delta2", "est"] <- coef(self$m)["Delta2"] %>%
+              as.numeric()
+            self$parm_df[self$parm_df$parms %in% new_parm_df$parms, "est"] <- coef(self$m)[5:(4+i)] %>% 
+              as.numeric()
+            
           }, 
           warning = function(w) {},
           error = function(e) {
@@ -268,6 +282,21 @@ NonLinear_Beta <- R6::R6Class(
           })
         }
       }
+      
+      ## fit with spatial correlation structure on subset of data
+      subdat_trn <- self$dat$trn[sample(nrow(self$dat$trn), floor(nrow(self$dat$trn) * 0.25)), ]
+      subdat_trn <- subdat_trn[!duplicated(subdat_trn[, c("x", "y")]), ]
+      tryCatch({self$m <- nlme::gnls(as.formula(self$form),
+                                     data = subdat_trn,
+                                     correlation = nlme::corGaus(form = ~ x+y),
+                                     control = nlme::gnlsControl(tolerance = 10000),
+                                     start = coef(self$m))
+      self$m$call[["model"]] <- as.call(list(model = as.formula(self$form)))[[1]]}, 
+               warning = function(w) {},
+               error = function(e) {
+                 print(paste0("Unable to fit spatial correlation structure for ", self$respvar, " model!"))
+               })
+      
     },
     .makeFormula = function(parm_df) {
       if (is.null(parm_df)) {
@@ -292,9 +321,14 @@ NonLinear_Beta <- R6::R6Class(
       }
       
       # make function statement
-      fxn <- paste0("private$BetaFun(", paste(alpha, collapse = " + "), ", ",
-                    paste(beta, collapse = " + "), ", ", "Delta, ", "Delta2, ",
-                    self$expvar, ", x, y)")
+      # fxn <- paste0("private$.BetaFun(", paste(alpha, collapse = " + "), ", ",
+      #               paste(beta, collapse = " + "), ", ", "Delta, ", "Delta2, ",
+      #               self$expvar, ")")
+      Alpha <- paste0("(", paste(alpha, collapse = " + "), ")")
+      Beta <- paste0("(", paste(beta, collapse = " + ") , ")")
+      
+      fxn <- paste0(Alpha, " + ((", Beta,  " - ", Alpha, ") * (1 + (Delta2 - ",  self$expvar, ") / (Delta2 - Delta)) * (", self$expvar, " / Delta2)^(Delta2 / (Delta2 - Delta)))") 
+      
       fxn <- paste0(ifelse(self$respvar == "yld", "yld", "pro"), " ~ ", fxn)
       return(fxn)
     }
