@@ -331,6 +331,8 @@ ModClass <- R6::R6Class(
       m$saveDiagnostics(self$out_path, SAVE)
     },
     .saveValidation = function(m, SAVE) {
+      # remove outliers
+      
       if (SAVE) {
         private$.plotObsPredRespVsExp(m, self$out_path, SAVE)
         private$.plotObsVsPred(m, self$out_path, SAVE)

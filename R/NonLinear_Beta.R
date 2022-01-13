@@ -191,6 +191,7 @@ NonLinear_Beta <- R6::R6Class(
     #' @return Vector of predicted values for each location in 'dat'.
     predResps = function(dat, m) {
       pred <- predict(m, dat) %>% as.numeric()
+      pred <- exp(pred)
       return(pred)
     },
     #' @description
@@ -329,7 +330,7 @@ NonLinear_Beta <- R6::R6Class(
       
       fxn <- paste0(Alpha, " + ((", Beta,  " - ", Alpha, ") * (1 + (Delta2 - ",  self$expvar, ") / (Delta2 - Delta)) * (", self$expvar, " / Delta2)^(Delta2 / (Delta2 - Delta)))") 
       
-      fxn <- paste0(ifelse(self$respvar == "yld", "yld", "pro"), " ~ ", fxn)
+      fxn <- paste0(ifelse(self$respvar == "yld", "log(yld)", "log(pro)"), " ~ ", fxn)
       return(fxn)
     }
   )
