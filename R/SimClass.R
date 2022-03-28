@@ -1874,7 +1874,7 @@ SimClass <- R6::R6Class(
                        axis.title = ggplot2::element_text(size = 14),
                        axis.title.y = ggplot2::element_text(color = NR_color, size=12),
                        axis.title.y.right = ggplot2::element_text(color = cost.NUE_color, size=12))
-      if (any(DNR$var < 0, na.rm = T)) {
+      if (any(DNR$NR < 0, na.rm = T) | any(DNR$cost.NUE < 0, na.rm = T)) {
         var_plot <- var_plot +
           ggplot2::geom_hline(yintercept = 0, color = "red", linetype = 2)
       }
