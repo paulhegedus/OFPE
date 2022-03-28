@@ -35,7 +35,7 @@ SimClass <- R6::R6Class(
     #' There are two current options, 'Maximum' or 'Derivative'. Both methods select
     #' the optimum as-applied rate at each location in the field based on calculating
     #' the net-return at each point under a sequence of as-applied rates. Selecting
-    #' 'Maximum' selects the optimim rate as the as-applied rate with the highest
+    #' 'Maximum' selects the optimum rate as the as-applied rate with the highest
     #' calculated net-return. The 'Derivative' approach calculates the first
     #' derivatives (slope) at each as-applied rate at each point and selects the
     #' optimum as the as-applied rate where an increase of one unit of the as-applied
@@ -46,6 +46,15 @@ SimClass <- R6::R6Class(
     #' optimum at that point because \$100 < \$101, whereas the 'Derivative' approach
     #' would select 20 lbs N/acre the optimum because the $1 increase between 20 and
     #' 21 lbs N/acre is less than the \$1.50 cost for the 1 unit increase in N.
+    #' 
+    #' Additionally, the user can select 'Ecological' where rates are optimized based 
+    #' on maximization of profit while considering the cost of nitrogen use inefficiency.
+    #' Only recommended for N fertilizer trials. At every point and for every N rate the 
+    #' NUE is estimated via modeling performed in Hegedus & Ewing, 2022. Based on 
+    #' estimated NUE, the cost of inefficiency is calculated and subtracted from net-
+    #' return. After net-return is amended, the derivative approach is used to find 
+    #' the rate where net-return is maximized and adding more N does not increase 
+    #' net-return more than the cost of adding that N. 
     opt = NULL,
     #' @field sim_years Select the year(s) for which to simulate net-return outcomes for.
     #' Multiple years can be selected and will be simulated in sequence or one year can
@@ -129,6 +138,10 @@ SimClass <- R6::R6Class(
     CEXP = NULL,
     #' @field FC The fixed costs of operations besides fertilizer and seed..
     FC = NULL,
+    #' @field nue_class The R6 class for fitting and using the NUE model developed 
+    #' by Hegedus & Ewing, 2022. Only initialized if the optimization method selected 
+    #' is 'Ecological'.
+    nue_class = NULL,
 
     #' @param dbCon Database connection object connected to an OFPE formatted
     #' database, see DBCon class.
@@ -138,7 +151,7 @@ SimClass <- R6::R6Class(
     #' There are two current options, 'Maximum' or 'Derivative'. Both methods select
     #' the optimum as-applied rate at each location in the field based on calculating
     #' the net-return at each point under a sequence of as-applied rates. Selecting
-    #' 'Maximum' selects the optimim rate as the as-applied rate with the highest
+    #' 'Maximum' selects the optimum rate as the as-applied rate with the highest
     #' calculated net-return. The 'Derivative' approach calculates the first
     #' derivatives (slope) at each as-applied rate at each point and selects the
     #' optimum as the as-applied rate where an increase of one unit of the as-applied
@@ -149,6 +162,15 @@ SimClass <- R6::R6Class(
     #' optimum at that point because \$100 < \$101, whereas the 'Derivative' approach
     #' would select 20 lbs N/acre the optimum because the $1 increase between 20 and
     #' 21 lbs N/acre is less than the \$1.50 cost for the 1 unit increase in N.
+    #' 
+    #' Additionally, the user can select 'Ecological' where rates are optimized based 
+    #' on maximization of profit while considering the cost of nitrogen use inefficiency.
+    #' Only recommended for N fertilizer trials. At every point and for every N rate the 
+    #' NUE is estimated via modeling performed in Hegedus & Ewing, 2022. Based on 
+    #' estimated NUE, the cost of inefficiency is calculated and subtracted from net-
+    #' return. After net-return is amended, the derivative approach is used to find 
+    #' the rate where net-return is maximized and adding more N does not increase 
+    #' net-return more than the cost of adding that N. 
     #' @param sim_years Select the year(s) for which to simulate net-return outcomes for.
     #' Multiple years can be selected and will be simulated in sequence or one year can
     #' be selected. The user can only select from years that they have aggregated with
@@ -197,9 +219,10 @@ SimClass <- R6::R6Class(
       }
       if (!is.null(opt)) {
         stopifnot(is.character(opt),
-                  any(grepl("Maximum|Derivative", opt)))
+                  any(grepl("Maximum|Derivative|Ecological", opt)))
         self$opt <- ifelse(opt == "Maximum", "max",
-                           ifelse(opt == "Derivative", "deriv", NA))
+                           ifelse(opt == "Derivative", "deriv",
+                                  ifelse(opt == "Ecological", "ecol", NA)))
 
       }
       if (!is.null(sim_years)) {
@@ -378,6 +401,19 @@ SimClass <- R6::R6Class(
       } else {
         self$dat_path <- paste0(getwd(), "/")
       }
+      
+      if (self$opt == "ecol") {
+        utm_epsg <- OFPE::findUTMzone(self$dbCon$db, fieldname = self$datClass$fieldname[1])
+        self$nue_class <- NUE$new(mod_type = "RF", utm_epsg = utm_epsg) # SVR
+        # add WHC class to sim data
+        whc_dat <- sf::st_read(self$dbCon$db,
+                            query = paste0("SELECT * FROM all_farms.whc 
+                                   WHERE field = '", self$datClass$fieldname, "' 
+                                           AND method = 'nb';"))
+        self$datClass$sim_dat <- lapply(self$datClass$sim_dat,
+                                        private$.extractWHC,
+                                        whc_dat)
+      }
     },
     #' @description
     #' Method for executing the Monte Carlo simulation to compare management
@@ -552,6 +588,50 @@ SimClass <- R6::R6Class(
       resp_plots$nr <- nr_plot
       #big_plot <- cowplot::plot_grid(plotlist = resp_plots, nrow = 3, ncol = 1)
       #return(big_plot)
+      
+      if (self$opt == "ecol") {
+        nue_plot <- private$.estsVsExpPlot("NUE",
+                                          expvar,
+                                          fieldname,
+                                          sim_year,
+                                          Bp,
+                                          CEXP,
+                                          self$AAmin,
+                                          self$AArateCutoff,
+                                          fxn)
+        if (SAVE) {
+          try({dev.off()}, silent = TRUE)
+          invisible(suppressWarnings(suppressMessages(
+            ggplot2::ggsave(paste0(out_path, "/Outputs/Predictions/", sim_year, "/",
+                                   fieldname, "_NUEvs",
+                                   ifelse(expvar == "aa_n","N","SR"),
+                                   "_", fxn, "_", sim_year, ".png"),
+                            plot = nue_plot, device = "png", scale = 1,
+                            width = 7.5, height = 5, units = "in"))))
+        }
+        resp_plots$nue <- nue_plot
+        
+        nue_n_nr_plot <- private$.NUEnNRVsExpPlot(expvar,
+                                                  fieldname,
+                                                  sim_year,
+                                                  Bp,
+                                                  CEXP,
+                                                  self$AAmin,
+                                                  self$AArateCutoff,
+                                                  fxn)
+        if (SAVE) {
+          try({dev.off()}, silent = TRUE)
+          invisible(suppressWarnings(suppressMessages(
+            ggplot2::ggsave(paste0(out_path, "/Outputs/Predictions/", sim_year, "/",
+                                   fieldname, "_NR&costNUEvs",
+                                   ifelse(expvar == "aa_n","N","SR"),
+                                   "_", fxn, "_", sim_year, ".png"),
+                            plot = nue_n_nr_plot, device = "png", scale = 1,
+                            width = 7.5, height = 5, units = "in"))))
+        }
+        resp_plots$nue_n_nr <- nue_n_nr_plot
+      }
+      
     },
     #' @description
     #' Function for creating a map of the actual net-return observed in the
@@ -752,11 +832,12 @@ SimClass <- R6::R6Class(
     },
     .selectOpt = function() {
       opt <- as.character(select.list(
-        c("Maximum", "Derivative"),
+        c("Maximum", "Derivative", "Ecological"),
         title = "Select the optimization method to use."
       ))
       self$opt <- ifelse(opt == "Maximum", "max",
-                         ifelse(opt == "Derivative", "deriv", NA))
+                         ifelse(opt == "Derivative", "deriv", 
+                                ifelse(opt == "Ecological", "ecol", NA)))
     },
     .selectSimYear = function(farmername, fieldname) {
       sim_years <- as.character(select.list(
@@ -859,7 +940,7 @@ SimClass <- R6::R6Class(
       # columns needed for the simulation
       keep_columns <- c("x", "y", "row", "col", "field", "year", "NR", "NRmin",
                         "NRopp", "NRfs", self$datClass$expvar,
-                        "pred_yld", "pred_pro")
+                        "pred_yld", "pred_pro", "NUE")
       # get rid of columns not in the keep vector
       bad_columns <- names(dat)[!names(dat) %in% keep_columns]
       for (i in 1:length(bad_columns)) {
@@ -922,6 +1003,15 @@ SimClass <- R6::R6Class(
       
       names(dat)[grep("^pred$", names(dat))] <- paste0("pred_", respvar)
       gc()
+      
+      if (self$opt == "ecol") {
+        names(dat)[grep(paste0("^", self$datClass$expvar, "$"), names(dat))] <- 
+          "EXP"
+        dat$NUE <- self$nue_class$nuePred(dat) 
+        names(dat)[grep("EXP", names(dat))] <- self$datClass$expvar 
+      } else {
+        dat$NUE <- NA
+      }
       return(dat)
     },
     .yearSim = function(sim_dat, sim_year, EXPvec) {
@@ -938,6 +1028,7 @@ SimClass <- R6::R6Class(
       # for all years, location, & each rate predict repsonses
       private$.simResponses(self$datClass$respvar)
       gc()
+      
       # get rid of unneccessary columns for the simulation
       self$sim_list <- lapply(self$sim_list,
                               private$.trimSimCols)
@@ -946,6 +1037,7 @@ SimClass <- R6::R6Class(
       
       private$.runSim(sim_year)
       gc()
+      
       # tryCatch({
       #   
       #   },
@@ -972,6 +1064,10 @@ SimClass <- R6::R6Class(
                          sim_year, " RESPS VS EXP ",
                          " FOR ", self$unique_fieldname, "!!!"))
           })
+        if (self$opt == "ecol") {
+          ## TODO: plot NUE vs EXP
+          ## TODO: plot OG NR & cost NUE vs EXP
+        }
       }
       return(invisible())
     },
@@ -1039,7 +1135,7 @@ SimClass <- R6::R6Class(
         )
       }
       x <- c("BaseP", "EXP.cost", "NR.ssopt", "NR.min", "NR.fs", "ffopt.EXPrate",
-             "NR.ffopt", "NR.act", "NR.opp", "sim")
+             "NR.ffopt", "NR.act", "NR.opp", "median.ssopt.EXPrate", "sim")
       df <- as.data.frame(matrix(vector(), 0, length(x)))
       names(df) <- x
       write.csv(df,
@@ -1095,7 +1191,7 @@ SimClass <- R6::R6Class(
       x <- c("BaseP", "EXP.cost", "x", "y", "row", "col", "field", "EXP.rate.ssopt",
              "NR.ssopt", "NR.min", "NR.opp", "NR.fs", "yld.opt", "yld.min", "yld.fs",
              "pro.opt", "pro.min", "pro.fs", "NR.ffopt", "yld.ffopt", "pro.ffopt",
-             "EXP.rate.ffopt", "NR.act", "yld.act", "pro.act", "sim")
+             "EXP.rate.ffopt", "NUE", "cost.NUE", "NR.act", "yld.act", "pro.act", "sim")
       df <- as.data.frame(matrix(vector(), 0, length(x)))
       names(df) <- x
       write.csv(df,
@@ -1109,10 +1205,10 @@ SimClass <- R6::R6Class(
     .simFunIter = function(bp, rr, sim_list_names, sim_year,
                            Bp.var_con, NRffmax_con, NRopt_con) {
       tryCatch({
-        Bp.var <- matrix(0, nrow = 1, ncol = 10)
-        colnames(Bp.var) <- c("BaseP", "EXP.cost", "NR.ssopt", "NR.min", "NR.fs",
-                              "ffopt.EXPrate", "NR.ffopt", "NR.act", "NR.opp", "sim")
-
+        Bp.var <- matrix(0, nrow = 1, ncol = 11)
+        colnames(Bp.var) <- c("BaseP", "EXP.cost", "NR.ssopt", "NR.min", "NR.fs", 
+                              "ffopt.EXPrate", "NR.ffopt", "NR.act", "NR.opp", "median.ssopt.EXPrate", "sim")
+        
         rp <- as.integer(runif(1, 1, length(self$econDat$Prc$Year)))
         Bp_col <- grep(self$datClass$sys_type, names(self$econDat$Prc))
         Bp <- as.numeric(self$econDat$Prc[rp, Bp_col])
@@ -1147,24 +1243,8 @@ SimClass <- R6::R6Class(
         self$sim_list <- lapply(self$sim_list, function(x) data.table::as.data.table(x) %>%
                                   `names<-`(sim_list_names)) %>%
           lapply(private$.cleanNRdat)
-        NRff <- data.frame(EXP.rate = self$EXPvec, NR.ff = NA)
-        NRff$NR.ff <- lapply(self$sim_list, function(x) sum(x$NR, na.rm = TRUE))
-        NRff <- apply(NRff, 2, as.numeric) %>% as.data.frame()
-        if (self$opt == "max") {
-          NRffmax <- subset(NRff,
-                            NRff[, "NR.ff"] == max(na.omit(NRff[, "NR.ff"])))
-        } else {
-          if (self$opt == "deriv") {
-            NRff <- NRff %>% `names<-`(NULL) %>% as.matrix()
-            NRffmax <- OFPE::derivFFoptCpp(NRff,
-                                          nrow(NRff),
-                                          self$fieldsize,
-                                          CEXP) %>%
-              as.data.frame() %>%
-              `names<-`(c("EXP.rate", "NR.ff"))
-          } # else some other opt method (i.e. not max or deriv)
-        }
-        ffopt_rate <- NRffmax[1, "EXP.rate"]
+        
+        
         invisible(ifelse(self$datClass$sys_type == "conv",
                          NR.opp <- self$sim_list[[1]]$NRopp,
                          NR.opp <- self$sim_list[[grep(paste0("^", self$fs, "$"), names(self$sim_list))]]$NRopp))
@@ -1186,27 +1266,75 @@ SimClass <- R6::R6Class(
                             pro.opt = NA,
                             pro.min = self$sim_list[[1]]$pred_pro,
                             pro.fs = self$sim_list[[grep(paste0("^", self$fs, "$"), names(self$sim_list))]]$pred_pro,
-                            NR.ffopt = self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$NR,
-                            yld.ffopt = self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$pred_yld,
-                            pro.ffopt = self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$pred_pro,
-                            EXP.rate.ffopt = ffopt_rate)
-        NRopt[,c("EXP.rate.ssopt", "NR.ssopt", "yld.opt", "pro.opt")] <-
+                            NR.ffopt = NA,
+                            yld.ffopt = NA,
+                            pro.ffopt = NA,
+                            EXP.rate.ffopt = NA,
+                            NUE = NA,
+                            cost.NUE = NA)
+        
+        if (self$opt == "ecol") {
+          # calculate cost of NUE
+          self$sim_list <- mapply(private$.calcNUEcost, 
+                                  self$sim_list, 
+                                  names(self$sim_list),
+                                  MoreArgs = list(CEXP = CEXP),
+                                  SIMPLIFY = FALSE) %>% 
+            lapply(function(x) {x$NR <- x$NR - x$cost.NUE; return(x)})
+        }
+        
+        NRff <- data.frame(EXP.rate = self$EXPvec, NR.ff = NA)
+        div_by <- self$fieldsize / rr
+        NRff$NR.ff <- lapply(self$sim_list, function(x) sum(x$NR * div_by, na.rm = TRUE))
+        NRff <- apply(NRff, 2, as.numeric) %>% as.data.frame()
+        if (self$opt == "max") {
+          NRffmax <- subset(NRff,
+                            NRff[, "NR.ff"] == max(na.omit(NRff[, "NR.ff"])))
+        } 
+        if (self$opt == "deriv" | self$opt == "ecol") {
+          NRff <- NRff %>% `names<-`(NULL) %>% as.matrix()
+          NRffmax <- OFPE::derivFFoptCpp(NRff,
+                                         nrow(NRff),
+                                         self$fieldsize,
+                                         CEXP) %>%
+            as.data.frame() %>%
+            `names<-`(c("EXP.rate", "NR.ff"))
+        } 
+        ffopt_rate <- NRffmax[1, "EXP.rate"]
+        
+        NRopt$NR.ffopt <- self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$NR
+        NRopt$yld.ffopt <- self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$pred_yld
+        NRopt$pro.ffopt <- self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$pred_pro
+        NRopt$EXP.rate.ffopt <- ffopt_rate
+        
+        NRopt[,c("EXP.rate.ssopt", "NR.ssopt", "yld.opt", "pro.opt", "NUE", "cost.NUE")] <-
           private$.getNRopt(CEXP)
+        
+        if (self$opt == "ecol") {
+          NRopt$NR.ffopt <- NRopt$NR.ffopt + self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$cost.NUE
+          NRopt$NR.ssopt <- NRopt$NR.ssopt + NRopt$cost.NUE
+          NRffmax[1, "NR.ff"] <- sum((self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$NR + 
+            self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$cost.NUE) * div_by,
+            na.rm = TRUE)
+        } 
+        
         gc()
         NRopt <- apply(NRopt, 2, as.numeric)
         ## Fill in Bp.var
         Bp.var[1, "BaseP"] <- Bp
         Bp.var[1, "EXP.cost"] <- CEXP
-        Bp.var[1, "NR.ssopt"] <- mean(NRopt[, "NR.ssopt"], na.rm = T)
-        Bp.var[1, "NR.min"] <- mean(NRopt[, "NR.min"], na.rm = T)
-        Bp.var[1, "NR.fs"] <- mean(NRopt[, "NR.fs"], na.rm = T)
+        Bp.var[1, "NR.ssopt"] <- median(NRopt[, "NR.ssopt"], na.rm = T)
+        Bp.var[1, "NR.min"] <- median(NRopt[, "NR.min"], na.rm = T)
+        Bp.var[1, "NR.fs"] <- median(NRopt[, "NR.fs"], na.rm = T)
         Bp.var[1, "ffopt.EXPrate"] <- NRffmax[, "EXP.rate"]
-        Bp.var[1, "NR.ffopt"] <- NRffmax[, "NR.ff"] / rr
-        Bp.var[1, "NR.opp"] <- mean(NRopt[, "NR.opp"], na.rm = T)
+        Bp.var[1, "NR.ffopt"] <- median(NRopt[, "NR.ffopt"], na.rm = T) # NRffmax[, "NR.ff"] / self$fieldsize # / rr
+        Bp.var[1, "NR.opp"] <- median(NRopt[, "NR.opp"], na.rm = T)
+        Bp.var[1, "median.ssopt.EXPrate"] <- median(NRopt[, "EXP.rate.ssopt"], na.rm = T)
 
         NRopt <- private$.calcNRact(NRopt, self$sim_list[[1]]$year[1], Bp, CEXP, FC)
         gc()
-        Bp.var[1, "NR.act"] <- mean(NRopt[, "NR.act"], na.rm = T)
+        
+        Bp.var[1, "NR.act"] <- median(NRopt[, "NR.act"], na.rm = T)
         Bp.var[1, "sim"] <- bp
         # fill out rest
         NRopt <- data.table::as.data.table(NRopt)
@@ -1236,6 +1364,7 @@ SimClass <- R6::R6Class(
                 sep = ",")
         }
         gc()
+        self$sim_list <- lapply(self$sim_list, function(x) {x$cost.NUE <- NULL; return(x)})
       },
       warning = function(w) {return(print(paste0("warning at ", sim_year, " bp = ", bp)))},
       error = function(e) {return(print(paste0("error at ", sim_year, " bp = ", bp)))})
@@ -1255,30 +1384,42 @@ SimClass <- R6::R6Class(
         NRoptDat$EXP.rate.ssopt <-
           colnames(NRdf)[max.col(NRdf, ties.method = "first")]
         NRoptDat <- sapply(NRoptDat, as.numeric) %>% as.data.frame()
-      } else {
-        if (self$opt == "deriv") {
-          Nrates <- data.frame(Nrates = self$EXPvec)
-          rr <- nrow(NRdf)
-          cc <- ncol(NRdf)
-          NRdf <- as.matrix(NRdf)
-          NRoptDat <- as.matrix(NRoptDat)
-          Nrates <- as.matrix(Nrates)
-          colnames(NRdf) <- NULL
-          colnames(NRoptDat) <- NULL
-          colnames(Nrates) <- NULL
-          NRoptDat <- OFPE::derivNRoptCpp(NRdf, NRoptDat, Nrates, rr, cc, CEXP) %>%
-            as.data.frame() %>%
-            `names<-`(c("EXP.rate.ssopt", "NR.ssopt"))
-        }
+      } 
+      if (self$opt == "deriv" | self$opt == "ecol") {
+        Nrates <- data.frame(Nrates = self$EXPvec)
+        rr <- nrow(NRdf)
+        cc <- ncol(NRdf)
+        NRdf <- as.matrix(NRdf)
+        NRoptDat <- as.matrix(NRoptDat)
+        Nrates <- as.matrix(Nrates)
+        colnames(NRdf) <- NULL
+        colnames(NRoptDat) <- NULL
+        colnames(Nrates) <- NULL
+        NRoptDat <- OFPE::derivNRoptCpp(NRdf, NRoptDat, Nrates, rr, cc, CEXP) %>%
+          as.data.frame() %>%
+          `names<-`(c("EXP.rate.ssopt", "NR.ssopt"))
       }
+      
       NRoptDat$yld.opt <- NA
       NRoptDat$pro.opt <- NA
+      NRoptDat$NUE <- NA
+      NRoptDat$cost.NUE <- NA
       for (i in 1:nrow(NRoptDat)) {
         NRoptDat$yld.opt[i] <-
           self$sim_list[[grep(paste0("^", NRoptDat$EXP.rate.ssopt[i], "$"), names(self$sim_list))]]$pred_yld[i]
         NRoptDat$pro.opt[i] <- 
           self$sim_list[[grep(paste0("^", NRoptDat$EXP.rate.ssopt[i], "$"), names(self$sim_list))]]$pred_pro[i]
       }
+      
+      if (self$opt == "ecol") {
+        for (i in 1:nrow(NRoptDat)) {
+          NRoptDat$NUE[i] <-
+            self$sim_list[[grep(paste0("^", NRoptDat$EXP.rate.ssopt[i], "$"), names(self$sim_list))]]$NUE[i]
+          NRoptDat$cost.NUE[i] <- 
+            self$sim_list[[grep(paste0("^", NRoptDat$EXP.rate.ssopt[i], "$"), names(self$sim_list))]]$cost.NUE[i]
+        }
+      }
+      
       return(NRoptDat)
     },
     .getNR = function(dat) {
@@ -1323,6 +1464,17 @@ SimClass <- R6::R6Class(
                                        mod_covars)]
       }
       sim_dat <- private$.checkSimDat(sim_dat[[1]], year, mod_covars)
+      
+      # if (self$opt == "ecol") {
+      #   utm_epsg <- OFPE::findUTMzone(self$dbCon$db, fieldname = self$datClass$fieldname[1])
+      #   # add WHC class to sim data
+      #   whc_dat <- sf::st_read(self$dbCon$db,
+      #                          query = paste0("SELECT * FROM all_farms.whc 
+      #                              WHERE field = '", self$datClass$fieldname, "' 
+      #                                      AND method = 'nb';"))
+      #   sim_dat <- private$.extractWHC(sim_dat, whc_dat)
+      # }
+      
       # make the cell_id column
       sim_dat$cell_id <- paste0(sim_dat$row, "_", sim_dat$col)
       # change field codes to field names (useful if multiple fields)
@@ -1412,6 +1564,16 @@ SimClass <- R6::R6Class(
         names(sim_dat)[grep("^pred$", names(sim_dat))] <- 
           paste0("pred_", self$datClass$respvar[i])
       }
+      
+      # if (self$opt == "ecol") {
+      #   names(sim_dat)[grep(paste0("^", self$datClass$expvar, "$"), names(sim_dat))] <- 
+      #     "EXP"
+      #   sim_dat$NUE <- self$nue_class$nuePred(sim_dat) 
+      #   names(sim_dat)[grep("EXP", names(sim_dat))] <- self$datClass$expvar 
+      # } else {
+      #   sim_dat$NUE <- NA
+      # }
+      
       # trim cols 
       sim_dat <- private$.trimSimCols(sim_dat)
       
@@ -1429,6 +1591,14 @@ SimClass <- R6::R6Class(
         FC,
         self$econDat$ssAC
       )
+      
+      # if (self$opt == "ecol") {
+      #   # calculate cost of NUE
+      #   names(sim_dat)[grep(paste0("^", self$datClass$expvar, "$"), names(sim_dat))] <- 
+      #     "EXP"
+      #   sim_dat$cost.NUE <- (sim_dat$EXP * sim_dat$NUE) * CEXP
+      #   sim_dat$NR <- sim_dat$NR - sim_dat$cost.NUE
+      # }
       
       ## report yld pro & NR
       NRopt <- as.data.frame(NRopt)
@@ -1536,9 +1706,19 @@ SimClass <- R6::R6Class(
                grep("NRopp", sim_list_names) - 1,
                grep("NRfs", sim_list_names) - 1,
                self$AAmin)
-      self$sim_list <- lapply(self$sim_list, function(x) data.table::as.data.table(x) %>% `names<-`(sim_list_names))
+      self$sim_list <- lapply(self$sim_list, function(x) data.table::as.data.table(x) %>%
+                                `names<-`(sim_list_names)) %>%
+        lapply(private$.cleanNRdat)
+      if (self$opt == "ecol") {
+        # calculate cost of NUE
+        self$sim_list <- mapply(private$.calcNUEcost, 
+                                self$sim_list, 
+                                names(self$sim_list),
+                                MoreArgs = list(CEXP = self$CEXP),
+                                SIMPLIFY = FALSE) 
+      }
     },
-    .estsVsExpPlot = function(var, # NR, pred_yld, pred_pro
+    .estsVsExpPlot = function(var, # NR, pred_yld, pred_pro, NUE
                               expvar,
                               fieldname,
                               sim_year,
@@ -1563,8 +1743,8 @@ SimClass <- R6::R6Class(
       
       DNR <- data.table::rbindlist(self$sim_list)
       DNR <- DNR[runif(nrow(DNR) * 0.25, 1, nrow(DNR)), ]
-      stopifnot(any(grepl("NR|yld|pro", var)))
-      if (grepl("NR", var)) {
+      stopifnot(any(grepl("NR|yld|pro|NUE", var)))
+      if (grepl("NR|NUE", var)) {
         names(DNR)[grep(paste0("^", var, "$"), names(DNR))] <- "var"
       } else {
         names(DNR)[grep(paste0("^pred_", var, "$"), names(DNR))] <- "var"
@@ -1572,17 +1752,19 @@ SimClass <- R6::R6Class(
       xMIN <- AAmin
       xMAX  <- AArateCutoff
       xSTEP <- (AArateCutoff - AAmin) / 10
-      step_by <- ifelse(grepl("yld", var), 10, 5)
+      step_by <- ifelse(grepl("yld", var), 10,
+                        ifelse(grepl("NUE", var), 0.1, 5))
       yMIN <- DescTools::RoundTo(min(DNR$var, na.rm = T), step_by, floor)
       yMAX <- DescTools::RoundTo(max(DNR$var, na.rm = T), step_by, ceiling)
-      ySTEP <- (yMAX - yMIN) / step_by
+      ySTEP <- ifelse(var != "NUE", (yMAX - yMIN) / step_by, (yMAX - yMIN) * step_by)
       names(DNR)[grep(paste0("^", expvar, "$"), names(DNR))] <- "exp"
       var_color <- ifelse(grepl("NR", var), "green",
                           ifelse(grepl("yld", var), "red",
-                                 "cyan"))
+                                 ifelse(grepl("pro", var), "cyan", "purple")))
       y_lab <- ifelse(grepl("NR", var), paste0("Estimated Net-Return ($/", nr_lab, ")"),
                       ifelse(grepl("yld", var), paste0("Predicted Yield ", yld_lab),
-                             "Predicted Grain Protein %"))
+                             ifelse(grepl("pro", var), paste0("Predicted Grain Protein %"), 
+                                    "Nitrogen Use Efficiency")))
       x_lab <- paste0(ifelse(expvar == "aa_n", "Nitrogen",  "Seed"), " ", exp_lab)
       sub_title <-  paste0(fxn, " : Base Price = $",
                            round(Bp, 2), "/", bp_denom, ", ",
@@ -1608,6 +1790,96 @@ SimClass <- R6::R6Class(
           ggplot2::geom_hline(yintercept = 0, color = "red", linetype = 2)
       }
       return(var_plot)
+    },
+    .NUEnNRVsExpPlot = function(expvar,
+                                fieldname,
+                                sim_year,
+                                Bp,
+                                CEXP,
+                                AAmin,
+                                AArateCutoff,
+                                fxn) {
+      if (self$datClass$SI) {
+        nr_lab <- "ha"
+        exp_lab <- "(kg/ha)"
+        bp_denom <- "kg"
+        exp_denom <- "kg"
+      } else {
+        nr_lab <- "ac"
+        exp_lab <- "(lbs/ac)"
+        bp_denom <- "bu"
+        exp_denom <- "lbs"
+      }
+      
+      DNR <- data.table::rbindlist(self$sim_list)
+      DNR <- DNR[runif(nrow(DNR) * 0.25, 1, nrow(DNR)), ]
+      stopifnot(any(grepl("NR|cost.NUE", names(DNR))))
+      
+      xMIN <- AAmin
+      xMAX  <- AArateCutoff
+      xSTEP <- (AArateCutoff - AAmin) / 10
+      
+      step_by <- 5
+      yMIN <- DescTools::RoundTo(min(DNR$NR, na.rm = T), step_by, floor)
+      yMAX <- DescTools::RoundTo(max(DNR$NR, na.rm = T), step_by, ceiling)
+      ySTEP <- (yMAX - yMIN) / step_by
+      
+      coeff <- 10
+      nue_step_by <- 5
+      nue_yMIN <- yMIN / coeff
+      nue_yMAX <- yMAX / coeff
+      nue_ySTEP <- (nue_yMAX - nue_yMIN) / nue_step_by
+      
+      names(DNR)[grep(paste0("^", expvar, "$"), names(DNR))] <- "exp"
+      NR_color <- "darkgreen"
+      cost.NUE_color <- "purple"
+      
+      y_lab_nr <- paste0("Estimated Net-Return ($/", nr_lab, ")")
+      y_lab_cost.NUE <- paste0("Value of Nitrogen Loss ($/", nr_lab, ")")
+      
+      x_lab <- paste0(ifelse(expvar == "aa_n", "Nitrogen",  "Seed"), " ", exp_lab)
+      sub_title <-  paste0(fxn, " : Base Price = $",
+                           round(Bp, 2), "/", bp_denom, ", ",
+                           ifelse(expvar == "aa_n", "N", "Seed"),
+                           " Cost = $", round(CEXP, 2), "/", exp_denom)
+      
+      var_plot <-
+        ggplot2::ggplot(DNR) +
+        ggplot2::geom_point(ggplot2::aes(x = exp, y = NR),
+                            shape = 1,
+                            color = NR_color) +
+        ggplot2::geom_smooth(ggplot2::aes(x = exp, y = NR), 
+                             color = NR_color, 
+                             span = 0.001,
+                             formula = y ~ s(x, bs = "cs", k = 5)) +
+        ggplot2::geom_point(ggplot2::aes(x = exp, y = cost.NUE * coeff),
+                            shape = 2,
+                            color = cost.NUE_color) +
+        ggplot2::geom_smooth(ggplot2::aes(x = exp, y = cost.NUE * coeff), 
+                             color = cost.NUE_color, 
+                             span = 0.001,
+                             formula = y ~ s(x, bs = "cs", k = 5)) +
+        ggplot2::labs(x = x_lab) +
+        ggplot2::ggtitle(paste0(fieldname, " ", sim_year),
+                         subtitle = sub_title) +
+        ggplot2::scale_y_continuous(name = y_lab_nr,
+                                    limits = c(yMIN, yMAX),
+                                    breaks = seq(yMIN, yMAX, ySTEP),
+                                    sec.axis = ggplot2::sec_axis(~./coeff, 
+                                                                 name = y_lab_cost.NUE)) +
+        ggplot2::scale_x_continuous(limits = c(xMIN, xMAX),
+                                    breaks = seq(xMIN, xMAX, xSTEP)) +
+        ggplot2::theme_bw() +
+        ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
+                       axis.title = ggplot2::element_text(size = 14),
+                       axis.title.y = ggplot2::element_text(color = NR_color, size=12),
+                       axis.title.y.right = ggplot2::element_text(color = cost.NUE_color, size=12))
+      if (any(DNR$var < 0, na.rm = T)) {
+        var_plot <- var_plot +
+          ggplot2::geom_hline(yintercept = 0, color = "red", linetype = 2)
+      }
+      return(var_plot)
+      
     },
     .plotActNRFun = function() {
       index <- lapply(self$datClass$mod_dat, lapply, dim) %>%
@@ -1649,8 +1921,9 @@ SimClass <- R6::R6Class(
     .cleanNRdat = function(dat) {
       NRcols <- grep("NR", names(dat))
       for (j in 1:length(NRcols)) {
-        dat <- dat[dat[, NRcols[j]] > -50000 &
-                     dat[, NRcols[j]] < 50000, ]
+        if (!all(is.na(dat[[NRcols[j]]]))) {
+          dat[dat[[NRcols[j]]] < -2000 | dat[[NRcols[j]]] > 2000, (names(dat)[NRcols[j]])] <- NA
+        }
       }
       return(dat)
     },
@@ -1725,22 +1998,23 @@ SimClass <- R6::R6Class(
         mod_covars <- parm_df$parms[!parm_df$bad_parms]
         sim_dat <- OFPE::removeNAfromCovars(sim_dat, mod_covars)
         
-        # columns needed for the simulation
-        keep_columns <- c("x", "y", "row", "col", "field", "year", mod_covars)
-        # get rid of columns not in the keep vector
-        bad_columns <- names(sim_dat)[!names(sim_dat) %in% keep_columns]
-        for (i in 1:length(bad_columns)) {
-          remove_var <- bad_columns[i]
-          sim_dat <- sim_dat[, (remove_var):= NULL]
-        }
+        ## TODO/TEMP - NEED TO MOVE TO AFTER NUE CALCULATED??
+        # # columns needed for the simulation
+        # keep_columns <- c("x", "y", "row", "col", "field", "year", mod_covars)
+        # # get rid of columns not in the keep vector
+        # bad_columns <- names(sim_dat)[!names(sim_dat) %in% keep_columns]
+        # for (i in 1:length(bad_columns)) {
+        #   remove_var <- bad_columns[i]
+        #   sim_dat <- sim_dat[, (remove_var):= NULL]
+        # }
         return(sim_dat)
       }
     },
     .simActEconConds = function(rr, sim_list_names, sim_year) {
       tryCatch({
-        Bp.var <- matrix(0, nrow = 1, ncol = 10)
-        colnames(Bp.var) <- c("BaseP", "EXP.cost", "NR.ssopt", "NR.min", "NR.fs",
-                              "ffopt.EXPrate", "NR.ffopt", "NR.act", "NR.opp", "sim")
+        Bp.var <- matrix(0, nrow = 1, ncol = 11)
+        colnames(Bp.var) <- c("BaseP", "EXP.cost", "NR.ssopt", "NR.min", "NR.fs", 
+                              "ffopt.EXPrate", "NR.ffopt", "NR.act", "NR.opp", "median.ssopt.EXPrate", "sim")
         
         if (any(self$econDat$Prc$Year == sim_year)) {
           rp <- which(self$econDat$Prc$Year == sim_year)
@@ -1802,24 +2076,7 @@ SimClass <- R6::R6Class(
         self$sim_list <- lapply(self$sim_list, function(x) data.table::as.data.table(x) %>%
                                   `names<-`(sim_list_names)) %>%
           lapply(private$.cleanNRdat)
-        NRff <- data.frame(EXP.rate = self$EXPvec, NR.ff = NA)
-        NRff$NR.ff <- lapply(self$sim_list, function(x) sum(x$NR, na.rm = TRUE))
-        NRff <- apply(NRff, 2, as.numeric) %>% as.data.frame()
-        if (self$opt == "max") {
-          NRffmax <- subset(NRff,
-                            NRff[, "NR.ff"] == max(na.omit(NRff[, "NR.ff"])))
-        } else {
-          if (self$opt == "deriv") {
-            NRff <- NRff %>% `names<-`(NULL) %>% as.matrix()
-            NRffmax <- OFPE::derivFFoptCpp(NRff,
-                                           nrow(NRff),
-                                           self$fieldsize,
-                                           CEXP) %>%
-              as.data.frame() %>%
-              `names<-`(c("EXP.rate", "NR.ff"))
-          } # else some other opt method (i.e. not max or deriv)
-        }
-        ffopt_rate <- NRffmax[1, "EXP.rate"]
+        
         invisible(ifelse(self$datClass$sys_type == "conv",
                          NR.opp <- self$sim_list[[1]]$NRopp,
                          NR.opp <- self$sim_list[[grep(paste0("^", self$fs, "$"), names(self$sim_list))]]$NRopp))
@@ -1841,27 +2098,74 @@ SimClass <- R6::R6Class(
                             pro.opt = NA,
                             pro.min = self$sim_list[[1]]$pred_pro,
                             pro.fs = self$sim_list[[grep(paste0("^", self$fs, "$"), names(self$sim_list))]]$pred_pro,
-                            NR.ffopt = self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$NR,
-                            yld.ffopt = self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$pred_yld,
-                            pro.ffopt = self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$pred_pro,
-                            EXP.rate.ffopt = ffopt_rate)
-        NRopt[,c("EXP.rate.ssopt", "NR.ssopt", "yld.opt", "pro.opt")] <-
+                            NR.ffopt = NA,
+                            yld.ffopt = NA,
+                            pro.ffopt = NA,
+                            EXP.rate.ffopt = NA,
+                            NUE = NA,
+                            cost.NUE = NA)
+        
+        if (self$opt == "ecol") {
+          # calculate cost of NUE
+          self$sim_list <- mapply(private$.calcNUEcost, 
+                                  self$sim_list, 
+                                  names(self$sim_list),
+                                  MoreArgs = list(CEXP = CEXP),
+                                  SIMPLIFY = FALSE) %>% 
+            lapply(function(x) {x$NR <- x$NR - x$cost.NUE; return(x)})
+        }
+        
+        NRff <- data.frame(EXP.rate = self$EXPvec, NR.ff = NA)
+        div_by <- self$fieldsize / rr
+        NRff$NR.ff <- lapply(self$sim_list, function(x) sum(x$NR * div_by, na.rm = TRUE))
+        NRff <- apply(NRff, 2, as.numeric) %>% as.data.frame()
+        if (self$opt == "max") {
+          NRffmax <- subset(NRff,
+                            NRff[, "NR.ff"] == max(na.omit(NRff[, "NR.ff"])))
+        } 
+        if (self$opt == "deriv" | self$opt == "ecol") {
+          NRff <- NRff %>% `names<-`(NULL) %>% as.matrix()
+          NRffmax <- OFPE::derivFFoptCpp(NRff,
+                                         nrow(NRff),
+                                         self$fieldsize,
+                                         CEXP) %>%
+            as.data.frame() %>%
+            `names<-`(c("EXP.rate", "NR.ff"))
+        } 
+        ffopt_rate <- NRffmax[1, "EXP.rate"]
+        
+        NRopt$NR.ffopt <- self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$NR
+        NRopt$yld.ffopt <- self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$pred_yld
+        NRopt$pro.ffopt <- self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$pred_pro
+        NRopt$EXP.rate.ffopt <- ffopt_rate
+        
+        NRopt[,c("EXP.rate.ssopt", "NR.ssopt", "yld.opt", "pro.opt", "NUE", "cost.NUE")] <-
           private$.getNRopt(CEXP)
+        
+        if (self$opt == "ecol") {
+          NRopt$NR.ffopt <- NRopt$NR.ffopt + self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$cost.NUE
+          NRopt$NR.ssopt <- NRopt$NR.ssopt + NRopt$cost.NUE
+          NRffmax[1, "NR.ff"] <- sum((self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$NR + 
+                                        self$sim_list[[grep(paste0("^", ffopt_rate, "$"), names(self$sim_list))]]$cost.NUE) * div_by,
+                                     na.rm = TRUE)
+        } 
+        
         gc()
         NRopt <- apply(NRopt, 2, as.numeric)
         ## Fill in Bp.var
         Bp.var[1, "BaseP"] <- Bp
         Bp.var[1, "EXP.cost"] <- CEXP
-        Bp.var[1, "NR.ssopt"] <- mean(NRopt[, "NR.ssopt"], na.rm = T)
-        Bp.var[1, "NR.min"] <- mean(NRopt[, "NR.min"], na.rm = T)
-        Bp.var[1, "NR.fs"] <- mean(NRopt[, "NR.fs"], na.rm = T)
+        Bp.var[1, "NR.ssopt"] <- median(NRopt[, "NR.ssopt"], na.rm = T)
+        Bp.var[1, "NR.min"] <- median(NRopt[, "NR.min"], na.rm = T)
+        Bp.var[1, "NR.fs"] <- median(NRopt[, "NR.fs"], na.rm = T)
         Bp.var[1, "ffopt.EXPrate"] <- NRffmax[, "EXP.rate"]
-        Bp.var[1, "NR.ffopt"] <- NRffmax[, "NR.ff"] / rr
-        Bp.var[1, "NR.opp"] <- mean(NRopt[, "NR.opp"], na.rm = T)
+        Bp.var[1, "NR.ffopt"] <- median(NRopt[, "NR.ffopt"], na.rm = T) # NRffmax[, "NR.ff"] / self$fieldsize # / rr
+        Bp.var[1, "NR.opp"] <- median(NRopt[, "NR.opp"], na.rm = T)
+        Bp.var[1, "median.ssopt.EXPrate"] <- median(NRopt[, "EXP.rate.ssopt"], na.rm = T)
         
         NRopt <- private$.calcNRact(NRopt, self$sim_list[[1]]$year[1], Bp, CEXP, FC)
         gc()
-        Bp.var[1, "NR.act"] <- mean(NRopt[, "NR.act"], na.rm = T)
+        Bp.var[1, "NR.act"] <- median(NRopt[, "NR.act"], na.rm = T)
         Bp.var[1, "sim"] <- paste0(sim_year, "EconCondition")
         # fill out rest
         NRopt <- data.table::as.data.table(NRopt)
@@ -1891,9 +2195,28 @@ SimClass <- R6::R6Class(
                                sim_year, "EconCond_",
                                self$opt, ".csv"))
         gc()
+        self$sim_list <- lapply(self$sim_list, function(x) {x$cost.NUE <- NULL; return(x)})
       },
       warning = function(w) {return(print(paste0("warning with actual economics for ", sim_year)))},
       error = function(e) {return(print(paste0("error with actual economics for ", sim_year)))})
+    },
+    .extractWHC = function(x, y) {
+      utm_zone <- OFPE::findUTMzone(self$dbCon$db, fieldname = self$datClass$fieldname[1])
+      x$X <- x$x
+      x$Y <- x$y
+      x <- sf::st_as_sf(x, coords = c("X", "Y"), crs = utm_zone)
+      y <- sf::st_transform(y, utm_zone)
+      temp <- nngeo::st_nn(x, y) %>%
+        unlist()
+      y <- sf::st_drop_geometry(y)
+      x$WHC <- y[temp, "whcClass"]
+      x <- sf::st_drop_geometry(x)
+      return(x)
+    },
+    .calcNUEcost = function(dat, EXP, CEXP) {
+      EXP <- as.numeric(EXP)
+      dat$cost.NUE <- (EXP * dat$NUE) * CEXP
+      return(dat)
     }
   )
 )

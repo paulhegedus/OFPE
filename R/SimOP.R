@@ -331,6 +331,11 @@ SimOP <- R6::R6Class(
             Bp.var = Bp.var,
             sim_year = self$sim_years[i]
           )
+          ## difference in net-return boxplots
+          temp_plot <- self$plotDiffNRbox(
+            Bp.var = Bp.var,
+            sim_year = self$sim_years[i]
+          )
           ## probability of higher avg net return
           temp_plot <- self$mgmtNRprobTable(
             mgmt = "NR.ssopt",
@@ -711,10 +716,7 @@ SimOP <- R6::R6Class(
       }
     },
     #' @description
-    #' Convert the Bp.var matrix to a dataframe for plotting. Reorder the levels
-    #' of the method for plotting. Now, start to save the tables and plots showing
-    #' results from the simulations. First, the variation in net returns over
-    #' different price years.
+    #' Plot the variation in net returns over different price years with a boxplot.
     #' @param Bp.var Data.table containing the average net-returns from the field for each
     #' management type for every iteration of the simulation.
     #' @param fieldname Unique field name corresponding to all fields used in the simulation.
@@ -741,7 +743,7 @@ SimOP <- R6::R6Class(
       
       Bp.plot <- as.data.frame(Bp.var)
       Bp.plot <- tidyr::pivot_longer(Bp.plot,
-                                     -c("BaseP", "ffopt.EXPrate", "EXP.cost", "sim"),
+                                     -c("BaseP", "ffopt.EXPrate", "EXP.cost", "median.ssopt.EXPrate", "sim"),
                                      names_to = "Method",
                                      values_to = "NR")
       Bp.plot$Method <- factor(Bp.plot$Method)
@@ -789,7 +791,77 @@ SimOP <- R6::R6Class(
       return(p)
     },
     #' @description
-    #' Calculate the propabability that a given management method is more profitable
+    #' Plot the variation in the difference in net returns over different price years.
+    #' @param Bp.var Data.table containing the average net-returns from the field for each
+    #' management type for every iteration of the simulation.
+    #' @param fieldname Unique field name corresponding to all fields used in the simulation.
+    #' @param fxn The functional form of the models used for analysis.
+    #' @param sim_year Year that the simulation was performed for. Indicates the
+    #' weather conditions used.
+    #' @param opt The optimization method used in the simulation.
+    #' @param SAVE Logical, whether to save figure.
+    #' @param out_path The path to the folder in which to store and
+    #' save outputs from the simulation.
+    #' @return A 'ggplot' object and data saved in 'Outputs/NR/NRboxplots' if selected.
+    plotDiffNRbox = function(Bp.var,
+                         fieldname = self$unique_fieldname,
+                         fxn = self$unique_fxn,
+                         sim_year,
+                         opt = self$opt,
+                         SAVE = self$SAVE,
+                         out_path = self$out_path) {
+      if (self$SI) {
+        nr_lab <- "$/ha"
+      } else {
+        nr_lab <- "$/ac"
+      }
+      
+      Bp.plot <- as.data.frame(Bp.var)
+      Bp.plot$`SS.Opt - Min. Rate` <- Bp.plot$NR.ssopt - Bp.plot$NR.min
+      Bp.plot$`SS.Opt - FS` <- Bp.plot$NR.ssopt - Bp.plot$NR.fs
+      Bp.plot$`SS.Opt - FF.Opt` <- Bp.plot$NR.ssopt - Bp.plot$NR.ffopt
+      Bp.plot$`SS.Opt - Actual` <- Bp.plot$NR.ssopt - Bp.plot$NR.act
+      Bp.plot$`SS.Opt - Alt. Price` <- Bp.plot$NR.ssopt - Bp.plot$NR.opp
+      Bp.plot <- Bp.plot[, c("SS.Opt - Min. Rate", "SS.Opt - FS", "SS.Opt - FF.Opt", "SS.Opt - Actual", "SS.Opt - Alt. Price")]
+      
+      Bp.plot <- tidyr::pivot_longer(Bp.plot,
+                                     c("SS.Opt - Min. Rate", "SS.Opt - FS", "SS.Opt - FF.Opt", "SS.Opt - Actual", "SS.Opt - Alt. Price"),
+                                     names_to = "Comparison",
+                                     values_to = "Diff.NR")
+      Bp.plot$Comparison <- factor(Bp.plot$Comparison, 
+                                   levels = c("SS.Opt - Min. Rate", "SS.Opt - FS", "SS.Opt - FF.Opt", "SS.Opt - Actual", "SS.Opt - Alt. Price"))
+      
+      yMIN <- DescTools::RoundTo(min(Bp.plot$Diff.NR,na.rm=T),5,floor)
+      yMAX <- DescTools::RoundTo(max(Bp.plot$Diff.NR,na.rm=T),5,ceiling)
+      ySTEP <- (yMAX - yMIN) / 10
+      p <-
+        ggplot2::ggplot(Bp.plot) +
+        ggplot2::geom_boxplot(ggplot2::aes(x = Comparison, y = Diff.NR),
+                              fill = "green3",
+                              notch = FALSE) +
+        ggplot2::scale_y_continuous(name =  paste0("Difference in Net Return (", nr_lab, ")"),
+                                    limits = c(yMIN, yMAX),
+                                    breaks = seq(yMIN, yMAX, ySTEP)) +
+        ggplot2::scale_x_discrete(name = "Strategy Comparison", labels = levels(Bp.plot$Comparison)) +
+        ggplot2::theme_bw() +
+        ggplot2::theme(axis.text = ggplot2::element_text(size = 12),
+                       axis.title = ggplot2::element_text(size = 14))
+      if (any(Bp.plot$Diff.NR < 0, na.rm = TRUE)) {
+        p <- p +
+          ggplot2::geom_hline(yintercept = 0, color = "red", linetype = 2)
+      }
+      if (SAVE) {
+        try({dev.off()}, silent = TRUE)
+        ggplot2::ggsave(paste0(out_path, "/Outputs/NR/NRboxPlots/",
+                               fieldname, "_diffAvgNR_box_",
+                               fxn, "_", sim_year, "_", opt, ".png"),
+                        plot = p, device = "png", scale = 1,
+                        width = 10, height = 7.5, units = "in")
+      }
+      return(p)
+    },
+    #' @description
+    #' Calculate the probability that a given management method is more profitable
     #' than the other management strategies. For example, compare the probability that
     #' the site-specific optimization strategy yielded a higher net-retrun than the
     #' other management strategies. This probability is generated from across all

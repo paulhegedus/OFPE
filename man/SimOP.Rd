@@ -158,6 +158,7 @@ outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
 \item \href{#method-new}{\code{SimOP$new()}}
 \item \href{#method-savePlots}{\code{SimOP$savePlots()}}
 \item \href{#method-plotNRbox}{\code{SimOP$plotNRbox()}}
+\item \href{#method-plotDiffNRbox}{\code{SimOP$plotDiffNRbox()}}
 \item \href{#method-mgmtNRprobTable}{\code{SimOP$mgmtNRprobTable()}}
 \item \href{#method-plotNRbar}{\code{SimOP$plotNRbar()}}
 \item \href{#method-plotTotExpAppl}{\code{SimOP$plotTotExpAppl()}}
@@ -277,12 +278,52 @@ Simulation outputs in the 'Outputs' folder.
 \if{html}{\out{<a id="method-plotNRbox"></a>}}
 \if{latex}{\out{\hypertarget{method-plotNRbox}{}}}
 \subsection{Method \code{plotNRbox()}}{
-Convert the Bp.var matrix to a dataframe for plotting. Reorder the levels
-of the method for plotting. Now, start to save the tables and plots showing
-results from the simulations. First, the variation in net returns over
-different price years.
+Plot the variation in net returns over different price years with a boxplot.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{SimOP$plotNRbox(
+  Bp.var,
+  fieldname = self$unique_fieldname,
+  fxn = self$unique_fxn,
+  sim_year,
+  opt = self$opt,
+  SAVE = self$SAVE,
+  out_path = self$out_path
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{Bp.var}}{Data.table containing the average net-returns from the field for each
+management type for every iteration of the simulation.}
+
+\item{\code{fieldname}}{Unique field name corresponding to all fields used in the simulation.}
+
+\item{\code{fxn}}{The functional form of the models used for analysis.}
+
+\item{\code{sim_year}}{Year that the simulation was performed for. Indicates the
+weather conditions used.}
+
+\item{\code{opt}}{The optimization method used in the simulation.}
+
+\item{\code{SAVE}}{Logical, whether to save figure.}
+
+\item{\code{out_path}}{The path to the folder in which to store and
+save outputs from the simulation.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A 'ggplot' object and data saved in 'Outputs/NR/NRboxplots' if selected.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-plotDiffNRbox"></a>}}
+\if{latex}{\out{\hypertarget{method-plotDiffNRbox}{}}}
+\subsection{Method \code{plotDiffNRbox()}}{
+Plot the variation in the difference in net returns over different price years.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SimOP$plotDiffNRbox(
   Bp.var,
   fieldname = self$unique_fieldname,
   fxn = self$unique_fxn,
@@ -323,7 +364,7 @@ A 'ggplot' object and data saved in 'Outputs/NR/NRboxplots' if selected.
 \if{html}{\out{<a id="method-mgmtNRprobTable"></a>}}
 \if{latex}{\out{\hypertarget{method-mgmtNRprobTable}{}}}
 \subsection{Method \code{mgmtNRprobTable()}}{
-Calculate the propabability that a given management method is more profitable
+Calculate the probability that a given management method is more profitable
 than the other management strategies. For example, compare the probability that
 the site-specific optimization strategy yielded a higher net-retrun than the
 other management strategies. This probability is generated from across all

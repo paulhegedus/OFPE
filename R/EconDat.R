@@ -9,7 +9,7 @@
 #' protein premiums/dockages or uses the default data from the Billings, MT
 #' grain elevator in 2016 or 2021. Both have a base protein of 11.5% where 
 #' the 2016 premium/dockages range from 7-15% protein with a 15 cent premium per half, 
-#' while 2021 premium/dockages range from 9.5-14% protein with a 2 cent premium per half.
+#' while 2021 premium/dockages range from 9.5-14% protein with a 2 cent premium and 8 cent dockage per half.
 #'
 #' Thes user has the option of providing their own data to use for the simulation
 #' that feeds into the prescription generation in order to simulate a specific

@@ -41,7 +41,7 @@ user inputs the default will be 100.}
 There are two current options, 'Maximum' or 'Derivative'. Both methods select
 the optimum as-applied rate at each location in the field based on calculating
 the net-return at each point under a sequence of as-applied rates. Selecting
-'Maximum' selects the optimim rate as the as-applied rate with the highest
+'Maximum' selects the optimum rate as the as-applied rate with the highest
 calculated net-return. The 'Derivative' approach calculates the first
 derivatives (slope) at each as-applied rate at each point and selects the
 optimum as the as-applied rate where an increase of one unit of the as-applied
@@ -51,7 +51,16 @@ if the net-return is \$100 at 20 lbs N/acre and \$101 at 21 lbs N/acre where N
 costs \$1.50 per lbs, the 'Maximum' approach would consider 21 lbs N/acre the
 optimum at that point because \$100 < \$101, whereas the 'Derivative' approach
 would select 20 lbs N/acre the optimum because the $1 increase between 20 and
-21 lbs N/acre is less than the \$1.50 cost for the 1 unit increase in N.}
+21 lbs N/acre is less than the \$1.50 cost for the 1 unit increase in N.
+
+Additionally, the user can select 'Ecological' where rates are optimized based
+on maximization of profit while considering the cost of nitrogen use inefficiency.
+Only recommended for N fertilizer trials. At every point and for every N rate the
+NUE is estimated via modeling performed in Hegedus & Ewing, 2022. Based on
+estimated NUE, the cost of inefficiency is calculated and subtracted from net-
+return. After net-return is amended, the derivative approach is used to find
+the rate where net-return is maximized and adding more N does not increase
+net-return more than the cost of adding that N.}
 
 \item{\code{sim_years}}{Select the year(s) for which to simulate net-return outcomes for.
 Multiple years can be selected and will be simulated in sequence or one year can
@@ -133,6 +142,10 @@ folder, else to the getwd().}
 \item{\code{CEXP}}{Mean cost of the as-applied experimental input.}
 
 \item{\code{FC}}{The fixed costs of operations besides fertilizer and seed..}
+
+\item{\code{nue_class}}{The R6 class for fitting and using the NUE model developed
+by Hegedus & Ewing, 2022. Only initialized if the optimization method selected
+is 'Ecological'.}
 }
 \if{html}{\out{</div>}}
 }
@@ -179,7 +192,7 @@ user inputs the default will be 100.}
 There are two current options, 'Maximum' or 'Derivative'. Both methods select
 the optimum as-applied rate at each location in the field based on calculating
 the net-return at each point under a sequence of as-applied rates. Selecting
-'Maximum' selects the optimim rate as the as-applied rate with the highest
+'Maximum' selects the optimum rate as the as-applied rate with the highest
 calculated net-return. The 'Derivative' approach calculates the first
 derivatives (slope) at each as-applied rate at each point and selects the
 optimum as the as-applied rate where an increase of one unit of the as-applied
@@ -189,7 +202,16 @@ if the net-return is \$100 at 20 lbs N/acre and \$101 at 21 lbs N/acre where N
 costs \$1.50 per lbs, the 'Maximum' approach would consider 21 lbs N/acre the
 optimum at that point because \$100 < \$101, whereas the 'Derivative' approach
 would select 20 lbs N/acre the optimum because the $1 increase between 20 and
-21 lbs N/acre is less than the \$1.50 cost for the 1 unit increase in N.}
+21 lbs N/acre is less than the \$1.50 cost for the 1 unit increase in N.
+
+Additionally, the user can select 'Ecological' where rates are optimized based
+on maximization of profit while considering the cost of nitrogen use inefficiency.
+Only recommended for N fertilizer trials. At every point and for every N rate the
+NUE is estimated via modeling performed in Hegedus & Ewing, 2022. Based on
+estimated NUE, the cost of inefficiency is calculated and subtracted from net-
+return. After net-return is amended, the derivative approach is used to find
+the rate where net-return is maximized and adding more N does not increase
+net-return more than the cost of adding that N.}
 
 \item{\code{sim_years}}{Select the year(s) for which to simulate net-return outcomes for.
 Multiple years can be selected and will be simulated in sequence or one year can
