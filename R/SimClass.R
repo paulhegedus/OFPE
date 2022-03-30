@@ -412,7 +412,10 @@ SimClass <- R6::R6Class(
                                            AND method = 'nb';"))
         self$datClass$sim_dat <- lapply(self$datClass$sim_dat,
                                         private$.extractWHC,
-                                        whc_dat)
+                                        whc_dat) %>% 
+          lapply(OFPE::removeNAfromCovars,
+                 "WHC")
+        
       }
     },
     #' @description
