@@ -69,16 +69,16 @@ is used for plottting.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{NonLinear_Logistic$new()}}
-\item \href{#method-fitMod}{\code{NonLinear_Logistic$fitMod()}}
-\item \href{#method-predResps}{\code{NonLinear_Logistic$predResps()}}
-\item \href{#method-saveDiagnostics}{\code{NonLinear_Logistic$saveDiagnostics()}}
-\item \href{#method-clone}{\code{NonLinear_Logistic$clone()}}
+\item \href{#method-NonLinear_Logistic-new}{\code{NonLinear_Logistic$new()}}
+\item \href{#method-NonLinear_Logistic-fitMod}{\code{NonLinear_Logistic$fitMod()}}
+\item \href{#method-NonLinear_Logistic-predResps}{\code{NonLinear_Logistic$predResps()}}
+\item \href{#method-NonLinear_Logistic-saveDiagnostics}{\code{NonLinear_Logistic$saveDiagnostics()}}
+\item \href{#method-NonLinear_Logistic-clone}{\code{NonLinear_Logistic$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-NonLinear_Logistic-new"></a>}}
+\if{latex}{\out{\hypertarget{method-NonLinear_Logistic-new}{}}}
 \subsection{Method \code{new()}}{
 The initialization creates a data frame ('parm_df') containing the parameter names,
 the function component and id, the mean and standard deviation, and whether it meets
@@ -108,8 +108,8 @@ A instantiated 'NonLinear_Logistic' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fitMod"></a>}}
-\if{latex}{\out{\hypertarget{method-fitMod}{}}}
+\if{html}{\out{<a id="method-NonLinear_Logistic-fitMod"></a>}}
+\if{latex}{\out{\hypertarget{method-NonLinear_Logistic-fitMod}{}}}
 \subsection{Method \code{fitMod()}}{
 Method for fitting the non-linear logistic regression model to response variables
 using experimental and covariate data.
@@ -155,8 +155,8 @@ A fitted logistic model.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-predResps"></a>}}
-\if{latex}{\out{\hypertarget{method-predResps}{}}}
+\if{html}{\out{<a id="method-NonLinear_Logistic-predResps"></a>}}
+\if{latex}{\out{\hypertarget{method-NonLinear_Logistic-predResps}{}}}
 \subsection{Method \code{predResps()}}{
 Method for predicting response variables using data and a model.
 \subsection{Usage}{
@@ -178,8 +178,8 @@ Vector of predicted values for each location in 'dat'.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-saveDiagnostics"></a>}}
-\if{latex}{\out{\hypertarget{method-saveDiagnostics}{}}}
+\if{html}{\out{<a id="method-NonLinear_Logistic-saveDiagnostics"></a>}}
+\if{latex}{\out{\hypertarget{method-NonLinear_Logistic-saveDiagnostics}{}}}
 \subsection{Method \code{saveDiagnostics()}}{
 Method for saving diagnostic plots of the fitted model. These include residual
 vs. fitted values, normal QQ plots, etc.
@@ -202,8 +202,8 @@ Diagnostic plots.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-NonLinear_Logistic-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-NonLinear_Logistic-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

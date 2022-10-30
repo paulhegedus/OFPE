@@ -12,8 +12,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // NRcalcCpp
-arma::mat NRcalcCpp(arma::mat df, double Bp, double B0pd, double B1pd, double B2pd, double CEXP, double BpOpp, double FC, double fs, double ssAC, int predInd, int rr, int expCol, int yldCol, int proCol, int NRcol, int NRminCol, int NRoppCol, int NRfsCol, int AAmin);
-RcppExport SEXP _OFPE_NRcalcCpp(SEXP dfSEXP, SEXP BpSEXP, SEXP B0pdSEXP, SEXP B1pdSEXP, SEXP B2pdSEXP, SEXP CEXPSEXP, SEXP BpOppSEXP, SEXP FCSEXP, SEXP fsSEXP, SEXP ssACSEXP, SEXP predIndSEXP, SEXP rrSEXP, SEXP expColSEXP, SEXP yldColSEXP, SEXP proColSEXP, SEXP NRcolSEXP, SEXP NRminColSEXP, SEXP NRoppColSEXP, SEXP NRfsColSEXP, SEXP AAminSEXP) {
+arma::mat NRcalcCpp(arma::mat df, double Bp, double B0pd, double B1pd, double B2pd, double B3pd, double CEXP, double BpOpp, double FC, double fs, double ssAC, int predInd, int rr, int expCol, int yldCol, int proCol, int NRcol, int NRminCol, int NRoppCol, int NRfsCol, int AAmin);
+RcppExport SEXP _OFPE_NRcalcCpp(SEXP dfSEXP, SEXP BpSEXP, SEXP B0pdSEXP, SEXP B1pdSEXP, SEXP B2pdSEXP, SEXP B3pdSEXP, SEXP CEXPSEXP, SEXP BpOppSEXP, SEXP FCSEXP, SEXP fsSEXP, SEXP ssACSEXP, SEXP predIndSEXP, SEXP rrSEXP, SEXP expColSEXP, SEXP yldColSEXP, SEXP proColSEXP, SEXP NRcolSEXP, SEXP NRminColSEXP, SEXP NRoppColSEXP, SEXP NRfsColSEXP, SEXP AAminSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -22,6 +22,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type B0pd(B0pdSEXP);
     Rcpp::traits::input_parameter< double >::type B1pd(B1pdSEXP);
     Rcpp::traits::input_parameter< double >::type B2pd(B2pdSEXP);
+    Rcpp::traits::input_parameter< double >::type B3pd(B3pdSEXP);
     Rcpp::traits::input_parameter< double >::type CEXP(CEXPSEXP);
     Rcpp::traits::input_parameter< double >::type BpOpp(BpOppSEXP);
     Rcpp::traits::input_parameter< double >::type FC(FCSEXP);
@@ -37,7 +38,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type NRoppCol(NRoppColSEXP);
     Rcpp::traits::input_parameter< int >::type NRfsCol(NRfsColSEXP);
     Rcpp::traits::input_parameter< int >::type AAmin(AAminSEXP);
-    rcpp_result_gen = Rcpp::wrap(NRcalcCpp(df, Bp, B0pd, B1pd, B2pd, CEXP, BpOpp, FC, fs, ssAC, predInd, rr, expCol, yldCol, proCol, NRcol, NRminCol, NRoppCol, NRfsCol, AAmin));
+    rcpp_result_gen = Rcpp::wrap(NRcalcCpp(df, Bp, B0pd, B1pd, B2pd, B3pd, CEXP, BpOpp, FC, fs, ssAC, predInd, rr, expCol, yldCol, proCol, NRcol, NRminCol, NRoppCol, NRfsCol, AAmin));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -99,7 +100,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_OFPE_NRcalcCpp", (DL_FUNC) &_OFPE_NRcalcCpp, 20},
+    {"_OFPE_NRcalcCpp", (DL_FUNC) &_OFPE_NRcalcCpp, 21},
     {"_OFPE_derivFFoptCpp", (DL_FUNC) &_OFPE_derivFFoptCpp, 4},
     {"_OFPE_derivNRoptCpp", (DL_FUNC) &_OFPE_derivNRoptCpp, 6},
     {"_OFPE_selectDatCpp", (DL_FUNC) &_OFPE_selectDatCpp, 16},

@@ -16,6 +16,7 @@ NRcalcCpp(
   B0pd,
   B1pd,
   B2pd,
+  B3pd,
   CEXP,
   BpOpp,
   FC,
@@ -46,6 +47,9 @@ type selected by the user (i.e. conventional or organic).}
 equation.}
 
 \item{B2pd}{The coefficient for protein squared for the protein
+premium/dockage equation.}
+
+\item{B3pd}{The coefficient for protein cubed for the protein
 premium/dockage equation.}
 
 \item{CEXP}{The cost of the experimental input.}

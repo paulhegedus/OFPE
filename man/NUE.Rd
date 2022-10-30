@@ -48,14 +48,14 @@ datasets.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{NUE$new()}}
-\item \href{#method-nuePred}{\code{NUE$nuePred()}}
-\item \href{#method-clone}{\code{NUE$clone()}}
+\item \href{#method-NUE-new}{\code{NUE$new()}}
+\item \href{#method-NUE-nuePred}{\code{NUE$nuePred()}}
+\item \href{#method-NUE-clone}{\code{NUE$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-NUE-new"></a>}}
+\if{latex}{\out{\hypertarget{method-NUE-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{NUE$new(mod_type = "SVR", utm_epsg)}\if{html}{\out{</div>}}
@@ -79,8 +79,8 @@ A NUE model is fit and initialized in the class.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-nuePred"></a>}}
-\if{latex}{\out{\hypertarget{method-nuePred}{}}}
+\if{html}{\out{<a id="method-NUE-nuePred"></a>}}
+\if{latex}{\out{\hypertarget{method-NUE-nuePred}{}}}
 \subsection{Method \code{nuePred()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{NUE$nuePred(new_dat)}\if{html}{\out{</div>}}
@@ -98,8 +98,8 @@ Predictions of NUE for each observation in the new data.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-NUE-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-NUE-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

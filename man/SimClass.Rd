@@ -152,19 +152,19 @@ is 'Ecological'.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{SimClass$new()}}
-\item \href{#method-selectInputs}{\code{SimClass$selectInputs()}}
-\item \href{#method-setupSim}{\code{SimClass$setupSim()}}
-\item \href{#method-executeSim}{\code{SimClass$executeSim()}}
-\item \href{#method-cleanUp}{\code{SimClass$cleanUp()}}
-\item \href{#method-plotEstsVsExp}{\code{SimClass$plotEstsVsExp()}}
-\item \href{#method-plotActNR}{\code{SimClass$plotActNR()}}
-\item \href{#method-clone}{\code{SimClass$clone()}}
+\item \href{#method-SimClass-new}{\code{SimClass$new()}}
+\item \href{#method-SimClass-selectInputs}{\code{SimClass$selectInputs()}}
+\item \href{#method-SimClass-setupSim}{\code{SimClass$setupSim()}}
+\item \href{#method-SimClass-executeSim}{\code{SimClass$executeSim()}}
+\item \href{#method-SimClass-cleanUp}{\code{SimClass$cleanUp()}}
+\item \href{#method-SimClass-plotEstsVsExp}{\code{SimClass$plotEstsVsExp()}}
+\item \href{#method-SimClass-plotActNR}{\code{SimClass$plotActNR()}}
+\item \href{#method-SimClass-clone}{\code{SimClass$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-SimClass-new"></a>}}
+\if{latex}{\out{\hypertarget{method-SimClass-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{SimClass$new(
@@ -255,8 +255,8 @@ A new 'SimClass' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-selectInputs"></a>}}
-\if{latex}{\out{\hypertarget{method-selectInputs}{}}}
+\if{html}{\out{<a id="method-SimClass-selectInputs"></a>}}
+\if{latex}{\out{\hypertarget{method-SimClass-selectInputs}{}}}
 \subsection{Method \code{selectInputs()}}{
 Interactive method for selecting inputs related to the analysis and the
 subsequent simulations and prescription generation. The description below
@@ -316,8 +316,8 @@ A 'SimClass' object with completed inputs.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-setupSim"></a>}}
-\if{latex}{\out{\hypertarget{method-setupSim}{}}}
+\if{html}{\out{<a id="method-SimClass-setupSim"></a>}}
+\if{latex}{\out{\hypertarget{method-SimClass-setupSim}{}}}
 \subsection{Method \code{setupSim()}}{
 Method used to prepare the class for the simulation. This method takes
 a DatClass, ModClass, and EconDat R6 classes that the user has initialized
@@ -355,8 +355,8 @@ Processed simulation data in the DatClass.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-executeSim"></a>}}
-\if{latex}{\out{\hypertarget{method-executeSim}{}}}
+\if{html}{\out{<a id="method-SimClass-executeSim"></a>}}
+\if{latex}{\out{\hypertarget{method-SimClass-executeSim}{}}}
 \subsection{Method \code{executeSim()}}{
 Method for executing the Monte Carlo simulation to compare management
 scenarios for each year the user selected to simulate in. The method
@@ -416,8 +416,8 @@ simulation year.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-cleanUp"></a>}}
-\if{latex}{\out{\hypertarget{method-cleanUp}{}}}
+\if{html}{\out{<a id="method-SimClass-cleanUp"></a>}}
+\if{latex}{\out{\hypertarget{method-SimClass-cleanUp}{}}}
 \subsection{Method \code{cleanUp()}}{
 If the user has selected to not save anything, remove temporary files
 that could have been used by the SimOP class.
@@ -437,8 +437,8 @@ Any temporary files deleted.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plotEstsVsExp"></a>}}
-\if{latex}{\out{\hypertarget{method-plotEstsVsExp}{}}}
+\if{html}{\out{<a id="method-SimClass-plotEstsVsExp"></a>}}
+\if{latex}{\out{\hypertarget{method-SimClass-plotEstsVsExp}{}}}
 \subsection{Method \code{plotEstsVsExp()}}{
 Plot the average net-return, yield, and protein, of all points vs the
 experimental variable for the average price and experimental cost scenario
@@ -498,8 +498,8 @@ Data saved in 'Outputs/Predictions'.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plotActNR"></a>}}
-\if{latex}{\out{\hypertarget{method-plotActNR}{}}}
+\if{html}{\out{<a id="method-SimClass-plotActNR"></a>}}
+\if{latex}{\out{\hypertarget{method-SimClass-plotActNR}{}}}
 \subsection{Method \code{plotActNR()}}{
 Function for creating a map of the actual net-return observed in the
 field for a selected year available in the data the user specified
@@ -521,6 +521,7 @@ the field.
   B0pd,
   B1pd,
   B2pd,
+  B3pd,
   CEXP,
   FC,
   ssAC,
@@ -556,6 +557,9 @@ type selected by the user (i.e. conventional or organic).}
 equation.}
 
 \item{\code{B2pd}}{The coefficient for protein squared for the protein
+premium/dockage equation.}
+
+\item{\code{B3pd}}{The coefficient for protein cubed for the protein
 premium/dockage equation.}
 
 \item{\code{CEXP}}{The cost of the experimental input.}
@@ -604,8 +608,8 @@ Map of the actual net-return from a given year in 'Outputs/Maps'.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-SimClass-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-SimClass-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

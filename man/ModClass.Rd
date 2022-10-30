@@ -93,18 +93,18 @@ bu/ac for yield and lbs/ac for experimental data (nitrogen or seed).}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{ModClass$new()}}
-\item \href{#method-selectInputs}{\code{ModClass$selectInputs()}}
-\item \href{#method-setupOP}{\code{ModClass$setupOP()}}
-\item \href{#method-setupMod}{\code{ModClass$setupMod()}}
-\item \href{#method-fitModels}{\code{ModClass$fitModels()}}
-\item \href{#method-savePlots}{\code{ModClass$savePlots()}}
-\item \href{#method-clone}{\code{ModClass$clone()}}
+\item \href{#method-ModClass-new}{\code{ModClass$new()}}
+\item \href{#method-ModClass-selectInputs}{\code{ModClass$selectInputs()}}
+\item \href{#method-ModClass-setupOP}{\code{ModClass$setupOP()}}
+\item \href{#method-ModClass-setupMod}{\code{ModClass$setupMod()}}
+\item \href{#method-ModClass-fitModels}{\code{ModClass$fitModels()}}
+\item \href{#method-ModClass-savePlots}{\code{ModClass$savePlots()}}
+\item \href{#method-ModClass-clone}{\code{ModClass$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-ModClass-new"></a>}}
+\if{latex}{\out{\hypertarget{method-ModClass-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ModClass$new(fxn = NULL, fxn_path = NULL, SAVE = NULL, out_path = NULL)}\if{html}{\out{</div>}}
@@ -151,8 +151,8 @@ A instantiated 'ModClass' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-selectInputs"></a>}}
-\if{latex}{\out{\hypertarget{method-selectInputs}{}}}
+\if{html}{\out{<a id="method-ModClass-selectInputs"></a>}}
+\if{latex}{\out{\hypertarget{method-ModClass-selectInputs}{}}}
 \subsection{Method \code{selectInputs()}}{
 Interactive method for selecting inputs related to the models used to
 fit crop responses to experimental and covariate data. The user must
@@ -180,8 +180,8 @@ A completed 'ModClass' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-setupOP"></a>}}
-\if{latex}{\out{\hypertarget{method-setupOP}{}}}
+\if{html}{\out{<a id="method-ModClass-setupOP"></a>}}
+\if{latex}{\out{\hypertarget{method-ModClass-setupOP}{}}}
 \subsection{Method \code{setupOP()}}{
 Method used to setup the output location for the figures that the model
 produces. These include diagnostic and validation plots. Pass FALSE to
@@ -207,8 +207,8 @@ A folder created in the path for model output figures.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-setupMod"></a>}}
-\if{latex}{\out{\hypertarget{method-setupMod}{}}}
+\if{html}{\out{<a id="method-ModClass-setupMod"></a>}}
+\if{latex}{\out{\hypertarget{method-ModClass-setupMod}{}}}
 \subsection{Method \code{setupMod()}}{
 Method used to setup the model. This initializes the specified model for each
 response variable. The initialization of each model creates a table of the
@@ -233,8 +233,8 @@ An instantiated model for each response variable.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fitModels"></a>}}
-\if{latex}{\out{\hypertarget{method-fitModels}{}}}
+\if{html}{\out{<a id="method-ModClass-fitModels"></a>}}
+\if{latex}{\out{\hypertarget{method-ModClass-fitModels}{}}}
 \subsection{Method \code{fitModels()}}{
 Method for calling the specific model class' method for executing the model
 fitting function. This can differ between model types and is thus model
@@ -255,8 +255,8 @@ Fitted models.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-savePlots"></a>}}
-\if{latex}{\out{\hypertarget{method-savePlots}{}}}
+\if{html}{\out{<a id="method-ModClass-savePlots"></a>}}
+\if{latex}{\out{\hypertarget{method-ModClass-savePlots}{}}}
 \subsection{Method \code{savePlots()}}{
 Method for saving diagnostic and validation plots. The diagnostic plots
 are methods of the specific model class used, while the validation plots
@@ -285,8 +285,8 @@ Diagnostic and validation plots in the 'Outputs' folder.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-ModClass-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-ModClass-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

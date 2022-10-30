@@ -25,18 +25,18 @@ database, see DBCon class.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{BuildDB$new()}}
-\item \href{#method-buildDatabase}{\code{BuildDB$buildDatabase()}}
-\item \href{#method-.loadExtensions}{\code{BuildDB$.loadExtensions()}}
-\item \href{#method-.buildSchemas}{\code{BuildDB$.buildSchemas()}}
-\item \href{#method-.buildTables}{\code{BuildDB$.buildTables()}}
-\item \href{#method-.buildSpatialIndexes}{\code{BuildDB$.buildSpatialIndexes()}}
-\item \href{#method-clone}{\code{BuildDB$clone()}}
+\item \href{#method-BuildDB-new}{\code{BuildDB$new()}}
+\item \href{#method-BuildDB-buildDatabase}{\code{BuildDB$buildDatabase()}}
+\item \href{#method-BuildDB-.loadExtensions}{\code{BuildDB$.loadExtensions()}}
+\item \href{#method-BuildDB-.buildSchemas}{\code{BuildDB$.buildSchemas()}}
+\item \href{#method-BuildDB-.buildTables}{\code{BuildDB$.buildTables()}}
+\item \href{#method-BuildDB-.buildSpatialIndexes}{\code{BuildDB$.buildSpatialIndexes()}}
+\item \href{#method-BuildDB-clone}{\code{BuildDB$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-BuildDB-new"></a>}}
+\if{latex}{\out{\hypertarget{method-BuildDB-new}{}}}
 \subsection{Method \code{new()}}{
 Create a database builder object.
 \subsection{Usage}{
@@ -60,8 +60,8 @@ A new 'BuildDB' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-buildDatabase"></a>}}
-\if{latex}{\out{\hypertarget{method-buildDatabase}{}}}
+\if{html}{\out{<a id="method-BuildDB-buildDatabase"></a>}}
+\if{latex}{\out{\hypertarget{method-BuildDB-buildDatabase}{}}}
 \subsection{Method \code{buildDatabase()}}{
 Execute database builder functions. Runs, .loadExtensions(), .buildSchemas(),
 and .buildTables().
@@ -79,8 +79,8 @@ initialization.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.loadExtensions"></a>}}
-\if{latex}{\out{\hypertarget{method-.loadExtensions}{}}}
+\if{html}{\out{<a id="method-BuildDB-.loadExtensions"></a>}}
+\if{latex}{\out{\hypertarget{method-BuildDB-.loadExtensions}{}}}
 \subsection{Method \code{.loadExtensions()}}{
 Loads extensions needed for OFPE database functions such
 as PostGIS tools and a function for generating a net across an area of
@@ -107,8 +107,8 @@ Enabled database extensions.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.buildSchemas"></a>}}
-\if{latex}{\out{\hypertarget{method-.buildSchemas}{}}}
+\if{html}{\out{<a id="method-BuildDB-.buildSchemas"></a>}}
+\if{latex}{\out{\hypertarget{method-BuildDB-.buildSchemas}{}}}
 \subsection{Method \code{.buildSchemas()}}{
 Builds the skeleton of the database. Two schemas for each farmer supplied
 is built; one for holding raw data collected on-farms from equipment, and
@@ -136,8 +136,8 @@ Built database schemas.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.buildTables"></a>}}
-\if{latex}{\out{\hypertarget{method-.buildTables}{}}}
+\if{html}{\out{<a id="method-BuildDB-.buildTables"></a>}}
+\if{latex}{\out{\hypertarget{method-BuildDB-.buildTables}{}}}
 \subsection{Method \code{.buildTables()}}{
 Builds initial tables in the 'all_farms' schema. None of these tables
 are filled with information. These tables will be filled with methods
@@ -167,8 +167,8 @@ Built 'all_farms' tables
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.buildSpatialIndexes"></a>}}
-\if{latex}{\out{\hypertarget{method-.buildSpatialIndexes}{}}}
+\if{html}{\out{<a id="method-BuildDB-.buildSpatialIndexes"></a>}}
+\if{latex}{\out{\hypertarget{method-BuildDB-.buildSpatialIndexes}{}}}
 \subsection{Method \code{.buildSpatialIndexes()}}{
 Builds spatial indexes on the tabels created in the 'all_farms' schema.
 These indexes are used to speed up spatial queries and are a PostGIS tool.
@@ -192,8 +192,8 @@ Built spatial indexes on the 'farms' and 'fields' tables.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-BuildDB-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-BuildDB-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

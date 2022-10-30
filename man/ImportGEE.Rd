@@ -37,17 +37,17 @@ OFPE formatted database.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{ImportGEE$new()}}
-\item \href{#method-executeUpload}{\code{ImportGEE$executeUpload()}}
-\item \href{#method-.uploadGEE}{\code{ImportGEE$.uploadGEE()}}
-\item \href{#method-.getInfo}{\code{ImportGEE$.getInfo()}}
-\item \href{#method-.addColsToDB}{\code{ImportGEE$.addColsToDB()}}
-\item \href{#method-clone}{\code{ImportGEE$clone()}}
+\item \href{#method-ImportGEE-new}{\code{ImportGEE$new()}}
+\item \href{#method-ImportGEE-executeUpload}{\code{ImportGEE$executeUpload()}}
+\item \href{#method-ImportGEE-.uploadGEE}{\code{ImportGEE$.uploadGEE()}}
+\item \href{#method-ImportGEE-.getInfo}{\code{ImportGEE$.getInfo()}}
+\item \href{#method-ImportGEE-.addColsToDB}{\code{ImportGEE$.addColsToDB()}}
+\item \href{#method-ImportGEE-clone}{\code{ImportGEE$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-ImportGEE-new"></a>}}
+\if{latex}{\out{\hypertarget{method-ImportGEE-new}{}}}
 \subsection{Method \code{new()}}{
 Create a database importer object.
 \subsection{Usage}{
@@ -73,8 +73,8 @@ A new 'ImportGEE' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-executeUpload"></a>}}
-\if{latex}{\out{\hypertarget{method-executeUpload}{}}}
+\if{html}{\out{<a id="method-ImportGEE-executeUpload"></a>}}
+\if{latex}{\out{\hypertarget{method-ImportGEE-executeUpload}{}}}
 \subsection{Method \code{executeUpload()}}{
 Google Earth Engine data import execution.
 \subsection{Usage}{
@@ -93,8 +93,8 @@ See 'GEE' table in database.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.uploadGEE"></a>}}
-\if{latex}{\out{\hypertarget{method-.uploadGEE}{}}}
+\if{html}{\out{<a id="method-ImportGEE-.uploadGEE"></a>}}
+\if{latex}{\out{\hypertarget{method-ImportGEE-.uploadGEE}{}}}
 \subsection{Method \code{.uploadGEE()}}{
 Uploads data to an OFPE formatted database from a Google Drive folder.
 The dot indicates that this function would be private if not for
@@ -119,8 +119,8 @@ See 'GEE' table in database.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.getInfo"></a>}}
-\if{latex}{\out{\hypertarget{method-.getInfo}{}}}
+\if{html}{\out{<a id="method-ImportGEE-.getInfo"></a>}}
+\if{latex}{\out{\hypertarget{method-ImportGEE-.getInfo}{}}}
 \subsection{Method \code{.getInfo()}}{
 Function for identifying information from the filenames exported from
 Google Drive
@@ -140,8 +140,8 @@ Raster information.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.addColsToDB"></a>}}
-\if{latex}{\out{\hypertarget{method-.addColsToDB}{}}}
+\if{html}{\out{<a id="method-ImportGEE-.addColsToDB"></a>}}
+\if{latex}{\out{\hypertarget{method-ImportGEE-.addColsToDB}{}}}
 \subsection{Method \code{.addColsToDB()}}{
 Adds columns to the data file importing to the database.
 \subsection{Usage}{
@@ -164,8 +164,8 @@ Columns added to database table.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-ImportGEE-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-ImportGEE-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

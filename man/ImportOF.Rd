@@ -40,21 +40,21 @@ OFPE formatted database.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{ImportOF$new()}}
-\item \href{#method-executeUpload}{\code{ImportOF$executeUpload()}}
-\item \href{#method-.uploadData}{\code{ImportOF$.uploadData()}}
-\item \href{#method-.impDat}{\code{ImportOF$.impDat()}}
-\item \href{#method-.makeSptl}{\code{ImportOF$.makeSptl()}}
-\item \href{#method-.oldDatClean}{\code{ImportOF$.oldDatClean()}}
-\item \href{#method-.findInfo}{\code{ImportOF$.findInfo()}}
-\item \href{#method-.fixCols}{\code{ImportOF$.fixCols()}}
-\item \href{#method-.uploadFun}{\code{ImportOF$.uploadFun()}}
-\item \href{#method-clone}{\code{ImportOF$clone()}}
+\item \href{#method-ImportOF-new}{\code{ImportOF$new()}}
+\item \href{#method-ImportOF-executeUpload}{\code{ImportOF$executeUpload()}}
+\item \href{#method-ImportOF-.uploadData}{\code{ImportOF$.uploadData()}}
+\item \href{#method-ImportOF-.impDat}{\code{ImportOF$.impDat()}}
+\item \href{#method-ImportOF-.makeSptl}{\code{ImportOF$.makeSptl()}}
+\item \href{#method-ImportOF-.oldDatClean}{\code{ImportOF$.oldDatClean()}}
+\item \href{#method-ImportOF-.findInfo}{\code{ImportOF$.findInfo()}}
+\item \href{#method-ImportOF-.fixCols}{\code{ImportOF$.fixCols()}}
+\item \href{#method-ImportOF-.uploadFun}{\code{ImportOF$.uploadFun()}}
+\item \href{#method-ImportOF-clone}{\code{ImportOF$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-ImportOF-new"></a>}}
+\if{latex}{\out{\hypertarget{method-ImportOF-new}{}}}
 \subsection{Method \code{new()}}{
 Create a database importer object.
 \subsection{Usage}{
@@ -77,8 +77,8 @@ A new 'ImportOF' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-executeUpload"></a>}}
-\if{latex}{\out{\hypertarget{method-executeUpload}{}}}
+\if{html}{\out{<a id="method-ImportOF-executeUpload"></a>}}
+\if{latex}{\out{\hypertarget{method-ImportOF-executeUpload}{}}}
 \subsection{Method \code{executeUpload()}}{
 On-farm data import execution.
 \subsection{Usage}{
@@ -97,8 +97,8 @@ See 'status' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.uploadData"></a>}}
-\if{latex}{\out{\hypertarget{method-.uploadData}{}}}
+\if{html}{\out{<a id="method-ImportOF-.uploadData"></a>}}
+\if{latex}{\out{\hypertarget{method-ImportOF-.uploadData}{}}}
 \subsection{Method \code{.uploadData()}}{
 Uploads data to an OFPE formatted database following a chain of methods
 and returning the status of the upload. The dot indicates that this
@@ -119,8 +119,8 @@ See 'status' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.impDat"></a>}}
-\if{latex}{\out{\hypertarget{method-.impDat}{}}}
+\if{html}{\out{<a id="method-ImportOF-.impDat"></a>}}
+\if{latex}{\out{\hypertarget{method-ImportOF-.impDat}{}}}
 \subsection{Method \code{.impDat()}}{
 Imports data for uploading to an OFPE database. If data is a shapefile
 imported directly using 'sf' package, otherwise brings in data as .csv.
@@ -142,8 +142,8 @@ Imported data.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.makeSptl"></a>}}
-\if{latex}{\out{\hypertarget{method-.makeSptl}{}}}
+\if{html}{\out{<a id="method-ImportOF-.makeSptl"></a>}}
+\if{latex}{\out{\hypertarget{method-ImportOF-.makeSptl}{}}}
 \subsection{Method \code{.makeSptl()}}{
 Makes data that was imported for uploading into spatial data. This only
 applies to non-shapefiles, as they are already spatial. This is for the
@@ -167,8 +167,8 @@ Data in spatial format.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.oldDatClean"></a>}}
-\if{latex}{\out{\hypertarget{method-.oldDatClean}{}}}
+\if{html}{\out{<a id="method-ImportOF-.oldDatClean"></a>}}
+\if{latex}{\out{\hypertarget{method-ImportOF-.oldDatClean}{}}}
 \subsection{Method \code{.oldDatClean()}}{
 Cleans up any column names that might mess with new ones that are
 created in the data workflow. This is mainly to prevent issues when using
@@ -190,8 +190,8 @@ Data without old columns.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.findInfo"></a>}}
-\if{latex}{\out{\hypertarget{method-.findInfo}{}}}
+\if{html}{\out{<a id="method-ImportOF-.findInfo"></a>}}
+\if{latex}{\out{\hypertarget{method-ImportOF-.findInfo}{}}}
 \subsection{Method \code{.findInfo()}}{
 Identifies distinguishing features of the data, such as a field name if
 present, the corresponding farmer, and the year the data is collected.
@@ -215,8 +215,8 @@ Data without old columns.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.fixCols"></a>}}
-\if{latex}{\out{\hypertarget{method-.fixCols}{}}}
+\if{html}{\out{<a id="method-ImportOF-.fixCols"></a>}}
+\if{latex}{\out{\hypertarget{method-ImportOF-.fixCols}{}}}
 \subsection{Method \code{.fixCols()}}{
 Goes through each file and replaces any column names with more palatable
 formats such as lower case and without any special characters. The dot
@@ -237,8 +237,8 @@ Data with cleaned up column names.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.uploadFun"></a>}}
-\if{latex}{\out{\hypertarget{method-.uploadFun}{}}}
+\if{html}{\out{<a id="method-ImportOF-.uploadFun"></a>}}
+\if{latex}{\out{\hypertarget{method-ImportOF-.uploadFun}{}}}
 \subsection{Method \code{.uploadFun()}}{
 Function for uploading each file to the appropriate section of the
 database. This function identifies the data type and uses the information
@@ -264,8 +264,8 @@ Data uploaded to the database
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-ImportOF-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-ImportOF-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

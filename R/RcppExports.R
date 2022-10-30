@@ -18,6 +18,8 @@
 #' equation.
 #' @param B2pd The coefficient for protein squared for the protein
 #' premium/dockage equation.
+#' @param B3pd The coefficient for protein cubed for the protein
+#' premium/dockage equation.
 #' @param CEXP The cost of the experimental input.
 #' @param BpOpp The base price corresponding to the price for the opposite
 #' system type selected by the user (i.e. conventional or organic).
@@ -49,8 +51,8 @@
 #' simulate in (i.e. 0 lbs N/ac).
 #' @return df Matrix filled in with net-returns.
 #' @export
-NRcalcCpp <- function(df, Bp, B0pd, B1pd, B2pd, CEXP, BpOpp, FC, fs, ssAC, predInd, rr, expCol, yldCol, proCol, NRcol, NRminCol, NRoppCol, NRfsCol, AAmin) {
-    .Call(`_OFPE_NRcalcCpp`, df, Bp, B0pd, B1pd, B2pd, CEXP, BpOpp, FC, fs, ssAC, predInd, rr, expCol, yldCol, proCol, NRcol, NRminCol, NRoppCol, NRfsCol, AAmin)
+NRcalcCpp <- function(df, Bp, B0pd, B1pd, B2pd, B3pd, CEXP, BpOpp, FC, fs, ssAC, predInd, rr, expCol, yldCol, proCol, NRcol, NRminCol, NRoppCol, NRfsCol, AAmin) {
+    .Call(`_OFPE_NRcalcCpp`, df, Bp, B0pd, B1pd, B2pd, B3pd, CEXP, BpOpp, FC, fs, ssAC, predInd, rr, expCol, yldCol, proCol, NRcol, NRminCol, NRoppCol, NRfsCol, AAmin)
 }
 
 #' Function for identifying the optimum full-field experimental rate based on

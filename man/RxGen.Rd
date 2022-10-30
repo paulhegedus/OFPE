@@ -201,14 +201,14 @@ the treatment length.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{RxGen$new()}}
-\item \href{#method-executeOutput}{\code{RxGen$executeOutput()}}
-\item \href{#method-clone}{\code{RxGen$clone()}}
+\item \href{#method-RxGen-new}{\code{RxGen$new()}}
+\item \href{#method-RxGen-executeOutput}{\code{RxGen$executeOutput()}}
+\item \href{#method-RxGen-clone}{\code{RxGen$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-RxGen-new"></a>}}
+\if{latex}{\out{\hypertarget{method-RxGen-new}{}}}
 \subsection{Method \code{new()}}{
 It is recommended to initialize this class through the RxClass,
 because it is integrated into the OFPE workflow. This also ensures all of the
@@ -359,8 +359,8 @@ An initialized RxGen R6 class object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-executeOutput"></a>}}
-\if{latex}{\out{\hypertarget{method-executeOutput}{}}}
+\if{html}{\out{<a id="method-RxGen-executeOutput"></a>}}
+\if{latex}{\out{\hypertarget{method-RxGen-executeOutput}{}}}
 \subsection{Method \code{executeOutput()}}{
 Method for calling the execution method of the experiment
 generator. This applies the prescription/experimental rates across
@@ -382,8 +382,8 @@ A completed experiment table containing the output.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-RxGen-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-RxGen-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

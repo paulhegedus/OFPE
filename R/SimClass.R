@@ -341,7 +341,8 @@ SimClass <- R6::R6Class(
         !is.null(econDat$Prc),
         !is.null(econDat$B0pd),
         !is.null(econDat$B1pd),
-        !is.null(econDat$B2pd)
+        !is.null(econDat$B2pd),
+        !is.null(econDat$B3pd)
       )
       self$datClass <- datClass
       self$modClass <- modClass
@@ -661,6 +662,8 @@ SimClass <- R6::R6Class(
     #' equation.
     #' @param B2pd The coefficient for protein squared for the protein
     #' premium/dockage equation.
+    #' @param B3pd The coefficient for protein cubed for the protein
+    #' premium/dockage equation.
     #' @param CEXP The cost of the experimental input.
     #' @param FC Fixed costs ($/area) associated with production, not including
     #' the input of interest. This includes things like the cost of labor, fuel, etc.
@@ -694,6 +697,7 @@ SimClass <- R6::R6Class(
                          B0pd,
                          B1pd,
                          B2pd,
+                         B3pd, 
                          CEXP,
                          FC,
                          ssAC,
@@ -740,7 +744,7 @@ SimClass <- R6::R6Class(
       # calculate NR for each point
       names(dat)[grep(paste0("^", expvar, "$"), names(dat))] <- "exp"
       if (any(respvar == "pro")) {
-        P <- Bp + (B0pd + B1pd * dat$pro + B2pd * dat$pro^2)
+        P <- Bp + (B0pd + B1pd * dat$pro + B2pd * dat$pro^2 + B3pd * dat$pro^3)
         dat$NR <- (dat$yld * P) - (CEXP * dat$exp) - FC - ssAC
       } else {
         dat$NR <- (dat$yld * Bp) - (CEXP * dat$exp) - FC - ssAC
@@ -1227,6 +1231,7 @@ SimClass <- R6::R6Class(
                  self$econDat$B0pd,
                  self$econDat$B1pd,
                  self$econDat$B2pd,
+                 self$econDat$B3pd,
                  CEXP,
                  BpOpp,
                  FC,
@@ -1590,6 +1595,7 @@ SimClass <- R6::R6Class(
         self$econDat$B0pd,
         self$econDat$B1pd,
         self$econDat$B2pd,
+        self$econDat$B3pd,
         CEXP,
         FC,
         self$econDat$ssAC
@@ -1648,9 +1654,9 @@ SimClass <- R6::R6Class(
       fieldsize <- do.call(c, fields) %>% sum()
       return(fieldsize)
     },
-    .NRcalc = function(dat, predInd, Bp, B0pd, B1pd, B2pd, CEXP, FC, ssAC) {
+    .NRcalc = function(dat, predInd, Bp, B0pd, B1pd, B2pd, B3pd, CEXP, FC, ssAC) {
       if (predInd == 1) {
-        P <- Bp + (B0pd + B1pd * dat$pred_pro + B2pd * dat$pred_pro^2);
+        P <- Bp + (B0pd + B1pd * dat$pred_pro + B2pd * dat$pred_pro^2 + B3pd * dat$pred_pro^3);
         dat$NR <- (dat$pred_yld * P) - (CEXP * dat$exp) - FC;
       } else {
         dat$NR <- (dat$pred_yld * Bp) - (CEXP * dat$exp) - FC;
@@ -1694,6 +1700,7 @@ SimClass <- R6::R6Class(
                self$econDat$B0pd,
                self$econDat$B1pd,
                self$econDat$B2pd,
+               self$econDat$B3pd,
                self$CEXP,
                BpOpp,
                self$FC,
@@ -1906,6 +1913,7 @@ SimClass <- R6::R6Class(
                        self$econDat$B0pd,
                        self$econDat$B1pd,
                        self$econDat$B2pd,
+                       self$econDat$B3pd,
                        CEXP,
                        FC,
                        self$econDat$ssAC,
@@ -2060,6 +2068,7 @@ SimClass <- R6::R6Class(
                  self$econDat$B0pd,
                  self$econDat$B1pd,
                  self$econDat$B2pd,
+                 self$econDat$B3pd,
                  CEXP,
                  BpOpp,
                  FC,

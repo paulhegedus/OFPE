@@ -93,22 +93,22 @@ documentation for more information on the 'dat_used' selection.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{ObsOP$new()}}
-\item \href{#method-fetchAggDat}{\code{ObsOP$fetchAggDat()}}
-\item \href{#method-fetchRawDat}{\code{ObsOP$fetchRawDat()}}
-\item \href{#method-krigeDat}{\code{ObsOP$krigeDat()}}
-\item \href{#method-calcNR}{\code{ObsOP$calcNR()}}
-\item \href{#method-plotObsMaps}{\code{ObsOP$plotObsMaps()}}
-\item \href{#method-plotScatters}{\code{ObsOP$plotScatters()}}
-\item \href{#method-plotBoxplots}{\code{ObsOP$plotBoxplots()}}
-\item \href{#method-plotViolins}{\code{ObsOP$plotViolins()}}
-\item \href{#method-plotHistogram}{\code{ObsOP$plotHistogram()}}
-\item \href{#method-clone}{\code{ObsOP$clone()}}
+\item \href{#method-ObsOP-new}{\code{ObsOP$new()}}
+\item \href{#method-ObsOP-fetchAggDat}{\code{ObsOP$fetchAggDat()}}
+\item \href{#method-ObsOP-fetchRawDat}{\code{ObsOP$fetchRawDat()}}
+\item \href{#method-ObsOP-krigeDat}{\code{ObsOP$krigeDat()}}
+\item \href{#method-ObsOP-calcNR}{\code{ObsOP$calcNR()}}
+\item \href{#method-ObsOP-plotObsMaps}{\code{ObsOP$plotObsMaps()}}
+\item \href{#method-ObsOP-plotScatters}{\code{ObsOP$plotScatters()}}
+\item \href{#method-ObsOP-plotBoxplots}{\code{ObsOP$plotBoxplots()}}
+\item \href{#method-ObsOP-plotViolins}{\code{ObsOP$plotViolins()}}
+\item \href{#method-ObsOP-plotHistogram}{\code{ObsOP$plotHistogram()}}
+\item \href{#method-ObsOP-clone}{\code{ObsOP$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-ObsOP-new"></a>}}
+\if{latex}{\out{\hypertarget{method-ObsOP-new}{}}}
 \subsection{Method \code{new()}}{
 Use this class to import data from an OFPE database, save figures and
 explore observed data. This class can be initialized with a arguments required
@@ -185,8 +185,8 @@ model output figures if specified.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fetchAggDat"></a>}}
-\if{latex}{\out{\hypertarget{method-fetchAggDat}{}}}
+\if{html}{\out{<a id="method-ObsOP-fetchAggDat"></a>}}
+\if{latex}{\out{\hypertarget{method-ObsOP-fetchAggDat}{}}}
 \subsection{Method \code{fetchAggDat()}}{
 Gather data from an aggregated table in an
 OFPE database. Provide the farmername, fieldname(s), year(s),
@@ -241,8 +241,8 @@ Data table with specified data.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fetchRawDat"></a>}}
-\if{latex}{\out{\hypertarget{method-fetchRawDat}{}}}
+\if{html}{\out{<a id="method-ObsOP-fetchRawDat"></a>}}
+\if{latex}{\out{\hypertarget{method-ObsOP-fetchRawDat}{}}}
 \subsection{Method \code{fetchRawDat()}}{
 Gather data from a raw table in an
 OFPE database. Provide the farmername, the type of data, and the
@@ -283,8 +283,8 @@ Data table with specified data.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-krigeDat"></a>}}
-\if{latex}{\out{\hypertarget{method-krigeDat}{}}}
+\if{html}{\out{<a id="method-ObsOP-krigeDat"></a>}}
+\if{latex}{\out{\hypertarget{method-ObsOP-krigeDat}{}}}
 \subsection{Method \code{krigeDat()}}{
 Interpolate data using kriging. Takes two datasets and the
 specified column name in the source data for the variable to be kriged
@@ -309,8 +309,8 @@ Data table with interpolated data.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-calcNR"></a>}}
-\if{latex}{\out{\hypertarget{method-calcNR}{}}}
+\if{html}{\out{<a id="method-ObsOP-calcNR"></a>}}
+\if{latex}{\out{\hypertarget{method-ObsOP-calcNR}{}}}
 \subsection{Method \code{calcNR()}}{
 Method for calculating net-return in a dataset. This method
 looks for columns specified as 'yld' or 'pro' as well as 'aa_X' specifying
@@ -377,8 +377,8 @@ Data frame with new 'NR' column.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plotObsMaps"></a>}}
-\if{latex}{\out{\hypertarget{method-plotObsMaps}{}}}
+\if{html}{\out{<a id="method-ObsOP-plotObsMaps"></a>}}
+\if{latex}{\out{\hypertarget{method-ObsOP-plotObsMaps}{}}}
 \subsection{Method \code{plotObsMaps()}}{
 This method is for plotting maps of observed variables. The user
 must supply the data and variable to map. Other arguments relate to
@@ -445,8 +445,8 @@ A 'ggmap' object and maps saved in the specified output folder if selected.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plotScatters"></a>}}
-\if{latex}{\out{\hypertarget{method-plotScatters}{}}}
+\if{html}{\out{<a id="method-ObsOP-plotScatters"></a>}}
+\if{latex}{\out{\hypertarget{method-ObsOP-plotScatters}{}}}
 \subsection{Method \code{plotScatters()}}{
 This method is for creating a scatterplot of variables specified by the
 user. The user specifies the x and y column to plot and a variable or
@@ -504,8 +504,8 @@ A scatterplot and saved in the specified output folder if selected.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plotBoxplots"></a>}}
-\if{latex}{\out{\hypertarget{method-plotBoxplots}{}}}
+\if{html}{\out{<a id="method-ObsOP-plotBoxplots"></a>}}
+\if{latex}{\out{\hypertarget{method-ObsOP-plotBoxplots}{}}}
 \subsection{Method \code{plotBoxplots()}}{
 This method is for creating a boxplot of variables specified by the
 user. The user specifies the x and y column to plot and a variable or
@@ -563,8 +563,8 @@ A boxplot and saved in the specified output folder if selected.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plotViolins"></a>}}
-\if{latex}{\out{\hypertarget{method-plotViolins}{}}}
+\if{html}{\out{<a id="method-ObsOP-plotViolins"></a>}}
+\if{latex}{\out{\hypertarget{method-ObsOP-plotViolins}{}}}
 \subsection{Method \code{plotViolins()}}{
 This method is for creating a violin plot of variables specified by the
 user. The user specifies the x and y column to plot and a variable or
@@ -624,8 +624,8 @@ A violin plot and saved in the specified output folder if selected.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plotHistogram"></a>}}
-\if{latex}{\out{\hypertarget{method-plotHistogram}{}}}
+\if{html}{\out{<a id="method-ObsOP-plotHistogram"></a>}}
+\if{latex}{\out{\hypertarget{method-ObsOP-plotHistogram}{}}}
 \subsection{Method \code{plotHistogram()}}{
 This method is for creating a histogram of a variable specified by the
 user. The user specifies the column in the data holding the data of interest
@@ -677,8 +677,8 @@ A scatterplot and saved in 'Outputs/Maps' folder if selected.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-ObsOP-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-ObsOP-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

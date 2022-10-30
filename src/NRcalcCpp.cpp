@@ -20,6 +20,8 @@
 //' equation.
 //' @param B2pd The coefficient for protein squared for the protein
 //' premium/dockage equation.
+//' @param B3pd The coefficient for protein cubed for the protein
+//' premium/dockage equation.
 //' @param CEXP The cost of the experimental input.
 //' @param BpOpp The base price corresponding to the price for the opposite
 //' system type selected by the user (i.e. conventional or organic).
@@ -57,6 +59,7 @@ arma::mat NRcalcCpp(arma::mat df,
                         double B0pd,
                         double B1pd,
                         double B2pd,
+                        double B3pd,
                         double CEXP,
                         double BpOpp,
                         double FC,
@@ -73,6 +76,7 @@ arma::mat NRcalcCpp(arma::mat df,
                         int NRfsCol,
                         int AAmin) {
   double prosq;
+  double procub;
   double P;
 
   for (int ii = 0; ii < rr; ii++) {
@@ -80,7 +84,8 @@ arma::mat NRcalcCpp(arma::mat df,
     if (predInd == 1) {
       double float_pro = df(ii, proCol);
       prosq = std::pow(float_pro, 2);
-      P = Bp + (B0pd + B1pd * df(ii, proCol) + B2pd * prosq);
+      procub = std::pow(float_pro, 3);
+      P = Bp + (B0pd + B1pd * df(ii, proCol) + B2pd * prosq + B3pd * procub);
       df(ii, NRcol) = (df(ii, yldCol) * P) - CEXP * df(ii, expCol) - FC;
     } else {
       df(ii, NRcol) = (df(ii, yldCol) * Bp) - CEXP * df(ii, expCol) - FC;

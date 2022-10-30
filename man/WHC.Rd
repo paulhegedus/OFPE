@@ -82,18 +82,18 @@ fallow cutoff specified in gatherDBdat().}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{WHC$new()}}
-\item \href{#method-gatherDBdat}{\code{WHC$gatherDBdat()}}
-\item \href{#method-genWHCclass}{\code{WHC$genWHCclass()}}
-\item \href{#method-classWHC}{\code{WHC$classWHC()}}
-\item \href{#method-plotRawMaps}{\code{WHC$plotRawMaps()}}
-\item \href{#method-plotWHCmap}{\code{WHC$plotWHCmap()}}
-\item \href{#method-clone}{\code{WHC$clone()}}
+\item \href{#method-WHC-new}{\code{WHC$new()}}
+\item \href{#method-WHC-gatherDBdat}{\code{WHC$gatherDBdat()}}
+\item \href{#method-WHC-genWHCclass}{\code{WHC$genWHCclass()}}
+\item \href{#method-WHC-classWHC}{\code{WHC$classWHC()}}
+\item \href{#method-WHC-plotRawMaps}{\code{WHC$plotRawMaps()}}
+\item \href{#method-WHC-plotWHCmap}{\code{WHC$plotWHCmap()}}
+\item \href{#method-WHC-clone}{\code{WHC$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-WHC-new"></a>}}
+\if{latex}{\out{\hypertarget{method-WHC-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{WHC$new(dbCon, fieldname)}\if{html}{\out{</div>}}
@@ -114,8 +114,8 @@ A new 'WHC' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-gatherDBdat"></a>}}
-\if{latex}{\out{\hypertarget{method-gatherDBdat}{}}}
+\if{html}{\out{<a id="method-WHC-gatherDBdat"></a>}}
+\if{latex}{\out{\hypertarget{method-WHC-gatherDBdat}{}}}
 \subsection{Method \code{gatherDBdat()}}{
 Function for creating a stack of rasters from a set of years. Requires
 a user to pass a vector of years as an argument. Also requires specification
@@ -150,8 +150,8 @@ An internal list object with data from each year stored in a 'raw_dat' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-genWHCclass"></a>}}
-\if{latex}{\out{\hypertarget{method-genWHCclass}{}}}
+\if{html}{\out{<a id="method-WHC-genWHCclass"></a>}}
+\if{latex}{\out{\hypertarget{method-WHC-genWHCclass}{}}}
 \subsection{Method \code{genWHCclass()}}{
 Function for generating the WHC classification from data in the database. Must
 be supplied with a list of data from the 'sat' tables of an aggregated schema or
@@ -192,8 +192,8 @@ A data frame with the WHC classification, if desired.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-classWHC"></a>}}
-\if{latex}{\out{\hypertarget{method-classWHC}{}}}
+\if{html}{\out{<a id="method-WHC-classWHC"></a>}}
+\if{latex}{\out{\hypertarget{method-WHC-classWHC}{}}}
 \subsection{Method \code{classWHC()}}{
 Function for classifying mean and CV classifications into WHC zones.
 \subsection{Usage}{
@@ -213,8 +213,8 @@ The user's dataset with classifications of WHC.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plotRawMaps"></a>}}
-\if{latex}{\out{\hypertarget{method-plotRawMaps}{}}}
+\if{html}{\out{<a id="method-WHC-plotRawMaps"></a>}}
+\if{latex}{\out{\hypertarget{method-WHC-plotRawMaps}{}}}
 \subsection{Method \code{plotRawMaps()}}{
 Function for plotting the raw satellite data.
 \subsection{Usage}{
@@ -241,8 +241,8 @@ A data frame with the WHC classification, if desired.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plotWHCmap"></a>}}
-\if{latex}{\out{\hypertarget{method-plotWHCmap}{}}}
+\if{html}{\out{<a id="method-WHC-plotWHCmap"></a>}}
+\if{latex}{\out{\hypertarget{method-WHC-plotWHCmap}{}}}
 \subsection{Method \code{plotWHCmap()}}{
 Function for plotting the WHC classifications.
 \subsection{Usage}{
@@ -270,8 +270,8 @@ A data frame with the WHC classification, if desired.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-WHC-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-WHC-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

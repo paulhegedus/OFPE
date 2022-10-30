@@ -234,10 +234,12 @@ EconDat <- R6::R6Class(
     },
     .fitPremDock = function() {
       prosq <- self$PD$pro^2
-      fm <- lm(self$PD$PremDock ~ self$PD$pro + prosq)
+      procub <- self$PD$pro^3
+      fm <- lm(self$PD$PremDock ~ self$PD$pro + prosq + procub)
       self$B0pd <- as.vector(coef(fm)[1])
       self$B1pd <- as.vector(coef(fm)[2])
       self$B2pd <- as.vector(coef(fm)[3])
+      self$B3pd <- as.vector(coef(fm)[4])
     }
   )
 )

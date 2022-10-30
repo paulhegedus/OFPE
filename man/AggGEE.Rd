@@ -49,15 +49,15 @@ label.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{AggGEE$new()}}
-\item \href{#method-aggregateGEE}{\code{AggGEE$aggregateGEE()}}
-\item \href{#method-.getGEEdata}{\code{AggGEE$.getGEEdata()}}
-\item \href{#method-clone}{\code{AggGEE$clone()}}
+\item \href{#method-AggGEE-new}{\code{AggGEE$new()}}
+\item \href{#method-AggGEE-aggregateGEE}{\code{AggGEE$aggregateGEE()}}
+\item \href{#method-AggGEE-.getGEEdata}{\code{AggGEE$.getGEEdata()}}
+\item \href{#method-AggGEE-clone}{\code{AggGEE$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-AggGEE-new"></a>}}
+\if{latex}{\out{\hypertarget{method-AggGEE-new}{}}}
 \subsection{Method \code{new()}}{
 Initialize an object for executing the process of aggregating
 Google Earth Engine data to OFPE data. Adds necessary columns to
@@ -85,8 +85,8 @@ An initialized 'AggGEE' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-aggregateGEE"></a>}}
-\if{latex}{\out{\hypertarget{method-aggregateGEE}{}}}
+\if{html}{\out{<a id="method-AggGEE-aggregateGEE"></a>}}
+\if{latex}{\out{\hypertarget{method-AggGEE-aggregateGEE}{}}}
 \subsection{Method \code{aggregateGEE()}}{
 Method for executing the aggregation of GEE data to the on-farm data
 within the OFPE database. First, gather the environmental variables
@@ -119,8 +119,8 @@ in the database.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-.getGEEdata"></a>}}
-\if{latex}{\out{\hypertarget{method-.getGEEdata}{}}}
+\if{html}{\out{<a id="method-AggGEE-.getGEEdata"></a>}}
+\if{latex}{\out{\hypertarget{method-AggGEE-.getGEEdata}{}}}
 \subsection{Method \code{.getGEEdata()}}{
 Method for aggregating the Google Earth Engine data to the on-farm
 aggregated data. Identifies the appropriate data from the 'all_farms.
@@ -171,8 +171,8 @@ Data in temporary aggregated table.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-AggGEE-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-AggGEE-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

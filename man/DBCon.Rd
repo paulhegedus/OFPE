@@ -26,14 +26,14 @@ supply the DSN, user, and password.
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{DBCon$new()}}
-\item \href{#method-disconnect}{\code{DBCon$disconnect()}}
-\item \href{#method-clone}{\code{DBCon$clone()}}
+\item \href{#method-DBCon-new}{\code{DBCon$new()}}
+\item \href{#method-DBCon-disconnect}{\code{DBCon$disconnect()}}
+\item \href{#method-DBCon-clone}{\code{DBCon$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-DBCon-new"></a>}}
+\if{latex}{\out{\hypertarget{method-DBCon-new}{}}}
 \subsection{Method \code{new()}}{
 Create a database connection inside of the DBCon class.
 \subsection{Usage}{
@@ -71,8 +71,8 @@ An open database connection.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-disconnect"></a>}}
-\if{latex}{\out{\hypertarget{method-disconnect}{}}}
+\if{html}{\out{<a id="method-DBCon-disconnect"></a>}}
+\if{latex}{\out{\hypertarget{method-DBCon-disconnect}{}}}
 \subsection{Method \code{disconnect()}}{
 Close a database connection in the DCCon class.
 \subsection{Usage}{
@@ -91,8 +91,8 @@ A closed database connection.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-DBCon-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-DBCon-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

@@ -61,16 +61,16 @@ is used for plotting.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{BayesLawrence$new()}}
-\item \href{#method-fitMod}{\code{BayesLawrence$fitMod()}}
-\item \href{#method-predResps}{\code{BayesLawrence$predResps()}}
-\item \href{#method-saveDiagnostics}{\code{BayesLawrence$saveDiagnostics()}}
-\item \href{#method-clone}{\code{BayesLawrence$clone()}}
+\item \href{#method-BayesLawrence-new}{\code{BayesLawrence$new()}}
+\item \href{#method-BayesLawrence-fitMod}{\code{BayesLawrence$fitMod()}}
+\item \href{#method-BayesLawrence-predResps}{\code{BayesLawrence$predResps()}}
+\item \href{#method-BayesLawrence-saveDiagnostics}{\code{BayesLawrence$saveDiagnostics()}}
+\item \href{#method-BayesLawrence-clone}{\code{BayesLawrence$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-BayesLawrence-new"></a>}}
+\if{latex}{\out{\hypertarget{method-BayesLawrence-new}{}}}
 \subsection{Method \code{new()}}{
 The initialization creates a data frame ('parm_df') containing the parameter names,
 the mean and standard deviation, and whether it meets
@@ -101,8 +101,8 @@ A instantiated 'RF' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fitMod"></a>}}
-\if{latex}{\out{\hypertarget{method-fitMod}{}}}
+\if{html}{\out{<a id="method-BayesLawrence-fitMod"></a>}}
+\if{latex}{\out{\hypertarget{method-BayesLawrence-fitMod}{}}}
 \subsection{Method \code{fitMod()}}{
 Method for fitting the modified Lawrence et al. 2015 Bayesian model to
 response variables using experimental input data, precipitation, and claycontent.
@@ -129,8 +129,8 @@ A fitted BayesLawrence model.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-predResps"></a>}}
-\if{latex}{\out{\hypertarget{method-predResps}{}}}
+\if{html}{\out{<a id="method-BayesLawrence-predResps"></a>}}
+\if{latex}{\out{\hypertarget{method-BayesLawrence-predResps}{}}}
 \subsection{Method \code{predResps()}}{
 Method for predicting response variables using data and a model.
 \subsection{Usage}{
@@ -152,8 +152,8 @@ Vector of predicted values for each location in 'dat'.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-saveDiagnostics"></a>}}
-\if{latex}{\out{\hypertarget{method-saveDiagnostics}{}}}
+\if{html}{\out{<a id="method-BayesLawrence-saveDiagnostics"></a>}}
+\if{latex}{\out{\hypertarget{method-BayesLawrence-saveDiagnostics}{}}}
 \subsection{Method \code{saveDiagnostics()}}{
 Method for saving diagnostic plots of the fitted model. This is
 simply the residuals vs fitted values.
@@ -176,8 +176,8 @@ Diagnostic plots.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-BayesLawrence-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-BayesLawrence-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

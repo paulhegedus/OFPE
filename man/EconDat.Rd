@@ -91,14 +91,14 @@ protein in the OFPE Monte Carlo simulation.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{EconDat$new()}}
-\item \href{#method-selectInputs}{\code{EconDat$selectInputs()}}
-\item \href{#method-clone}{\code{EconDat$clone()}}
+\item \href{#method-EconDat-new}{\code{EconDat$new()}}
+\item \href{#method-EconDat-selectInputs}{\code{EconDat$selectInputs()}}
+\item \href{#method-EconDat-clone}{\code{EconDat$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-EconDat-new"></a>}}
+\if{latex}{\out{\hypertarget{method-EconDat-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{EconDat$new(FC = NULL, ssAC = 0, Prc = NULL, PD = NULL)}\if{html}{\out{</div>}}
@@ -142,8 +142,8 @@ A new 'EconDat' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-selectInputs"></a>}}
-\if{latex}{\out{\hypertarget{method-selectInputs}{}}}
+\if{html}{\out{<a id="method-EconDat-selectInputs"></a>}}
+\if{latex}{\out{\hypertarget{method-EconDat-selectInputs}{}}}
 \subsection{Method \code{selectInputs()}}{
 Interactive method for selecting inputs related to the economic data
 and conditions of the Monte Carlo simulation. The user will be able
@@ -188,8 +188,8 @@ A completed 'EconDat' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-EconDat-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-EconDat-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

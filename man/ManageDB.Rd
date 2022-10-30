@@ -32,15 +32,15 @@ execution.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{ManageDB$new()}}
-\item \href{#method-setupActions}{\code{ManageDB$setupActions()}}
-\item \href{#method-executeActions}{\code{ManageDB$executeActions()}}
-\item \href{#method-clone}{\code{ManageDB$clone()}}
+\item \href{#method-ManageDB-new}{\code{ManageDB$new()}}
+\item \href{#method-ManageDB-setupActions}{\code{ManageDB$setupActions()}}
+\item \href{#method-ManageDB-executeActions}{\code{ManageDB$executeActions()}}
+\item \href{#method-ManageDB-clone}{\code{ManageDB$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-ManageDB-new"></a>}}
+\if{latex}{\out{\hypertarget{method-ManageDB-new}{}}}
 \subsection{Method \code{new()}}{
 Create a database manager object. The database connection and each
 action class list is passed to an internal method that initializes
@@ -65,8 +65,8 @@ A new 'ManageDB' object with initialized action classes.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-setupActions"></a>}}
-\if{latex}{\out{\hypertarget{method-setupActions}{}}}
+\if{html}{\out{<a id="method-ManageDB-setupActions"></a>}}
+\if{latex}{\out{\hypertarget{method-ManageDB-setupActions}{}}}
 \subsection{Method \code{setupActions()}}{
 Prepares the R6 action classes supplied by the user in the
 'action_list' by running their setup methods that preprocess data
@@ -88,8 +88,8 @@ Prepared R6 action classes specified by the user.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-executeActions"></a>}}
-\if{latex}{\out{\hypertarget{method-executeActions}{}}}
+\if{html}{\out{<a id="method-ManageDB-executeActions"></a>}}
+\if{latex}{\out{\hypertarget{method-ManageDB-executeActions}{}}}
 \subsection{Method \code{executeActions()}}{
 Executes the upload method of each action class that was passed in by
 the user and has been initialized and set up. These methods upload the
@@ -111,8 +111,8 @@ Data uploaded into the database.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-ManageDB-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-ManageDB-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{
