@@ -80,6 +80,10 @@ EconDat <- R6::R6Class(
     #' to protein premium/dockage data. Used to calculate estimated net-return based off of predicted
     #' protein in the OFPE Monte Carlo simulation.
     B2pd = NULL,
+    #' @field B3pd Coefficient for the cubed protein term in the protein premium/dockage model fit
+    #' to protein premium/dockage data. Used to calculate estimated net-return based off of predicted
+    #' protein in the OFPE Monte Carlo simulation.
+    B3pd = NULL,
 
     #' @param FC Fixed costs ($/acre) associated with production, not including the input of
     #' interest. This includes things like the cost of labor, fuel, etc.
