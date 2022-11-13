@@ -174,14 +174,14 @@ the treatment length.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-ExpGen-new}{\code{ExpGen$new()}}
-\item \href{#method-ExpGen-executeOutput}{\code{ExpGen$executeOutput()}}
-\item \href{#method-ExpGen-clone}{\code{ExpGen$clone()}}
+\item \href{#method-new}{\code{ExpGen$new()}}
+\item \href{#method-executeOutput}{\code{ExpGen$executeOutput()}}
+\item \href{#method-clone}{\code{ExpGen$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ExpGen-new"></a>}}
-\if{latex}{\out{\hypertarget{method-ExpGen-new}{}}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 It is recommended to initialize this class through the RxClass,
 because it is integrated into the OFPE workflow. This also ensures all of the
@@ -324,8 +324,8 @@ An initialized ExpGen R6 class object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ExpGen-executeOutput"></a>}}
-\if{latex}{\out{\hypertarget{method-ExpGen-executeOutput}{}}}
+\if{html}{\out{<a id="method-executeOutput"></a>}}
+\if{latex}{\out{\hypertarget{method-executeOutput}{}}}
 \subsection{Method \code{executeOutput()}}{
 Method for calling the execution method of the experiment
 generator. This randomly applies the experimental rates across
@@ -347,8 +347,8 @@ A completed experiment table containing the output.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ExpGen-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-ExpGen-clone}{}}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

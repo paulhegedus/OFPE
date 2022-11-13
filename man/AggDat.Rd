@@ -52,23 +52,23 @@ falls within.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-AggDat-new}{\code{AggDat$new()}}
-\item \href{#method-AggDat-aggregateData}{\code{AggDat$aggregateData()}}
-\item \href{#method-AggDat-.createAggTable}{\code{AggDat$.createAggTable()}}
-\item \href{#method-AggDat-.cleanRespData}{\code{AggDat$.cleanRespData()}}
-\item \href{#method-AggDat-.aggRespData}{\code{AggDat$.aggRespData()}}
-\item \href{#method-AggDat-.cleanExpData}{\code{AggDat$.cleanExpData()}}
-\item \href{#method-AggDat-.aggExpData}{\code{AggDat$.aggExpData()}}
-\item \href{#method-AggDat-.clipAggDat}{\code{AggDat$.clipAggDat()}}
-\item \href{#method-AggDat-.aggSSURGO}{\code{AggDat$.aggSSURGO()}}
-\item \href{#method-AggDat-.saveAggDat}{\code{AggDat$.saveAggDat()}}
-\item \href{#method-AggDat-.exportAggDat}{\code{AggDat$.exportAggDat()}}
-\item \href{#method-AggDat-clone}{\code{AggDat$clone()}}
+\item \href{#method-new}{\code{AggDat$new()}}
+\item \href{#method-aggregateData}{\code{AggDat$aggregateData()}}
+\item \href{#method-.createAggTable}{\code{AggDat$.createAggTable()}}
+\item \href{#method-.cleanRespData}{\code{AggDat$.cleanRespData()}}
+\item \href{#method-.aggRespData}{\code{AggDat$.aggRespData()}}
+\item \href{#method-.cleanExpData}{\code{AggDat$.cleanExpData()}}
+\item \href{#method-.aggExpData}{\code{AggDat$.aggExpData()}}
+\item \href{#method-.clipAggDat}{\code{AggDat$.clipAggDat()}}
+\item \href{#method-.aggSSURGO}{\code{AggDat$.aggSSURGO()}}
+\item \href{#method-.saveAggDat}{\code{AggDat$.saveAggDat()}}
+\item \href{#method-.exportAggDat}{\code{AggDat$.exportAggDat()}}
+\item \href{#method-clone}{\code{AggDat$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-AggDat-new"></a>}}
-\if{latex}{\out{\hypertarget{method-AggDat-new}{}}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Initialize an object for executing the process of aggregating OFPE
 data. Clears out temporary tables from the database and creates a
@@ -90,8 +90,8 @@ An initialized 'AggDat' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-AggDat-aggregateData"></a>}}
-\if{latex}{\out{\hypertarget{method-AggDat-aggregateData}{}}}
+\if{html}{\out{<a id="method-aggregateData"></a>}}
+\if{latex}{\out{\hypertarget{method-aggregateData}{}}}
 \subsection{Method \code{aggregateData()}}{
 Execution of the aggregation method for OFPE data. Occurs mainly
 within the database using PostGIS tools. Creates a 10m grid, a
@@ -115,8 +115,8 @@ Aggregated data in the 'farmername_a' schema
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-AggDat-.createAggTable"></a>}}
-\if{latex}{\out{\hypertarget{method-AggDat-.createAggTable}{}}}
+\if{html}{\out{<a id="method-.createAggTable"></a>}}
+\if{latex}{\out{\hypertarget{method-.createAggTable}{}}}
 \subsection{Method \code{.createAggTable()}}{
 Creates a temporary aggregated table in the database for processing.
 The dot indicates that this function would be private if not for
@@ -159,8 +159,8 @@ Temporary table in the database.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-AggDat-.cleanRespData"></a>}}
-\if{latex}{\out{\hypertarget{method-AggDat-.cleanRespData}{}}}
+\if{html}{\out{<a id="method-.cleanRespData"></a>}}
+\if{latex}{\out{\hypertarget{method-.cleanRespData}{}}}
 \subsection{Method \code{.cleanRespData()}}{
 Go through the cleaning process of cleaning the response variable data.
 Removes data that are outside of four standard deviations from the mean
@@ -210,8 +210,8 @@ Temporary table in farmer's 'raw' schema.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-AggDat-.aggRespData"></a>}}
-\if{latex}{\out{\hypertarget{method-AggDat-.aggRespData}{}}}
+\if{html}{\out{<a id="method-.aggRespData"></a>}}
+\if{latex}{\out{\hypertarget{method-.aggRespData}{}}}
 \subsection{Method \code{.aggRespData()}}{
 Method for aggregating the response variable data in the database. Uses
 the output of the .cleanRespData method to add the response variable data
@@ -267,8 +267,8 @@ Data in temporary aggregated table.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-AggDat-.cleanExpData"></a>}}
-\if{latex}{\out{\hypertarget{method-AggDat-.cleanExpData}{}}}
+\if{html}{\out{<a id="method-.cleanExpData"></a>}}
+\if{latex}{\out{\hypertarget{method-.cleanExpData}{}}}
 \subsection{Method \code{.cleanExpData()}}{
 Go through the cleaning process of cleaning the experimental variable data.
 Removes data that are outside of four standard deviations from the mean
@@ -327,8 +327,8 @@ Temporary table in the farmer's 'raw' schema.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-AggDat-.aggExpData"></a>}}
-\if{latex}{\out{\hypertarget{method-AggDat-.aggExpData}{}}}
+\if{html}{\out{<a id="method-.aggExpData"></a>}}
+\if{latex}{\out{\hypertarget{method-.aggExpData}{}}}
 \subsection{Method \code{.aggExpData()}}{
 Method for aggregating the response variable data in the database. Uses
 the output of the .cleanExpData method to add the experimental variable data
@@ -384,8 +384,8 @@ Data in temporary aggregated table.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-AggDat-.clipAggDat"></a>}}
-\if{latex}{\out{\hypertarget{method-AggDat-.clipAggDat}{}}}
+\if{html}{\out{<a id="method-.clipAggDat"></a>}}
+\if{latex}{\out{\hypertarget{method-.clipAggDat}{}}}
 \subsection{Method \code{.clipAggDat()}}{
 Clip aggregated data to the field boundary. Put the aggregated data
 into long lat for raster extraction. Clip the aggregated dataset to
@@ -413,8 +413,8 @@ None.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-AggDat-.aggSSURGO"></a>}}
-\if{latex}{\out{\hypertarget{method-AggDat-.aggSSURGO}{}}}
+\if{html}{\out{<a id="method-.aggSSURGO"></a>}}
+\if{latex}{\out{\hypertarget{method-.aggSSURGO}{}}}
 \subsection{Method \code{.aggSSURGO()}}{
 Gather SSURGO soils data if present in the database. Extract the
 MUSYM attribute. The dot indicates that this function would be private
@@ -435,8 +435,8 @@ None.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-AggDat-.saveAggDat"></a>}}
-\if{latex}{\out{\hypertarget{method-AggDat-.saveAggDat}{}}}
+\if{html}{\out{<a id="method-.saveAggDat"></a>}}
+\if{latex}{\out{\hypertarget{method-.saveAggDat}{}}}
 \subsection{Method \code{.saveAggDat()}}{
 Save the temporary aggregated table to the appropriate table in
 the OFPE database. Puts the data in the correct farmer's aggregated
@@ -464,8 +464,8 @@ Aggregated data in the OFPE database.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-AggDat-.exportAggDat"></a>}}
-\if{latex}{\out{\hypertarget{method-AggDat-.exportAggDat}{}}}
+\if{html}{\out{<a id="method-.exportAggDat"></a>}}
+\if{latex}{\out{\hypertarget{method-.exportAggDat}{}}}
 \subsection{Method \code{.exportAggDat()}}{
 Export the aggregated data to the local file system. Uses the user
 inputs for a path to the data. The dot indicates that this function
@@ -486,8 +486,8 @@ Exported data from the OFPE database.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-AggDat-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-AggDat-clone}{}}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

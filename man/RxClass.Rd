@@ -224,21 +224,21 @@ method.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-RxClass-new}{\code{RxClass$new()}}
-\item \href{#method-RxClass-selectInputs}{\code{RxClass$selectInputs()}}
-\item \href{#method-RxClass-setupOP}{\code{RxClass$setupOP()}}
-\item \href{#method-RxClass-setupGen}{\code{RxClass$setupGen()}}
-\item \href{#method-RxClass-executeOutGen}{\code{RxClass$executeOutGen()}}
-\item \href{#method-RxClass-saveOutputs}{\code{RxClass$saveOutputs()}}
-\item \href{#method-RxClass-plotRxMap}{\code{RxClass$plotRxMap()}}
-\item \href{#method-RxClass-plotCellTypeMap}{\code{RxClass$plotCellTypeMap()}}
-\item \href{#method-RxClass-uploadRxFun}{\code{RxClass$uploadRxFun()}}
-\item \href{#method-RxClass-clone}{\code{RxClass$clone()}}
+\item \href{#method-new}{\code{RxClass$new()}}
+\item \href{#method-selectInputs}{\code{RxClass$selectInputs()}}
+\item \href{#method-setupOP}{\code{RxClass$setupOP()}}
+\item \href{#method-setupGen}{\code{RxClass$setupGen()}}
+\item \href{#method-executeOutGen}{\code{RxClass$executeOutGen()}}
+\item \href{#method-saveOutputs}{\code{RxClass$saveOutputs()}}
+\item \href{#method-plotRxMap}{\code{RxClass$plotRxMap()}}
+\item \href{#method-plotCellTypeMap}{\code{RxClass$plotCellTypeMap()}}
+\item \href{#method-uploadRxFun}{\code{RxClass$uploadRxFun()}}
+\item \href{#method-clone}{\code{RxClass$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RxClass-new"></a>}}
-\if{latex}{\out{\hypertarget{method-RxClass-new}{}}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Initializing this class can be performed independent or
 after running the analysis and simulation step of the OFPE data cycle.
@@ -449,8 +449,8 @@ An initialized RxClass R6 class object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RxClass-selectInputs"></a>}}
-\if{latex}{\out{\hypertarget{method-RxClass-selectInputs}{}}}
+\if{html}{\out{<a id="method-selectInputs"></a>}}
+\if{latex}{\out{\hypertarget{method-selectInputs}{}}}
 \subsection{Method \code{selectInputs()}}{
 Interactive method for selecting inputs related to the prescription or
 experiment generation process. It is recommended to use this interactive
@@ -487,8 +487,8 @@ A 'RxClass' object with complete user selections.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RxClass-setupOP"></a>}}
-\if{latex}{\out{\hypertarget{method-RxClass-setupOP}{}}}
+\if{html}{\out{<a id="method-setupOP"></a>}}
+\if{latex}{\out{\hypertarget{method-setupOP}{}}}
 \subsection{Method \code{setupOP()}}{
 Method used to setup the output location for the prescription and related
 figures.
@@ -509,8 +509,8 @@ A folder created in the path for model output figures.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RxClass-setupGen"></a>}}
-\if{latex}{\out{\hypertarget{method-RxClass-setupGen}{}}}
+\if{html}{\out{<a id="method-setupGen"></a>}}
+\if{latex}{\out{\hypertarget{method-setupGen}{}}}
 \subsection{Method \code{setupGen()}}{
 Method used to setup the experiment or prescription generator based on the
 user select 'gen_type'. This initializes the output generator selected by the
@@ -532,8 +532,8 @@ An instantiated output generator class.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RxClass-executeOutGen"></a>}}
-\if{latex}{\out{\hypertarget{method-RxClass-executeOutGen}{}}}
+\if{html}{\out{<a id="method-executeOutGen"></a>}}
+\if{latex}{\out{\hypertarget{method-executeOutGen}{}}}
 \subsection{Method \code{executeOutGen()}}{
 Method for calling the execution method of the experiment or prescription
 generator. These call the methods in the generator R6 classes.
@@ -553,8 +553,8 @@ A completed experiment or prescription.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RxClass-saveOutputs"></a>}}
-\if{latex}{\out{\hypertarget{method-RxClass-saveOutputs}{}}}
+\if{html}{\out{<a id="method-saveOutputs"></a>}}
+\if{latex}{\out{\hypertarget{method-saveOutputs}{}}}
 \subsection{Method \code{saveOutputs()}}{
 Method for saving prescriptions or experiments and related plots. This only
 save plots if the user has supplied a folder path to save the
@@ -585,8 +585,8 @@ Shapefile and map saved in 'Outputs' folder and in database.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RxClass-plotRxMap"></a>}}
-\if{latex}{\out{\hypertarget{method-RxClass-plotRxMap}{}}}
+\if{html}{\out{<a id="method-plotRxMap"></a>}}
+\if{latex}{\out{\hypertarget{method-plotRxMap}{}}}
 \subsection{Method \code{plotRxMap()}}{
 This method is for plotting maps of simulation outcomes. These
 include the net-returns from the management strategies, predicted
@@ -608,8 +608,8 @@ Maps saved in 'Outputs/Rx/' and/or returned.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RxClass-plotCellTypeMap"></a>}}
-\if{latex}{\out{\hypertarget{method-RxClass-plotCellTypeMap}{}}}
+\if{html}{\out{<a id="method-plotCellTypeMap"></a>}}
+\if{latex}{\out{\hypertarget{method-plotCellTypeMap}{}}}
 \subsection{Method \code{plotCellTypeMap()}}{
 This method is for plotting a map showing the distribution of cell
 types. This shows which cells are the optimized or management scenario
@@ -630,8 +630,8 @@ Maps saved in 'Outputs/Rx/' and/or returned.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RxClass-uploadRxFun"></a>}}
-\if{latex}{\out{\hypertarget{method-RxClass-uploadRxFun}{}}}
+\if{html}{\out{<a id="method-uploadRxFun"></a>}}
+\if{latex}{\out{\hypertarget{method-uploadRxFun}{}}}
 \subsection{Method \code{uploadRxFun()}}{
 This method is for uploading the experiment or prescription to the
 database.
@@ -689,8 +689,8 @@ Output experiment or prescription saved in database.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RxClass-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-RxClass-clone}{}}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

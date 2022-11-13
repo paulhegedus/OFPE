@@ -232,14 +232,14 @@ to 10m if left NULL.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-AggInputs-new}{\code{AggInputs$new()}}
-\item \href{#method-AggInputs-selectInputs}{\code{AggInputs$selectInputs()}}
-\item \href{#method-AggInputs-clone}{\code{AggInputs$clone()}}
+\item \href{#method-new}{\code{AggInputs$new()}}
+\item \href{#method-selectInputs}{\code{AggInputs$selectInputs()}}
+\item \href{#method-clone}{\code{AggInputs$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-AggInputs-new"></a>}}
-\if{latex}{\out{\hypertarget{method-AggInputs-new}{}}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Initialize an object for storing aggregation inputs.
 \subsection{Usage}{
@@ -481,8 +481,8 @@ A new 'AggInputs' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-AggInputs-selectInputs"></a>}}
-\if{latex}{\out{\hypertarget{method-AggInputs-selectInputs}{}}}
+\if{html}{\out{<a id="method-selectInputs"></a>}}
+\if{latex}{\out{\hypertarget{method-selectInputs}{}}}
 \subsection{Method \code{selectInputs()}}{
 Interactive method for selecting aggregation input options. The description
 below describes the process of interactively selecting the necessary parameters
@@ -567,8 +567,8 @@ A completed 'AggInputs' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-AggInputs-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-AggInputs-clone}{}}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

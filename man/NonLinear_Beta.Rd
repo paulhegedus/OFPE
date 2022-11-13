@@ -73,16 +73,16 @@ is used for plottting.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-NonLinear_Beta-new}{\code{NonLinear_Beta$new()}}
-\item \href{#method-NonLinear_Beta-fitMod}{\code{NonLinear_Beta$fitMod()}}
-\item \href{#method-NonLinear_Beta-predResps}{\code{NonLinear_Beta$predResps()}}
-\item \href{#method-NonLinear_Beta-saveDiagnostics}{\code{NonLinear_Beta$saveDiagnostics()}}
-\item \href{#method-NonLinear_Beta-clone}{\code{NonLinear_Beta$clone()}}
+\item \href{#method-new}{\code{NonLinear_Beta$new()}}
+\item \href{#method-fitMod}{\code{NonLinear_Beta$fitMod()}}
+\item \href{#method-predResps}{\code{NonLinear_Beta$predResps()}}
+\item \href{#method-saveDiagnostics}{\code{NonLinear_Beta$saveDiagnostics()}}
+\item \href{#method-clone}{\code{NonLinear_Beta$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-NonLinear_Beta-new"></a>}}
-\if{latex}{\out{\hypertarget{method-NonLinear_Beta-new}{}}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 The initialization creates a data frame ('parm_df') containing the parameter names,
 the function component and id, the mean and standard deviation, and whether it meets
@@ -112,8 +112,8 @@ A instantiated 'NonLinear_Beta' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-NonLinear_Beta-fitMod"></a>}}
-\if{latex}{\out{\hypertarget{method-NonLinear_Beta-fitMod}{}}}
+\if{html}{\out{<a id="method-fitMod"></a>}}
+\if{latex}{\out{\hypertarget{method-fitMod}{}}}
 \subsection{Method \code{fitMod()}}{
 Method for fitting the non-linear beta model to response variables
 using experimental and covariate data.
@@ -152,8 +152,8 @@ A fitted beta function model.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-NonLinear_Beta-predResps"></a>}}
-\if{latex}{\out{\hypertarget{method-NonLinear_Beta-predResps}{}}}
+\if{html}{\out{<a id="method-predResps"></a>}}
+\if{latex}{\out{\hypertarget{method-predResps}{}}}
 \subsection{Method \code{predResps()}}{
 Method for predicting response variables using data and a model.
 \subsection{Usage}{
@@ -175,8 +175,8 @@ Vector of predicted values for each location in 'dat'.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-NonLinear_Beta-saveDiagnostics"></a>}}
-\if{latex}{\out{\hypertarget{method-NonLinear_Beta-saveDiagnostics}{}}}
+\if{html}{\out{<a id="method-saveDiagnostics"></a>}}
+\if{latex}{\out{\hypertarget{method-saveDiagnostics}{}}}
 \subsection{Method \code{saveDiagnostics()}}{
 Method for saving diagnostic plots of the fitted model. These include residual
 vs. fitted values, normal QQ plots, etc.
@@ -199,8 +199,8 @@ Diagnostic plots.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-NonLinear_Beta-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-NonLinear_Beta-clone}{}}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

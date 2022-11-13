@@ -64,16 +64,16 @@ is used for plotting.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-RF-new}{\code{RF$new()}}
-\item \href{#method-RF-fitMod}{\code{RF$fitMod()}}
-\item \href{#method-RF-predResps}{\code{RF$predResps()}}
-\item \href{#method-RF-saveDiagnostics}{\code{RF$saveDiagnostics()}}
-\item \href{#method-RF-clone}{\code{RF$clone()}}
+\item \href{#method-new}{\code{RF$new()}}
+\item \href{#method-fitMod}{\code{RF$fitMod()}}
+\item \href{#method-predResps}{\code{RF$predResps()}}
+\item \href{#method-saveDiagnostics}{\code{RF$saveDiagnostics()}}
+\item \href{#method-clone}{\code{RF$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RF-new"></a>}}
-\if{latex}{\out{\hypertarget{method-RF-new}{}}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 The initialization creates a data frame ('parm_df') containing the parameter names,
 the mean and standard deviation, and whether it meets
@@ -103,8 +103,8 @@ A instantiated 'RF' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RF-fitMod"></a>}}
-\if{latex}{\out{\hypertarget{method-RF-fitMod}{}}}
+\if{html}{\out{<a id="method-fitMod"></a>}}
+\if{latex}{\out{\hypertarget{method-fitMod}{}}}
 \subsection{Method \code{fitMod()}}{
 Method for fitting the RF to response variables using experimental and
 covariate data.
@@ -146,8 +146,8 @@ A fitted RF.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RF-predResps"></a>}}
-\if{latex}{\out{\hypertarget{method-RF-predResps}{}}}
+\if{html}{\out{<a id="method-predResps"></a>}}
+\if{latex}{\out{\hypertarget{method-predResps}{}}}
 \subsection{Method \code{predResps()}}{
 Method for predicting response variables using data and a model.
 \subsection{Usage}{
@@ -169,8 +169,8 @@ Vector of predicted values for each location in 'dat'.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RF-saveDiagnostics"></a>}}
-\if{latex}{\out{\hypertarget{method-RF-saveDiagnostics}{}}}
+\if{html}{\out{<a id="method-saveDiagnostics"></a>}}
+\if{latex}{\out{\hypertarget{method-saveDiagnostics}{}}}
 \subsection{Method \code{saveDiagnostics()}}{
 Method for saving diagnostic plots of the fitted model. This is
 simply the residuals vs fitted values.
@@ -193,8 +193,8 @@ Diagnostic plots.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RF-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-RF-clone}{}}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

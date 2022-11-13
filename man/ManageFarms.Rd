@@ -37,17 +37,17 @@ shapefiles with a column indicating the associated farmer name.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-ManageFarms-new}{\code{ManageFarms$new()}}
-\item \href{#method-ManageFarms-setup}{\code{ManageFarms$setup()}}
-\item \href{#method-ManageFarms-execute}{\code{ManageFarms$execute()}}
-\item \href{#method-ManageFarms-.setupFarms}{\code{ManageFarms$.setupFarms()}}
-\item \href{#method-ManageFarms-.uploadFarms}{\code{ManageFarms$.uploadFarms()}}
-\item \href{#method-ManageFarms-clone}{\code{ManageFarms$clone()}}
+\item \href{#method-new}{\code{ManageFarms$new()}}
+\item \href{#method-setup}{\code{ManageFarms$setup()}}
+\item \href{#method-execute}{\code{ManageFarms$execute()}}
+\item \href{#method-.setupFarms}{\code{ManageFarms$.setupFarms()}}
+\item \href{#method-.uploadFarms}{\code{ManageFarms$.uploadFarms()}}
+\item \href{#method-clone}{\code{ManageFarms$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ManageFarms-new"></a>}}
-\if{latex}{\out{\hypertarget{method-ManageFarms-new}{}}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Create an ManageFarms object. The database connection and a list with
 farm information used to upload farm information to the database with
@@ -76,8 +76,8 @@ A new initialized 'ManageFarms' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ManageFarms-setup"></a>}}
-\if{latex}{\out{\hypertarget{method-ManageFarms-setup}{}}}
+\if{html}{\out{<a id="method-setup"></a>}}
+\if{latex}{\out{\hypertarget{method-setup}{}}}
 \subsection{Method \code{setup()}}{
 Prepares the farm data prior to uploading to the database. Imports
 shapefiles from the farm path and puts them into a list with the
@@ -99,8 +99,8 @@ Prepared R6 class for uploading farmer information.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ManageFarms-execute"></a>}}
-\if{latex}{\out{\hypertarget{method-ManageFarms-execute}{}}}
+\if{html}{\out{<a id="method-execute"></a>}}
+\if{latex}{\out{\hypertarget{method-execute}{}}}
 \subsection{Method \code{execute()}}{
 Executes the upload of prepared farm information to the database in the
 'all_farms' schema and the 'farms' table. If a farm boundary is already
@@ -123,8 +123,8 @@ Farm data uploaded into the 'all_farms.farms' table in the database.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ManageFarms-.setupFarms"></a>}}
-\if{latex}{\out{\hypertarget{method-ManageFarms-.setupFarms}{}}}
+\if{html}{\out{<a id="method-.setupFarms"></a>}}
+\if{latex}{\out{\hypertarget{method-.setupFarms}{}}}
 \subsection{Method \code{.setupFarms()}}{
 Converts a list with information about the farms into a format ready for
 uploading to the database. Imports the shapefile using the path name
@@ -148,8 +148,8 @@ ESRI shapefile of farm boundary.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ManageFarms-.uploadFarms"></a>}}
-\if{latex}{\out{\hypertarget{method-ManageFarms-.uploadFarms}{}}}
+\if{html}{\out{<a id="method-.uploadFarms"></a>}}
+\if{latex}{\out{\hypertarget{method-.uploadFarms}{}}}
 \subsection{Method \code{.uploadFarms()}}{
 Uploads a farm to the database. Takes the farm shapefile and identifies the
 coresponding farmeridx, adds it as a column, and then uploads to the
@@ -176,8 +176,8 @@ Farm upload into database.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ManageFarms-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-ManageFarms-clone}{}}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

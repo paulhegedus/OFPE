@@ -27,16 +27,16 @@ database, see DBCon class.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-ManageFarmers-new}{\code{ManageFarmers$new()}}
-\item \href{#method-ManageFarmers-setup}{\code{ManageFarmers$setup()}}
-\item \href{#method-ManageFarmers-execute}{\code{ManageFarmers$execute()}}
-\item \href{#method-ManageFarmers-.uploadFarmers}{\code{ManageFarmers$.uploadFarmers()}}
-\item \href{#method-ManageFarmers-clone}{\code{ManageFarmers$clone()}}
+\item \href{#method-new}{\code{ManageFarmers$new()}}
+\item \href{#method-setup}{\code{ManageFarmers$setup()}}
+\item \href{#method-execute}{\code{ManageFarmers$execute()}}
+\item \href{#method-.uploadFarmers}{\code{ManageFarmers$.uploadFarmers()}}
+\item \href{#method-clone}{\code{ManageFarmers$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ManageFarmers-new"></a>}}
-\if{latex}{\out{\hypertarget{method-ManageFarmers-new}{}}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Create an ManageFarmers object. The database connection and a vector of
 farmer names are used to upload farmer information to the database.
@@ -63,8 +63,8 @@ A new initialized 'ManageFarmers' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ManageFarmers-setup"></a>}}
-\if{latex}{\out{\hypertarget{method-ManageFarmers-setup}{}}}
+\if{html}{\out{<a id="method-setup"></a>}}
+\if{latex}{\out{\hypertarget{method-setup}{}}}
 \subsection{Method \code{setup()}}{
 No setup needed for the ManageFarmers class. However is still present to
 abide by the ManageDB interface consisting of setup and execute methods.
@@ -74,8 +74,8 @@ abide by the ManageDB interface consisting of setup and execute methods.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ManageFarmers-execute"></a>}}
-\if{latex}{\out{\hypertarget{method-ManageFarmers-execute}{}}}
+\if{html}{\out{<a id="method-execute"></a>}}
+\if{latex}{\out{\hypertarget{method-execute}{}}}
 \subsection{Method \code{execute()}}{
 Executes the upload of prepared farmer information to the database in the
 'all_farms' schema and the 'farmers' table. If a farmer is already
@@ -97,8 +97,8 @@ Farmer data uploaded into 'all_farms.farmers' table in the database.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ManageFarmers-.uploadFarmers"></a>}}
-\if{latex}{\out{\hypertarget{method-ManageFarmers-.uploadFarmers}{}}}
+\if{html}{\out{<a id="method-.uploadFarmers"></a>}}
+\if{latex}{\out{\hypertarget{method-.uploadFarmers}{}}}
 \subsection{Method \code{.uploadFarmers()}}{
 Uploads a farmer to the database. Takes the farmer name and adds it to the
 'all_farms.farmers' table. Makes sure there is no conflict defined in the
@@ -123,8 +123,8 @@ Farmer upload into database.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ManageFarmers-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-ManageFarmers-clone}{}}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

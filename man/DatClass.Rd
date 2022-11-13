@@ -144,16 +144,16 @@ bu/ac for yield and lbs/ac for experimental data (nitrogen or seed).}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-DatClass-new}{\code{DatClass$new()}}
-\item \href{#method-DatClass-selectInputs}{\code{DatClass$selectInputs()}}
-\item \href{#method-DatClass-setupDat}{\code{DatClass$setupDat()}}
-\item \href{#method-DatClass-getSimDat}{\code{DatClass$getSimDat()}}
-\item \href{#method-DatClass-clone}{\code{DatClass$clone()}}
+\item \href{#method-new}{\code{DatClass$new()}}
+\item \href{#method-selectInputs}{\code{DatClass$selectInputs()}}
+\item \href{#method-setupDat}{\code{DatClass$setupDat()}}
+\item \href{#method-getSimDat}{\code{DatClass$getSimDat()}}
+\item \href{#method-clone}{\code{DatClass$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-DatClass-new"></a>}}
-\if{latex}{\out{\hypertarget{method-DatClass-new}{}}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DatClass$new(
@@ -259,8 +259,8 @@ A new 'AggInputs' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-DatClass-selectInputs"></a>}}
-\if{latex}{\out{\hypertarget{method-DatClass-selectInputs}{}}}
+\if{html}{\out{<a id="method-selectInputs"></a>}}
+\if{latex}{\out{\hypertarget{method-selectInputs}{}}}
 \subsection{Method \code{selectInputs()}}{
 Interactive method for selecting inputs related to the data used in the
 analysis, simulation, and subsequent prescription generation steps. The
@@ -308,8 +308,8 @@ A 'DatClass' object with complete user selections.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-DatClass-setupDat"></a>}}
-\if{latex}{\out{\hypertarget{method-DatClass-setupDat}{}}}
+\if{html}{\out{<a id="method-setupDat"></a>}}
+\if{latex}{\out{\hypertarget{method-setupDat}{}}}
 \subsection{Method \code{setupDat()}}{
 This function calls the private methods for data gathering and
 processing. The data gather step takes the user selected inputs
@@ -347,8 +347,8 @@ A named list with training and validation data, called
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-DatClass-getSimDat"></a>}}
-\if{latex}{\out{\hypertarget{method-DatClass-getSimDat}{}}}
+\if{html}{\out{<a id="method-getSimDat"></a>}}
+\if{latex}{\out{\hypertarget{method-getSimDat}{}}}
 \subsection{Method \code{getSimDat()}}{
 This function calls the private methods for data gathering and
 processing. The gathering process takes the vector of simulation
@@ -372,8 +372,8 @@ A data.table with the user specified data for the simulation.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-DatClass-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-DatClass-clone}{}}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{
