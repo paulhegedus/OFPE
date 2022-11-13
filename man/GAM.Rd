@@ -64,16 +64,16 @@ is used for plottting.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-GAM-new}{\code{GAM$new()}}
-\item \href{#method-GAM-fitMod}{\code{GAM$fitMod()}}
-\item \href{#method-GAM-predResps}{\code{GAM$predResps()}}
-\item \href{#method-GAM-saveDiagnostics}{\code{GAM$saveDiagnostics()}}
-\item \href{#method-GAM-clone}{\code{GAM$clone()}}
+\item \href{#method-new}{\code{GAM$new()}}
+\item \href{#method-fitMod}{\code{GAM$fitMod()}}
+\item \href{#method-predResps}{\code{GAM$predResps()}}
+\item \href{#method-saveDiagnostics}{\code{GAM$saveDiagnostics()}}
+\item \href{#method-clone}{\code{GAM$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GAM-new"></a>}}
-\if{latex}{\out{\hypertarget{method-GAM-new}{}}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 The initialization creates a data frame ('parm_df') containing the parameter names,
 the k value to use for the GAM, the mean and standard deviation, and whether it meets
@@ -107,8 +107,8 @@ A instantiated 'GAM' object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GAM-fitMod"></a>}}
-\if{latex}{\out{\hypertarget{method-GAM-fitMod}{}}}
+\if{html}{\out{<a id="method-fitMod"></a>}}
+\if{latex}{\out{\hypertarget{method-fitMod}{}}}
 \subsection{Method \code{fitMod()}}{
 Method for fitting the GAM to response variables using experimental and
 covariate data.
@@ -148,8 +148,8 @@ A fitted GAM.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GAM-predResps"></a>}}
-\if{latex}{\out{\hypertarget{method-GAM-predResps}{}}}
+\if{html}{\out{<a id="method-predResps"></a>}}
+\if{latex}{\out{\hypertarget{method-predResps}{}}}
 \subsection{Method \code{predResps()}}{
 Method for predicting response variables using data and a model.
 \subsection{Usage}{
@@ -171,8 +171,8 @@ Vector of predicted values for each location in 'dat'.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GAM-saveDiagnostics"></a>}}
-\if{latex}{\out{\hypertarget{method-GAM-saveDiagnostics}{}}}
+\if{html}{\out{<a id="method-saveDiagnostics"></a>}}
+\if{latex}{\out{\hypertarget{method-saveDiagnostics}{}}}
 \subsection{Method \code{saveDiagnostics()}}{
 Method for saving diagnostic plots of the fitted model. These include residual
 vs. fitted values, normal QQ plots, etc.
@@ -195,8 +195,8 @@ Diagnostic plots.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GAM-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-GAM-clone}{}}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

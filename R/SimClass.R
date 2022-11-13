@@ -1338,8 +1338,15 @@ SimClass <- R6::R6Class(
         Bp.var[1, "NR.ffopt"] <- median(NRopt[, "NR.ffopt"], na.rm = T) # NRffmax[, "NR.ff"] / self$fieldsize # / rr
         Bp.var[1, "NR.opp"] <- median(NRopt[, "NR.opp"], na.rm = T)
         Bp.var[1, "median.ssopt.EXPrate"] <- median(NRopt[, "EXP.rate.ssopt"], na.rm = T)
-
-        NRopt <- private$.calcNRact(NRopt, self$sim_list[[1]]$year[1], Bp, CEXP, FC)
+        
+        if (self$datClass$fieldname %in% unique(self$datClass$mod_dat$yld$trn$field)) {
+          NRopt <- private$.calcNRact(NRopt, self$sim_list[[1]]$year[1], Bp, CEXP, FC)
+        } else {
+          temp <- matrix(NA, nrow = nrow(NRopt), ncol = 3)
+          colnames(temp) <- c("NR.act", "yld.act", "pro.act")
+          NRopt <- cbind(NRopt, temp)
+          rm(temp)
+        }
         gc()
         
         Bp.var[1, "NR.act"] <- median(NRopt[, "NR.act"], na.rm = T)
@@ -1372,7 +1379,9 @@ SimClass <- R6::R6Class(
                 sep = ",")
         }
         gc()
-        self$sim_list <- lapply(self$sim_list, function(x) {x$cost.NUE <- NULL; return(x)})
+        if (self$opt == "ecol") {
+          self$sim_list <- lapply(self$sim_list, function(x) {x$cost.NUE <- NULL; return(x)})
+        }
       },
       warning = function(w) {return(print(paste0("warning at ", sim_year, " bp = ", bp)))},
       error = function(e) {return(print(paste0("error at ", sim_year, " bp = ", bp)))})
@@ -2175,8 +2184,16 @@ SimClass <- R6::R6Class(
         Bp.var[1, "NR.opp"] <- median(NRopt[, "NR.opp"], na.rm = T)
         Bp.var[1, "median.ssopt.EXPrate"] <- median(NRopt[, "EXP.rate.ssopt"], na.rm = T)
         
-        NRopt <- private$.calcNRact(NRopt, self$sim_list[[1]]$year[1], Bp, CEXP, FC)
+        if (self$datClass$fieldname %in% unique(self$datClass$mod_dat$yld$trn$field)) {
+          NRopt <- private$.calcNRact(NRopt, self$sim_list[[1]]$year[1], Bp, CEXP, FC)
+        } else {
+          temp <- matrix(NA, nrow = nrow(NRopt), ncol = 3)
+          colnames(temp) <- c("NR.act", "yld.act", "pro.act")
+          NRopt <- cbind(NRopt, temp)
+          rm(temp)
+        }
         gc()
+        
         Bp.var[1, "NR.act"] <- median(NRopt[, "NR.act"], na.rm = T)
         Bp.var[1, "sim"] <- paste0(sim_year, "EconCondition")
         # fill out rest
@@ -2207,7 +2224,9 @@ SimClass <- R6::R6Class(
                                sim_year, "EconCond_",
                                self$opt, ".csv"))
         gc()
-        self$sim_list <- lapply(self$sim_list, function(x) {x$cost.NUE <- NULL; return(x)})
+        if (self$opt == "ecol") {
+          self$sim_list <- lapply(self$sim_list, function(x) {x$cost.NUE <- NULL; return(x)})
+        }
       },
       warning = function(w) {return(print(paste0("warning with actual economics for ", sim_year)))},
       error = function(e) {return(print(paste0("error with actual economics for ", sim_year)))})

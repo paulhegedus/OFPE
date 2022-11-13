@@ -155,26 +155,26 @@ outcomues from (i.e. 0 lbs N per acre or 25 lbs seed per acre).}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-SimOP-new}{\code{SimOP$new()}}
-\item \href{#method-SimOP-savePlots}{\code{SimOP$savePlots()}}
-\item \href{#method-SimOP-plotNRbox}{\code{SimOP$plotNRbox()}}
-\item \href{#method-SimOP-plotDiffNRbox}{\code{SimOP$plotDiffNRbox()}}
-\item \href{#method-SimOP-mgmtNRprobTable}{\code{SimOP$mgmtNRprobTable()}}
-\item \href{#method-SimOP-plotNRbar}{\code{SimOP$plotNRbar()}}
-\item \href{#method-SimOP-plotTotExpAppl}{\code{SimOP$plotTotExpAppl()}}
-\item \href{#method-SimOP-plotSSOPThist}{\code{SimOP$plotSSOPThist()}}
-\item \href{#method-SimOP-plotFFOPThist}{\code{SimOP$plotFFOPThist()}}
-\item \href{#method-SimOP-plotSimMaps}{\code{SimOP$plotSimMaps()}}
-\item \href{#method-SimOP-loadBpVar}{\code{SimOP$loadBpVar()}}
-\item \href{#method-SimOP-loadNRffmax}{\code{SimOP$loadNRffmax()}}
-\item \href{#method-SimOP-makeTF4}{\code{SimOP$makeTF4()}}
-\item \href{#method-SimOP-loadNRopt}{\code{SimOP$loadNRopt()}}
-\item \href{#method-SimOP-clone}{\code{SimOP$clone()}}
+\item \href{#method-new}{\code{SimOP$new()}}
+\item \href{#method-savePlots}{\code{SimOP$savePlots()}}
+\item \href{#method-plotNRbox}{\code{SimOP$plotNRbox()}}
+\item \href{#method-plotDiffNRbox}{\code{SimOP$plotDiffNRbox()}}
+\item \href{#method-mgmtNRprobTable}{\code{SimOP$mgmtNRprobTable()}}
+\item \href{#method-plotNRbar}{\code{SimOP$plotNRbar()}}
+\item \href{#method-plotTotExpAppl}{\code{SimOP$plotTotExpAppl()}}
+\item \href{#method-plotSSOPThist}{\code{SimOP$plotSSOPThist()}}
+\item \href{#method-plotFFOPThist}{\code{SimOP$plotFFOPThist()}}
+\item \href{#method-plotSimMaps}{\code{SimOP$plotSimMaps()}}
+\item \href{#method-loadBpVar}{\code{SimOP$loadBpVar()}}
+\item \href{#method-loadNRffmax}{\code{SimOP$loadNRffmax()}}
+\item \href{#method-makeTF4}{\code{SimOP$makeTF4()}}
+\item \href{#method-loadNRopt}{\code{SimOP$loadNRopt()}}
+\item \href{#method-clone}{\code{SimOP$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SimOP-new"></a>}}
-\if{latex}{\out{\hypertarget{method-SimOP-new}{}}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Use this class to save figures and tables from simulations performed using
 the 'SimClass' R6 object. This class can be initialized with an executed
@@ -233,8 +233,8 @@ A folder created in the path for model output figures.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SimOP-savePlots"></a>}}
-\if{latex}{\out{\hypertarget{method-SimOP-savePlots}{}}}
+\if{html}{\out{<a id="method-savePlots"></a>}}
+\if{latex}{\out{\hypertarget{method-savePlots}{}}}
 \subsection{Method \code{savePlots()}}{
 Method for saving simulation output plots (see below). This method is used
 to call the public methods for each figure, map,  and table generated. This
@@ -275,8 +275,8 @@ Simulation outputs in the 'Outputs' folder.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SimOP-plotNRbox"></a>}}
-\if{latex}{\out{\hypertarget{method-SimOP-plotNRbox}{}}}
+\if{html}{\out{<a id="method-plotNRbox"></a>}}
+\if{latex}{\out{\hypertarget{method-plotNRbox}{}}}
 \subsection{Method \code{plotNRbox()}}{
 Plot the variation in net returns over different price years with a boxplot.
 \subsection{Usage}{
@@ -318,8 +318,8 @@ A 'ggplot' object and data saved in 'Outputs/NR/NRboxplots' if selected.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SimOP-plotDiffNRbox"></a>}}
-\if{latex}{\out{\hypertarget{method-SimOP-plotDiffNRbox}{}}}
+\if{html}{\out{<a id="method-plotDiffNRbox"></a>}}
+\if{latex}{\out{\hypertarget{method-plotDiffNRbox}{}}}
 \subsection{Method \code{plotDiffNRbox()}}{
 Plot the variation in the difference in net returns over different price years.
 \subsection{Usage}{
@@ -361,8 +361,8 @@ A 'ggplot' object and data saved in 'Outputs/NR/NRboxplots' if selected.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SimOP-mgmtNRprobTable"></a>}}
-\if{latex}{\out{\hypertarget{method-SimOP-mgmtNRprobTable}{}}}
+\if{html}{\out{<a id="method-mgmtNRprobTable"></a>}}
+\if{latex}{\out{\hypertarget{method-mgmtNRprobTable}{}}}
 \subsection{Method \code{mgmtNRprobTable()}}{
 Calculate the probability that a given management method is more profitable
 than the other management strategies. For example, compare the probability that
@@ -419,8 +419,8 @@ A data.frame and data saved in 'Outputs/NR/NRProbabilities' if selected.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SimOP-plotNRbar"></a>}}
-\if{latex}{\out{\hypertarget{method-SimOP-plotNRbar}{}}}
+\if{html}{\out{<a id="method-plotNRbar"></a>}}
+\if{latex}{\out{\hypertarget{method-plotNRbar}{}}}
 \subsection{Method \code{plotNRbar()}}{
 Plot the mean net return for each management strategy as a
 bar plot and a quarter standard deviation around each mean.
@@ -463,8 +463,8 @@ A 'ggplot' object and data saved in 'Outputs/NR/NRbarplots' if selected.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SimOP-plotTotExpAppl"></a>}}
-\if{latex}{\out{\hypertarget{method-SimOP-plotTotExpAppl}{}}}
+\if{html}{\out{<a id="method-plotTotExpAppl"></a>}}
+\if{latex}{\out{\hypertarget{method-plotTotExpAppl}{}}}
 \subsection{Method \code{plotTotExpAppl()}}{
 Create a bar plot of the total experimental input applied with
 each strategy. The amount of the site-specific input applied
@@ -517,8 +517,8 @@ A 'ggplot' object and data saved in 'Outputs/EXP/EXPapplied' if selected.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SimOP-plotSSOPThist"></a>}}
-\if{latex}{\out{\hypertarget{method-SimOP-plotSSOPThist}{}}}
+\if{html}{\out{<a id="method-plotSSOPThist"></a>}}
+\if{latex}{\out{\hypertarget{method-plotSSOPThist}{}}}
 \subsection{Method \code{plotSSOPThist()}}{
 Generate a histogram of site specific experimental inptut rates within
 a field. Uses the average site-specific rate for each point across the
@@ -573,8 +573,8 @@ A 'ggplot' object and data saved in 'Outputs/EXP/ssoptEXP' if selected.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SimOP-plotFFOPThist"></a>}}
-\if{latex}{\out{\hypertarget{method-SimOP-plotFFOPThist}{}}}
+\if{html}{\out{<a id="method-plotFFOPThist"></a>}}
+\if{latex}{\out{\hypertarget{method-plotFFOPThist}{}}}
 \subsection{Method \code{plotFFOPThist()}}{
 Generate a histogram of full-field experimental input rates identified
 in the simulation. Shows the distribution of full-field optimum rates
@@ -628,8 +628,8 @@ A 'ggplot' object and data saved in 'Outputs/EXP/ffoptEXP' if selected.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SimOP-plotSimMaps"></a>}}
-\if{latex}{\out{\hypertarget{method-SimOP-plotSimMaps}{}}}
+\if{html}{\out{<a id="method-plotSimMaps"></a>}}
+\if{latex}{\out{\hypertarget{method-plotSimMaps}{}}}
 \subsection{Method \code{plotSimMaps()}}{
 This method is for plotting maps of simulation outcomes. These
 include the net-returns from the management strategies, predicted
@@ -696,8 +696,8 @@ A 'ggmap' object and maps saved in 'Outputs/Maps' folder if selected.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SimOP-loadBpVar"></a>}}
-\if{latex}{\out{\hypertarget{method-SimOP-loadBpVar}{}}}
+\if{html}{\out{<a id="method-loadBpVar"></a>}}
+\if{latex}{\out{\hypertarget{method-loadBpVar}{}}}
 \subsection{Method \code{loadBpVar()}}{
 Gets the Bp.var output table from the 'SimClass' simulation. The Bp.var table contains means
 across each field for each iteration of the simulation. This records base
@@ -740,8 +740,8 @@ iterations in the simulation.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SimOP-loadNRffmax"></a>}}
-\if{latex}{\out{\hypertarget{method-SimOP-loadNRffmax}{}}}
+\if{html}{\out{<a id="method-loadNRffmax"></a>}}
+\if{latex}{\out{\hypertarget{method-loadNRffmax}{}}}
 \subsection{Method \code{loadNRffmax()}}{
 Gets the NRffmax table that is an output from the 'SimClass' simulation with rows for
 each iteration and the full-field optimum experimental input rate and the
@@ -782,8 +782,8 @@ iterations in the simulation.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SimOP-makeTF4"></a>}}
-\if{latex}{\out{\hypertarget{method-SimOP-makeTF4}{}}}
+\if{html}{\out{<a id="method-makeTF4"></a>}}
+\if{latex}{\out{\hypertarget{method-makeTF4}{}}}
 \subsection{Method \code{makeTF4()}}{
 Create the table TF4, which is used for the output functions 'plotFFOPThist',
 'plotTotExpAppl', and 'plotSSOPThist'. This contains mean values for each
@@ -815,8 +815,8 @@ each management strategy.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SimOP-loadNRopt"></a>}}
-\if{latex}{\out{\hypertarget{method-SimOP-loadNRopt}{}}}
+\if{html}{\out{<a id="method-loadNRopt"></a>}}
+\if{latex}{\out{\hypertarget{method-loadNRopt}{}}}
 \subsection{Method \code{loadNRopt()}}{
 Gets the NRopt table that is an output from the 'SimClass' simulation with rows for
 each in the field. Columns contain the means across all iterations of the
@@ -859,8 +859,8 @@ observations in the dataset.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-SimOP-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-SimOP-clone}{}}}
+\if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

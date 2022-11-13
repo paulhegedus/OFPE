@@ -545,7 +545,16 @@ SimOP <- R6::R6Class(
                                             self$unique_fieldname, "_NRopt_",
                                             self$unique_fxn, "_SimYr",
                                             self$sim_years[i], "EconCond_",
-                                            self$opt, ".csv"))
+                                            self$opt, ".csv")) %>% 
+            as.data.frame()
+          for (k in 1:ncol(NRopt)) {
+            if (!grepl("^x$|^y$", names(NRopt)[k])) {
+              if (all(is.na(NRopt[, k]))) {
+                NRopt[, k] <- 0
+              }
+            }
+          }
+          NRopt <- data.table::as.data.table(NRopt)
           ## SSOPT N map 
           temp_plot <- self$plotSimMaps(
             dat = NRopt,
